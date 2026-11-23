@@ -40,3 +40,14 @@ export function depthScaleAt(d: DepthSettings, y: number): number {
   const t = clamp((y - d.yFar) / (d.yNear - d.yFar), 0, 1);
   return lerp(d.scaleFar, d.scaleNear, t);
 }
+
+/**
+ * Perspektivní zkrácení hloubky: 1 jednotka pohybu „do scény“ (svisle po obrazovce) odpovídá
+ * 1/K jednotkám skutečné dráhy (kamera jen mírně nad úrovní očí). Chůze do hloubky je tak na
+ * obrazovce pomalejší a kroky se do svislé osy promítají zkrácené – nohy pak dosáhnou na zem.
+ */
+export const GROUND_DEPTH_K = 0.4;
+/** Skutečná (fyzická) délka posunu po zemi z posunu na obrazovce. */
+export function groundLen(dx: number, dy: number): number { return Math.hypot(dx, dy / GROUND_DEPTH_K); }
+/** Směr na zemi (fyzický úhel) ze směru na obrazovce. */
+export function groundAngle(screenAngle: number): number { return Math.atan2(Math.sin(screenAngle) / GROUND_DEPTH_K, Math.cos(screenAngle)); }

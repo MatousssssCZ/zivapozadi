@@ -3,8 +3,8 @@
   "formatVersion": 1,
   "meta": {
     "name": "Náměstí s radnicí (test dodané grafiky)",
-    "createdAt": "2026-11-23T19:03:39.240Z",
-    "modifiedAt": "2026-11-23T19:03:39.915Z",
+    "createdAt": "2026-11-23T19:41:03.393Z",
+    "modifiedAt": "2026-11-23T19:41:03.431Z",
     "appVersion": "0.1.0"
   },
   "seed": 1224,
@@ -1294,7 +1294,7 @@
       "id": "ch_6",
       "name": "Františka",
       "assetId": "builtin_postava_cg",
-      "startNodeId": "c",
+      "startNodeId": "i",
       "baseScale": 1,
       "walkSpeed": 52.9,
       "palette": {
@@ -1345,15 +1345,9 @@
         },
         "locks": []
       },
-      "activities": {
-        "coffee": {
-          "enabled": true,
-          "firstDelayMin": 34,
-          "firstDelayMax": 40,
-          "intervalMin": 70,
-          "intervalMax": 160
-        }
-      }
+      "activities": {},
+      "companionId": "ch_5",
+      "companionSide": 1
     },
     {
       "id": "ch_7",
@@ -1554,7 +1548,7 @@
       "id": "ch_10",
       "name": "Jana",
       "assetId": "builtin_postava_cg",
-      "startNodeId": "j",
+      "startNodeId": "n",
       "baseScale": 1,
       "walkSpeed": 72.1,
       "palette": {
@@ -1605,15 +1599,9 @@
         },
         "locks": []
       },
-      "activities": {
-        "coffee": {
-          "enabled": true,
-          "firstDelayMin": 58,
-          "firstDelayMax": 64,
-          "intervalMin": 70,
-          "intervalMax": 160
-        }
-      }
+      "activities": {},
+      "companionId": "ch_9",
+      "companionSide": -1
     },
     {
       "id": "ch_11",

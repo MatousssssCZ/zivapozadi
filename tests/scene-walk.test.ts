@@ -1,0 +1,99 @@
+import { describe, it, expect, beforeAll } from 'vitest';
+import path from 'node:path';
+import { tmpDir } from './helpers';
+import { loadProject, type LoadedProject } from '../src/node/projectIO';
+import { generateRadnice } from '../scripts/generate-radnice-demo';
+import { Simulation } from '../src/core/sim/simulation';
+import { characterVisual, localToScene } from '../src/core/render/characterPose';
+import { gaitEvents } from '../src/core/anim/gaitProfile';
+import { visualRoot, BODY_W } from '../src/core/sim/spacing';
+import { depthScaleAt, groundLen } from '../src/core/scene/geometry';
+import { directionFromAngle } from '../src/core/sim/movement';
+
+let lp: LoadedProject;
+beforeAll(async () => {
+  const dir = path.join(await tmpDir(), 'Radnice.zscena');
+  await generateRadnice(dir);
+  lp = await loadProject(dir);
+}, 60_000);
+
+describe('chůze ve scéně (náměstí, 12 postav, 2 dvojice)', () => {
+  it('opřená bota se ve scéně neposouvá (pata během celé podrážky)', () => {
+    const sim = Simulation.create(lp.project, lp.manifests);
+    sim.advanceTo(2);
+    let worst = 0, moved = 0, total = 0;
+    const prev = new Map<string, { x: number; y: number } | null>();
+    for (let i = 0; i < 60 * 40; i++) {
+      sim.step();
+      for (const a of sim.state.agents) {
+        const c = sim.characterOf(a.id)!;
+        const cv = characterVisual(a, sim.manifests[c.assetId], c, lp.project.scene.depth);
+        const ev = gaitEvents(a.anim.gaitW ?? 0);
+        for (const k of [0, 1]) {
+          const q = (a.anim.walkPhase + k * 0.5) % 1;
+          const flat = a.anim.walkBlend > 0.001 && !a.anim.settle && q > ev.footFlat + 0.02 && q < ev.heelRise - 0.02;
+          const hp = cv.pose.heelPts?.[k];
+          if (!hp) continue;
+          const p = localToScene(cv, hp), key = a.id + k, pp = prev.get(key);
+          if (flat && pp) { const d = Math.hypot(p.x - pp.x, p.y - pp.y); worst = Math.max(worst, d); total++; if (d > 0.05) moved++; }
+          prev.set(key, flat ? p : null);
+        }
+      }
+    }
+    console.log(`opora ve scéně: max ${worst.toFixed(3)} px/snímek, posun > 0,05 px v ${moved} z ${total} snímků`);
+    // výjimky jen při převrácení pohledu za chůze (2D zrcadlení prohodí blízkou a vzdálenou nohu)
+    expect(moved / total).toBeLessThan(0.002);
+    expect(worst).toBeLessThan(2);
+  });
+
+  it('dvojice jdou spolu, ostatní postavy se nepřekrývají (hlavně ve stoje)', () => {
+    const sim = Simulation.create(lp.project, lp.manifests);
+    const pairs = lp.project.characters.filter((c) => c.companionId).map((c) => [c.id, c.companionId!] as const);
+    expect(pairs.length).toBe(2);
+    let far = 0, n = 0, overlap = 0, overlapStanding = 0, pairActivities = 0;
+    for (let i = 0; i < 60 * 90; i++) {
+      sim.step();
+      const ags = sim.state.agents;
+      for (const [f, l] of pairs) {
+        const A = ags.find((x) => x.id === f)!, B = ags.find((x) => x.id === l)!;
+        const va = visualRoot(A), vb = visualRoot(B);
+        const d = groundLen(va.x - vb.x, va.y - vb.y) / depthScaleAt(lp.project.scene.depth, vb.y);
+        n++; if (d > 45) far++;
+        if (A.activity) pairActivities++;
+      }
+      for (let x = 0; x < ags.length; x++) for (let y = x + 1; y < ags.length; y++) {
+        const a = ags[x], b = ags[y];
+        if (a.follow?.leaderId === b.id || b.follow?.leaderId === a.id) continue;
+        const va = visualRoot(a), vb = visualRoot(b);
+        const d = groundLen(va.x - vb.x, va.y - vb.y) / depthScaleAt(lp.project.scene.depth, va.y);
+        if (d < BODY_W * 0.5) { overlap++; if (a.speed < 4 && b.speed < 4) overlapStanding++; }
+      }
+    }
+    console.log(`dvojice daleko od sebe: ${(100 * far / n).toFixed(1)} % času; překryvy: ${overlap} snímko-dvojic (ve stoje ${overlapStanding})`);
+    expect(far / n).toBeLessThan(0.05);
+    expect(pairActivities).toBe(0);
+    expect(overlapStanding).toBeLessThan(60); // 1 s ze 90 s pro všech 66 dvojic postav
+    expect(overlap).toBeLessThan(600);
+  });
+
+  it('při chůzi se nepoužívá čistě čelní ani zadní pohled', () => {
+    for (let k = 0; k < 360; k++) {
+      const ang = (k / 180) * Math.PI;
+      for (const cur of [null, 'SE', 'SW', 'NE', 'NW', 'E', 'W'] as const) {
+        const d = directionFromAngle(ang, cur);
+        expect(d === 'S' || d === 'N').toBe(false);
+      }
+    }
+    const sim = Simulation.create(lp.project, lp.manifests);
+    const seen = new Set<string>();
+    for (let i = 0; i < 60 * 60; i++) { sim.step(); for (const a of sim.state.agents) seen.add(a.anim.dir); }
+    expect(seen.has('S') || seen.has('N')).toBe(false);
+  });
+
+  it('dvojice se obnoví z checkpointu beze změny průběhu', () => {
+    const a = Simulation.create(lp.project, lp.manifests); a.advanceTo(20);
+    const b = Simulation.restore(lp.project, lp.manifests, a.snapshot());
+    a.advanceTo(35); b.advanceTo(35);
+    expect(b.stateHash()).toBe(a.stateHash());
+  });
+});

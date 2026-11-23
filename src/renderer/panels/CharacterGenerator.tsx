@@ -194,6 +194,7 @@ export function GeneratorPanel() {
   const [cands, setCands] = useState<{ app: CharacterAppearance; on: boolean }[]>([]);
   const [sel, setSel] = useState(0);
   const [note, setNote] = useState<string | null>(null);
+  const [pairPct, setPairPct] = useState(30);
   const lib = rig?.lib;
   const pals = palettes ?? lib?.palettes.map((p) => p.id) ?? [];
   const combos = useMemo(() => (lib ? countCombos(lib, lib.bodyTemplates[0].id, pals) : 0), [lib, pals.join(',')]);
@@ -218,7 +219,10 @@ export function GeneratorPanel() {
     if (!nodes.length) { store.toast('warn', 'Nejdřív nakreslete trasu – postavy začínají v bodech trasy.'); return; }
     const used = new Set(project.characters.map((c) => c.name));
     const names = NAMES.filter((n) => !used.has(n));
+    // dvojice: z vybraných postav se po dvou spárují (podle podílu), druhá jde vedle první
+    const pairCount = Math.floor((chosen.length * pairPct) / 100 / 2);
     store.edit(`Vložení ${chosen.length} vygenerovaných postav`, (d) => {
+      const startLen = d.characters.length;
       chosen.forEach((c, i) => {
         const ci: CharacterInstance = {
           id: newId('ch'), name: names[i] ?? `Postava ${d.characters.length + 1}`, assetId: rig.assetId,
@@ -228,6 +232,13 @@ export function GeneratorPanel() {
         };
         d.characters.push(ci);
       });
+      for (let k = 0; k < pairCount; k++) {
+        const leader = d.characters[startLen + 2 * k], follower = d.characters[startLen + 2 * k + 1];
+        if (!leader || !follower) break;
+        follower.companionId = leader.id; follower.companionSide = k % 2 === 0 ? 1 : -1;
+        follower.startNodeId = leader.startNodeId;
+        follower.activities = {};
+      }
     });
     store.toast('info', `Do projektu přidáno ${chosen.length} postav. Vzhled je uložen (konkrétní díly, barvy, proporce i seed).`);
     setCands([]);
@@ -248,6 +259,7 @@ export function GeneratorPanel() {
         ))}
       </div>
       <div className="muted small">Různých viditelných kombinací: {combos}</div>
+      <div className="row"><span className="row-label" title="Kolik procent vybraných postav půjde ve dvojicích (druhá z dvojice jde vedle první a nemá vlastní program)">Ve dvojicích %</span><span className="row-field"><NumField testId="gen-pairs" value={pairPct} min={0} max={100} step={10} onCommit={(v) => setPairPct(Math.round(v))} /></span></div>
       <button className="primary" onClick={generate} data-testid="gen-generate">Generovat</button>
       {note && <div className="warn">{note}</div>}
       {cands.length > 0 && <>

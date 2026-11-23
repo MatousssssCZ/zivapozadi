@@ -1,4 +1,6 @@
-import { approachAngle, clamp, dist, wrapAngle } from '../math/vec';
+import { approachAngle, clamp, wrapAngle, type Vec2 } from '../math/vec';
+import { groundLen } from '../scene/geometry';
+const gdist = (a: Vec2, b: Vec2) => groundLen(b.x - a.x, b.y - a.y);
 import type { Direction } from '../anim/manifest';
 import type { AgentState, Waypoint } from './types';
 import type { NavGraph } from '../nav/navGraph';
@@ -10,18 +12,38 @@ const TURN_RATE = 5.5; // rad/s
 
 export const edgeKey = (edgeId: string) => `edge:${edgeId}`;
 
-/** Směr z úhlu pohledu s hysterezí (bez přeskakování na hranici sektorů). */
+/**
+ * Směr z úhlu pohledu s hysterezí (bez přeskakování na hranici sektorů).
+ * Čistě čelní (S) a zadní (N) pohled se nepoužívá: postava je vždy natočená trochu doleva
+ * nebo doprava (SE/SW, NE/NW) – tyto pohledy jsou u malovaných dílů nejspolehlivější.
+ */
 export function directionFromAngle(angle: number, current: Direction | null): Direction {
-  const dirs: Direction[] = ['E', 'SE', 'S', 'SW', 'W', 'NW', 'N', 'NE'];
   const centers: Record<Direction, number> = { E: 0, SE: Math.PI / 4, S: Math.PI / 2, SW: (3 * Math.PI) / 4, W: Math.PI, NW: (-3 * Math.PI) / 4, N: -Math.PI / 2, NE: -Math.PI / 4 };
-  if (current && Math.abs(wrapAngle(angle - centers[current])) < Math.PI / 8 + 0.17) return current;
-  const idx = ((Math.round(wrapAngle(angle) / (Math.PI / 4)) % 8) + 8) % 8;
-  return dirs[idx];
+  const a = wrapAngle(angle);
+  // šířka sektorů: SE/SW a NE/NW pokrývají i svislý směr (dělí se podle vodorovné složky)
+  const sector = (d: Direction): [number, number] => {
+    switch (d) {
+      case 'E': return [-Math.PI / 8, Math.PI / 8];
+      case 'SE': return [Math.PI / 8, Math.PI / 2];
+      case 'SW': return [Math.PI / 2, (7 * Math.PI) / 8];
+      case 'W': return [(7 * Math.PI) / 8, (9 * Math.PI) / 8];
+      case 'NW': return [-(7 * Math.PI) / 8, -Math.PI / 2];
+      case 'NE': return [-Math.PI / 2, -Math.PI / 8];
+      default: return [centers[d] - Math.PI / 8, centers[d] + Math.PI / 8];
+    }
+  };
+  const inSector = (d: Direction, margin: number) => {
+    const [lo, hi] = sector(d), mid = (lo + hi) / 2, half = (hi - lo) / 2;
+    return Math.abs(wrapAngle(a - mid)) <= half + margin;
+  };
+  if (current && current !== 'S' && current !== 'N' && inSector(current, 0.17)) return current;
+  for (const d of ['E', 'SE', 'SW', 'W', 'NW', 'NE'] as Direction[]) if (inSector(d, 0)) return d;
+  return Math.cos(a) >= 0 ? 'SE' : 'SW';
 }
 
 function remainingTo(agent: AgentState, wps: Waypoint[], from: number, to: number): number {
-  let d = dist(agent.pos, wps[from]);
-  for (let k = from; k < to; k++) d += dist(wps[k], wps[k + 1]);
+  let d = gdist(agent.pos, wps[from]);
+  for (let k = from; k < to; k++) d += gdist(wps[k], wps[k + 1]);
   return d;
 }
 
@@ -61,7 +83,17 @@ export function stepMovement(agent: AgentState, g: NavGraph, res: Reservations, 
     const a1 = Math.atan2(a.y - prev.y, a.x - prev.x), a2 = Math.atan2(nx.y - a.y, nx.x - a.x);
     const turn = Math.abs(wrapAngle(a2 - a1));
     const vc = vmax * clamp(1 - turn / 2.4, 0.35, 1);
-    target = Math.min(target, Math.sqrt(vc * vc + 2 * DECEL * dist(agent.pos, a)));
+    target = Math.min(target, Math.sqrt(vc * vc + 2 * DECEL * gdist(agent.pos, a)));
+  }
+  // nechodit bokem ani pozpátku: při velkém rozdílu směru se nejdřív otočit (kroky vždy vpřed)
+  {
+    const wp = wps[r.idx], dx = wp.x - agent.pos.x, dy = wp.y - agent.pos.y;
+    if (Math.hypot(dx, dy) > 1e-6) {
+      const desired = Math.atan2(dy, dx);
+      agent.facing = approachAngle(agent.facing, desired, TURN_RATE * dt);
+      const al = Math.cos(wrapAngle(desired - agent.facing));
+      target = Math.min(target, vmax * clamp((al - 0.35) / 0.55, 0, 1));
+    }
   }
   if (agent.speed < target) agent.speed = Math.min(target, agent.speed + ACCEL * dt);
   else agent.speed = Math.max(target, agent.speed - DECEL * dt);
@@ -71,11 +103,7 @@ export function stepMovement(agent: AgentState, g: NavGraph, res: Reservations, 
   while (move > 0) {
     const wp = wps[r.idx];
     const dx = wp.x - agent.pos.x, dy = wp.y - agent.pos.y;
-    const dd = Math.hypot(dx, dy);
-    if (dd > 1e-6) {
-      const desired = Math.atan2(dy, dx);
-      agent.facing = approachAngle(agent.facing, desired, TURN_RATE * dt);
-    }
+    const dd = groundLen(dx, dy); // rychlost je fyzická: do hloubky se po obrazovce postupuje pomaleji
     if (dd > move) { agent.pos = { x: agent.pos.x + (dx / dd) * move, y: agent.pos.y + (dy / dd) * move }; move = 0; break; }
     // Dosažen bod trasy.
     agent.pos = { x: wp.x, y: wp.y }; move -= dd;

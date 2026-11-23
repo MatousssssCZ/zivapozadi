@@ -2,7 +2,7 @@ import type { Vec2 } from '../math/vec';
 import type { RngState } from '../math/rng';
 import type { AnimState } from '../anim/animator';
 
-export const SIM_STATE_VERSION = 1;
+export const SIM_STATE_VERSION = 2;
 export const SIM_DT = 1 / 60;
 export const STEPS_PER_SECOND = 60;
 
@@ -59,6 +59,20 @@ export interface AgentState {
   speedFactor?: number;
   /** Srozumitelný popis, na co postava čeká (pro panel vlastností). */
   status: string;
+  /** Vizuální posun od polohy na trase (px scény) – vyhýbání, pruhy; pohání i nohy (žádné klouzání). */
+  off?: Vec2;
+  /** Příčná rychlost posunu (px/s) – plynulé vyhýbání. */
+  offLatV?: number;
+  /** Rozpracovaný úkrok stranou v klidu (cílový posun, fyzické souřadnice země). */
+  sidestep?: Vec2 | null;
+  /** Vizuální kořen v minulém kroku (pro skutečnou rychlost a směr pohybu nohou). */
+  visPrev?: Vec2;
+  /** Směr skutečného pohybu kořene (radiány) – promítnutí kroků na zem. */
+  groundHeading?: number;
+  /** Omezení rychlosti z rozestupů (následování pomalejšího), px/s; null = bez omezení. */
+  speedCap?: number | null;
+  /** Dvojice: tato postava jde s vůdcem (id) na dané straně. */
+  follow?: { leaderId: string; side: number } | null;
 }
 
 export type PropKind = 'cup';

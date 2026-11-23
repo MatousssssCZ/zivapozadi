@@ -7,14 +7,15 @@ import { ALL_DIRECTIONS, resolveDirection, resolveClip, type CharacterManifest }
 import { initialAnimState, playAction, stepAnimator, stopAction } from '../anim/animator';
 import { getActivity } from '../activities/registry';
 import { characterVisual, localToScene, gaitContextFor } from '../render/characterPose';
-import { depthScaleAt } from '../scene/geometry';
+import { depthScaleAt, groundLen, groundAngle, GROUND_DEPTH_K } from '../scene/geometry';
 import { Reservations } from './reservations';
 import { stepMovement, directionFromAngle, turnInPlace } from './movement';
 import type { SimContext, ResolvedPoint, CharacterControl } from './context';
 import { ALL_VIEWS } from '../anim/skeleton';
 import { gaitEvents } from '../anim/gaitProfile';
 import { SIM_DT, SIM_STATE_VERSION, type AgentState, type SimState, type Waypoint, type PropState, type LogEntry } from './types';
-import { dist } from '../math/vec';
+import { dist, approachAngle, type Vec2 } from '../math/vec';
+import { stepSpacing, stepFollower, visualRoot, PAIR_GAP } from './spacing';
 
 export interface Diagnostic { level: 'warning' | 'error'; message: string; ref?: string }
 
@@ -53,6 +54,7 @@ export class Simulation {
     const sim = new Simulation(project, manifests, st);
     for (const ev of project.schedule) st.schedule[ev.id] = { status: 'pending' };
     for (const c of project.characters) sim.spawnAgent(c);
+    sim.linkPairs();
     return sim;
   }
 
@@ -142,6 +144,24 @@ export class Simulation {
     a.wander.waitUntil = randRange(a.rng, 0.3, 2.5);
     for (const [type, cfg] of Object.entries(c.activities)) if (cfg.enabled) a.cooldowns[type] = randRange(a.rng, cfg.firstDelayMin, cfg.firstDelayMax);
     this.state.agents.push(a);
+  }
+
+  /** Dvojice: druhý člen začne vedle vůdce a dál ho následuje. */
+  private linkPairs() {
+    for (const c of this.project.characters) {
+      if (!c.companionId || c.companionId === c.id) continue;
+      const f = this.state.agents.find((x) => x.id === c.id), l = this.state.agents.find((x) => x.id === c.companionId);
+      const lc = this.chars.get(c.companionId);
+      if (!f || !l || !lc) { this.addDiag('warning', `${c.name}: postava do dvojice (${c.companionId}) neexistuje – chodí sama.`, c.id); continue; }
+      if (lc.companionId) { this.addDiag('warning', `${c.name}: vůdce dvojice ${lc.name} sám někoho následuje – ${c.name} chodí sama.`, c.id); continue; }
+      if (this.state.agents.some((x) => x.follow?.leaderId === l.id)) { this.addDiag('warning', `${c.name}: ${lc.name} už má dvojici – ${c.name} chodí sama.`, c.id); continue; }
+      const side = c.companionSide === -1 ? -1 : 1;
+      f.follow = { leaderId: l.id, side };
+      const g = PAIR_GAP * this.scaleOf(l);
+      f.facing = l.facing;
+      f.pos = { x: l.pos.x - Math.sin(l.facing) * side * g, y: l.pos.y + Math.cos(l.facing) * side * g };
+      f.loc = l.loc; f.cooldowns = {};
+    }
   }
 
   log(level: LogEntry['level'], msg: string, agentId?: string) {
@@ -266,6 +286,24 @@ export class Simulation {
     };
   }
 
+  /** Při došlapu uloží polohu paty ve scéně – od té chvíle je opora pevná ve světě. */
+  private latchFootAnchors(a: AgentState, c: CharacterInstance, m: CharacterManifest, heelsNow: (Vec2 | null)[] | null = null): void {
+    const an = a.anim.anchors;
+    if (a.anim.settle && a.anim.walkBlend > 0) return; // dokročení: kotvy zůstávají (rozplynou se v kostře)
+    if (!an || a.anim.settle || m.backend !== 'skeleton') { if (a.anim.anchorsXY) a.anim.anchorsXY = undefined; return; }
+    const xy = (a.anim.anchorsXY ??= [null, null]);
+    for (let i = 0; i < 2; i++) {
+      if (an[i] == null) { xy[i] = null; continue; }
+      if (xy[i]?.key === an[i]) continue;
+      xy[i] = null;
+      const hn = heelsNow?.[i];
+      if (hn) { xy[i] = { x: hn.x, y: hn.y, key: an[i]!, h: a.groundHeading ?? a.facing }; continue; }
+      const cv = characterVisual(a, m, c, this.project.scene.depth);
+      const hp = cv.pose.heelPts?.[i];
+      if (hp) { const p = localToScene(cv, hp); xy[i] = { x: p.x, y: p.y, key: an[i]!, h: a.groundHeading ?? a.facing }; }
+    }
+  }
+
   handPosition(a: AgentState) {
     const c = this.chars.get(a.id)!;
     const cv = characterVisual(a, this.manifests[c.assetId], c, this.project.scene.depth);
@@ -276,6 +314,9 @@ export class Simulation {
   step(): void {
     const t = this.time();
     this.stepSchedule(t);
+    // 1) pohyb (trasy, dvojice), 2) rozestupy, 3) animace a rozhodování
+    for (const a of this.state.agents) this.stepMotion(a);
+    stepSpacing(this.state.agents.map((a) => ({ a, scale: this.scaleOf(a) })), SIM_DT);
     for (const a of this.state.agents) this.stepAgent(a, t);
     this.stepProps(t);
     this.state.step++;
@@ -288,7 +329,7 @@ export class Simulation {
       if (t < ev.time || (rt.nextTry !== undefined && t < rt.nextTry)) continue;
       const runner = getActivity(ev.activityType);
       const zones = this.project.zones.filter((z) => z.enabled && z.activityType === ev.activityType && (!ev.zoneId || z.id === ev.zoneId));
-      const candidates = this.state.agents.filter((a) => (!ev.characterId || a.id === ev.characterId) && !a.activity && !a.pendingActivity);
+      const candidates = this.state.agents.filter((a) => (!ev.characterId || a.id === ev.characterId) && !a.activity && !a.pendingActivity && !a.follow);
       let started = false, reason = '';
       if (!runner || !zones.length) reason = 'činnost nebo zóna neexistuje';
       else if (!candidates.length) reason = ev.characterId ? 'postava je zaneprázdněná nebo neexistuje' : 'žádná volná postava';
@@ -310,16 +351,33 @@ export class Simulation {
   }
 
   private vmax(a: AgentState): number {
+    const own = this.vmaxOwn(a);
+    // vůdce dvojice jde tempem pomalejšího z dvojice
+    const f = this.state.agents.find((x) => x.follow?.leaderId === a.id);
+    return f ? Math.min(own, this.vmaxOwn(f) * 0.97) : own;
+  }
+
+  private vmaxOwn(a: AgentState): number {
     const c = this.chars.get(a.id)!;
     return c.walkSpeed * a.pace * (a.speedFactor ?? 1) * depthScaleAt(this.project.scene.depth, a.pos.y) * c.baseScale;
   }
 
-  private stepAgent(a: AgentState, t: number) {
-    const c = this.chars.get(a.id)!;
-    const m = this.manifests[c.assetId];
-    // 1) pohyb po trase
+  private scaleOf(a: AgentState): number {
+    return this.chars.get(a.id)!.baseScale * depthScaleAt(this.project.scene.depth, a.pos.y);
+  }
+
+  private motion = new Map<string, { arrived: boolean; waitingNarrow: boolean }>();
+
+  /** Pohyb po trase (nebo vedle vůdce dvojice) a natáčení v klidu. */
+  private stepMotion(a: AgentState) {
+    if (a.follow) {
+      const leader = this.state.agents.find((x) => x.id === a.follow!.leaderId);
+      if (leader) { stepFollower(a, leader, this.scaleOf(a), this.vmax(a), SIM_DT); this.motion.set(a.id, { arrived: false, waitingNarrow: false }); return; }
+      a.follow = null;
+    }
     const dest = a.route?.dest ?? null;
-    const mv = stepMovement(a, this.graph, this.res, SIM_DT, this.vmax(a));
+    const cap = a.speedCap;
+    const mv = stepMovement(a, this.graph, this.res, SIM_DT, cap != null ? Math.max(0, Math.min(this.vmax(a), cap)) : this.vmax(a));
     if (mv.arrived && dest) a.loc = dest;
     if (!a.route) {
       if (a.look) {
@@ -327,6 +385,20 @@ export class Simulation {
         turnInPlace(a, target, SIM_DT);
       }
     }
+    this.motion.set(a.id, mv);
+  }
+
+  private stepAgent(a: AgentState, t: number) {
+    const c = this.chars.get(a.id)!;
+    const m = this.manifests[c.assetId];
+    const mv = this.motion.get(a.id) ?? { arrived: false, waitingNarrow: false };
+    // skutečný pohyb vizuálního kořene (trasa + rozestupy) pohání nohy
+    const vr = visualRoot(a), vp = a.visPrev ?? vr;
+    const vdx = vr.x - vp.x, vdy = vr.y - vp.y, visSpeed = groundLen(vdx, vdy) / SIM_DT;
+    // směr kroků: plynule za skutečným pohybem (bez šumu malých posunů)
+    const gTarget = visSpeed > 3 ? Math.atan2(vdy / GROUND_DEPTH_K, vdx) : groundAngle(a.facing);
+    a.groundHeading = approachAngle(a.groundHeading ?? groundAngle(a.facing), gTarget, 6 * SIM_DT);
+    a.visPrev = vr;
     // změna pohledu jen při dvojí opoře (nebo v klidu), aby opřená bota neposkočila
     const wantDir = directionFromAngle(a.facing, a.anim.dir);
     if (wantDir !== a.anim.dir) {
@@ -336,9 +408,17 @@ export class Simulation {
     // 2) přehrávání animací (události z animace řídí navazující logiku)
     // chůze řízená drahou a kontakty (délka nohy a bota postavy; měřítko scény = hloubka × základní měřítko)
     const scale = c.baseScale * depthScaleAt(this.project.scene.depth, a.pos.y);
-    const events = stepAnimator(a.anim, m, SIM_DT, a.speed, this.vmax(a), scale, gaitContextFor(m, c));
+    // rozejití z (dokračujícího) klidu: kotvy převezmou místa, kde boty právě stojí (žádný skok)
+    let heelsNow: (Vec2 | null)[] | null = null;
+    if (a.anim.settle && visSpeed > 0.5 && m.backend === 'skeleton') {
+      const cv = characterVisual(a, m, c, this.project.scene.depth);
+      heelsNow = [0, 1].map((i) => (cv.pose.heelPts ? localToScene(cv, cv.pose.heelPts[i]) : null));
+    }
+    const events = stepAnimator(a.anim, m, SIM_DT, visSpeed, this.vmax(a), scale, gaitContextFor(m, c));
+    this.latchFootAnchors(a, c, m, heelsNow);
     if (mv.waitingNarrow) a.status = 'Čeká před úzkým průchodem';
     // 3) rozhodování + účast v činnosti
+    if (a.follow) { const l = this.state.agents.find((x) => x.id === a.follow!.leaderId); a.status = l ? `Jde s postavou ${l.name}` : 'Stojí'; return; }
     if (a.activity) { this.stepActivity(a, events); return; }
     if (a.pendingActivity && !a.route) { this.tryStartPending(a); if (a.activity) return; }
     if (a.route) { if (!mv.waitingNarrow) a.status = a.pendingActivity ? 'Jde k činnosti' : 'Prochází se'; return; }

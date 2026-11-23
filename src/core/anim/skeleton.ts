@@ -117,6 +117,7 @@ export interface SkeletonPose {
   /** natočení chodidel (rad) – jen při přenosu nohy */
   feet: [number, number];
   /** zápěstí přední ruky (úchop se dopočítá z dílu ruky) */ handR: Vec2;
+  /** body paty obou bot (lokálně) – kotva při došlapu */ heelPts?: [Vec2, Vec2];
 }
 
 export function ik(root: Vec2, target: Vec2, l1: number, l2: number, bendSign: number): Limb {
@@ -147,10 +148,21 @@ function weightShift(t: number, period: number, seed: number): number {
  * Chůze: každá noha má stojnou fázi, během níž se kotník vůči pánvi posouvá lineárně dozadu přesně
  * o dráhu, kterou tělo urazí (fáze cyklu = uražená dráha / délka cyklu) ⇒ stojná noha na zemi neklouže.
  */
-export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolean, a: AnimState, holding: boolean, motion: MotionParams, seed = 0): SkeletonPose {
+export interface PoseOptions {
+  /** Skutečný směr chůze v lokálních souřadnicích obrazu (jednotkový vektor; x vpřed). Bez něj směr podle pohledu. */
+  ground?: Vec2;
+  /** Opěrné body pat ve světě převedené do lokálních souřadnic (null = noha bez kotvy). */
+  anchors?: [Anchor | null, Anchor | null];
+}
+/** Kotva paty: poloha a směr chodidla na zemi (lokálně), uložené při došlapu. */
+export interface Anchor { x: number; y: number; gx?: number; gy?: number }
+
+export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolean, a: AnimState, holding: boolean, motion: MotionParams, seed = 0, opts: PoseOptions = {}): SkeletonPose {
   const v = tpl.views[view] ?? tpl.views.side ?? Object.values(tpl.views)[0]!;
   const B = tpl.bones, G = tpl.gait, I = tpl.idle;
   const fx = v.forward.x, fy = v.forward.y;
+  // promítnutí země: skutečný směr pohybu (opora pak ve scéně drží i v zatáčkách); jinak stylizovaný pohled
+  const gfx = opts.ground ? opts.ground.x : fx, gfy = opts.ground ? opts.ground.y : fy * 0.35;
   const ns = v.nearSide ?? 1; // strana blízkých končetin
   const b = a.walkBlend;
   const ph = a.walkPhase;
@@ -172,6 +184,7 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
   const idleFeet: [number, number] = a.startRest ?? [0.03 * L, -0.03 * L];
   const sideX = (i: number) => (i === 0 ? -1 : 1) * ns;
   let feet: { u: number; h: number; theta: number }[];
+  const settleShift: Vec2[] = [{ x: 0, y: 0 }, { x: 0, y: 0 }];
   let gaitH = (meanPelvisHeight(w) + sampleGait('pelvisVerticalLegLen', q0, w) * motion.bob) * L;
   const idleH = AH + L * 0.99;
   let pelvisH: number;
@@ -181,6 +194,11 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
     const fr = [footAt(st.phase, st.stride, st.w, geom, st.heelRel?.[0] ?? undefined), footAt(st.phase + 0.5, st.stride, st.w, geom, st.heelRel?.[1] ?? undefined)];
     const rest = restFeet(st.phase, st.stride, st.w, geom, st.heelRel);
     feet = fr.map((f, i) => ({ u: f.u + (rest[i] - f.u) * tt, h: f.h + (AH - f.h) * tt + (f.contact === 'swing' ? Math.sin(Math.PI * tt) * 0.02 * L : 0), theta: f.theta * (1 - tt) }));
+    // opřené nohy: navázat na světovou kotvu z chůze (rozdíl vůči odhadu z dráhy se během dokročení rozplyne)
+    for (let i = 0; i < 2; i++) {
+      const o = opts.anchors?.[i], hr = st.heelRel?.[i];
+      if (o && hr != null && fr[i].contact !== 'swing') settleShift[i] = { x: (o.x - (sideX(i) * v.hipSpread + gfx * hr)) * (1 - tt), y: (o.y - gfy * hr) * (1 - tt) };
+    }
     const hFrozen = (meanPelvisHeight(st.w) + sampleGait('pelvisVerticalLegLen', st.phase, st.w) * motion.bob) * L;
     pelvisH = hFrozen + (idleH - hFrozen) * tt;
     gaitH = pelvisH;
@@ -188,7 +206,7 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
     // rozejití / klid: z klidových poloh do chůze; zvedající se noha se odlehčí a vykročí obloukem
     feet = gaitFeet.map((f, i) => ({ u: idleFeet[i] + (f.u - idleFeet[i]) * b, h: AH + (f.h - AH) * b, theta: f.theta * b }));
     pelvisH = idleH + (gaitH - idleH) * b;
-  } else { feet = gaitFeet; pelvisH = gaitH; }
+  } else { feet = gaitFeet.slice(); pelvisH = gaitH; }
   const restS = a.settle ? restFeet(a.settle.phase, a.settle.stride, a.settle.w, geom, a.settle.heelRel) : null;
   const idleCenter = restS ? (restS[0] + restS[1]) / 2 : (idleFeet[0] + idleFeet[1]) / 2;
   const centerShift = idleCenter * (1 - b) * (a.settle ? smoothstep(a.settle.t) : 1); // v klidu je pánev nad chodidly
@@ -199,16 +217,33 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
   const obl = sampleGait('pelvisObliquityDeg', q0, w) * DEG * b * (front ? 1 : 0.3);
   const halfHip = 0.08 * L;
   const shiftIdle = weightShift(tIdle, I.shiftPeriod, seed) * I.shiftAmp * (1 - b) * (front ? 1 : 0.3);
-  const hip = { x: -ns * lateral * 0.7 + shiftIdle + fx * centerShift, y: -pelvisH + fy * centerShift * 0.35 };
+  const hip = { x: -ns * lateral * 0.7 + shiftIdle + gfx * centerShift, y: -pelvisH + gfy * centerShift };
   const hipRoots = [0, 1].map((i) => {
     const sgn = i === 0 ? 1 : -1; // referenční (pravá) = noha 0
     const fwd = sgn * halfHip * Math.sin(yaw) * (front ? 1 : 0.6);
-    return { x: hip.x + sideX(i) * v.hipSpread + fx * fwd, y: hip.y - sgn * halfHip * Math.sin(obl) + fy * fwd * 0.35 };
+    return { x: hip.x + sideX(i) * v.hipSpread + gfx * fwd, y: hip.y - sgn * halfHip * Math.sin(obl) + gfy * fwd };
   });
   // dosah: opřená noha nesmí být natažená přes délku. Odvalující se noha nejdřív víc zvedne patu
   // (rotace boty kolem pevného přednoží), teprve pak se sníží pánev. Opora se nikdy neposouvá.
   const maxD = (T + Sh) * 0.9995;
-  const ankleXY = (f: { u: number; h: number }, i: number) => ({ x: sideX(i) * v.hipSpread + fx * f.u, y: -f.h + fy * f.u * 0.35 });
+  // Opřená noha s kotvou: chodidlo se počítá vůči kotvě paty (pevný bod ve světě), jinak vůči pánvi.
+  const anchored = [0, 1].map((i) => !!opts.anchors?.[i] && !a.settle && b > 0);
+  const isAnch = (i: number) => anchored[i] && gaitFeet[i].contact !== 'swing';
+  const baseOf = (i: number): Vec2 => (isAnch(i) ? opts.anchors![i]! : { x: sideX(i) * v.hipSpread, y: 0 });
+  // opřená bota leží na zemi ve směru, ve kterém došlápla (i když tělo mezitím zatáčí)
+  const gOf = (i: number): Vec2 => { const o = opts.anchors?.[i]; return isAnch(i) && o && o.gx !== undefined ? { x: o.gx, y: o.gy! } : { x: gfx, y: gfy }; };
+  // pojistka: kotva, která se od odhadu z dráhy vzdálí víc než o MIS (prudký úhyb, otočka), se k němu přitáhne
+  const MIS = 0.3 * L;
+  const anchorPull = [0, 1].map((i) => {
+    const o = opts.anchors?.[i];
+    if (!o || !anchored[i] || rel[i] == null) return { x: 0, y: 0 };
+    const est = { x: sideX(i) * v.hipSpread + gfx * rel[i]!, y: gfy * rel[i]! };
+    const dx = o.x - est.x, dy = o.y - est.y, m = Math.hypot(dx, dy);
+    return m > MIS ? { x: -dx * (1 - MIS / m), y: -dy * (1 - MIS / m) } : { x: 0, y: 0 };
+  });
+  const anchorAt = (i: number): Vec2 => { const o = opts.anchors![i]!; return { x: o.x + anchorPull[i].x, y: o.y + anchorPull[i].y }; };
+  const ankleXY = (f: { u: number; h: number }, i: number) => { const o = isAnch(i) ? anchorAt(i) : baseOf(i), g = gOf(i); return { x: o.x + g.x * f.u, y: o.y - f.h + g.y * f.u }; };
+  for (let i = 0; i < 2; i++) if (anchored[i] && gaitFeet[i].contact !== 'swing') { const f = footAt(qs[i], S, w, geom, 0); feet[i] = b < 1 ? { ...f, theta: f.theta * b } : f; }
   const reachAdjust = (f: { u: number; h: number; theta: number }, i: number) => {
     const reach = (ff: { u: number; h: number }) => Math.hypot(ankleXY(ff, i).x - hipRoots[i].x, ankleXY(ff, i).y - hipRoots[i].y);
     if (reach(f) <= maxD) return f;
@@ -220,6 +255,7 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
     for (let k = 0; k < 24; k++) { const mid = (lo + hi) / 2; if (reach(at(mid)) > maxD) lo = mid; else hi = mid; }
     return at(hi);
   };
+  const swingShift: Vec2[] = [{ x: 0, y: 0 }, { x: 0, y: 0 }];
   if (!a.settle && b >= 1) {
     const ev = gaitEvents(w);
     for (let i = 0; i < 2; i++) {
@@ -229,14 +265,33 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
         // úpravu z konce odvalení plynule přenést do začátku švihu (žádné cuknutí při odlepení)
         const sw = (qs[i] - ev.toeOff) / (1 - ev.toeOff);
         if (sw < 0.3) {
-          const f0 = footAt(ev.toeOff - 1e-6, S, w, geom, rel[i] ?? undefined), f1 = reachAdjust(f0, i);
           const k = 1 - smoothstep(sw / 0.3);
+          const f0 = footAt(ev.toeOff - 1e-6, S, w, geom, rel[i] ?? undefined);
+          let f1 = reachAdjust(f0, i);
+          if (anchored[i]) {
+            // skutečný konec opory (z kotvy, včetně úpravy dosahu) → posun v obraze vůči odhadu z dráhy
+            const oa = opts.anchors![i]!, o = anchorAt(i), ag = oa.gx !== undefined ? { x: oa.gx, y: oa.gy! } : { x: gfx, y: gfy };
+            const at = (ff: { u: number; h: number }) => ({ x: o.x + ag.x * ff.u, y: o.y - ff.h + ag.y * ff.u });
+            const reach = (ff: { u: number; h: number }) => Math.hypot(at(ff).x - hipRoots[i].x, at(ff).y - hipRoots[i].y);
+            let fa: { u: number; h: number; theta: number } = footAt(ev.toeOff - 1e-6, S, w, geom, 0);
+            if (reach(fa) > maxD) {
+              const toeU = fa.u - (-geom.toe * Math.cos(fa.theta) - geom.AH * Math.sin(fa.theta));
+              const rot = (th: number) => ({ u: toeU + (-geom.toe * Math.cos(th) - geom.AH * Math.sin(th)), h: -geom.toe * Math.sin(th) + geom.AH * Math.cos(th), theta: th });
+              let lo = fa.theta, hi = -1.45;
+              if (reach(rot(hi)) > maxD) fa = rot(hi);
+              else { for (let n = 0; n < 24; n++) { const mid = (lo + hi) / 2; if (reach(rot(mid)) > maxD) lo = mid; else hi = mid; } fa = rot(hi); }
+            }
+            const pA = at(fa);
+            const pE = { x: sideX(i) * v.hipSpread + gfx * f0.u, y: -f0.h + gfy * f0.u };
+            swingShift[i] = { x: (pA.x - pE.x) * k, y: (pA.y - pE.y) * k };
+            f1 = { ...f0, theta: fa.theta };
+          }
           feet[i] = { u: feet[i].u + (f1.u - f0.u) * k, h: feet[i].h + (f1.h - f0.h) * k, theta: feet[i].theta + (f1.theta - f0.theta) * k };
         }
       }
     }
   }
-  const ankles: Vec2[] = feet.map((f, i) => ankleXY(f, i));
+  const ankles: Vec2[] = feet.map((f, i) => { const p = ankleXY(f, i); return { x: p.x + swingShift[i].x + settleShift[i].x, y: p.y + swingShift[i].y + settleShift[i].y }; });
   let lower = 0;
   for (let i = 0; i < 2; i++) {
     const inContact = a.settle || b < 1 || gaitFeet[i].contact !== 'swing';
@@ -247,6 +302,8 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
   if (lower > 0) { hip.y += lower; for (const r of hipRoots) r.y += lower; }
   const legs = [0, 1].map((i) => ik(hipRoots[i], ankles[i], T, Sh, -1)) as [Limb, Limb];
   const footAng = feet.map((f) => -f.theta * (Math.abs(fx) > 0.9 ? 1 : 0.75));
+  // body paty v lokálních souřadnicích (pro uložení kotvy při došlapu)
+  const heelPts = ankles.map((A, i) => { const g = gOf(i), th = feet[i].theta, hu = -geom.heel * Math.cos(th) + geom.AH * Math.sin(th), hh = -geom.heel * Math.sin(th) - geom.AH * Math.cos(th); return { x: A.x + g.x * hu, y: A.y - hh + g.y * hu }; }) as [Vec2, Vec2];
   void qs;
 
   // --- trup, krk, hlava: předklon a jeho kmitání z tabulky, hlava stabilizovaná (absolutní pitch)
@@ -325,7 +382,7 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
     }
   }
   const arms = [backTarget ? ik(backRoot, backTarget, B.upperArm, B.forearm, 1) : armBackFK, frontTarget ? ik(frontRoot, frontTarget, B.upperArm, B.forearm, 1) : armFrontFK] as [Limb, Limb];
-  return { view, mirror, root: { x: 0, y: 0 }, hip, neck, shoulder, head, headTilt, torsoAngle, legs, arms, feet: [footAng[0], footAng[1]], handR: arms[1].end };
+  return { view, mirror, root: { x: 0, y: 0 }, hip, neck, shoulder, head, headTilt, torsoAngle, legs, arms, feet: [footAng[0], footAng[1]], handR: arms[1].end, heelPts };
 }
 
 /** Geometrie chůze ze šablony (výchozí bota podle zadání: pata 0,042 L, přednoží 0,113 L). */

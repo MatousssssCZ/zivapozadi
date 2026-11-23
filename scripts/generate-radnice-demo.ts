@@ -110,6 +110,11 @@ export async function generateRadnice(dir: string): Promise<ProjectFile> {
     activities: { coffee: names[i] === 'Cyril' ? { enabled: false, firstDelayMin: 0, firstDelayMax: 0, intervalMin: 90, intervalMax: 180 }
       : { enabled: true, firstDelayMin: 4 + i * 6, firstDelayMax: 10 + i * 6, intervalMin: 70, intervalMax: 160 } },
   }));
+  // dvě dvojice: Františka jde s Emilem, Jana s Ivanem
+  for (const [f, l, side] of [['ch_6', 'ch_5', 1], ['ch_10', 'ch_9', -1]] as const) {
+    const fc = p.characters.find((c) => c.id === f)!, lc = p.characters.find((c) => c.id === l)!;
+    fc.companionId = l; fc.companionSide = side; fc.startNodeId = lc.startNodeId; fc.activities = {};
+  }
   p.schedule = [{ id: 'ev_cyril', name: 'Cyril jde na kávu', time: 20, activityType: 'coffee', characterId: 'ch_3', zoneId: 'zone_kava', onUnavailable: 'wait', waitLimit: 40 }];
   p.export = { ...p.export, durationSec: 60, chunkSec: 20 };
   await saveProject(dir, p);

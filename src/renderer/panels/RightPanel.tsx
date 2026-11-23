@@ -187,6 +187,10 @@ function CharacterProps({ id, p }: { id: string; p: ProjectFile }) {
         <Row label="Rychlost chůze"><NumField value={c.walkSpeed} min={10} max={200} step={2} onCommit={(v) => set('Rychlost', (x) => { x.walkSpeed = v; })} /></Row>
         <Row label="Měřítko"><NumField value={c.baseScale} min={0.3} max={3} step={0.05} onCommit={(v) => set('Měřítko postavy', (x) => { x.baseScale = v; })} /></Row>
         <Check label="Volná procházka po trasách" value={c.wander} onChange={(v) => set('Procházka', (x) => { x.wander = v; })} />
+        <Row label="Chodí ve dvojici s"><Select value={c.companionId ?? ''} options={[{ value: '', label: '— sám/sama —' }, ...p.characters.filter((o) => o.id !== c.id && !o.companionId).map((o) => ({ value: o.id, label: o.name }))]}
+          onChange={(v) => set('Dvojice', (x) => { x.companionId = v || null; if (v) { const l = p.characters.find((o) => o.id === v); if (l) x.startNodeId = l.startNodeId; } })} /></Row>
+        {c.companionId && <Row label="Strana"><Select value={String(c.companionSide === -1 ? -1 : 1)} options={[{ value: '1', label: 'vpravo od partnera' }, { value: '-1', label: 'vlevo od partnera' }]} onChange={(v) => set('Strana ve dvojici', (x) => { x.companionSide = Number(v); })} /></Row>}
+        {c.companionId && <div className="muted small">Ve dvojici jde postava vedle partnera, přizpůsobí mu tempo a čeká s ním; vlastní činnosti a plánované události nemá.</div>}
         {(['coat', 'hat', 'scarf', 'trousers', 'skin'] as const).map((k) => (
           <Row key={k} label={{ coat: 'Kabát', hat: 'Čepice', scarf: 'Šála', trousers: 'Kalhoty', skin: 'Pleť' }[k]}>
             <input type="color" value={c.palette[k]} onChange={(e) => set('Barva', (x) => { x.palette[k] = e.target.value; })} />

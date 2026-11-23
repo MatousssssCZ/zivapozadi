@@ -1,8 +1,8 @@
 import type { CharacterManifest, Direction, LoopMode, AnimEvent } from './manifest';
 import { resolveClip } from './manifest';
-import { clamp } from '../math/vec';
+import { clamp, smoothstep } from '../math/vec';
 import { LEG_PHYS_M, speedBlend, strideLegLen } from './gaitProfile';
-import { restFeet, startPhase, heelAtContact, type FootGeom } from './gaitKinematics';
+import { restFeet, startPhase, heelAtContact, footAt, type FootGeom } from './gaitKinematics';
 import { gaitEvents } from './gaitProfile';
 
 /** Poloha opěrných pat vůči pánvi ze světových kotev (null = noha bez kotvy). */
@@ -31,6 +31,8 @@ export interface AnimState {
   /** Uražená dráha (jednotky postavy) a světové kotvy pat obou nohou (dráha, kde je pata opřená). */
   dist?: number;
   anchors?: [number | null, number | null];
+  /** Tytéž kotvy pat ve scéně (px) + klíč kotvy dráhy, ke které patří (opora pak neklouže ani v zatáčce či při změně hloubky). */
+  anchorsXY?: [{ x: number; y: number; key: number; h?: number } | null, { x: number; y: number; key: number; h?: number } | null];
 }
 
 /** Údaje o postavě potřebné pro chůzi (délka nohy, geometrie boty, individuální délka kroku). */
@@ -92,10 +94,17 @@ export function stepAnimator(a: AnimState, m: CharacterManifest, dt: number, spe
     const targetS = strideLegLen(vMps) * gait.legLen * gait.strideScale;
     const targetW = speedBlend(vMps);
     if (speed > 0.5) {
-      if (a.stride === undefined || a.walkBlend < 0.02) {
-        // rozejití z místa: vpředu stojící noha zůstane, zadní vykročí; první krok je kratší (nízká rychlost)
+      if (a.stride === undefined || a.walkBlend < 0.02 || a.settle) {
+        // rozejití z místa: vpředu stojící noha zůstane, zadní vykročí; první krok je kratší (nízká rychlost).
+        // Rozejití během dokračování (např. po otočce na místě) začíná z aktuální polohy chodidel.
+        let rest: [number, number] = [0.03 * gait.legLen, -0.03 * gait.legLen];
+        if (a.settle) {
+          const st = a.settle, tt = smoothstep(st.t);
+          const r = restFeet(st.phase, st.stride, st.w, gait.foot, st.heelRel);
+          rest = [0, 1].map((i) => { const f = footAt(st.phase + i * 0.5, st.stride, st.w, gait.foot, st.heelRel?.[i] ?? undefined); return f.u + (r[i] - f.u) * tt; }) as [number, number];
+          a.walkBlend = 0;
+        }
         a.stride = targetS; a.gaitW = targetW;
-        const rest: [number, number] = a.settle ? restFeet(a.settle.phase, a.settle.stride, a.settle.w, gait.foot, a.settle.heelRel) : [0.03 * gait.legLen, -0.03 * gait.legLen];
         if (a.walkBlend < 0.02) {
           a.walkPhase = startPhase(rest, a.stride, a.gaitW, gait.foot); a.startRest = rest;
           // stojná noha: kotva paty tam, kde chodidlo stojí; švihová dostane kotvu až při došlapu

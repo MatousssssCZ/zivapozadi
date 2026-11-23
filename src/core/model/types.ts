@@ -142,6 +142,10 @@ export interface CharacterInstance {
   wander: boolean;
   /** Vzhled skládané postavy (identita z generátoru) – jen u manifestů s backendem `skeleton`. */
   appearance?: import('../anim/partLibrary').CharacterAppearance;
+  /** Dvojice: tato postava chodí vedle uvedené postavy (vůdce dvojice) a nemá vlastní program. */
+  companionId?: string | null;
+  /** Strana vedle vůdce: 1 = vpravo, −1 = vlevo (výchozí 1). */
+  companionSide?: number;
 }
 
 export type UnavailablePolicy = 'wait' | 'skip' | 'report';

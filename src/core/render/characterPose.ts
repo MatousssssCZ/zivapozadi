@@ -6,8 +6,8 @@ import type { GaitContext } from '../anim/animator';
 import type { DepthSettings } from '../model/types';
 import type { CharacterAppearance } from '../anim/partLibrary';
 import { resolveView } from '../anim/partLibrary';
-import { skeletonPose, viewForDirection, footGeomOf, type SkeletonPose, type ViewId } from '../anim/skeleton';
-import { depthScaleAt } from '../scene/geometry';
+import { skeletonPose, viewForDirection, footGeomOf, type SkeletonPose, type ViewId, type PoseOptions, type Anchor } from '../anim/skeleton';
+import { depthScaleAt, groundAngle, GROUND_DEPTH_K } from '../scene/geometry';
 import { assembleRig, scaledTemplate, type RigAssembly } from './rigRenderer';
 import type { Vec2 } from '../math/vec';
 import { hashString } from '../math/rng';
@@ -32,17 +32,16 @@ export interface CharacterLook { baseScale: number; appearance?: CharacterAppear
  */
 export function characterVisual(agent: AgentState, m: CharacterManifest, look: CharacterLook, depth: DepthSettings): CharacterVisual {
   const scale = look.baseScale * depthScaleAt(depth, agent.pos.y);
-  // Mírné boční odsazení při chůzi (aby se protijdoucí postavy nepřekrývaly); v klidu nulové.
-  const off = agent.lane * agent.anim.walkBlend * scale;
-  const x = agent.pos.x - Math.sin(agent.facing) * off;
-  const y = agent.pos.y + Math.cos(agent.facing) * off * 0.5;
+  // vizuální kořen = poloha na trase + posun z rozestupů (simulace ho mění jen spolu s kroky)
+  const x = agent.pos.x + (agent.off?.x ?? 0);
+  const y = agent.pos.y + (agent.off?.y ?? 0);
   const lib = m.rigLibrary, app = look.appearance;
   if (m.backend === 'skeleton' && lib && app) {
     const tpl = lib.bodyTemplates.find((t) => t.id === app.bodyTemplate) ?? lib.bodyTemplates[0];
     const req = viewForDirection(agent.anim.dir);
     const rv = resolveView(tpl, req.view);
     const stpl = scaledTemplate(tpl, app.proportions);
-    const pose = skeletonPose(stpl, rv.use, req.mirror, agent.anim, agent.holding !== null, app.motion, hashString(agent.id));
+    const pose = skeletonPose(stpl, rv.use, req.mirror, agent.anim, agent.holding !== null, app.motion, hashString(agent.id), groundOptions(agent, x, y, scale, req.mirror));
     const rig = assembleRig(lib, tpl, app, pose, rv.use);
     return { x, y, scale, mirror: req.mirror, pose, rig, grip: rig.grip, view: { requested: req.view, used: rv.use, substituted: rv.substituted },
       warning: rig.missing.length ? `Chybí díly: ${rig.missing.join(', ')}` : undefined };
@@ -52,6 +51,33 @@ export function characterVisual(agent: AgentState, m: CharacterManifest, look: C
   const mirror = rd.mirror !== (rd.use === 'W' || rd.use === 'SW' || rd.use === 'NW');
   const pose = figurePose(agent.anim, agent.holding !== null, { base, mirror });
   return { x, y, scale, mirror, pose, grip: pose.handR, warning: rd.warning };
+}
+
+/** Směr na zemi v lokálních souřadnicích; pohled vždy odpovídá směru – pojistka proti chůzi „pozpátku“. */
+function clampGround(x: number, y: number): Vec2 {
+  if (x < 0.05) x = 0.05;
+  const n = Math.hypot(x, y);
+  // jednotkový směr na zemi, svislá (hloubková) složka zkrácená perspektivou
+  return { x: x / n, y: (y / n) * GROUND_DEPTH_K };
+}
+
+/**
+ * Promítnutí země pro kostru: skutečný směr pohybu ve scéně (lokálně, se zrcadlením) a světové kotvy pat
+ * převedené do lokálních souřadnic postavy.
+ */
+function groundOptions(agent: AgentState, x: number, y: number, scale: number, mirror: boolean): PoseOptions {
+  const sx = mirror ? -1 : 1;
+  const gh = agent.groundHeading ?? groundAngle(agent.facing); // fyzický směr na zemi
+  const ground = clampGround(sx * Math.cos(gh), Math.sin(gh));
+  const an = agent.anim.anchors, xy = agent.anim.anchorsXY;
+  const anchors = [0, 1].map((i) => {
+    const k = an?.[i], p = xy?.[i];
+    if (!(p && (agent.anim.settle || (k != null && p.key === k)))) return null;
+    const out: Anchor = { x: sx * (p.x - x) / scale, y: (p.y - y) / scale };
+    if (p.h !== undefined) { const g = clampGround(sx * Math.cos(p.h), Math.sin(p.h)); out.gx = g.x; out.gy = g.y; }
+    return out;
+  }) as [Anchor | null, Anchor | null];
+  return { ground, anchors };
 }
 
 /** Údaje pro chůzi postavy (délka nohy, bota, individuální délka kroku) – stejné pro simulaci i náhled. */
