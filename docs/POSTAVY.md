@@ -4,11 +4,35 @@ Generátor skládá postavy z **předem připravených malovaných dílů** na h
 Za běhu nic negeneruje AI – jen vybírá kompatibilní díly, barvy z připravených palet a omezené
 parametry proporcí a pohybu.
 
-> **Stav podkladů:** dodaný výtvarný prototyp dílů (hlava, čepice, bundy, rukávy, nohy, boty,
-> rukavice, šály) do projektu **nedorazil** (v konverzaci ani v repozitáři nebyl). Všechny díly
-> v `resources/builtin/painted-parts` jsou proto **DOČASNÉ** – procedurálně kreslené skriptem
-> `scripts/generate-painted-parts.ts`, v manifestu označené `provisional: true` a v UI popsané
-> „dočasné“. Po dodání prototypu se nahradí (viz „Příprava dodané grafiky“).
+> **Stav podkladů:**
+> * **`painted-parts-cg`** – díly z ChatGPT (`grafika/zdroje/postava-dily-3q-zepredu-v1.webp`,
+>   reference `postava-reference-v2.webp`), zpracované skriptem `scripts/process-character-parts.ts`.
+>   Používá je demo „Náměstí s radnicí“ a generátor. Zatím jen **pohled šikmo zepředu**, jedna bunda,
+>   kulich a šála (+ 7 palet). Ostatní pohledy mají explicitní náhradu šikmým pohledem zepředu.
+> * **`painted-parts`** – DOČASNÉ procedurálně kreslené díly (3 pohledy, 2 bundy, 3 čepice, 2 šály),
+>   ponechané jako technická ukázka a pro testy všech pravidel kombinování.
+
+![Postavy z dílů ChatGPT](img/postavy-cg-skupina.png)
+
+## Zpracování dodaného archu (`scripts/process-character-parts.ts`)
+
+1. Originál zůstává beze změny v `grafika/zdroje/`.
+2. Arch se rozdělí podle průhledných mezer; alfa se vyčistí (šum pozadí < 28 → 0, téměř plné → 255),
+   ponechá se jen hlavní souvislá oblast dílu. Okraje byly čisté, bez světlého lemu.
+3. Každý díl se změří (profil levého/pravého okraje po řádcích) a určí se klouby:
+   rameno, loket, zápěstí, kyčel, koleno, kotník, krk, pánev, kotva čepice, kotva šály, úchop ruky.
+4. Měřítko: délka dílu podle délky kosti šablony; šířka končetin sjednocena podle reference
+   (nadloktí 8,6, předloktí 7,9, stehno 10,2, lýtko 9,4 j.). Kde se poměr stran lišil o víc než 12 %,
+   je zapsán požadavek na přemalování (`artIssues`).
+5. Úpravy: vnitřek čepice (tmavý průhled) odstraněn, otvor šály vyplněn stínem smyčky.
+6. Maska přebarvení = šedá látka s nízkou sytostí; pleť, krémová bambule a proužky, knoflíky
+   a podrážky se nepřebarvují. Kontrast textury v masce je snížen na polovinu, aby po obarvení
+   nevznikaly bílé skvrny.
+
+Zjištěné požadavky na úpravu grafiky (z `library.json` → `artIssues`):
+* nadloktí a stehno jsou vůči délce příliš široké (šířka upravena ×0,66) – přemalovat užší a delší;
+* průramky a límec trupu ukazují tmavý vnitřek (zakrytý rukávem, krkem a šálou) – lépe vyplnit látkou;
+* chybí pohledy z boku, šikmo zezadu, zepředu a zezadu a další varianty oblečení.
 
 ![Skupina 12 postav](img/generator-skupina.png)
 

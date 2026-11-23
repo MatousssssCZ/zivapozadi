@@ -17,7 +17,7 @@ import type { CharacterInstance } from '../../core/model/types';
 import { drawRigDiagnostics } from '../rigDiagnostics';
 import { NumField, Check } from './fields';
 
-export const RIG_ASSET_ID = 'builtin_postava_malovana';
+export const RIG_ASSET_ID = 'builtin_postava_cg';
 const NAMES = ['Adéla', 'Bohumil', 'Cecílie', 'David', 'Eliška', 'Filip', 'Gabriela', 'Hynek', 'Irena', 'Jakub', 'Klára', 'Lukáš', 'Marie', 'Norbert', 'Olga', 'Petr', 'Radka', 'Stanislav', 'Tereza', 'Urban', 'Věra', 'Vojtěch', 'Zdeňka', 'Zbyněk', 'Alžběta', 'Bedřich', 'Dagmar', 'Ema', 'Ferdinand', 'Jitka', 'Kamil', 'Ludmila', 'Matěj', 'Nela', 'Oldřich', 'Pavla', 'Rudolf', 'Simona', 'Tomáš', 'Vilma'];
 const VIEW_DIR: Record<ViewId, Direction> = { side: 'E', front3q: 'SE', back3q: 'NE', front: 'S', back: 'N' };
 const MIRROR_DIR: Partial<Record<Direction, Direction>> = { E: 'W', SE: 'SW', NE: 'NW' };
@@ -201,7 +201,7 @@ export function GeneratorPanel() {
       <div className="lib">
         <div className="small">Generátor skládá postavy z malovaných dílů (bunda, čepice, šála, barvy, proporce, pohyb). Projekt zatím knihovnu dílů nemá.</div>
         <button className="primary" onClick={addRigLibrary}>Přidat knihovnu malovaných postav</button>
-        <div className="warn">Díly jsou zatím DOČASNÉ (procedurálně kreslené) – finální podklady nebyly dodány.</div>
+        <div className="warn">Díly z ChatGPT: zatím jen pohled šikmo zepředu, jedna bunda, čepice a šála.</div>
       </div>
     );
   }

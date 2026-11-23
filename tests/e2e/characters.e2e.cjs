@@ -26,11 +26,19 @@ const snap = (win) => win.evaluate(() => JSON.stringify(window.__store.state.pro
   // úprava jednotlivce v panelu vlastností
   const id = await win.evaluate(() => { const s = window.__store; const c = s.state.project.characters[s.state.project.characters.length - 1]; s.set({ selection: { kind: 'character', id: c.id } }); return c.id; });
   await win.waitForTimeout(300);
-  const before = await win.evaluate((id) => window.__store.state.project.characters.find((c) => c.id === id).appearance.variants.hat, id);
-  const target = before === 'hat_beanie' ? 'hat_beret' : 'hat_beanie';
-  await win.getByTestId('props-panel').getByTestId('variant-hat').selectOption(target);
-  const after = await win.evaluate((id) => window.__store.state.project.characters.find((c) => c.id === id).appearance.variants.hat, id);
-  check('změna čepice u jednotlivce', after === target, `${before} → ${after}`);
+  const sel = win.getByTestId('props-panel').getByTestId('variant-hat');
+  const opts = await sel.locator('option:not([disabled])').evaluateAll((os) => os.map((o) => o.value));
+  const before = await win.evaluate((id) => window.__store.state.project.characters.find((c) => c.id === id).appearance, id);
+  if (opts.length > 1) {
+    const target = opts.find((o) => o !== before.variants.hat);
+    await sel.selectOption(target);
+    const after = await win.evaluate((id) => window.__store.state.project.characters.find((c) => c.id === id).appearance.variants.hat, id);
+    check('změna čepice u jednotlivce', after === target, `${before.variants.hat} → ${after}`);
+  } else {
+    await win.getByTestId('props-panel').locator('.role-box').nth(1).locator('.swatch:not(.sel)').first().click();
+    const after = await win.evaluate((id) => window.__store.state.project.characters.find((c) => c.id === id).appearance.colors.hat, id);
+    check('změna barvy čepice u jednotlivce (knihovna má jednu čepici)', after !== before.colors.hat, `${before.colors.hat} → ${after}`);
+  }
   await win.getByTestId('props-panel').getByText('zamknout bunda').click();
   const jk = await win.evaluate((id) => window.__store.state.project.characters.find((c) => c.id === id).appearance.variants.jacket, id);
   for (let i = 0; i < 4; i++) await win.getByTestId('props-panel').getByTestId('regenerate').click();

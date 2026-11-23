@@ -3,8 +3,8 @@
   "formatVersion": 1,
   "meta": {
     "name": "Náměstí s radnicí (test dodané grafiky)",
-    "createdAt": "2026-11-23T12:57:52.455Z",
-    "modifiedAt": "2026-11-23T12:57:52.512Z",
+    "createdAt": "2026-11-23T14:49:23.426Z",
+    "modifiedAt": "2026-11-23T14:49:23.468Z",
     "appVersion": "0.1.0"
   },
   "seed": 1224,
@@ -232,12 +232,11 @@
       }
     },
     {
-      "id": "builtin_postava_malovana",
+      "id": "builtin_postava_cg",
       "kind": "character",
-      "name": "Malovaná postava – generátor (dočasné díly)",
-      "file": "assets/characters/malovana-postava.json",
-      "includeDir": "painted-parts",
-      "provisional": true
+      "name": "Malovaná postava – díly z ChatGPT",
+      "file": "assets/characters/malovana-postava-cg.json",
+      "includeDir": "painted-parts-cg"
     }
   ],
   "objects": [
@@ -969,10 +968,10 @@
     {
       "id": "ch_1",
       "name": "Anna",
-      "assetId": "builtin_postava_malovana",
+      "assetId": "builtin_postava_cg",
       "startNodeId": "b",
       "baseScale": 1,
-      "walkSpeed": 64.6,
+      "walkSpeed": 55.9,
       "palette": {
         "coat": "#c8553d",
         "hat": "#f2c14e",
@@ -983,39 +982,39 @@
       "wander": true,
       "appearance": {
         "generator": "parts",
-        "libraryId": "malovane-docasne-v1",
+        "libraryId": "malovane-cg-v1",
         "seed": 229611161,
-        "bodyTemplate": "adult",
+        "bodyTemplate": "adult-cg",
         "variants": {
-          "jacket": "jacket_puffer",
-          "hat": "hat_beret",
-          "scarf": "scarf_long",
-          "trousers": "trousers_basic",
-          "boots": "boots_basic",
-          "gloves": "gloves_basic",
-          "head": "head_adult"
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
         },
         "colors": {
-          "jacket": "tmave-seda",
-          "hat": "olivova",
-          "scarf": "okrova",
-          "gloves": "okrova",
-          "trousers": "olivova",
+          "jacket": "hneda",
+          "hat": "vinova",
+          "scarf": "tmave-seda",
+          "gloves": "vinova",
+          "trousers": "hneda",
           "boots": "tmave-seda"
         },
         "proportions": {
-          "height": 1.025,
-          "build": 0.981
+          "height": 0.963,
+          "build": 1.001
         },
         "motion": {
-          "strideScale": 0.993,
-          "armSwing": 1.128,
-          "bob": 0.922,
-          "sway": 0.729,
-          "idleTempo": 1.031,
-          "lean": 0.709,
-          "speed": 1.076,
-          "phase": 0.949
+          "strideScale": 1.026,
+          "armSwing": 0.958,
+          "bob": 1.092,
+          "sway": 0.932,
+          "idleTempo": 1.027,
+          "lean": 1.275,
+          "speed": 0.932,
+          "phase": 0.433
         },
         "locks": []
       },
@@ -1032,10 +1031,10 @@
     {
       "id": "ch_2",
       "name": "Bára",
-      "assetId": "builtin_postava_malovana",
+      "assetId": "builtin_postava_cg",
       "startNodeId": "h",
       "baseScale": 1,
-      "walkSpeed": 65.6,
+      "walkSpeed": 64,
       "palette": {
         "coat": "#c8553d",
         "hat": "#f2c14e",
@@ -1046,39 +1045,39 @@
       "wander": true,
       "appearance": {
         "generator": "parts",
-        "libraryId": "malovane-docasne-v1",
+        "libraryId": "malovane-cg-v1",
         "seed": 1145160267,
-        "bodyTemplate": "adult",
+        "bodyTemplate": "adult-cg",
         "variants": {
-          "jacket": "jacket_puffer",
-          "hat": "hat_ushanka",
-          "scarf": "scarf_long",
-          "trousers": "trousers_basic",
-          "boots": "boots_basic",
-          "gloves": "gloves_basic",
-          "head": "head_adult"
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
         },
         "colors": {
-          "jacket": "okrova",
-          "hat": "hneda",
-          "scarf": "kremova",
-          "gloves": "kremova",
+          "jacket": "tmave-seda",
+          "hat": "vinova",
+          "scarf": "hneda",
+          "gloves": "vinova",
           "trousers": "olivova",
           "boots": "hneda"
         },
         "proportions": {
-          "height": 1.048,
-          "build": 1.057
+          "height": 1.019,
+          "build": 0.965
         },
         "motion": {
-          "strideScale": 0.979,
-          "armSwing": 0.833,
-          "bob": 1.138,
-          "sway": 0.939,
-          "idleTempo": 1.01,
-          "lean": 1.194,
-          "speed": 1.094,
-          "phase": 0.644
+          "strideScale": 1.057,
+          "armSwing": 0.959,
+          "bob": 0.953,
+          "sway": 1.072,
+          "idleTempo": 0.854,
+          "lean": 0.877,
+          "speed": 1.067,
+          "phase": 0.01
         },
         "locks": []
       },
@@ -1095,10 +1094,10 @@
     {
       "id": "ch_3",
       "name": "Cyril",
-      "assetId": "builtin_postava_malovana",
+      "assetId": "builtin_postava_cg",
       "startNodeId": "k",
       "baseScale": 1,
-      "walkSpeed": 56.3,
+      "walkSpeed": 58.2,
       "palette": {
         "coat": "#c8553d",
         "hat": "#f2c14e",
@@ -1109,39 +1108,39 @@
       "wander": true,
       "appearance": {
         "generator": "parts",
-        "libraryId": "malovane-docasne-v1",
+        "libraryId": "malovane-cg-v1",
         "seed": 1925584793,
-        "bodyTemplate": "adult",
+        "bodyTemplate": "adult-cg",
         "variants": {
-          "jacket": "jacket_puffer",
-          "hat": "hat_beanie",
-          "scarf": "scarf_long",
-          "trousers": "trousers_basic",
-          "boots": "boots_basic",
-          "gloves": "gloves_basic",
-          "head": "head_adult"
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
         },
         "colors": {
-          "jacket": "tmave-seda",
-          "hat": "kremova",
-          "scarf": "vinova",
-          "gloves": "kremova",
-          "trousers": "tmave-seda",
-          "boots": "hneda"
+          "jacket": "vinova",
+          "hat": "hneda",
+          "scarf": "kremova",
+          "gloves": "hneda",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
         },
         "proportions": {
-          "height": 1.042,
-          "build": 1.068
+          "height": 0.985,
+          "build": 0.986
         },
         "motion": {
-          "strideScale": 1.022,
-          "armSwing": 0.876,
-          "bob": 1.109,
-          "sway": 1.163,
-          "idleTempo": 1.142,
-          "lean": 0.718,
-          "speed": 0.939,
-          "phase": 0.965
+          "strideScale": 0.943,
+          "armSwing": 0.919,
+          "bob": 1.194,
+          "sway": 0.822,
+          "idleTempo": 0.858,
+          "lean": 1.35,
+          "speed": 0.97,
+          "phase": 0.493
         },
         "locks": []
       },
@@ -1158,7 +1157,7 @@
     {
       "id": "ch_4",
       "name": "Dana",
-      "assetId": "builtin_postava_malovana",
+      "assetId": "builtin_postava_cg",
       "startNodeId": "a",
       "baseScale": 1,
       "walkSpeed": 55,
@@ -1172,39 +1171,39 @@
       "wander": true,
       "appearance": {
         "generator": "parts",
-        "libraryId": "malovane-docasne-v1",
-        "seed": 148603573,
-        "bodyTemplate": "adult",
+        "libraryId": "malovane-cg-v1",
+        "seed": 198936430,
+        "bodyTemplate": "adult-cg",
         "variants": {
-          "jacket": "jacket_puffer",
-          "hat": "hat_beanie",
-          "scarf": "scarf_long",
-          "trousers": "trousers_basic",
-          "boots": "boots_basic",
-          "gloves": "gloves_basic",
-          "head": "head_adult"
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
         },
         "colors": {
-          "jacket": "vinova",
-          "hat": "tmave-seda",
-          "scarf": "olivova",
-          "gloves": "olivova",
-          "trousers": "tmave-seda",
-          "boots": "hneda"
+          "jacket": "okrova",
+          "hat": "hneda",
+          "scarf": "petrolejova",
+          "gloves": "hneda",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
         },
         "proportions": {
-          "height": 1.058,
-          "build": 1.03
+          "height": 0.97,
+          "build": 1.01
         },
         "motion": {
-          "strideScale": 0.975,
-          "armSwing": 1.078,
-          "bob": 0.98,
-          "sway": 0.868,
-          "idleTempo": 1.023,
-          "lean": 0.957,
+          "strideScale": 1.048,
+          "armSwing": 0.804,
+          "bob": 0.816,
+          "sway": 0.785,
+          "idleTempo": 0.956,
+          "lean": 1.06,
           "speed": 0.917,
-          "phase": 0.083
+          "phase": 0.462
         },
         "locks": []
       },
@@ -1221,10 +1220,10 @@
     {
       "id": "ch_5",
       "name": "Emil",
-      "assetId": "builtin_postava_malovana",
+      "assetId": "builtin_postava_cg",
       "startNodeId": "i",
       "baseScale": 1,
-      "walkSpeed": 56,
+      "walkSpeed": 55,
       "palette": {
         "coat": "#c8553d",
         "hat": "#f2c14e",
@@ -1235,39 +1234,39 @@
       "wander": true,
       "appearance": {
         "generator": "parts",
-        "libraryId": "malovane-docasne-v1",
+        "libraryId": "malovane-cg-v1",
         "seed": 979360954,
-        "bodyTemplate": "adult",
+        "bodyTemplate": "adult-cg",
         "variants": {
-          "jacket": "jacket_coat",
-          "hat": "hat_beanie",
-          "scarf": "scarf_snood",
-          "trousers": "trousers_basic",
-          "boots": "boots_basic",
-          "gloves": "gloves_basic",
-          "head": "head_adult"
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
         },
         "colors": {
-          "jacket": "petrolejova",
+          "jacket": "kremova",
           "hat": "vinova",
-          "scarf": "okrova",
-          "gloves": "okrova",
-          "trousers": "olivova",
+          "scarf": "hneda",
+          "gloves": "vinova",
+          "trousers": "hneda",
           "boots": "tmave-seda"
         },
         "proportions": {
-          "height": 0.997,
-          "build": 1.052
+          "height": 1.045,
+          "build": 1.035
         },
         "motion": {
-          "strideScale": 0.968,
-          "armSwing": 0.815,
-          "bob": 1.13,
-          "sway": 0.939,
-          "idleTempo": 0.987,
-          "lean": 0.955,
-          "speed": 0.933,
-          "phase": 0.252
+          "strideScale": 0.965,
+          "armSwing": 1.13,
+          "bob": 1.094,
+          "sway": 1.122,
+          "idleTempo": 0.943,
+          "lean": 1.362,
+          "speed": 0.917,
+          "phase": 0.731
         },
         "locks": []
       },
@@ -1284,10 +1283,10 @@
     {
       "id": "ch_6",
       "name": "Františka",
-      "assetId": "builtin_postava_malovana",
+      "assetId": "builtin_postava_cg",
       "startNodeId": "c",
       "baseScale": 1,
-      "walkSpeed": 65.8,
+      "walkSpeed": 55,
       "palette": {
         "coat": "#c8553d",
         "hat": "#f2c14e",
@@ -1298,39 +1297,39 @@
       "wander": true,
       "appearance": {
         "generator": "parts",
-        "libraryId": "malovane-docasne-v1",
+        "libraryId": "malovane-cg-v1",
         "seed": 136061648,
-        "bodyTemplate": "adult",
+        "bodyTemplate": "adult-cg",
         "variants": {
-          "jacket": "jacket_puffer",
-          "hat": "hat_beanie",
-          "scarf": "scarf_long",
-          "trousers": "trousers_basic",
-          "boots": "boots_basic",
-          "gloves": "gloves_basic",
-          "head": "head_adult"
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
         },
         "colors": {
           "jacket": "hneda",
-          "hat": "vinova",
-          "scarf": "okrova",
-          "gloves": "vinova",
-          "trousers": "olivova",
-          "boots": "tmave-seda"
+          "hat": "petrolejova",
+          "scarf": "olivova",
+          "gloves": "olivova",
+          "trousers": "tmave-seda",
+          "boots": "hneda"
         },
         "proportions": {
-          "height": 1.001,
-          "build": 1.061
+          "height": 0.983,
+          "build": 1.049
         },
         "motion": {
-          "strideScale": 0.99,
-          "armSwing": 0.867,
-          "bob": 1.185,
-          "sway": 1.089,
-          "idleTempo": 0.882,
-          "lean": 1.36,
-          "speed": 1.097,
-          "phase": 0.233
+          "strideScale": 1.001,
+          "armSwing": 0.847,
+          "bob": 1.169,
+          "sway": 1.142,
+          "idleTempo": 0.86,
+          "lean": 1.376,
+          "speed": 0.916,
+          "phase": 0.394
         },
         "locks": []
       },
@@ -1347,10 +1346,10 @@
     {
       "id": "ch_7",
       "name": "Gustav",
-      "assetId": "builtin_postava_malovana",
+      "assetId": "builtin_postava_cg",
       "startNodeId": "g",
       "baseScale": 1,
-      "walkSpeed": 63.1,
+      "walkSpeed": 54.3,
       "palette": {
         "coat": "#c8553d",
         "hat": "#f2c14e",
@@ -1361,39 +1360,39 @@
       "wander": true,
       "appearance": {
         "generator": "parts",
-        "libraryId": "malovane-docasne-v1",
+        "libraryId": "malovane-cg-v1",
         "seed": 1410719869,
-        "bodyTemplate": "adult",
+        "bodyTemplate": "adult-cg",
         "variants": {
-          "jacket": "jacket_coat",
-          "hat": "hat_ushanka",
-          "scarf": "scarf_long",
-          "trousers": "trousers_basic",
-          "boots": "boots_basic",
-          "gloves": "gloves_basic",
-          "head": "head_adult"
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
         },
         "colors": {
-          "jacket": "olivova",
-          "hat": "hneda",
-          "scarf": "vinova",
-          "gloves": "hneda",
+          "jacket": "tmave-seda",
+          "hat": "olivova",
+          "scarf": "petrolejova",
+          "gloves": "olivova",
           "trousers": "olivova",
-          "boots": "hneda"
+          "boots": "tmave-seda"
         },
         "proportions": {
-          "height": 1.012,
-          "build": 0.984
+          "height": 1.046,
+          "build": 0.975
         },
         "motion": {
-          "strideScale": 0.988,
-          "armSwing": 1.093,
-          "bob": 1.003,
-          "sway": 1.008,
-          "idleTempo": 1.149,
-          "lean": 1.271,
-          "speed": 1.051,
-          "phase": 0.262
+          "strideScale": 1.058,
+          "armSwing": 0.982,
+          "bob": 1.186,
+          "sway": 0.907,
+          "idleTempo": 1.132,
+          "lean": 1.334,
+          "speed": 0.905,
+          "phase": 0.974
         },
         "locks": []
       },
@@ -1410,10 +1409,10 @@
     {
       "id": "ch_8",
       "name": "Hana",
-      "assetId": "builtin_postava_malovana",
+      "assetId": "builtin_postava_cg",
       "startNodeId": "d",
       "baseScale": 1,
-      "walkSpeed": 64.6,
+      "walkSpeed": 62,
       "palette": {
         "coat": "#c8553d",
         "hat": "#f2c14e",
@@ -1424,39 +1423,39 @@
       "wander": true,
       "appearance": {
         "generator": "parts",
-        "libraryId": "malovane-docasne-v1",
+        "libraryId": "malovane-cg-v1",
         "seed": 1125092721,
-        "bodyTemplate": "adult",
+        "bodyTemplate": "adult-cg",
         "variants": {
-          "jacket": "jacket_coat",
-          "hat": "hat_ushanka",
-          "scarf": "scarf_snood",
-          "trousers": "trousers_basic",
-          "boots": "boots_basic",
-          "gloves": "gloves_basic",
-          "head": "head_adult"
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
         },
         "colors": {
-          "jacket": "hneda",
-          "hat": "okrova",
-          "scarf": "tmave-seda",
+          "jacket": "petrolejova",
+          "hat": "tmave-seda",
+          "scarf": "olivova",
           "gloves": "tmave-seda",
           "trousers": "olivova",
-          "boots": "hneda"
+          "boots": "tmave-seda"
         },
         "proportions": {
-          "height": 0.956,
-          "build": 1.002
+          "height": 0.966,
+          "build": 0.997
         },
         "motion": {
-          "strideScale": 0.993,
-          "armSwing": 0.804,
-          "bob": 1.012,
-          "sway": 1.076,
-          "idleTempo": 1.025,
-          "lean": 1.269,
-          "speed": 1.076,
-          "phase": 0.558
+          "strideScale": 1.014,
+          "armSwing": 1.113,
+          "bob": 0.889,
+          "sway": 1.099,
+          "idleTempo": 1.061,
+          "lean": 0.678,
+          "speed": 1.034,
+          "phase": 0.048
         },
         "locks": []
       },
@@ -1473,10 +1472,10 @@
     {
       "id": "ch_9",
       "name": "Ivan",
-      "assetId": "builtin_postava_malovana",
+      "assetId": "builtin_postava_cg",
       "startNodeId": "n",
       "baseScale": 1,
-      "walkSpeed": 55,
+      "walkSpeed": 59.5,
       "palette": {
         "coat": "#c8553d",
         "hat": "#f2c14e",
@@ -1487,39 +1486,39 @@
       "wander": true,
       "appearance": {
         "generator": "parts",
-        "libraryId": "malovane-docasne-v1",
+        "libraryId": "malovane-cg-v1",
         "seed": 833278543,
-        "bodyTemplate": "adult",
+        "bodyTemplate": "adult-cg",
         "variants": {
-          "jacket": "jacket_coat",
-          "hat": "hat_beanie",
-          "scarf": "scarf_snood",
-          "trousers": "trousers_basic",
-          "boots": "boots_basic",
-          "gloves": "gloves_basic",
-          "head": "head_adult"
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
         },
         "colors": {
           "jacket": "okrova",
-          "hat": "hneda",
-          "scarf": "petrolejova",
-          "gloves": "petrolejova",
-          "trousers": "tmave-seda",
-          "boots": "hneda"
+          "hat": "vinova",
+          "scarf": "kremova",
+          "gloves": "kremova",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
         },
         "proportions": {
-          "height": 1.034,
-          "build": 0.99
+          "height": 0.984,
+          "build": 1.015
         },
         "motion": {
-          "strideScale": 0.992,
-          "armSwing": 0.853,
-          "bob": 1.092,
-          "sway": 0.724,
-          "idleTempo": 0.899,
-          "lean": 1.074,
-          "speed": 0.917,
-          "phase": 0.707
+          "strideScale": 0.994,
+          "armSwing": 0.95,
+          "bob": 1.045,
+          "sway": 1.032,
+          "idleTempo": 0.937,
+          "lean": 1.136,
+          "speed": 0.992,
+          "phase": 0.914
         },
         "locks": []
       },
@@ -1536,10 +1535,10 @@
     {
       "id": "ch_10",
       "name": "Jana",
-      "assetId": "builtin_postava_malovana",
+      "assetId": "builtin_postava_cg",
       "startNodeId": "j",
       "baseScale": 1,
-      "walkSpeed": 56.2,
+      "walkSpeed": 64.6,
       "palette": {
         "coat": "#c8553d",
         "hat": "#f2c14e",
@@ -1550,39 +1549,39 @@
       "wander": true,
       "appearance": {
         "generator": "parts",
-        "libraryId": "malovane-docasne-v1",
-        "seed": 5544707,
-        "bodyTemplate": "adult",
+        "libraryId": "malovane-cg-v1",
+        "seed": 22322326,
+        "bodyTemplate": "adult-cg",
         "variants": {
-          "jacket": "jacket_coat",
-          "hat": "hat_ushanka",
-          "scarf": "scarf_long",
-          "trousers": "trousers_basic",
-          "boots": "boots_basic",
-          "gloves": "gloves_basic",
-          "head": "head_adult"
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
         },
         "colors": {
-          "jacket": "olivova",
-          "hat": "tmave-seda",
-          "scarf": "vinova",
-          "gloves": "tmave-seda",
-          "trousers": "tmave-seda",
-          "boots": "hneda"
+          "jacket": "vinova",
+          "hat": "hneda",
+          "scarf": "tmave-seda",
+          "gloves": "hneda",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
         },
         "proportions": {
-          "height": 0.962,
-          "build": 1.037
+          "height": 0.96,
+          "build": 1.048
         },
         "motion": {
-          "strideScale": 1.028,
-          "armSwing": 0.854,
-          "bob": 1.101,
-          "sway": 1.222,
-          "idleTempo": 1.14,
-          "lean": 1.277,
-          "speed": 0.936,
-          "phase": 0.089
+          "strideScale": 0.943,
+          "armSwing": 1.084,
+          "bob": 1.187,
+          "sway": 0.749,
+          "idleTempo": 0.874,
+          "lean": 1.325,
+          "speed": 1.076,
+          "phase": 0.098
         },
         "locks": []
       },
@@ -1599,10 +1598,10 @@
     {
       "id": "ch_11",
       "name": "Karel",
-      "assetId": "builtin_postava_malovana",
+      "assetId": "builtin_postava_cg",
       "startNodeId": "e",
       "baseScale": 1,
-      "walkSpeed": 54.8,
+      "walkSpeed": 65.1,
       "palette": {
         "coat": "#c8553d",
         "hat": "#f2c14e",
@@ -1613,39 +1612,39 @@
       "wander": true,
       "appearance": {
         "generator": "parts",
-        "libraryId": "malovane-docasne-v1",
-        "seed": 1770133419,
-        "bodyTemplate": "adult",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1786911038,
+        "bodyTemplate": "adult-cg",
         "variants": {
-          "jacket": "jacket_puffer",
-          "hat": "hat_ushanka",
-          "scarf": "scarf_long",
-          "trousers": "trousers_basic",
-          "boots": "boots_basic",
-          "gloves": "gloves_basic",
-          "head": "head_adult"
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
         },
         "colors": {
-          "jacket": "petrolejova",
-          "hat": "olivova",
-          "scarf": "tmave-seda",
-          "gloves": "olivova",
-          "trousers": "hneda",
-          "boots": "tmave-seda"
+          "jacket": "kremova",
+          "hat": "tmave-seda",
+          "scarf": "vinova",
+          "gloves": "tmave-seda",
+          "trousers": "tmave-seda",
+          "boots": "hneda"
         },
         "proportions": {
-          "height": 0.956,
-          "build": 0.95
+          "height": 0.983,
+          "build": 0.987
         },
         "motion": {
-          "strideScale": 0.999,
-          "armSwing": 0.809,
-          "bob": 0.836,
-          "sway": 1.025,
-          "idleTempo": 0.896,
-          "lean": 1.281,
-          "speed": 0.914,
-          "phase": 0.877
+          "strideScale": 0.952,
+          "armSwing": 0.867,
+          "bob": 1.137,
+          "sway": 0.832,
+          "idleTempo": 1.016,
+          "lean": 0.933,
+          "speed": 1.085,
+          "phase": 0.04
         },
         "locks": []
       },
@@ -1662,10 +1661,10 @@
     {
       "id": "ch_12",
       "name": "Lenka",
-      "assetId": "builtin_postava_malovana",
+      "assetId": "builtin_postava_cg",
       "startNodeId": "l",
       "baseScale": 1,
-      "walkSpeed": 59.7,
+      "walkSpeed": 57.1,
       "palette": {
         "coat": "#c8553d",
         "hat": "#f2c14e",
@@ -1676,39 +1675,39 @@
       "wander": true,
       "appearance": {
         "generator": "parts",
-        "libraryId": "malovane-docasne-v1",
-        "seed": 1843583415,
-        "bodyTemplate": "adult",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1810028177,
+        "bodyTemplate": "adult-cg",
         "variants": {
-          "jacket": "jacket_puffer",
-          "hat": "hat_beret",
-          "scarf": "scarf_long",
-          "trousers": "trousers_basic",
-          "boots": "boots_basic",
-          "gloves": "gloves_basic",
-          "head": "head_adult"
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
         },
         "colors": {
           "jacket": "olivova",
-          "hat": "petrolejova",
-          "scarf": "tmave-seda",
-          "gloves": "tmave-seda",
-          "trousers": "hneda",
+          "hat": "okrova",
+          "scarf": "petrolejova",
+          "gloves": "petrolejova",
+          "trousers": "olivova",
           "boots": "tmave-seda"
         },
         "proportions": {
-          "height": 0.982,
-          "build": 1.009
+          "height": 1.023,
+          "build": 0.988
         },
         "motion": {
-          "strideScale": 1.011,
-          "armSwing": 0.896,
-          "bob": 0.832,
-          "sway": 1.003,
-          "idleTempo": 0.917,
-          "lean": 0.777,
-          "speed": 0.995,
-          "phase": 0.72
+          "strideScale": 1.025,
+          "armSwing": 1.036,
+          "bob": 0.893,
+          "sway": 1.124,
+          "idleTempo": 1.03,
+          "lean": 1.307,
+          "speed": 0.951,
+          "phase": 0.821
         },
         "locks": []
       },

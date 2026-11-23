@@ -40,6 +40,8 @@ export interface SkeletonViewDef {
   headOffsetX: number;
   /** Vodorovný posun ramen vůči ose (z boku mírně vpřed). */
   shoulderOffsetX: number;
+  /** Na které straně obrazu (−1 vlevo, +1 vpravo) jsou končetiny blíž ke kameře. Výchozí +1. */
+  nearSide?: number;
 }
 
 export interface SkeletonTemplate {
@@ -141,10 +143,11 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
   const v = tpl.views[view] ?? tpl.views.side ?? Object.values(tpl.views)[0]!;
   const B = tpl.bones, G = tpl.gait, I = tpl.idle;
   const fx = v.forward.x, fy = v.forward.y;
+  const ns = v.nearSide ?? 1; // strana blízkých končetin
   const b = a.walkBlend;
   const ph = a.walkPhase;
   const legLen = B.thigh + B.shin;
-  const restHipY = -(B.ankleHeight + legLen * 0.975);
+  const restHipY = -(B.ankleHeight + legLen * 0.99);
   const tIdle = a.idleTime * motion.idleTempo + motion.phase * 10;
 
   // --- nohy (stojná / švihová fáze)
@@ -157,14 +160,14 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
     if (p < f) r = 0.5 - p / f;
     else { const s = (p - f) / (1 - f); r = -0.5 + smoothstep(s); lift = Math.sin(Math.PI * s) * G.stepLift; ang = -Math.sin(Math.PI * s) * 0.25; }
     rel.push(r);
-    const side = i === 0 ? -1 : 1;
+    const side = (i === 0 ? -1 : 1) * ns;
     ankles.push({ x: side * v.hipSpread + fx * r * range * b, y: -B.ankleHeight - lift * b + fy * r * range * b * 0.35 });
     footAng.push(ang * b);
   }
   // pokles pánve, aby obě nohy dosáhly (omezený – zbytek je odvalení přes špičku)
   let hipY = restHipY;
   for (let i = 0; i < 2; i++) {
-    const dx = ankles[i].x - (i === 0 ? -1 : 1) * v.hipSpread;
+    const dx = ankles[i].x - (i === 0 ? -1 : 1) * ns * v.hipSpread;
     const need = ankles[i].y - Math.sqrt(Math.max(0, (legLen * 0.985) ** 2 - dx * dx));
     hipY = Math.max(hipY, need);
   }
@@ -174,7 +177,7 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
   const shiftIdle = weightShift(tIdle, I.shiftPeriod, seed) * I.shiftAmp * (1 - b) * (view === 'side' ? 0.3 : 1);
   const hip = { x: swayWalk + shiftIdle, y: hipY };
   const legs = [0, 1].map((i) => {
-    const side = i === 0 ? -1 : 1;
+    const side = (i === 0 ? -1 : 1) * ns;
     const root = { x: hip.x + side * v.hipSpread, y: hip.y };
     return ik(root, ankles[i], B.thigh, B.shin, -1);
   }) as [Limb, Limb];
@@ -195,9 +198,9 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
     const th = legRel * 2 * G.armSwing * motion.armSwing * b; // rad
     return { x: root.x + Math.sin(th) * (armLen - 3) * fx + (v.shoulderSpread ? Math.sign(root.x - shoulder.x) * 2.5 : 0), y: root.y + Math.cos(th) * (armLen - 3) + Math.sin(th) * fy * 6 };
   };
-  const backRoot = armRoot(-1), frontRoot = armRoot(1);
+  const backRoot = armRoot(-ns), frontRoot = armRoot(ns);
   let backTarget = swingTarget(backRoot, rel[1]);
-  const holdPos = { x: frontRoot.x + 13 * fx + (v.shoulderSpread ? 3 : 0), y: hip.y - 4 };
+  const holdPos = { x: frontRoot.x + 13 * fx + (v.shoulderSpread ? 3 * ns : 0), y: hip.y - 4 };
   let frontTarget = holding ? holdPos : swingTarget(frontRoot, rel[0]);
 
   const act = a.action;

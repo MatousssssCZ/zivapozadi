@@ -32,7 +32,7 @@ export async function generateRadnice(dir: string): Promise<ProjectFile> {
   };
   const lampa = await imp('lampa.png', 'Lampa', { x: 0.5, y: 0.99 });
   const strom = await imp('strom.png', 'Vánoční strom', { x: 0.5, y: 0.985 });
-  for (const id of ['builtin_stolecek', 'builtin_kos', 'builtin_postava_malovana']) await addBuiltinAsset('resources/builtin', dir, p, id);
+  for (const id of ['builtin_stolecek', 'builtin_kos', 'builtin_postava_cg']) await addBuiltinAsset('resources/builtin', dir, p, id);
   p.scene.backgroundAssetId = bg.id;
   // Perspektiva: chodník u budov (y≈900) je daleko, spodní okraj blízko.
   p.scene.depth = { enabled: true, yFar: 900, scaleFar: 0.36, yNear: 1080, scaleNear: 1.3 };
@@ -98,14 +98,14 @@ export async function generateRadnice(dir: string): Promise<ProjectFile> {
     bounds: rect(700, 900, 1700, 1075),
     objectRoles: { stand: ['obj_st_napoje'], seating: ['obj_stolecek', 'obj_strom'], bin: ['obj_kos'] }, params: {},
   }];
-  // 12 postav z generátoru (skládané malované díly – zatím DOČASNÉ podklady)
-  const lib = JSON.parse(await fs.readFile('resources/builtin/painted-parts/library.json', 'utf8')) as PartLibrary;
+  // 12 postav z generátoru (malované díly z ChatGPT, pohled šikmo zepředu)
+  const lib = JSON.parse(await fs.readFile('resources/builtin/painted-parts-cg/library.json', 'utf8')) as PartLibrary;
   const group = generateGroup(lib, 12, 2024);
   const names = ['Anna', 'Bára', 'Cyril', 'Dana', 'Emil', 'Františka', 'Gustav', 'Hana', 'Ivan', 'Jana', 'Karel', 'Lenka'];
   const starts = ['b', 'h', 'k', 'a', 'i', 'c', 'g', 'd', 'n', 'j', 'e', 'l'];
   const testPal = { coat: '#c8553d', hat: '#f2c14e', scarf: '#f7f3e3', skin: '#f1c9a5', trousers: '#3b4a6b' };
   p.characters = group.appearances.map((app, i): CharacterInstance => ({
-    id: `ch_${i + 1}`, name: names[i], assetId: 'builtin_postava_malovana', startNodeId: starts[i], baseScale: 1,
+    id: `ch_${i + 1}`, name: names[i], assetId: 'builtin_postava_cg', startNodeId: starts[i], baseScale: 1,
     walkSpeed: Math.round(60 * app.motion.speed * 10) / 10, palette: testPal, wander: true, appearance: app,
     activities: { coffee: names[i] === 'Cyril' ? { enabled: false, firstDelayMin: 0, firstDelayMax: 0, intervalMin: 90, intervalMax: 180 }
       : { enabled: true, firstDelayMin: 4 + i * 6, firstDelayMax: 10 + i * 6, intervalMin: 70, intervalMax: 160 } },

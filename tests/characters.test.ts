@@ -95,11 +95,11 @@ describe('generátor postav', () => {
     expect(canonicalJson(lp2.project.characters.map((c) => c.appearance))).toBe(before);
     expect(lp2.issues.filter((i) => i.level === 'error')).toEqual([]);
     // rozšíření knihovny o novou bundu: uložené postavy mají konkrétní díly ⇒ vzhled i sestava beze změny
-    const libPath = path.join(dir, 'assets/characters/painted-parts/library.json');
+    const libPath = path.join(dir, 'assets/characters/painted-parts-cg/library.json');
     const ext = JSON.parse(await fs.readFile(libPath, 'utf8')) as PartLibrary;
-    const coat = ext.variants.find((v) => v.id === 'jacket_coat')!;
+    const coat = ext.variants.find((v) => v.id === 'jacket_coat_cg')!;
     ext.variants.push({ ...coat, id: 'jacket_new', label: 'Nová bunda' });
-    ext.parts.push(...ext.parts.filter((p) => p.variantId === 'jacket_coat').map((p) => ({ ...p, id: p.id.replace('jacket_coat', 'jacket_new'), variantId: 'jacket_new' })));
+    ext.parts.push(...ext.parts.filter((p) => p.variantId === 'jacket_coat_cg').map((p) => ({ ...p, id: p.id.replace('jacket_coat_cg', 'jacket_new'), variantId: 'jacket_new' })));
     await fs.writeFile(libPath, JSON.stringify(ext));
     const lp3 = await loadProject(dir);
     const sim = Simulation.create(lp2.project, lp2.manifests); sim.advanceTo(20);
@@ -226,5 +226,39 @@ describe('export se skládanými postavami', () => {
     const empty = ctx2.getImageData(0, 0, W, H).data;
     let diff = 0; for (let i = 0; i < clean.length; i += 16) if (Math.abs(clean[i] - empty[i]) > 40) diff++;
     expect(diff).toBeGreaterThan(2000);
+  });
+});
+
+describe('knihovna dílů z ChatGPT (painted-parts-cg)', () => {
+  it('je konzistentní, generuje jen platné kombinace a v kloubech nemá mezery', async () => {
+    const D = 'resources/builtin/painted-parts-cg';
+    const L = JSON.parse(await fs.readFile(`${D}/library.json`, 'utf8')) as PartLibrary;
+    expect(validateLibrary(L).filter((i) => i.level === 'error')).toEqual([]);
+    for (let s = 1; s <= 300; s++) expect(validateAppearance(L, generateAppearance(L, { seed: s }))).toEqual([]);
+    const man = { ...JSON.parse(await fs.readFile('resources/builtin/malovana-postava-cg.json', 'utf8')), rigLibrary: L, rigLibraryDir: 'C' } as CharacterManifest;
+    const im = new Map<string, unknown>();
+    for (const p of L.parts) for (const f of [p.texture, p.mask]) if (f) im.set(rigImageKey('C', f), await loadImage(`${D}/${f}`));
+    const imgs2 = { get: (k: string) => im.get(k) as never };
+    const S = 4, W = 140 * S, H = 160 * S;
+    const c = createCanvas(W, H); const ctx = c.getContext('2d') as unknown as CanvasRenderingContext2D;
+    let checked = 0;
+    for (const seed of [1, 2]) {
+      const app = generateAppearance(L, { seed });
+      for (const dir of ['SE', 'SW', 'E', 'NE'] as Direction[]) for (const [phase, blend] of [[0, 0], [0.1, 1], [0.3, 1], [0.55, 1], [0.8, 1]]) {
+        const anim = initialAnimState(dir); anim.walkPhase = phase; anim.walkBlend = blend; anim.idleTime = 2;
+        const cv = characterVisual({ id: 'a', pos: { x: 0, y: 0 }, facing: 0, lane: 0, anim, holding: null } as unknown as AgentState, man, { baseScale: 1, appearance: app }, ZD);
+        expect(cv.view!.used).toBe('front3q');
+        if (dir === 'E' || dir === 'NE') expect(cv.view!.substituted).toBe(true); // explicitní náhrada chybějícího pohledu
+        ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, W, H);
+        ctx.setTransform(cv.mirror ? -S : S, 0, 0, S, W / 2, H - 10 * S);
+        drawRig(ctx, cv.rig!, imgs2, 'C', 0.82);
+        const d = ctx.getImageData(0, 0, W, H).data;
+        const alpha = (p: { x: number; y: number }) => d[(Math.round(H - 10 * S + p.y * S) * W + Math.round(W / 2 + (cv.mirror ? -p.x : p.x) * S)) * 4 + 3];
+        const segs = [...cv.pose.legs, ...cv.pose.arms].flatMap((l) => [[l.root, l.joint], [l.joint, l.end]]);
+        segs.push([cv.pose.hip, cv.pose.neck]);
+        for (const [a, b] of segs) { const n = Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) * 2); for (let k = 0; k <= n; k++) { const p = { x: a.x + ((b.x - a.x) * k) / n, y: a.y + ((b.y - a.y) * k) / n }; const al = alpha(p); if (al < 200) throw new Error(`Mezera ${dir} ${phase}: ${p.x.toFixed(1)},${p.y.toFixed(1)} alfa ${al}`); checked++; } }
+      }
+    }
+    expect(checked).toBeGreaterThan(3000);
   });
 });

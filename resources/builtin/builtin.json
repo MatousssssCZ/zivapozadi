@@ -322,6 +322,13 @@
       "file": "malovana-postava.json",
       "includeDir": "painted-parts",
       "provisional": true
+    },
+    {
+      "id": "builtin_postava_cg",
+      "kind": "character",
+      "name": "Malovaná postava – díly z ChatGPT",
+      "file": "malovana-postava-cg.json",
+      "includeDir": "painted-parts-cg"
     }
   ]
 }

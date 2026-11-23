@@ -1,0 +1,113 @@
+{
+  "format": "zimni-scena-postava",
+  "formatVersion": 1,
+  "id": "painted-cg",
+  "name": "Malovaná postava (ChatGPT díly)",
+  "provisional": false,
+  "backend": "skeleton",
+  "height": 130,
+  "anchor": {
+    "x": 0.5,
+    "y": 1
+  },
+  "directions": [
+    "SE"
+  ],
+  "directionFallbacks": {
+    "E": {
+      "use": "SE",
+      "mirror": false
+    },
+    "NE": {
+      "use": "SE",
+      "mirror": false
+    },
+    "S": {
+      "use": "SE",
+      "mirror": false
+    },
+    "N": {
+      "use": "SE",
+      "mirror": false
+    },
+    "W": {
+      "use": "SE",
+      "mirror": true
+    },
+    "SW": {
+      "use": "SE",
+      "mirror": true
+    },
+    "NW": {
+      "use": "SE",
+      "mirror": true
+    }
+  },
+  "clips": {
+    "idle": {
+      "duration": 3.2,
+      "loop": "loop"
+    },
+    "walk": {
+      "duration": 1,
+      "loop": "loop",
+      "strideLength": 100
+    },
+    "talk": {
+      "duration": 1.4,
+      "loop": "loop"
+    },
+    "receive": {
+      "duration": 1.1,
+      "loop": "once",
+      "events": [
+        {
+          "time": 0.6,
+          "name": "take"
+        }
+      ]
+    },
+    "drink": {
+      "duration": 2.6,
+      "loop": "once",
+      "events": [
+        {
+          "time": 1.1,
+          "name": "sip"
+        }
+      ]
+    },
+    "drop": {
+      "duration": 1,
+      "loop": "once",
+      "events": [
+        {
+          "time": 0.55,
+          "name": "release"
+        }
+      ]
+    },
+    "look": {
+      "duration": 2,
+      "loop": "once"
+    }
+  },
+  "clipFallbacks": {
+    "look": "idle"
+  },
+  "attachPoints": {},
+  "capabilities": [
+    "walk",
+    "look",
+    "hold-cup",
+    "drink",
+    "talk"
+  ],
+  "supportedActivities": [
+    "coffee"
+  ],
+  "rig": {
+    "library": "painted-parts-cg/library.json",
+    "bodyTemplate": "adult-cg"
+  }
+}
