@@ -10,7 +10,8 @@ import { characterVisual, localToScene } from '../render/characterPose';
 import { depthScaleAt } from '../scene/geometry';
 import { Reservations } from './reservations';
 import { stepMovement, directionFromAngle, turnInPlace } from './movement';
-import type { SimContext, ResolvedPoint } from './context';
+import type { SimContext, ResolvedPoint, CharacterControl } from './context';
+import { ALL_VIEWS } from '../anim/skeleton';
 import { SIM_DT, SIM_STATE_VERSION, type AgentState, type SimState, type Waypoint, type PropState, type LogEntry } from './types';
 import { dist } from '../math/vec';
 
@@ -231,13 +232,43 @@ export class Simulation {
       rand: (a) => rand(a.rng),
       randRange: (a, lo, hi) => randRange(a.rng, lo, hi),
       isRemoved: (id) => self.state.removedObjects.includes(id),
+      character: self.characterControl(),
+    };
+  }
+
+  /** Rozhraní pro řízení postavy (směr, rychlost, animace, předmět v ruce, schopnosti). */
+  characterControl(): CharacterControl {
+    const self = this;
+    const man = (a: AgentState) => self.manifests[self.chars.get(a.id)!.assetId];
+    return {
+      setFacing(a, angle) { a.look = { angle }; },
+      setSpeedFactor(a, f) { a.speedFactor = Math.max(0.2, Math.min(2.5, f)); },
+      playAnimation(a, clip, o = {}) {
+        const m = man(a);
+        if (!m.clips[clip] && !m.clipFallbacks[clip]) { self.addDiag('warning', `${a.name}: animace „${clip}“ není podporována.`, a.id); return false; }
+        const w = playAction(a.anim, m, clip, { duration: o.duration ?? m.clips[clip]?.duration ?? 1, loop: o.loop });
+        if (w) self.addDiag('warning', w);
+        return true;
+      },
+      attachToHand(a, propId) {
+        const p = self.state.props.find((x) => x.id === propId); if (!p) return;
+        p.place = { kind: 'held', agentId: a.id }; a.holding = p.id;
+      },
+      detachFromHand(a) { const id = a.holding; a.holding = null; return id; },
+      capabilities(a) {
+        const m = man(a);
+        const views = m.rigLibrary
+          ? (() => { const t = m.rigLibrary.bodyTemplates[0]; return ALL_VIEWS.map((v) => ({ view: v, available: t.availableViews.includes(v), substitute: t.viewFallbacks[v]?.use })); })()
+          : m.directions.map((d) => ({ view: d, available: true }));
+        return { clips: Object.keys(m.clips), capabilities: [...m.capabilities], activities: [...m.supportedActivities], views };
+      },
     };
   }
 
   handPosition(a: AgentState) {
     const c = this.chars.get(a.id)!;
-    const cv = characterVisual(a, this.manifests[c.assetId], c.baseScale, this.project.scene.depth);
-    return localToScene(cv, cv.pose.handR);
+    const cv = characterVisual(a, this.manifests[c.assetId], c, this.project.scene.depth);
+    return localToScene(cv, cv.grip);
   }
 
   // ---------------------------------------------------------------- krok simulace
@@ -279,7 +310,7 @@ export class Simulation {
 
   private vmax(a: AgentState): number {
     const c = this.chars.get(a.id)!;
-    return c.walkSpeed * a.pace * depthScaleAt(this.project.scene.depth, a.pos.y) * c.baseScale;
+    return c.walkSpeed * a.pace * (a.speedFactor ?? 1) * depthScaleAt(this.project.scene.depth, a.pos.y) * c.baseScale;
   }
 
   private stepAgent(a: AgentState, t: number) {
@@ -297,7 +328,9 @@ export class Simulation {
     }
     a.anim.dir = directionFromAngle(a.facing, a.anim.dir);
     // 2) přehrávání animací (události z animace řídí navazující logiku)
-    const scale = c.baseScale * depthScaleAt(this.project.scene.depth, a.pos.y);
+    // délka kroku: šablona × individuální délka kroku × výška postavy (sladěno s pózou ⇒ noha neklouže)
+    const strideF = c.appearance ? c.appearance.motion.strideScale * c.appearance.proportions.height : 1;
+    const scale = c.baseScale * depthScaleAt(this.project.scene.depth, a.pos.y) * strideF;
     const events = stepAnimator(a.anim, m, SIM_DT, a.speed, this.vmax(a), scale);
     if (mv.waitingNarrow) a.status = 'Čeká před úzkým průchodem';
     // 3) rozhodování + účast v činnosti

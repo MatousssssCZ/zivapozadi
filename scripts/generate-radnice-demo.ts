@@ -9,6 +9,8 @@ import { createEmptyProject } from '../src/core/model/defaults';
 import type { ProjectFile, SceneObject, NavNode, NavEdge, CharacterInstance, AssetEntry, InteractionSpec } from '../src/core/model/types';
 import type { Vec2 } from '../src/core/math/vec';
 import { addBuiltinAsset } from '../src/node/builtin';
+import type { PartLibrary } from '../src/core/anim/partLibrary';
+import { generateGroup } from '../src/core/anim/appearanceGenerator';
 import { createProjectDir, saveProject, importAssetFile } from '../src/node/projectIO';
 
 const G = 'grafika/zpracovane';
@@ -30,7 +32,7 @@ export async function generateRadnice(dir: string): Promise<ProjectFile> {
   };
   const lampa = await imp('lampa.png', 'Lampa', { x: 0.5, y: 0.99 });
   const strom = await imp('strom.png', 'Vánoční strom', { x: 0.5, y: 0.985 });
-  for (const id of ['builtin_stolecek', 'builtin_kos', 'builtin_postava']) await addBuiltinAsset('resources/builtin', dir, p, id);
+  for (const id of ['builtin_stolecek', 'builtin_kos', 'builtin_postava_malovana']) await addBuiltinAsset('resources/builtin', dir, p, id);
   p.scene.backgroundAssetId = bg.id;
   // Perspektiva: chodník u budov (y≈900) je daleko, spodní okraj blízko.
   p.scene.depth = { enabled: true, yFar: 900, scaleFar: 0.36, yNear: 1080, scaleNear: 1.3 };
@@ -96,18 +98,19 @@ export async function generateRadnice(dir: string): Promise<ProjectFile> {
     bounds: rect(700, 900, 1700, 1075),
     objectRoles: { stand: ['obj_st_napoje'], seating: ['obj_stolecek', 'obj_strom'], bin: ['obj_kos'] }, params: {},
   }];
-  const C = (id: string, name: string, start: string, pal: CharacterInstance['palette'], coffee: [number, number, number, number] | null, speed: number): CharacterInstance => ({
-    id, name, assetId: 'builtin_postava', startNodeId: start, baseScale: 1, walkSpeed: speed, palette: pal, wander: true,
-    activities: { coffee: coffee ? { enabled: true, firstDelayMin: coffee[0], firstDelayMax: coffee[1], intervalMin: coffee[2], intervalMax: coffee[3] } : { enabled: false, firstDelayMin: 0, firstDelayMax: 0, intervalMin: 90, intervalMax: 180 } },
-  });
-  p.characters = [
-    C('ch_anna', 'Anna', 'b', { coat: '#c8553d', hat: '#f2c14e', scarf: '#f7f3e3', skin: '#f1c9a5', trousers: '#3b4a6b' }, [2, 5, 40, 70], 60),
-    C('ch_bara', 'Bára', 'h', { coat: '#6a8fbf', hat: '#e07a8f', scarf: '#f2c14e', skin: '#e8b98f', trousers: '#4a3b4b' }, [10, 16, 50, 90], 56),
-    C('ch_cyril', 'Cyril', 'k', { coat: '#5d8f6e', hat: '#c8553d', scarf: '#e9e1cf', skin: '#d9a982', trousers: '#2f2f3f' }, null, 64),
-    C('ch_dana', 'Dana', 'a', { coat: '#9a6fb0', hat: '#8fc1d4', scarf: '#f4d06f', skin: '#c99272', trousers: '#33384d' }, [25, 35, 60, 100], 58),
-    C('ch_emil', 'Emil', 'i', { coat: '#3f5a8a', hat: '#d9d9d9', scarf: '#c8553d', skin: '#f0cfae', trousers: '#2b2b33' }, [40, 50, 60, 110], 66),
-  ];
-  p.schedule = [{ id: 'ev_cyril', name: 'Cyril jde na kávu', time: 20, activityType: 'coffee', characterId: 'ch_cyril', zoneId: 'zone_kava', onUnavailable: 'wait', waitLimit: 40 }];
+  // 12 postav z generátoru (skládané malované díly – zatím DOČASNÉ podklady)
+  const lib = JSON.parse(await fs.readFile('resources/builtin/painted-parts/library.json', 'utf8')) as PartLibrary;
+  const group = generateGroup(lib, 12, 2024);
+  const names = ['Anna', 'Bára', 'Cyril', 'Dana', 'Emil', 'Františka', 'Gustav', 'Hana', 'Ivan', 'Jana', 'Karel', 'Lenka'];
+  const starts = ['b', 'h', 'k', 'a', 'i', 'c', 'g', 'd', 'n', 'j', 'e', 'l'];
+  const testPal = { coat: '#c8553d', hat: '#f2c14e', scarf: '#f7f3e3', skin: '#f1c9a5', trousers: '#3b4a6b' };
+  p.characters = group.appearances.map((app, i): CharacterInstance => ({
+    id: `ch_${i + 1}`, name: names[i], assetId: 'builtin_postava_malovana', startNodeId: starts[i], baseScale: 1,
+    walkSpeed: Math.round(60 * app.motion.speed * 10) / 10, palette: testPal, wander: true, appearance: app,
+    activities: { coffee: names[i] === 'Cyril' ? { enabled: false, firstDelayMin: 0, firstDelayMax: 0, intervalMin: 90, intervalMax: 180 }
+      : { enabled: true, firstDelayMin: 4 + i * 6, firstDelayMax: 10 + i * 6, intervalMin: 70, intervalMax: 160 } },
+  }));
+  p.schedule = [{ id: 'ev_cyril', name: 'Cyril jde na kávu', time: 20, activityType: 'coffee', characterId: 'ch_3', zoneId: 'zone_kava', onUnavailable: 'wait', waitLimit: 40 }];
   p.export = { ...p.export, durationSec: 60, chunkSec: 20 };
   await saveProject(dir, p);
   return p;

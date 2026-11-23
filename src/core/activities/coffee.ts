@@ -161,7 +161,7 @@ export const coffeeRunner: ActivityRunner = {
         agent.status = 'Přebírá kelímek';
         const cup = ctx.prop(data.cupId!);
         if (cup && cup.place.kind === 'counter' && (events.includes('take') || ctx.actionFinished(agent))) {
-          cup.place = { kind: 'held', agentId: agent.id }; agent.holding = cup.id;
+          ctx.character.attachToHand(agent, cup.id);
           ctx.state.stats.cupsServed++;
           ctx.log('info', `${agent.name} převzal(a) kelímek.`, agent.id);
         }
@@ -252,8 +252,8 @@ export const coffeeRunner: ActivityRunner = {
           const bin = ctx.object(data.binId!)!;
           const opening = ctx.points(bin.id, 'counter')[0]?.pos ?? { x: bin.x, y: bin.y - 50 * bin.scale };
           const from = ctx.handPosition(agent);
+          ctx.character.detachFromHand(agent);
           cup.place = { kind: 'falling', from, to: opening, t0: now, t1: now + 0.35, binId: bin.id };
-          agent.holding = null;
         }
         if (!ctx.actionFinished(agent)) return 'running';
         ctx.stopAction(agent);

@@ -314,6 +314,14 @@
       "name": "Testovací postava (provizorní)",
       "file": "test-figure.json",
       "provisional": true
+    },
+    {
+      "id": "builtin_postava_malovana",
+      "kind": "character",
+      "name": "Malovaná postava – generátor (dočasné díly)",
+      "file": "malovana-postava.json",
+      "includeDir": "painted-parts",
+      "provisional": true
     }
   ]
 }

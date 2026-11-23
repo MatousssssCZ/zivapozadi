@@ -2,37 +2,31 @@
  * Procedurální testovací postava (PROVIZORNÍ vzhled). Póza je čistá funkce stavu animátoru,
  * takže úchopový bod ruky se počítá stejně v simulaci, náhledu i exportu.
  */
-import type { Vec2 } from '../math/vec';
-import { clamp, smoothstep } from '../math/vec';
+import { clamp } from '../math/vec';
 import type { AnimState } from './animator';
 import type { Direction } from './manifest';
+import { skeletonPose, DEFAULT_MOTION, type SkeletonPose, type SkeletonTemplate, type ViewId, type Limb } from './skeleton';
+export type { Limb } from './skeleton';
 
 export type BaseDir = 'E' | 'SE' | 'NE';
+export type FigurePose = SkeletonPose & { base: BaseDir };
 
-export interface FigurePose {
-  base: BaseDir;
-  mirror: boolean;
-  hip: Vec2; shoulder: Vec2; head: Vec2; headTilt: number;
-  legs: [Limb, Limb]; // [zadní, přední]
-  arms: [Limb, Limb]; // [zadní (levá), přední (pravá – drží předměty)]
-  handR: Vec2;
-}
-export interface Limb { root: Vec2; joint: Vec2; end: Vec2 }
+/** Tělesná šablona testovací postavy (sdílí kinematiku se skládanými postavami). */
+export const TEST_FIGURE_TEMPLATE: SkeletonTemplate = {
+  id: 'test-figure', label: 'Testovací postava', height: 130,
+  bones: { thigh: 32, shin: 30, ankleHeight: 2, torso: 40, neck: 13, shoulderDrop: 3, upperArm: 22, forearm: 21 },
+  views: {
+    side: { forward: { x: 1, y: 0 }, hipSpread: 0, shoulderSpread: 0, headOffsetX: 2, shoulderOffsetX: 1 },
+    front3q: { forward: { x: 0.72, y: 0.3 }, hipSpread: 5, shoulderSpread: 9, headOffsetX: 0, shoulderOffsetX: 0 },
+    back3q: { forward: { x: 0.72, y: -0.3 }, hipSpread: 5, shoulderSpread: 9, headOffsetX: 0, shoulderOffsetX: 0 },
+  },
+  gait: { strideLength: 92, stanceFraction: 0.58, stepLift: 7, armSwing: 0.42, maxDip: 2.5, sway: 1.2, lean: 0.03 },
+  idle: { breathe: 0.6, headAmp: 0.02, shiftAmp: 1.4, shiftPeriod: 7 },
+  proportions: { height: [1, 1], build: [1, 1] },
+  motionRanges: { strideScale: [1, 1], armSwing: [1, 1], bob: [1, 1], sway: [1, 1], idleTempo: [1, 1], lean: [1, 1], speed: [1, 1] },
+};
 
-const THIGH = 32, SHIN = 30, UPPER = 22, FORE = 21;
-
-function ik(root: Vec2, target: Vec2, l1: number, l2: number, bendSign: number): Limb {
-  const dx = target.x - root.x, dy = target.y - root.y;
-  let d = Math.hypot(dx, dy);
-  const maxD = l1 + l2 - 0.01;
-  let tx = target.x, ty = target.y;
-  if (d > maxD) { tx = root.x + (dx / d) * maxD; ty = root.y + (dy / d) * maxD; d = maxD; }
-  const a = Math.atan2(ty - root.y, tx - root.x);
-  const cosA = clamp((l1 * l1 + d * d - l2 * l2) / (2 * l1 * Math.max(d, 1e-6)), -1, 1);
-  const ang = a + bendSign * Math.acos(cosA);
-  const joint = { x: root.x + Math.cos(ang) * l1, y: root.y + Math.sin(ang) * l1 };
-  return { root, joint, end: { x: tx, y: ty } };
-}
+const VIEW_OF: Record<BaseDir, ViewId> = { E: 'side', SE: 'front3q', NE: 'back3q' };
 
 export function baseDirFor(dir: Direction): { base: BaseDir; mirror: boolean } {
   switch (dir) {
@@ -48,77 +42,7 @@ export function baseDirFor(dir: Direction): { base: BaseDir; mirror: boolean } {
 /** Póza v lokálních souřadnicích (chodidla = 0,0; nahoru záporné y), bez zrcadlení. */
 export function figurePose(a: AnimState, holding: boolean, mirrorOverride?: { base: BaseDir; mirror: boolean }): FigurePose {
   const { base, mirror } = mirrorOverride ?? baseDirFor(a.dir);
-  const ph = a.walkPhase * Math.PI * 2;
-  const b = a.walkBlend;
-  const breathe = Math.sin((a.idleTime / 3.2) * Math.PI * 2) * 0.8 * (1 - b);
-  const bob = Math.abs(Math.sin(ph)) * 2.6 * b;
-  const hip = { x: 0, y: -62 + bob };
-  const shoulder = { x: base === 'E' ? 1.5 * b : 0, y: -100 + bob + breathe * 0.5 };
-  const head = { x: shoulder.x + (base === 'E' ? 2 : 0), y: -117 + bob + breathe * 0.4 };
-  let headTilt = 0;
-
-  // Nohy: kyvadlo s ohybem kolena při švihu vpřed.
-  const forward = base === 'E' ? { x: 1, y: 0 } : base === 'SE' ? { x: 0.72, y: 0.3 } : { x: 0.72, y: -0.3 };
-  const spread = base === 'E' ? 0 : 5;
-  const amp = 0.37 * b;
-  const legFor = (sign: number, side: number): Limb => {
-    const s = Math.sin(ph) * sign;
-    const swingDist = Math.sin(amp * s) * (THIGH + SHIN);
-    const lift = Math.max(0, Math.cos(ph) * sign) * 7 * b; // zvednutí nohy při přenosu vpřed
-    const root = { x: hip.x + side * spread, y: hip.y };
-    const foot = { x: root.x + forward.x * swingDist, y: -lift + forward.y * swingDist * 0.5 };
-    return ik(root, foot, THIGH, SHIN, base === 'NE' ? -1 : -1);
-  };
-  const legs: [Limb, Limb] = [legFor(-1, -1), legFor(1, 1)];
-
-  // Paže: protipohyb k nohám; přední (pravá) může držet předmět nebo hrát akci.
-  const armSwing = (sign: number) => Math.sin(ph) * sign * 0.5 * b;
-  const armRoot = (side: number) => ({ x: shoulder.x + side * (base === 'E' ? 0 : 9), y: shoulder.y + 3 });
-  const swingTarget = (root: Vec2, ang: number): Vec2 => ({
-    x: root.x + Math.sin(ang) * (UPPER + FORE - 3) * forward.x + (base === 'E' ? 0 : root.x > 0 ? 2 : -2),
-    y: root.y + Math.cos(ang) * (UPPER + FORE - 3) + Math.sin(ang) * forward.y * 6,
-  });
-  const backRoot = armRoot(-1), frontRoot = armRoot(1);
-  let backTarget = swingTarget(backRoot, armSwing(1));
-  const holdPos = { x: frontRoot.x + 13 * forward.x + (base === 'E' ? 0 : 3), y: -66 + bob };
-  let frontTarget = holding ? holdPos : swingTarget(frontRoot, armSwing(-1));
-
-  const act = a.action;
-  if (act && act.clip !== null) {
-    const t = act.duration > 0 ? act.time / act.duration : 1;
-    const fx = forward.x;
-    switch (act.clip) {
-      case 'talk': {
-        const g = Math.sin((act.time / 0.7) * Math.PI * 2);
-        backTarget = { x: backRoot.x + 12 * fx, y: -78 + g * 5 };
-        headTilt = g * 0.05;
-        break;
-      }
-      case 'receive': {
-        const reach = { x: frontRoot.x + 30 * fx, y: -80 + bob };
-        const k = t < 0.55 ? smoothstep(t / 0.55) : 1 - smoothstep((t - 0.55) / 0.45);
-        const rest = holding ? holdPos : swingTarget(frontRoot, 0);
-        frontTarget = { x: rest.x + (reach.x - rest.x) * k, y: rest.y + (reach.y - rest.y) * k };
-        break;
-      }
-      case 'drink': {
-        const mouth = { x: head.x + 9 * fx + (base === 'E' ? 4 : 0), y: head.y + 7 };
-        const k = t < 0.32 ? smoothstep(t / 0.32) : t < 0.62 ? 1 : 1 - smoothstep((t - 0.62) / 0.38);
-        frontTarget = { x: holdPos.x + (mouth.x - holdPos.x) * k, y: holdPos.y + (mouth.y - holdPos.y) * k };
-        headTilt = -0.12 * k;
-        break;
-      }
-      case 'drop': {
-        const down = { x: frontRoot.x + 26 * fx, y: -54 };
-        const k = t < 0.5 ? smoothstep(t / 0.5) : 1 - smoothstep((t - 0.5) / 0.5);
-        const rest = holding ? holdPos : swingTarget(frontRoot, 0);
-        frontTarget = { x: rest.x + (down.x - rest.x) * k, y: rest.y + (down.y - rest.y) * k };
-        break;
-      }
-    }
-  }
-  const arms: [Limb, Limb] = [ik(backRoot, backTarget, UPPER, FORE, 1), ik(frontRoot, frontTarget, UPPER, FORE, 1)];
-  return { base, mirror, hip, shoulder, head, headTilt, legs, arms, handR: arms[1].end };
+  return { ...skeletonPose(TEST_FIGURE_TEMPLATE, VIEW_OF[base], mirror, a, holding, DEFAULT_MOTION), base };
 }
 
 export interface FigurePalette { coat: string; hat: string; scarf: string; skin: string; trousers: string }

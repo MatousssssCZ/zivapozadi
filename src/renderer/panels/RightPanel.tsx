@@ -5,6 +5,7 @@ import { getActivity, listActivityDefinitions } from '../../core/activities/regi
 import { newId } from '../../core/model/ids';
 import { deleteSelection, duplicateSelection } from '../ops';
 import { formatTime } from './BottomPanel';
+import { AppearanceEditor, CharacterPreview } from './CharacterGenerator';
 
 const deg = (r: number | undefined) => Math.round(((r ?? 0) * 180) / Math.PI);
 const rad = (d: number) => (d * Math.PI) / 180;
@@ -170,8 +171,15 @@ function CharacterProps({ id, p }: { id: string; p: ProjectFile }) {
   const set = (label: string, fn: (x: typeof c) => void) => upd(label, (d) => fn(d.characters.find((x) => x.id === id)!));
   const agent = store.sim.sim?.state.agents.find((a) => a.id === id);
   const m = store.state.manifests[c.assetId];
+  const rigLib = m?.rigLibrary;
   return (
     <>
+      {rigLib && c.appearance && <Section title="Vzhled (generátor postav)">
+        {rigLib.provisional && <div className="warn small">Dočasné díly – nejde o finální grafiku.</div>}
+        <CharacterPreview app={c.appearance} manifest={m} />
+        <AppearanceEditor app={c.appearance} lib={rigLib} onChange={(a, label) => set(label, (x) => { x.appearance = a; })} />
+      </Section>}
+      {rigLib && !c.appearance && <div className="warn">Postava nemá uložený vzhled – vygenerujte ho v panelu Postavy.</div>}
       <Section title="Postava">
         <Row label="Jméno"><TextField value={c.name} onCommit={(v) => set('Přejmenování', (x) => { x.name = v; })} /></Row>
         <Row label="Vzhled"><span className="muted">{m ? m.name : 'manifest chybí!'}</span></Row>

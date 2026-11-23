@@ -20,7 +20,9 @@
     "dist:win": "npm run build && electron-builder --win",
     "dist:mac": "npm run build && electron-builder --mac",
     "test:e2e": "npm run build && node tests/e2e/electron.e2e.cjs",
-    "assets:generate": "tsx scripts/generate-assets.ts"
+    "assets:generate": "tsx scripts/generate-assets.ts",
+    "test:e2e:postavy": "npm run build && node tests/e2e/characters.e2e.cjs",
+    "parts:generate": "tsx scripts/generate-painted-parts.ts"
   },
   "build": {
     "appId": "cz.zimniscena.editor",

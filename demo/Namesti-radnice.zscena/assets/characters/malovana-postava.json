@@ -1,0 +1,107 @@
+{
+  "format": "zimni-scena-postava",
+  "formatVersion": 1,
+  "id": "painted-adult",
+  "name": "Malovaná postava (dočasné díly)",
+  "provisional": true,
+  "backend": "skeleton",
+  "height": 130,
+  "anchor": {
+    "x": 0.5,
+    "y": 1
+  },
+  "directions": [
+    "E",
+    "SE",
+    "NE"
+  ],
+  "directionFallbacks": {
+    "W": {
+      "use": "E",
+      "mirror": true
+    },
+    "SW": {
+      "use": "SE",
+      "mirror": true
+    },
+    "NW": {
+      "use": "NE",
+      "mirror": true
+    },
+    "S": {
+      "use": "SE",
+      "mirror": false
+    },
+    "N": {
+      "use": "NE",
+      "mirror": false
+    }
+  },
+  "clips": {
+    "idle": {
+      "duration": 3.2,
+      "loop": "loop"
+    },
+    "walk": {
+      "duration": 1,
+      "loop": "loop",
+      "strideLength": 96
+    },
+    "talk": {
+      "duration": 1.4,
+      "loop": "loop"
+    },
+    "receive": {
+      "duration": 1.1,
+      "loop": "once",
+      "events": [
+        {
+          "time": 0.6,
+          "name": "take"
+        }
+      ]
+    },
+    "drink": {
+      "duration": 2.6,
+      "loop": "once",
+      "events": [
+        {
+          "time": 1.1,
+          "name": "sip"
+        }
+      ]
+    },
+    "drop": {
+      "duration": 1,
+      "loop": "once",
+      "events": [
+        {
+          "time": 0.55,
+          "name": "release"
+        }
+      ]
+    },
+    "look": {
+      "duration": 2,
+      "loop": "once"
+    }
+  },
+  "clipFallbacks": {
+    "look": "idle"
+  },
+  "attachPoints": {},
+  "capabilities": [
+    "walk",
+    "look",
+    "hold-cup",
+    "drink",
+    "talk"
+  ],
+  "supportedActivities": [
+    "coffee"
+  ],
+  "rig": {
+    "library": "painted-parts/library.json",
+    "bodyTemplate": "adult"
+  }
+}

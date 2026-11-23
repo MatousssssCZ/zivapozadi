@@ -5,6 +5,7 @@ import type { AssetEntry } from '../../core/model/types';
 import { listActivityDefinitions } from '../../core/activities/registry';
 import { placeAsset, setBackground, addEvent } from '../ops';
 import { formatTime } from './BottomPanel';
+import { GeneratorPanel } from './CharacterGenerator';
 
 const thumbCache = new Map<string, string>();
 function Thumb({ asset, builtin }: { asset: AssetEntry; builtin: boolean }) {
@@ -138,7 +139,7 @@ function Events() {
 const STATUS: Record<string, string> = { pending: 'čeká na čas', waiting: 'čeká na dostupnost', started: 'spuštěno', skipped: 'přeskočeno', conflict: 'konflikt' };
 
 export function LeftPanel() {
-  const [tab, setTab] = useState<'lib' | 'act' | 'out' | 'ev'>('lib');
+  const [tab, setTab] = useState<'lib' | 'act' | 'out' | 'ev' | 'gen'>('lib');
   const has = useEditor((s) => !!s.project);
   useEffect(() => { zs().listBuiltins().then((b) => store.set({ builtins: b })).catch(() => {}); }, []);
   if (!has) return <div className="panel left" />;
@@ -149,12 +150,14 @@ export function LeftPanel() {
         <button className={tab === 'act' ? 'active' : ''} onClick={() => setTab('act')}>Činnosti</button>
         <button className={tab === 'out' ? 'active' : ''} onClick={() => setTab('out')}>Scéna</button>
         <button className={tab === 'ev' ? 'active' : ''} onClick={() => setTab('ev')}>Události</button>
+        <button className={tab === 'gen' ? 'active' : ''} onClick={() => setTab('gen')} data-testid="tab-generator">Postavy</button>
       </div>
       <div className="panel-body">
         {tab === 'lib' && <Library />}
         {tab === 'act' && <Activities />}
         {tab === 'out' && <Outline />}
         {tab === 'ev' && <Events />}
+        {tab === 'gen' && <GeneratorPanel />}
       </div>
     </div>
   );

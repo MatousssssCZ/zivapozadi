@@ -81,6 +81,7 @@ npm run export:cli -- demo/Vanocni-namesti.zscena --out video.mp4 --res 3840x216
 * [docs/FORMAT_ASSETU.md](docs/FORMAT_ASSETU.md) – formát projektu, assetů a manifestu postavy
 * [docs/PRIDANI_CINNOSTI.md](docs/PRIDANI_CINNOSTI.md) – jak přidat činnost (+ návrh definice sněhuláka)
 * [docs/STAV.md](docs/STAV.md) – hotové funkce, známá omezení, výsledky ověření
+* [docs/POSTAVY.md](docs/POSTAVY.md) – generátor malovaných postav (díly, kostra, pravidla, jak přidat bundu/čepici/pohled)
 
 ## Ovládání (výběr)
 

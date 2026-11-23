@@ -69,7 +69,7 @@ export function EditorCanvas() {
     if (st.showMarkers) {
       drawOverlay(ctx, {
         project: p, sim: store.sim.sim, selection: st.selection, tool: st.tool, px, routeActiveNode: st.routeActiveNode,
-        drawing: st.drawing, mouse: mouse.current, dragRect: dragRect.current, hover: hover.current && hover.current.kind === 'object' ? { kind: 'object', id: hover.current.id } : null,
+        drawing: st.drawing, mouse: mouse.current, dragRect: dragRect.current, rigDiagnostics: st.rigDiagnostics, hover: hover.current && hover.current.kind === 'object' ? { kind: 'object', id: hover.current.id } : null,
       });
     }
     // rámeček exportovaného záběru

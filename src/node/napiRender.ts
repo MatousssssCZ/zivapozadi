@@ -1,5 +1,7 @@
 /** Vykreslování v Node (CLI export a testy) přes @napi-rs/canvas (Skia) – tentýž kód rendereru jako v aplikaci. */
 import { createCanvas, loadImage, type Image } from '@napi-rs/canvas';
+import { setCanvasFactory, rigImageKey } from '../core/render/rigRenderer';
+setCanvasFactory((w, h) => createCanvas(w, h) as never);
 import type { LoadedProject } from './projectIO';
 import { resolveInside } from './projectIO';
 import type { AssetImages } from '../core/render/sceneRenderer';
@@ -11,6 +13,14 @@ export async function loadNodeImages(lp: LoadedProject): Promise<AssetImages> {
   for (const a of lp.project.assets) {
     if (a.kind !== 'image' || lp.missingAssets.includes(a.id)) continue;
     try { map.set(a.id, await loadImage(resolveInside(lp.dir, a.file))); } catch { /* zástupný obdélník */ }
+  }
+  // díly skládaných postav
+  for (const m of Object.values(lp.manifests)) {
+    if (!m.rigLibrary || m.rigLibraryDir === undefined) continue;
+    for (const p of m.rigLibrary.parts) for (const f of [p.texture, p.mask]) {
+      if (!f) continue; const k = rigImageKey(m.rigLibraryDir, f);
+      if (!map.has(k)) { try { map.set(k, await loadImage(resolveInside(lp.dir, `${m.rigLibraryDir}/${f}`))); } catch { /* chybějící díl */ } }
+    }
   }
   return { get: (id) => map.get(id) ?? null };
 }

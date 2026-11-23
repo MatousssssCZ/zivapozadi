@@ -1,12 +1,12 @@
 import { app, BrowserWindow, dialog, ipcMain, shell, Menu } from 'electron';
 import path from 'node:path';
 import { promises as fs, existsSync } from 'node:fs';
-import { loadProject, saveProject, createProjectDir, importAssetFile, readProjectFile, copyProjectDir, PROJECT_EXT, ProjectIOError } from '../src/node/projectIO';
+import { loadCharacterManifest, loadProject, saveProject, createProjectDir, importAssetFile, readProjectFile, copyProjectDir, PROJECT_EXT, ProjectIOError } from '../src/node/projectIO';
 import { readBuiltinLibrary, copyBuiltinAsset } from '../src/node/builtin';
 import { locateFfmpeg, ffmpegHasEncoder, probeDuration } from '../src/node/ffmpeg';
 import { NodeEncoderHost } from '../src/node/exportHost';
 import { createEmptyProject } from '../src/core/model/defaults';
-import type { ProjectFile } from '../src/core/model/types';
+import type { ProjectFile, AssetEntry } from '../src/core/model/types';
 import type { ExportPlan } from '../src/core/export/plan';
 import { IMAGE_EXTS, AUDIO_EXTS } from '../src/node/imageInfo';
 
@@ -121,6 +121,7 @@ handle('asset:import', async (dir: string, kind: 'image' | 'audio') => {
 handle('builtin:list', async () => (await readBuiltinLibrary(resDir)).assets);
 handle('builtin:read', async (file: string) => new Uint8Array(await fs.readFile(path.join(resDir, path.basename(file)))));
 handle('builtin:add', async (dir: string, id: string) => copyBuiltinAsset(resDir, dir, id));
+handle('character:loadManifest', async (dir: string, asset: AssetEntry) => loadCharacterManifest(dir, asset));
 
 handle('ffmpeg:info', () => {
   const ff = locateFfmpeg();

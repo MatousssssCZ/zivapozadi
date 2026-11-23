@@ -16,6 +16,7 @@ const api = {
   listBuiltins: () => invoke('builtin:list'),
   readBuiltin: (file: string) => invoke('builtin:read', file),
   addBuiltin: (dir: string, id: string) => invoke('builtin:add', dir, id),
+  loadManifest: (dir: string, asset: unknown) => invoke('character:loadManifest', dir, asset),
   ffmpegInfo: () => invoke('ffmpeg:info'),
   probeAudio: (dir: string, rel: string) => invoke('audio:probe', dir, rel),
   chooseExportPath: (suggested: string) => invoke('export:choosePath', suggested),

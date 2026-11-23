@@ -11,6 +11,7 @@ import { getActivity } from '../core/activities/registry';
 import { polygonsOverlap } from '../core/math/geom';
 import { characterVisual } from '../core/render/characterPose';
 import type { Vec2 } from '../core/math/vec';
+import { drawRigDiagnostics } from './rigDiagnostics';
 
 /** Jedinečná barva editorových bodů (testy ověřují, že se v exportu nevyskytuje). */
 export const MARKER_ACCENT = '#ff00e6';
@@ -20,6 +21,8 @@ export interface OverlayInput {
   px: number; // velikost 1 obrazovkového pixelu v logických jednotkách
   routeActiveNode: string | null; drawing: Vec2[]; mouse: Vec2 | null; dragRect: { a: Vec2; b: Vec2 } | null;
   hover: Selection;
+  /** Diagnostika skládaných postav (kostra, kotvy, názvy dílů). */
+  rigDiagnostics?: boolean;
 }
 
 type Ctx = CanvasRenderingContext2D;
@@ -139,8 +142,13 @@ export function drawOverlay(ctx: Ctx, o: OverlayInput) {
     for (const a of o.sim.state.agents) {
       const c = o.sim.characterOf(a.id); if (!c) continue;
       const m = o.sim.manifests[c.assetId]; if (!m) continue;
-      const cv = characterVisual(a, m, c.baseScale, p.scene.depth);
+      const cv = characterVisual(a, m, c, p.scene.depth);
       const selected = isSel('character', a.id);
+      if (o.rigDiagnostics) {
+        ctx.save(); ctx.translate(cv.x, cv.y); ctx.scale(cv.mirror ? -cv.scale : cv.scale, cv.scale);
+        drawRigDiagnostics(ctx, cv, px / cv.scale, selected);
+        ctx.restore();
+      }
       const top = cv.y - m.height * cv.scale - 8;
       label(ctx, `${a.name}${m.provisional ? ' · provizorní' : ''}`, cv.x, top, px, selected ? '#ffe14d' : '#fff');
       if (selected) {

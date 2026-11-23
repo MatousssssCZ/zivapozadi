@@ -33,12 +33,13 @@ export interface EditorState {
   canRedo: boolean;
   exportOpen: boolean;
   exporting: boolean;
+  rigDiagnostics: boolean;
 }
 
 const initial: EditorState = {
   dir: null, project: null, manifests: {}, issues: [], missingAssets: [], selection: null, tool: 'select', routeActiveNode: null,
   drawing: [], zoneType: 'coffee', showMarkers: true, dirty: false, toasts: [], builtins: [], canUndo: false, canRedo: false,
-  exportOpen: false, exporting: false,
+  exportOpen: false, exporting: false, rigDiagnostics: false,
 };
 
 const HISTORY_LIMIT = 200;
@@ -79,14 +80,21 @@ class Store {
     this.sim.pause();
     this.sim.restart(r.project, r.manifests);
     this.images.onChange = () => this.set({});
-    await this.images.sync(r.dir, r.project, r.missingAssets);
+    await this.images.sync(r.dir, r.project, r.missingAssets, r.manifests);
     for (const i of r.issues.filter((x) => x.level === 'warning').slice(0, 4)) this.toast('warn', i.message, 9000);
+  }
+
+  /** Doplní/aktualizuje manifest postavy (např. po přidání knihovny malovaných dílů). */
+  async addManifest(assetId: string, m: CharacterManifest) {
+    const manifests = { ...this.state.manifests, [assetId]: m };
+    this.set({ manifests });
+    if (this.state.dir && this.state.project) { await this.images.sync(this.state.dir, this.state.project, this.state.missingAssets, manifests); this.sim.rebuild(this.state.project, manifests, true); }
   }
 
   private applyProject(next: ProjectFile, rebuildSim = true) {
     this.set({ project: next, dirty: true });
     if (rebuildSim) this.sim.rebuild(next, this.state.manifests, true);
-    if (this.state.dir) this.images.sync(this.state.dir, next, this.state.missingAssets);
+    if (this.state.dir) this.images.sync(this.state.dir, next, this.state.missingAssets, this.state.manifests);
   }
 
   /** Editační příkaz s historií zpět/vpřed. */

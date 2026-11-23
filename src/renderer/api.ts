@@ -17,6 +17,7 @@ export interface ZsApi {
   listBuiltins(): Promise<AssetEntry[]>;
   readBuiltin(file: string): Promise<Uint8Array>;
   addBuiltin(dir: string, id: string): Promise<AssetEntry>;
+  loadManifest(dir: string, asset: AssetEntry): Promise<CharacterManifest>;
   ffmpegInfo(): Promise<{ path: string; source: string; hasX264: boolean } | null>;
   probeAudio(dir: string, rel: string): Promise<number | null>;
   chooseExportPath(suggested: string): Promise<string | null>;

@@ -31,6 +31,7 @@ export function TopBar() {
   const tool = useEditor((s) => s.tool);
   const canUndo = useEditor((s) => s.canUndo), canRedo = useEditor((s) => s.canRedo);
   const showMarkers = useEditor((s) => s.showMarkers);
+  const rigDiag = useEditor((s) => s.rigDiagnostics);
   const has = !!project;
   return (
     <div className="topbar">
@@ -60,6 +61,7 @@ export function TopBar() {
         <button disabled={!canUndo} onClick={() => store.undoOp()} title="Ctrl+Z">↶ Zpět</button>
         <button disabled={!canRedo} onClick={() => store.redoOp()} title="Ctrl+Y / Ctrl+Shift+Z">↷ Vpřed</button>
         <label className="check"><input type="checkbox" checked={showMarkers} onChange={(e) => store.set({ showMarkers: e.target.checked })} /> Značky editoru</label>
+        <label className="check" title="Kostra, klouby, kotevní body a názvy dílů skládaných postav (jen v editoru)"><input type="checkbox" checked={rigDiag} onChange={(e) => store.set({ rigDiagnostics: e.target.checked, showMarkers: e.target.checked || store.state.showMarkers })} /> Kostra postav</label>
         <button className="primary" disabled={!has} onClick={() => store.set({ exportOpen: true })}>Export videa…</button>
       </div>
     </div>

@@ -19,6 +19,8 @@
 | Export | MP4 H.264 yuv420p (BT.709), 1920×1080 a 3840×2160 @ 30 fps, délka ruční / podle hudby, bez zvuku / s hudbou (opakovat / ticho / zkrátit se zeslabením), průběh, ETA, zrušení, části s checkpointy + navázání, zahození zastaralých checkpointů, kontrola cesty a místa na disku, chyby enkodéru, diagnostický PNG režim |
 | Demo | `demo/Vanocni-namesti.zscena`: pozadí, stánek, stoleček (2 místa), strom (2 výhledy), koš, 2 lampy, 2 závěje v popředí, 11 bodů a 15 spojení (1 jednosměrné, 1 úzké), překážka, plocha sněhu, 3 postavy, zóna kávy, plánovaná událost v 0:20 |
 
+| Generátor postav | skládání z malovaných dílů na 2D kostře, 1 šablona dospělého, 2 bundy, 3 pokrývky hlavy, 2 šály, společné kalhoty/boty/rukavice, 7 palet (přebarvení přes masky), jednotlivec i skupina, zámky, uložení vzhledu, náhled klidu/chůze a pohledů, diagnostika kostry; díly zatím DOČASNÉ (viz POSTAVY.md) |
+
 ## Známá omezení
 
 * Testováno pouze na **Linuxu** (kontejner bez GPU, Xvfb). Na Windows ani macOS aplikace spuštěna
@@ -26,8 +28,9 @@
 * Vykreslování přes Canvas 2D; export čte snímky přes `getImageData` a IPC. Ve 4K bez GPU ~4–5 snímků/s
   (12 s videa ≈ 75 s); hodina 4K videa by v tomto prostředí trvala odhadem 6–8 hodin. Na stroji s GPU
   bude rychlejší, ale netestováno.
-* Jediná postava je procedurální a provizorní; backendy `frames` (snímkové animace) a `skeleton`
-  (2D kostra) jsou jen připravené v datovém formátu, vykreslení není implementováno.
+* Postavy: procedurální testovací + skládané z malovaných dílů (backend `skeleton`). Díly jsou zatím
+  DOČASNÉ – dodaný výtvarný prototyp dílů do projektu nedorazil. Backend `frames` (snímkové animace)
+  je jen připravený v datovém formátu. Chybí čelní a zadní pohled (explicitní náhrada šikmým pohledem).
 * Jediná implementovaná činnost je káva. Prodavač ve stánku není postava – kelímek se „objeví“ na pultu.
 * Žádné vyhýbání se postav mezi sebou mimo rezervace (úzké průchody, obslužná místa); v otevřeném prostoru
   se postavy mohou krátce překrýt (zmírněno bočním odsazením při chůzi).
@@ -94,3 +97,19 @@ yuv420p, 0 pixelů značek), paměť, **zrušení exportu z GUI a navázání od
 * Skutečné zaplnění disku během exportu (ověřena jen předběžná kontrola místa a převod chybové hlášky FFmpeg).
 * Export celé hodiny ve 4K (ověřeno 12 s 4K z GUI a 5 min 1080p; rychlost a paměť jsou konstantní na snímek).
 * Ruční uživatelské testování ergonomie rozhraní.
+
+
+## Ověření generátoru postav
+
+* `tests/characters.test.ts` (10 testů): konzistence knihovny; stejný seed ⇒ stejný jednotlivec i
+  skupina; 2000 vzorků bez nekompatibilní kombinace a s pravidly barev; skupina 12 bez opakování,
+  při nedostatku kombinací hlášené duplicity; zámky při přegenerování (60 pokusů); uložení →
+  otevření beze změny a rozšíření knihovny nezmění uložené postavy (shodná sestava dílů i simulace);
+  mezery v kloubech (4 postavy × 4 směry × 8 póz, > 10 000 bodů podél kostí kryto); kadence úměrná
+  rychlosti a stojná noha bez klouzání (< 0,6 jednotky); nesynchronní klid; diagnostika kostry není
+  v exportovaném MP4 (s pozitivní kontrolou) a postavy v exportu jsou.
+* `tests/e2e/characters.e2e.cjs` (Electron): uložení skupiny do projektu, změna čepice, zámek bundy
+  při přegenerování v GUI, beze změny po znovuotevření, determinismus simulace.
+* Čitelnost na náměstí: `docs/img/postavy-na-namesti-1080p.png` a `docs/img/postavy-na-namesti-4k-vyrez.png`
+  (skutečná velikost ve výstupu) – posouzeno vizuálně.
+* Neověřeno: dodaná grafika dílů (nedorazila); čelní a zadní pohled (bez podkladů).

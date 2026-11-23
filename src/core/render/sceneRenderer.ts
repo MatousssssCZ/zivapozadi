@@ -7,6 +7,7 @@ import type { Simulation } from '../sim/simulation';
 import type { AgentState, PropState } from '../sim/types';
 import { characterVisual } from './characterPose';
 import { drawFigure } from '../anim/testFigure';
+import { drawRig } from './rigRenderer';
 import { depthScaleAt } from '../scene/geometry';
 import { hashNoise } from '../math/rng';
 import { clamp, smoothstep } from '../math/vec';
@@ -62,19 +63,21 @@ function drawShadow(ctx: Ctx, x: number, y: number, s: number) {
   ctx.beginPath(); ctx.ellipse(x, y, 17 * s, 5 * s, 0, 0, Math.PI * 2); ctx.fill();
 }
 
-function drawAgent(ctx: Ctx, project: ProjectFile, sim: Simulation, a: AgentState, cupScaleFallback: number) {
+function drawAgent(ctx: Ctx, project: ProjectFile, sim: Simulation, a: AgentState, cupScaleFallback: number, images: AssetImages) {
   const c = sim.characterOf(a.id);
   if (!c) return;
   const m = sim.manifests[c.assetId];
   if (!m) return;
-  const cv = characterVisual(a, m, c.baseScale, project.scene.depth);
+  const cv = characterVisual(a, m, c, project.scene.depth);
   drawShadow(ctx, cv.x, cv.y, cv.scale);
   ctx.save();
   ctx.translate(cv.x, cv.y);
   ctx.scale(cv.mirror ? -cv.scale : cv.scale, cv.scale);
-  if (m.backend === 'procedural-test-figure') {
-    const held = a.holding ? sim.state.props.find((p) => p.id === a.holding) : undefined;
-    drawFigure(ctx, cv.pose, c.palette, held ? () => drawCup(ctx, cv.pose.handR.x, cv.pose.handR.y + 6, 1, held.sips) : undefined);
+  const held = a.holding ? sim.state.props.find((p) => p.id === a.holding) : undefined;
+  if (m.backend === 'skeleton' && cv.rig && m.rigLibrary) {
+    drawRig(ctx, cv.rig, images, m.rigLibraryDir ?? '', m.rigLibrary.bodyTemplates[0]?.farShade ?? 0.8, held ? () => drawCup(ctx, cv.grip.x, cv.grip.y + 6, 1, held.sips) : undefined);
+  } else if (m.backend === 'procedural-test-figure') {
+    drawFigure(ctx, cv.pose as Parameters<typeof drawFigure>[1], c.palette, held ? () => drawCup(ctx, cv.pose.handR.x, cv.pose.handR.y + 6, 1, held.sips) : undefined);
   } else {
     // Backend zatím není implementován – zástupný obrys (viz diagnostika).
     ctx.fillStyle = 'rgba(120,120,140,0.6)'; ctx.fillRect(-12, -m.height, 24, m.height);
@@ -106,7 +109,7 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
     items.push({ key, tie: i, draw: () => drawObject(ctx, o, assets.get(o.assetId), images.get(o.assetId)) });
   }
   if (sim) {
-    for (const a of sim.state.agents) items.push({ key: a.pos.y, tie: 10000 + sim.state.agents.indexOf(a), draw: () => drawAgent(ctx, project, sim, a, 1) });
+    for (const a of sim.state.agents) items.push({ key: a.pos.y, tie: 10000 + sim.state.agents.indexOf(a), draw: () => drawAgent(ctx, project, sim, a, 1, images) });
     for (const p of sim.state.props) {
       const s = depthScaleAt(sc.depth, propY(p)) * 1.0;
       if (p.place.kind === 'counter') {

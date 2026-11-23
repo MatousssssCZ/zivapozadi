@@ -45,4 +45,25 @@ export interface SimContext {
   rand(agent: AgentState): number;
   randRange(agent: AgentState, lo: number, hi: number): number;
   isRemoved(objectId: string): boolean;
+  /** Rozhraní pro řízení postavy (nezávislé na jejím vzhledu). */
+  character: CharacterControl;
+}
+
+/** Ovládání postavy z činností a plánovače. Vzhled nerozhoduje o chování. */
+export interface CharacterControl {
+  setFacing(agent: AgentState, angle: number): void;
+  setSpeedFactor(agent: AgentState, factor: number): void;
+  /** Spustí podporovanou animaci (s explicitní náhradou při chybějícím klipu); vrací false u neznámého klipu bez náhrady. */
+  playAnimation(agent: AgentState, clip: string, opts?: { duration?: number; loop?: 'loop' | 'once' }): boolean;
+  /** Připojí rekvizitu do úchopového bodu ruky. */
+  attachToHand(agent: AgentState, propId: string): void;
+  /** Uvolní rekvizitu z ruky (volající určí, kam ji umístí). */
+  detachFromHand(agent: AgentState): string | null;
+  capabilities(agent: AgentState): CharacterCapabilities;
+}
+export interface CharacterCapabilities {
+  clips: string[];
+  capabilities: string[];
+  activities: string[];
+  views: { view: string; available: boolean; substitute?: string }[];
 }

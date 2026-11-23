@@ -1,10 +1,10 @@
 {
   "format": "zimni-scena-postava",
   "formatVersion": 1,
-  "id": "test-figure",
-  "name": "Testovací postava (provizorní)",
+  "id": "painted-adult",
+  "name": "Malovaná postava (dočasné díly)",
   "provisional": true,
-  "backend": "procedural-test-figure",
+  "backend": "skeleton",
   "height": 130,
   "anchor": {
     "x": 0.5,
@@ -45,7 +45,7 @@
     "walk": {
       "duration": 1,
       "loop": "loop",
-      "strideLength": 92
+      "strideLength": 96
     },
     "talk": {
       "duration": 1.4,
@@ -89,22 +89,7 @@
   "clipFallbacks": {
     "look": "idle"
   },
-  "attachPoints": {
-    "handR": {
-      "E": {
-        "x": 14,
-        "y": -64
-      },
-      "SE": {
-        "x": 12,
-        "y": -62
-      },
-      "NE": {
-        "x": 12,
-        "y": -64
-      }
-    }
-  },
+  "attachPoints": {},
   "capabilities": [
     "walk",
     "look",
@@ -114,5 +99,9 @@
   ],
   "supportedActivities": [
     "coffee"
-  ]
+  ],
+  "rig": {
+    "library": "painted-parts/library.json",
+    "bodyTemplate": "adult"
+  }
 }

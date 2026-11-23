@@ -55,6 +55,8 @@ export interface AgentState {
   pendingActivity: { type: string; zoneId: string | null; source: ActivityRun['source']; sourceId: string | null } | null;
   wander: { waitUntil: number; prevNode: string | null; atStop: boolean };
   cooldowns: Record<string, number>;
+  /** Násobek rychlosti chůze nastavený přes rozhraní postavy (výchozí 1). */
+  speedFactor?: number;
   /** Srozumitelný popis, na co postava čeká (pro panel vlastností). */
   status: string;
 }

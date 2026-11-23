@@ -5,6 +5,8 @@ import type { AssetEntry, ProjectFile } from '../core/model/types';
 import { migrateProject, validateProject, ProjectFormatError, type ValidationIssue } from '../core/model/validate';
 import type { CharacterManifest } from '../core/anim/manifest';
 import { readImageInfo, IMAGE_EXTS, AUDIO_EXTS } from './imageInfo';
+import { validateLibrary, type PartLibrary } from '../core/anim/partLibrary';
+import { validateAppearance } from '../core/anim/appearanceGenerator';
 import { APP_VERSION } from '../core/model/defaults';
 
 export const PROJECT_FILE = 'project.json';
@@ -83,11 +85,11 @@ export async function loadProject(dir: string): Promise<LoadedProject> {
     }
     if (a.kind === 'character') {
       try {
-        const m = JSON.parse(await fs.readFile(full, 'utf8')) as CharacterManifest;
-        if (m.format !== 'zimni-scena-postava') throw new Error('neznámý formát manifestu');
-        if (m.formatVersion !== 1) throw new Error(`nepodporovaná verze manifestu ${m.formatVersion}`);
-        if (!m.clips || !m.directions?.length) throw new Error('manifest nemá klipy nebo směry');
-        if (m.backend !== 'procedural-test-figure') issues.push({ level: 'warning', path: a.id, message: `Postava „${a.name}“ používá backend „${m.backend}“, který v této verzi není implementován – zobrazí se zástupný tvar.` });
+        const m = await loadCharacterManifest(dir, a, issues);
+        if (m.rigLibrary) for (const c of project.characters.filter((c) => c.assetId === a.id)) {
+          if (!c.appearance) { issues.push({ level: 'warning', path: c.id, message: `Postava „${c.name}“ nemá uložený vzhled.` }); continue; }
+          for (const x of validateAppearance(m.rigLibrary, c.appearance)) issues.push({ level: 'warning', path: c.id, message: `Postava „${c.name}“: ${x.message}` });
+        }
         manifests[a.id] = m;
       } catch (e) {
         missingAssets.push(a.id);
@@ -105,6 +107,24 @@ export async function loadProject(dir: string): Promise<LoadedProject> {
 
 function slug(s: string): string {
   return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'asset';
+}
+
+/** Načte a ověří manifest postavy (u backendu `skeleton` i knihovnu dílů). */
+export async function loadCharacterManifest(dir: string, a: AssetEntry, issues: ValidationIssue[] = []): Promise<CharacterManifest> {
+  const m = JSON.parse(await fs.readFile(resolveInside(dir, a.file), 'utf8')) as CharacterManifest;
+  if (m.format !== 'zimni-scena-postava') throw new Error('neznámý formát manifestu');
+  if (m.formatVersion !== 1) throw new Error(`nepodporovaná verze manifestu ${m.formatVersion}`);
+  if (!m.clips || !m.directions?.length) throw new Error('manifest nemá klipy nebo směry');
+  if (m.backend === 'skeleton') {
+    if (!m.rig?.library) throw new Error('chybí odkaz na knihovnu dílů (rig.library)');
+    const libRel = path.posix.join(path.posix.dirname(a.file), m.rig.library);
+    const lib = JSON.parse(await fs.readFile(resolveInside(dir, libRel), 'utf8')) as PartLibrary;
+    const li = validateLibrary(lib);
+    for (const x of li) issues.push({ level: 'warning', path: a.id, message: `Knihovna dílů „${lib.label}“: ${x.message}` });
+    if (li.some((x) => x.level === 'error')) throw new Error('knihovna dílů obsahuje chyby');
+    m.rigLibrary = lib; m.rigLibraryDir = path.posix.dirname(libRel);
+  } else if (m.backend !== 'procedural-test-figure') issues.push({ level: 'warning', path: a.id, message: `Postava „${a.name}“ používá backend „${m.backend}“, který v této verzi není implementován – zobrazí se zástupný tvar.` });
+  return m;
 }
 
 /** Zkopíruje podklad do spravované projektové složky a vrátí položku assetu. */

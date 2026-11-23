@@ -35,6 +35,8 @@ export interface AssetEntry {
   defaultFootprint?: Vec2[];
   /** Označení provizorního testovacího assetu. */
   provisional?: boolean;
+  /** Vestavěná knihovna: složka, která se kopíruje spolu se souborem (např. díly postav). */
+  includeDir?: string;
 }
 
 export type InteractionKind = 'none' | 'stand' | 'table' | 'bin' | 'viewpoint' | 'generic';
@@ -138,6 +140,8 @@ export interface CharacterInstance {
   activities: Record<string, ActivityAutoConfig>;
   /** Volné procházení sítí tras mezi činnostmi. */
   wander: boolean;
+  /** Vzhled skládané postavy (identita z generátoru) – jen u manifestů s backendem `skeleton`. */
+  appearance?: import('../anim/partLibrary').CharacterAppearance;
 }
 
 export type UnavailablePolicy = 'wait' | 'skip' | 'report';

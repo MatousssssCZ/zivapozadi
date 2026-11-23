@@ -46,6 +46,11 @@ export interface CharacterManifest {
   attachPoints: Record<string, AttachPointDef>;
   capabilities: string[];
   supportedActivities: string[];
+  /** Backend `skeleton`: knihovna malovaných dílů (cesta vůči souboru manifestu) a tělesná šablona. */
+  rig?: { library: string; bodyTemplate: string };
+  /** Doplněno při načtení projektu (neukládá se): načtená knihovna dílů a její složka v projektu. */
+  rigLibrary?: import('./partLibrary').PartLibrary;
+  rigLibraryDir?: string;
 }
 
 export function resolveDirection(m: CharacterManifest, d: Direction): DirectionFallback & { warning?: string } {

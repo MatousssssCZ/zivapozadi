@@ -66,6 +66,12 @@ zkrácení se zeslabením; rychlost hudby se nikdy nemění).
 V Electronu běží simulace a vykreslení v okně editoru (OffscreenCanvas → `getImageData`) a snímky
 jdou přes IPC do hlavního procesu. CLI používá totéž jádro s rendererem Skia (`@napi-rs/canvas`).
 
+## Skládané postavy (generátor)
+
+Viz [POSTAVY.md](POSTAVY.md). Kinematika kostry (`anim/skeleton.ts`) je společná pro testovací
+i skládanou postavu; backend `skeleton` v manifestu postavy odkazuje na knihovnu dílů,
+`characterVisual` z ní sestaví díly na kostru. Vzhled je uložen v `characters[].appearance`.
+
 ## Rozšiřitelnost
 
 * **Činnosti:** `registerActivity(runner)` – viz `PRIDANI_CINNOSTI.md`.

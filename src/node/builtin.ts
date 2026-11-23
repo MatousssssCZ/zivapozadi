@@ -28,5 +28,6 @@ export async function copyBuiltinAsset(resDir: string, projectDir: string, built
   const dest = resolveInside(projectDir, rel);
   await fs.mkdir(path.dirname(dest), { recursive: true });
   await fs.copyFile(path.join(resDir, src.file), dest);
+  if (src.includeDir) await fs.cp(path.join(resDir, src.includeDir), resolveInside(projectDir, `assets/${sub}/${src.includeDir}`), { recursive: true });
   return { ...structuredClone(src), file: rel };
 }
