@@ -6,12 +6,13 @@ import { canonicalJson, fingerprint } from '../model/hash';
 import { ALL_DIRECTIONS, resolveDirection, resolveClip, type CharacterManifest } from '../anim/manifest';
 import { initialAnimState, playAction, stepAnimator, stopAction } from '../anim/animator';
 import { getActivity } from '../activities/registry';
-import { characterVisual, localToScene } from '../render/characterPose';
+import { characterVisual, localToScene, gaitContextFor } from '../render/characterPose';
 import { depthScaleAt } from '../scene/geometry';
 import { Reservations } from './reservations';
 import { stepMovement, directionFromAngle, turnInPlace } from './movement';
 import type { SimContext, ResolvedPoint, CharacterControl } from './context';
 import { ALL_VIEWS } from '../anim/skeleton';
+import { gaitEvents } from '../anim/gaitProfile';
 import { SIM_DT, SIM_STATE_VERSION, type AgentState, type SimState, type Waypoint, type PropState, type LogEntry } from './types';
 import { dist } from '../math/vec';
 
@@ -326,12 +327,16 @@ export class Simulation {
         turnInPlace(a, target, SIM_DT);
       }
     }
-    a.anim.dir = directionFromAngle(a.facing, a.anim.dir);
+    // změna pohledu jen při dvojí opoře (nebo v klidu), aby opřená bota neposkočila
+    const wantDir = directionFromAngle(a.facing, a.anim.dir);
+    if (wantDir !== a.anim.dir) {
+      const dsEnd = gaitEvents(a.anim.gaitW ?? 0).toeOff - 0.5;
+      if (a.anim.walkBlend < 0.3 || a.anim.walkPhase % 0.5 < dsEnd) a.anim.dir = wantDir;
+    }
     // 2) přehrávání animací (události z animace řídí navazující logiku)
-    // délka kroku: šablona × individuální délka kroku × výška postavy (sladěno s pózou ⇒ noha neklouže)
-    const strideF = c.appearance ? c.appearance.motion.strideScale * c.appearance.proportions.height : 1;
-    const scale = c.baseScale * depthScaleAt(this.project.scene.depth, a.pos.y) * strideF;
-    const events = stepAnimator(a.anim, m, SIM_DT, a.speed, this.vmax(a), scale);
+    // chůze řízená drahou a kontakty (délka nohy a bota postavy; měřítko scény = hloubka × základní měřítko)
+    const scale = c.baseScale * depthScaleAt(this.project.scene.depth, a.pos.y);
+    const events = stepAnimator(a.anim, m, SIM_DT, a.speed, this.vmax(a), scale, gaitContextFor(m, c));
     if (mv.waitingNarrow) a.status = 'Čeká před úzkým průchodem';
     // 3) rozhodování + účast v činnosti
     if (a.activity) { this.stepActivity(a, events); return; }

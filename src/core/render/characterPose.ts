@@ -1,11 +1,12 @@
 import type { AgentState } from '../sim/types';
 import type { CharacterManifest } from '../anim/manifest';
 import { resolveDirection } from '../anim/manifest';
-import { figurePose, type BaseDir } from '../anim/testFigure';
+import { figurePose, TEST_FIGURE_TEMPLATE, type BaseDir } from '../anim/testFigure';
+import type { GaitContext } from '../anim/animator';
 import type { DepthSettings } from '../model/types';
 import type { CharacterAppearance } from '../anim/partLibrary';
 import { resolveView } from '../anim/partLibrary';
-import { skeletonPose, viewForDirection, type SkeletonPose, type ViewId } from '../anim/skeleton';
+import { skeletonPose, viewForDirection, footGeomOf, type SkeletonPose, type ViewId } from '../anim/skeleton';
 import { depthScaleAt } from '../scene/geometry';
 import { assembleRig, scaledTemplate, type RigAssembly } from './rigRenderer';
 import type { Vec2 } from '../math/vec';
@@ -51,6 +52,18 @@ export function characterVisual(agent: AgentState, m: CharacterManifest, look: C
   const mirror = rd.mirror !== (rd.use === 'W' || rd.use === 'SW' || rd.use === 'NW');
   const pose = figurePose(agent.anim, agent.holding !== null, { base, mirror });
   return { x, y, scale, mirror, pose, grip: pose.handR, warning: rd.warning };
+}
+
+/** Údaje pro chůzi postavy (délka nohy, bota, individuální délka kroku) – stejné pro simulaci i náhled. */
+export function gaitContextFor(m: CharacterManifest, look: CharacterLook): GaitContext {
+  const lib = m.rigLibrary, app = look.appearance;
+  if (m.backend === 'skeleton' && lib && app) {
+    const tpl = lib.bodyTemplates.find((t) => t.id === app.bodyTemplate) ?? lib.bodyTemplates[0];
+    const st = scaledTemplate(tpl, app.proportions);
+    return { legLen: st.bones.thigh + st.bones.shin, strideScale: app.motion.strideScale, foot: footGeomOf(st) };
+  }
+  const L = TEST_FIGURE_TEMPLATE.bones.thigh + TEST_FIGURE_TEMPLATE.bones.shin;
+  return { legLen: L, strideScale: 1, foot: footGeomOf(TEST_FIGURE_TEMPLATE) };
 }
 
 export function localToScene(cv: CharacterVisual, p: Vec2): Vec2 {

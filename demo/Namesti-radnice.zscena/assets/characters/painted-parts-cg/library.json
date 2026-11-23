@@ -97,32 +97,40 @@
    },
    "motionRanges": {
     "strideScale": [
-     0.94,
-     1.06
+     0.9,
+     1.1
     ],
     "armSwing": [
-     0.8,
-     1.15
+     0.65,
+     1.35
     ],
     "bob": [
      0.8,
      1.2
     ],
     "sway": [
-     0.7,
-     1.3
+     0.75,
+     1.25
     ],
     "idleTempo": [
      0.85,
      1.15
     ],
     "lean": [
-     0.6,
-     1.4
+     0,
+     3
     ],
     "speed": [
-     0.9,
-     1.1
+     0.85,
+     1.25
+    ],
+    "armLag": [
+     -2,
+     4
+    ],
+    "armLR": [
+     0.85,
+     1.15
     ]
    },
    "availableViews": [
@@ -163,7 +171,11 @@
      "held"
     ]
    },
-   "farShade": 0.82
+   "farShade": 0.82,
+   "foot": {
+    "heel": 3.33,
+    "toe": 7.95
+   }
   }
  ],
  "groups": [
@@ -700,7 +712,16 @@
     "x": 19.4,
     "y": 62.1
    },
-   "anchors": {},
+   "anchors": {
+    "heel": {
+     "x": 6.08,
+     "y": 74.1
+    },
+    "toe": {
+     "x": 51.19,
+     "y": 74.1
+    }
+   },
    "boneDir": 0,
    "layerOrder": 0,
    "compatibleBodyTypes": [

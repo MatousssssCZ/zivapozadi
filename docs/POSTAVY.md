@@ -70,28 +70,58 @@ kořen (země mezi chodidly)
 * Vzdálená končetina se kreslí za tělem a mírně ztmavená (`farShade`), blízká před ním;
   pořadí určuje `drawOrder` šablony pro každý pohled (`far.<slot>`, `near.<slot>`, `held`).
 
-## Pohyb (biomechanický model chůze)
+## Pohyb – kontaktně řízená chůze
 
-Profil je v `src/core/anim/gaitProfile.ts` (data s popisem zdrojů), kinematika v `skeleton.ts`.
-Cyklus = dva kroky, fáze začíná došlapem paty dané nohy.
+Implementace podle zadání [`docs/zdroje/zadani-prirozene-chuze-2D.md`](zdroje/zadani-prirozene-chuze-2D.md)
+(rešerše ChatGPT, zdroje [S1]–[S15]). Data: `src/core/anim/gaitData.json` (tabulky po 5 % cyklu pro
+1,3 a 0,9 m/s), profil a interpolace `gaitProfile.ts`, kontakty `gaitKinematics.ts`, póza `skeleton.ts`.
 
-| Jev | Hodnota v modelu | Normativní údaj |
-|---|---|---|
-| Stojná / švihová fáze | 60 % / 40 % | ~60 / 40 % |
-| Došlap na patu, chodidlo špičkou nahoru | 20°, položení do 8 % cyklu | odvalení přes patu |
-| Zvednutí paty, odvalení přes špičku | od 34 %, špička dolů až 45° při odrazu | pata 30–35 %, kotník ~20° PF |
-| Flexe kolena po došlapu (tlumení) | ~15–19° kolem 12 % | 10–15° kolem 15 % |
-| Flexe kolena ve švihu | ~54° | 60–65° |
-| Dráha kotníku ve švihu | pata vysoko vzadu v počátečním švihu, nízko ve středním, natažení v konečném | počáteční 60–73 %, střední 73–87 %, konečný 87–100 % |
-| Pohyb pánve nahoru/dolů | ~2,2 % délky nohy, nejníž při došlapu | 3,3–3,7 % délky nohy |
-| Rotace pánve, pokles strany švihu, přenos váhy | ano (dle pohledu) | ano |
-| Protirotace hrudníku, kmitání trupu, stabilizace hlavy | ano | ano |
-| Paže | kyv v rameni proti opačné noze, víc vzad než vpřed; loket se ohýbá víc při kyvu vpřed; rozsah roste s rychlostí | rameno ~20–25°, loket 15–30° |
-| Rychlost | delší **i** častější kroky (délka ∝ (v/v₀)^0,45) | rychlost = délka kroku × kadence |
+* **Kontakty jsou závazné:** při došlapu se uloží světová kotva paty; opora je postupně pata →
+  celá podrážka → přednoží (rocker tuhé boty). Kotník se dopočítá z kontaktu a natočení boty,
+  kolena a kyčle IK. Opora se nikdy neposouvá – ani při změně rychlosti.
+* **Švih** jde po tabulkové dráze kotníku; jen začátek a konec se plynule napojí na skutečné kontakty.
+* **Dosah:** když opřená noha nedosáhne, nejdřív se víc zvedne pata kolem pevného přednoží, pak se
+  případně mírně sníží pánev. Nic se nenatahuje.
+* **Rychlost:** délka kroku `0,7·L·(v/v0)^0,45`, kadence z rychlosti; fáze `+= Δs / délka cyklu`;
+  délka kroku a váha profilu (0,9 ↔ 1,3 m/s) se mění jen při došlapu; profily se míchají přes
+  pojmenované události (došlap, celá podrážka, zvednutí paty, odraz), ne podle stejného procenta.
+* **Pánev, trup, hlava, paže:** svislý pohyb z tabulky, boční posun, rotace a obliquita jako malé
+  posuny kyčlí (ne rotace obrázku), předklon a jeho kmitání, protirotace hrudníku jako posuny ramen,
+  absolutní stabilizace hlavy, rameno a loket z tabulky vůči stejnostranné noze.
+* **Rozejití:** vpředu stojící noha zůstane opřená, zadní vykročí; první krok je kratší.
+* **Zastavení:** opřená noha drží, pata/špička se položí, švihová noha dokročí malým obloukem.
+* **Pohled** se mění jen při dvojí opoře (opřená bota neposkočí).
+* **Individualita** (jednou na postavu, ze seedu): délka kroku 0,9–1,1, amplituda paží 0,65–1,35,
+  zpoždění paže −2…+4 %, poměr levé/pravé paže 0,85–1,15, předklon −1…+2°, svislý pohyb pánve
+  0,8–1,2, boční 0,75–1,25, rychlost 0,85–1,25.
+* Geometrie boty (pata 3,3 j., přednoží 7,9 j. před kotníkem) je změřená z namalované boty.
 
-Stojná noha je vázaná na zem: pata, celé chodidlo a pak bříško prstů se vůči zemi nehýbou (fáze
-cyklu = uražená dráha / délka cyklu). Test ověřuje posun kotníku < 0,6 jednotky. Klidová animace
-(dýchání, pohyb hlavy, přenášení váhy, nesynchronní fáze) zůstala.
+### Ověření (tests/gait.test.ts, akceptační kritéria zadání)
+
+| Kritérium | Požadavek | Běžná 1,3 m/s | Pomalá 0,9 m/s |
+|---|---|---|---|
+| Posun opory (postava 350 px) | < 0,25 px | 0,000 px | 0,000 px |
+| Koleno ve švihu | 58–65° / 53–62° | 62,2° | 57,7° |
+| Ohnutí kolena po došlapu | viditelné | ano | ano |
+| Svislý rozsah pánve | 0,018–0,035 L | 0,0276 L | 0,0282 L |
+| Kadence | 111,4 / 91 ±1 kroků/min | 111,4 | 91,0 |
+| Délky kostí | odchylka < 0,1 % | splněno | splněno |
+| Podlaha | průnik ≤ 0,001 L | splněno | splněno |
+| Paže při došlapu stejnostranné nohy | vzadu | splněno | – |
+| Změna rychlosti 0,9→1,3→0,9 m/s | bez posunu opory a skoku fáze | splněno | |
+| Zastavení | opora drží, obě boty na zemi | splněno | |
+| Rozejití | kratší první krok | splněno | |
+
+### Ze zadání zatím neimplementováno
+
+* plánování kroků v zatáčkách (natočení budoucích došlapů podle zakřivení, ostré otočky
+  přešlapováním) – směr se zatím mění plynulým otáčením a pohled jen při dvojí opoře;
+* zimní (opatrný) preset, rychlá chůze 1,7 m/s jako samostatný preset;
+* drobné variace mezi kroky (±2,5 %), gesta hlavy v klidu (yaw vyžaduje podklady pohledů),
+  krátké prolnutí při změně pohledu;
+* příprava přenesením váhy před prvním krokem (0,2–0,4 s);
+* testy při 24 a 60 fps (export je 30 fps; simulace má pevný krok 1/60 s, takže póza v daném čase
+  na snímkové frekvenci nezávisí).
 
 ![Chůze a pohledy](img/generator-chuze.png)
 

@@ -144,7 +144,10 @@ function measure(p: Part, ctx: { headWidthU?: number; neckWidthU?: number }): Me
     case 'foot': {
       const k = (9.8 * P) / H;
       const shaft = t10(0.05, 0.3);
-      return { k, pivot: { x: shaft, y: r.bottom - (BONES.ankleHeight * P) / k }, anchors: {}, boneDir: 0, info: `délka ${(avgOver(r.width, r.bottom - 4, r.bottom) * k / P).toFixed(1)} j.` };
+      // skutečná podrážka: pata = nejzadnější bod spodních řádků, přednoží = 85 % délky ke špičce
+      let sl = p.w, sr = 0; for (let y = Math.round(r.bottom - H * 0.12); y <= r.bottom; y++) { if (r.L[y] >= 0) { sl = Math.min(sl, r.L[y]); sr = Math.max(sr, r.R[y]); } }
+      const heel = { x: sl, y: r.bottom }, toe = { x: shaft + (sr - shaft) * 0.85, y: r.bottom };
+      return { k, pivot: { x: shaft, y: r.bottom - (BONES.ankleHeight * P) / k }, anchors: { heel, toe }, boneDir: 0, info: `pata ${((shaft - sl) * k / P).toFixed(1)} j., přednoží ${((toe.x - shaft) * k / P).toFixed(1)} j.` };
     }
     case 'torso': {
       const neckY = r.top + H * 0.07;
@@ -289,6 +292,8 @@ async function main() {
   const shoulderOffsetX = r2(u((a.shoulderR.x + a.shoulderL.x) / 2 - a.neck.x));
   const hipSpread = r2(u((a.hipR.x - a.hipL.x) / 2) * 0.42);
   for (const k of ['shoulderL', 'shoulderR', 'hipL', 'hipR']) delete a[k];
+  const boot = measured.get('foot')!.part;
+  const footGeom = { heel: r2((boot.pivot.x - boot.anchors.heel.x) / P), toe: r2((boot.anchors.toe.x - boot.pivot.x) / P) };
   const order3q = ['far.hand', 'far.forearm', 'far.upperArm', 'far.foot', 'far.shin', 'far.thigh', 'near.foot', 'near.shin', 'near.thigh', 'torso', 'head', 'hat', 'scarf', 'near.hand', 'near.forearm', 'near.upperArm', 'held'];
   const tpl: BodyTemplateDef = {
     id: 'adult-cg', label: 'Dospělý (reference v2)', height: 130, bones: BONES,
@@ -296,11 +301,12 @@ async function main() {
     gait: { strideLength: 100, stanceFraction: 0.58, stepLift: 6.5, armSwing: 0.36, maxDip: 2.2, sway: 1.1, lean: 0.035 },
     idle: { breathe: 0.5, headAmp: 0.02, shiftAmp: 1.4, shiftPeriod: 7.5 },
     proportions: { height: [0.95, 1.05], build: [0.95, 1.05] },
-    motionRanges: { strideScale: [0.94, 1.06], armSwing: [0.8, 1.15], bob: [0.8, 1.2], sway: [0.7, 1.3], idleTempo: [0.85, 1.15], lean: [0.6, 1.4], speed: [0.9, 1.1] },
+    motionRanges: { strideScale: [0.9, 1.1], armSwing: [0.65, 1.35], bob: [0.8, 1.2], sway: [0.75, 1.25], idleTempo: [0.85, 1.15], lean: [0, 3], speed: [0.85, 1.25], armLag: [-2, 4], armLR: [0.85, 1.15] },
     availableViews: [VIEW],
     viewFallbacks: { side: { use: VIEW }, back3q: { use: VIEW }, front: { use: VIEW }, back: { use: VIEW } },
     drawOrder: { front3q: order3q },
     farShade: 0.82,
+    foot: footGeom,
   };
   const V = (id: string, group: GroupId, label: string, extra: Partial<VariantDef> = {}): VariantDef => ({ id, group, label, compatibleBodyTypes: ['adult-cg'], tags: [], excludesTags: [], requiresAnchors: [], paletteOptions: palOf[group], provisional: false, ...extra });
   const lib: PartLibrary = {

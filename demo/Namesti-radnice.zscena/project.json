@@ -3,8 +3,8 @@
   "formatVersion": 1,
   "meta": {
     "name": "Náměstí s radnicí (test dodané grafiky)",
-    "createdAt": "2026-11-23T16:21:48.676Z",
-    "modifiedAt": "2026-11-23T16:21:48.715Z",
+    "createdAt": "2026-11-23T19:03:39.240Z",
+    "modifiedAt": "2026-11-23T19:03:39.915Z",
     "appVersion": "0.1.0"
   },
   "seed": 1224,
@@ -971,7 +971,7 @@
       "assetId": "builtin_postava_cg",
       "startNodeId": "b",
       "baseScale": 1,
-      "walkSpeed": 55.9,
+      "walkSpeed": 54.8,
       "palette": {
         "coat": "#c8553d",
         "hat": "#f2c14e",
@@ -1007,14 +1007,16 @@
           "build": 1.001
         },
         "motion": {
-          "strideScale": 1.026,
-          "armSwing": 0.958,
+          "strideScale": 1.043,
+          "armSwing": 0.967,
           "bob": 1.092,
-          "sway": 0.932,
+          "sway": 0.944,
           "idleTempo": 1.027,
-          "lean": 1.275,
-          "speed": 0.932,
-          "phase": 0.433
+          "lean": 2.531,
+          "speed": 0.913,
+          "phase": 0.433,
+          "armLag": 2.478,
+          "armLR": 1.086
         },
         "locks": []
       },
@@ -1034,7 +1036,7 @@
       "assetId": "builtin_postava_cg",
       "startNodeId": "h",
       "baseScale": 1,
-      "walkSpeed": 64,
+      "walkSpeed": 71,
       "palette": {
         "coat": "#c8553d",
         "hat": "#f2c14e",
@@ -1070,14 +1072,16 @@
           "build": 0.965
         },
         "motion": {
-          "strideScale": 1.057,
-          "armSwing": 0.959,
+          "strideScale": 1.095,
+          "armSwing": 0.967,
           "bob": 0.953,
-          "sway": 1.072,
+          "sway": 1.06,
           "idleTempo": 0.854,
-          "lean": 0.877,
-          "speed": 1.067,
-          "phase": 0.01
+          "lean": 1.039,
+          "speed": 1.183,
+          "phase": 0.01,
+          "armLag": 3.817,
+          "armLR": 1.138
         },
         "locks": []
       },
@@ -1097,7 +1101,7 @@
       "assetId": "builtin_postava_cg",
       "startNodeId": "k",
       "baseScale": 1,
-      "walkSpeed": 58.2,
+      "walkSpeed": 59.3,
       "palette": {
         "coat": "#c8553d",
         "hat": "#f2c14e",
@@ -1133,14 +1137,16 @@
           "build": 0.986
         },
         "motion": {
-          "strideScale": 0.943,
-          "armSwing": 0.919,
+          "strideScale": 0.905,
+          "armSwing": 0.889,
           "bob": 1.194,
-          "sway": 0.822,
+          "sway": 0.852,
           "idleTempo": 0.858,
-          "lean": 1.35,
-          "speed": 0.97,
-          "phase": 0.493
+          "lean": 2.814,
+          "speed": 0.989,
+          "phase": 0.493,
+          "armLag": -1.791,
+          "armLR": 1.091
         },
         "locks": []
       },
@@ -1160,7 +1166,7 @@
       "assetId": "builtin_postava_cg",
       "startNodeId": "a",
       "baseScale": 1,
-      "walkSpeed": 55,
+      "walkSpeed": 53,
       "palette": {
         "coat": "#c8553d",
         "hat": "#f2c14e",
@@ -1196,14 +1202,16 @@
           "build": 1.01
         },
         "motion": {
-          "strideScale": 1.048,
-          "armSwing": 0.804,
+          "strideScale": 1.08,
+          "armSwing": 0.659,
           "bob": 0.816,
-          "sway": 0.785,
+          "sway": 0.821,
           "idleTempo": 0.956,
-          "lean": 1.06,
-          "speed": 0.917,
-          "phase": 0.462
+          "lean": 1.725,
+          "speed": 0.884,
+          "phase": 0.462,
+          "armLag": 2.154,
+          "armLR": 0.881
         },
         "locks": []
       },
@@ -1223,7 +1231,7 @@
       "assetId": "builtin_postava_cg",
       "startNodeId": "i",
       "baseScale": 1,
-      "walkSpeed": 55,
+      "walkSpeed": 53.1,
       "palette": {
         "coat": "#c8553d",
         "hat": "#f2c14e",
@@ -1259,14 +1267,16 @@
           "build": 1.035
         },
         "motion": {
-          "strideScale": 0.965,
-          "armSwing": 1.13,
+          "strideScale": 0.942,
+          "armSwing": 1.31,
           "bob": 1.094,
-          "sway": 1.122,
+          "sway": 1.102,
           "idleTempo": 0.943,
-          "lean": 1.362,
-          "speed": 0.917,
-          "phase": 0.731
+          "lean": 2.857,
+          "speed": 0.885,
+          "phase": 0.731,
+          "armLag": -0.027,
+          "armLR": 0.859
         },
         "locks": []
       },
@@ -1286,7 +1296,7 @@
       "assetId": "builtin_postava_cg",
       "startNodeId": "c",
       "baseScale": 1,
-      "walkSpeed": 55,
+      "walkSpeed": 52.9,
       "palette": {
         "coat": "#c8553d",
         "hat": "#f2c14e",
@@ -1323,13 +1333,15 @@
         },
         "motion": {
           "strideScale": 1.001,
-          "armSwing": 0.847,
+          "armSwing": 0.744,
           "bob": 1.169,
-          "sway": 1.142,
+          "sway": 1.119,
           "idleTempo": 0.86,
-          "lean": 1.376,
-          "speed": 0.916,
-          "phase": 0.394
+          "lean": 2.911,
+          "speed": 0.882,
+          "phase": 0.394,
+          "armLag": 1.812,
+          "armLR": 0.999
         },
         "locks": []
       },
@@ -1349,7 +1361,7 @@
       "assetId": "builtin_postava_cg",
       "startNodeId": "g",
       "baseScale": 1,
-      "walkSpeed": 54.3,
+      "walkSpeed": 51.6,
       "palette": {
         "coat": "#c8553d",
         "hat": "#f2c14e",
@@ -1385,14 +1397,16 @@
           "build": 0.975
         },
         "motion": {
-          "strideScale": 1.058,
-          "armSwing": 0.982,
+          "strideScale": 1.096,
+          "armSwing": 1.015,
           "bob": 1.186,
-          "sway": 0.907,
+          "sway": 0.923,
           "idleTempo": 1.132,
-          "lean": 1.334,
-          "speed": 0.905,
-          "phase": 0.974
+          "lean": 2.753,
+          "speed": 0.86,
+          "phase": 0.974,
+          "armLag": 1.964,
+          "armLR": 1.107
         },
         "locks": []
       },
@@ -1412,7 +1426,7 @@
       "assetId": "builtin_postava_cg",
       "startNodeId": "d",
       "baseScale": 1,
-      "walkSpeed": 62,
+      "walkSpeed": 67,
       "palette": {
         "coat": "#c8553d",
         "hat": "#f2c14e",
@@ -1448,14 +1462,16 @@
           "build": 0.997
         },
         "motion": {
-          "strideScale": 1.014,
-          "armSwing": 1.113,
+          "strideScale": 1.024,
+          "armSwing": 1.276,
           "bob": 0.889,
-          "sway": 1.099,
+          "sway": 1.082,
           "idleTempo": 1.061,
-          "lean": 0.678,
-          "speed": 1.034,
-          "phase": 0.048
+          "lean": 0.291,
+          "speed": 1.117,
+          "phase": 0.048,
+          "armLag": 0.049,
+          "armLR": 1.039
         },
         "locks": []
       },
@@ -1475,7 +1491,7 @@
       "assetId": "builtin_postava_cg",
       "startNodeId": "n",
       "baseScale": 1,
-      "walkSpeed": 59.5,
+      "walkSpeed": 62,
       "palette": {
         "coat": "#c8553d",
         "hat": "#f2c14e",
@@ -1511,14 +1527,16 @@
           "build": 1.015
         },
         "motion": {
-          "strideScale": 0.994,
+          "strideScale": 0.989,
           "armSwing": 0.95,
           "bob": 1.045,
-          "sway": 1.032,
+          "sway": 1.027,
           "idleTempo": 0.937,
-          "lean": 1.136,
-          "speed": 0.992,
-          "phase": 0.914
+          "lean": 2.01,
+          "speed": 1.034,
+          "phase": 0.914,
+          "armLag": 2.539,
+          "armLR": 0.864
         },
         "locks": []
       },
@@ -1538,7 +1556,7 @@
       "assetId": "builtin_postava_cg",
       "startNodeId": "j",
       "baseScale": 1,
-      "walkSpeed": 64.6,
+      "walkSpeed": 72.1,
       "palette": {
         "coat": "#c8553d",
         "hat": "#f2c14e",
@@ -1574,14 +1592,16 @@
           "build": 1.048
         },
         "motion": {
-          "strideScale": 0.943,
-          "armSwing": 1.084,
+          "strideScale": 0.905,
+          "armSwing": 1.219,
           "bob": 1.187,
-          "sway": 0.749,
+          "sway": 0.791,
           "idleTempo": 0.874,
-          "lean": 1.325,
-          "speed": 1.076,
-          "phase": 0.098
+          "lean": 2.72,
+          "speed": 1.201,
+          "phase": 0.098,
+          "armLag": 0.075,
+          "armLR": 0.923
         },
         "locks": []
       },
@@ -1601,7 +1621,7 @@
       "assetId": "builtin_postava_cg",
       "startNodeId": "e",
       "baseScale": 1,
-      "walkSpeed": 65.1,
+      "walkSpeed": 73.2,
       "palette": {
         "coat": "#c8553d",
         "hat": "#f2c14e",
@@ -1637,14 +1657,16 @@
           "build": 0.987
         },
         "motion": {
-          "strideScale": 0.952,
-          "armSwing": 0.867,
+          "strideScale": 0.919,
+          "armSwing": 0.785,
           "bob": 1.137,
-          "sway": 0.832,
+          "sway": 0.86,
           "idleTempo": 1.016,
-          "lean": 0.933,
-          "speed": 1.085,
-          "phase": 0.04
+          "lean": 1.25,
+          "speed": 1.22,
+          "phase": 0.04,
+          "armLag": 1.547,
+          "armLR": 0.934
         },
         "locks": []
       },
@@ -1700,14 +1722,16 @@
           "build": 0.988
         },
         "motion": {
-          "strideScale": 1.025,
-          "armSwing": 1.036,
+          "strideScale": 1.041,
+          "armSwing": 1.122,
           "bob": 0.893,
-          "sway": 1.124,
+          "sway": 1.103,
           "idleTempo": 1.03,
-          "lean": 1.307,
+          "lean": 2.653,
           "speed": 0.951,
-          "phase": 0.821
+          "phase": 0.821,
+          "armLag": 1.184,
+          "armLR": 1.14
         },
         "locks": []
       },

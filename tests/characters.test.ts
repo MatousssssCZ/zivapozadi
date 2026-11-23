@@ -6,7 +6,7 @@ import '../src/node/napiRender';
 import type { PartLibrary, CharacterAppearance } from '../src/core/anim/partLibrary';
 import { validateLibrary } from '../src/core/anim/partLibrary';
 import { generateAppearance, generateGroup, validateAppearance, nextSeed, comboKey } from '../src/core/anim/appearanceGenerator';
-import { characterVisual } from '../src/core/render/characterPose';
+import { characterVisual, gaitContextFor } from '../src/core/render/characterPose';
 import { drawRig, rigImageKey } from '../src/core/render/rigRenderer';
 import { initialAnimState, stepAnimator, playAction } from '../src/core/anim/animator';
 import type { AgentState } from '../src/core/sim/types';
@@ -155,7 +155,7 @@ describe('sestavení a pohyb', () => {
       // stojná noha: zaznamenat světovou polohu kotníku během kontaktu se zemí
       let drift = 0, stanceStart: number | null = null, samples = 0;
       for (let i = 0; i < 60 * 20; i++) {
-        stepAnimator(anim, manifest, 1 / 60, v, 60, strideF);
+        stepAnimator(anim, manifest, 1 / 60, v, 60, 1, gaitContextFor(manifest, { baseScale: 1, appearance: app })); void strideF;
         x += v / 60;
         if (anim.walkPhase < prev) cycles++;
         prev = anim.walkPhase;

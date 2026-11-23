@@ -10,7 +10,7 @@ import { generateAppearance, generateGroup, nextSeed, variantCompatible, templat
 import { ALL_VIEWS, VIEW_LABELS, type ViewId } from '../../core/anim/skeleton';
 import { initialAnimState, stepAnimator, type AnimState } from '../../core/anim/animator';
 import type { Direction } from '../../core/anim/manifest';
-import { characterVisual } from '../../core/render/characterPose';
+import { characterVisual, gaitContextFor } from '../../core/render/characterPose';
 import { drawRig } from '../../core/render/rigRenderer';
 import type { AgentState } from '../../core/sim/types';
 import type { CharacterInstance } from '../../core/model/types';
@@ -65,7 +65,8 @@ export function CharacterPreview({ app, manifest, width = 220, height = 300, com
       while (acc >= 1 / 60) {
         acc -= 1 / 60;
         const strideF = L.app.motion.strideScale * L.app.proportions.height;
-        stepAnimator(animRef.current, manifest, 1 / 60, speed, 60 * L.app.motion.speed, strideF);
+        stepAnimator(animRef.current, manifest, 1 / 60, speed, 60 * L.app.motion.speed, 1, gaitContextFor(manifest, { baseScale: 1, appearance: L.app }));
+        void strideF;
         dist.current += speed / 60;
       }
       draw(speed);

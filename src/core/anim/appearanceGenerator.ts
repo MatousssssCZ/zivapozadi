@@ -109,6 +109,9 @@ export function generateAppearance(lib: PartLibrary, opts: GenerateOptions): Cha
       sway: round3(inRange(rng, m.sway)), idleTempo: round3(inRange(rng, m.idleTempo)), lean: round3(inRange(rng, m.lean)),
       speed: round3(inRange(rng, m.speed)), phase: round3(rand(rng)),
     };
+    // zpoždění a nesouměrnost paží (jen pokud je šablona definuje – starší knihovny se nemění)
+    if (m.armLag) motion.armLag = round3(inRange(rng, m.armLag));
+    if (m.armLR) motion.armLR = round3(inRange(rng, m.armLR));
   }
   return {
     generator: 'parts', libraryId: lib.id, seed: opts.seed, bodyTemplate: tplId,

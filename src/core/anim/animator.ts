@@ -1,7 +1,15 @@
 import type { CharacterManifest, Direction, LoopMode, AnimEvent } from './manifest';
 import { resolveClip } from './manifest';
 import { clamp } from '../math/vec';
-import { strideFactor } from './gaitProfile';
+import { LEG_PHYS_M, speedBlend, strideLegLen } from './gaitProfile';
+import { restFeet, startPhase, heelAtContact, type FootGeom } from './gaitKinematics';
+import { gaitEvents } from './gaitProfile';
+
+/** Poloha opěrných pat vůči pánvi ze světových kotev (null = noha bez kotvy). */
+export function heelRelOf(a: AnimState): [number | null, number | null] {
+  const d = a.dist ?? 0;
+  return [a.anchors?.[0] != null ? a.anchors[0] - d : null, a.anchors?.[1] != null ? a.anchors[1] - d : null];
+}
 
 /** Stav přehrávání animací jedné postavy. Čistá data ⇒ součást checkpointu. */
 export interface AnimState {
@@ -10,9 +18,23 @@ export interface AnimState {
   walkBlend: number;
   idleTime: number;
   action: ActionState | null;
-  /** Aktuální násobek délky kroku podle rychlosti (rychlejší chůze = delší i častější kroky). */
-  strideFactor?: number;
+  /** Délka cyklu (2 kroky) v jednotkách postavy – mění se jen při došlapu (žádný skok fáze ani posun opory). */
+  stride?: number;
+  /** Váha profilu (0 = pomalá procházka 0,9 m/s, 1 = běžná chůze 1,3 m/s) – mění se jen při došlapu. */
+  gaitW?: number;
+  /** Aktuální rychlost v m/s (diagnostika). */
+  speedMps?: number;
+  /** Zastavení: fáze, ve které postava zastavila, a průběh dokročení (0–1). Zůstává i v klidu. */
+  settle?: { phase: number; stride: number; w: number; t: number; heelRel?: [number | null, number | null] } | null;
+  /** Rozejití: klidové polohy chodidel, ze kterých se vychází. */
+  startRest?: [number, number] | null;
+  /** Uražená dráha (jednotky postavy) a světové kotvy pat obou nohou (dráha, kde je pata opřená). */
+  dist?: number;
+  anchors?: [number | null, number | null];
 }
+
+/** Údaje o postavě potřebné pro chůzi (délka nohy, geometrie boty, individuální délka kroku). */
+export interface GaitContext { legLen: number; strideScale: number; foot: FootGeom }
 
 export interface ActionState {
   /** Požadovaný klip (logický název podle činnosti). */
@@ -60,24 +82,55 @@ export function stopAction(a: AnimState): void { a.action = null; }
  * Krok animátoru. Fáze chůze postupuje podle uražené vzdálenosti (kroky sladěné s posunem),
  * prolnutí chůze/klid podle rychlosti. Vrací animační události, které v kroku nastaly.
  */
-export function stepAnimator(a: AnimState, m: CharacterManifest, dt: number, speed: number, refSpeed: number, scale: number): string[] {
+export function stepAnimator(a: AnimState, m: CharacterManifest, dt: number, speed: number, refSpeed: number, scale: number, gait?: GaitContext): string[] {
   const fired: string[] = [];
-  const walk = m.clips.walk;
-  // délka kroku se plynule přizpůsobuje rychlosti (v/vref)^0,45; fáze = dráha / délka cyklu ⇒ bez klouzání
-  const sfTarget = speed > 0.5 ? strideFactor(speed, refSpeed) : (a.strideFactor ?? 1);
-  a.strideFactor = (a.strideFactor ?? sfTarget) + clamp(sfTarget - (a.strideFactor ?? sfTarget), -dt * 1.2, dt * 1.2);
-  const stride = (walk?.strideLength ?? 90) * scale * a.strideFactor;
-  const targetBlend = clamp(speed / Math.max(1e-6, refSpeed * 0.55), 0, 1);
-  a.walkBlend += clamp(targetBlend - a.walkBlend, -dt * 4, dt * 4);
-  if (speed > 0.5) {
-    a.walkPhase = (a.walkPhase + (speed * dt) / stride) % 1;
+  if (gait) {
+    // Fáze řízená drahou: phase += Δs / délka cyklu (délka se mění jen při došlapu).
+    const vLocal = speed / Math.max(1e-6, scale);
+    const vMps = (vLocal * LEG_PHYS_M) / gait.legLen;
+    a.speedMps = vMps;
+    const targetS = strideLegLen(vMps) * gait.legLen * gait.strideScale;
+    const targetW = speedBlend(vMps);
+    if (speed > 0.5) {
+      if (a.stride === undefined || a.walkBlend < 0.02) {
+        // rozejití z místa: vpředu stojící noha zůstane, zadní vykročí; první krok je kratší (nízká rychlost)
+        a.stride = targetS; a.gaitW = targetW;
+        const rest: [number, number] = a.settle ? restFeet(a.settle.phase, a.settle.stride, a.settle.w, gait.foot, a.settle.heelRel) : [0.03 * gait.legLen, -0.03 * gait.legLen];
+        if (a.walkBlend < 0.02) {
+          a.walkPhase = startPhase(rest, a.stride, a.gaitW, gait.foot); a.startRest = rest;
+          // stojná noha: kotva paty tam, kde chodidlo stojí; švihová dostane kotvu až při došlapu
+          a.dist = a.dist ?? 0;
+          a.anchors = [0, 1].map((i) => (((a.walkPhase + i * 0.5) % 1) < gaitEvents(a.gaitW!).toeOff ? a.dist! + rest[i] - gait.foot.heel : null)) as [number | null, number | null];
+        }
+        a.settle = null;
+      }
+      a.settle = null; // pokračování v chůzi během dokračování
+      const prev = a.walkPhase;
+      a.dist = (a.dist ?? 0) + vLocal * dt;
+      a.walkPhase = (a.walkPhase + (vLocal * dt) / a.stride) % 1;
+      if (Math.floor(prev * 2) !== Math.floor(a.walkPhase * 2)) { a.stride = targetS; a.gaitW = targetW; } // došlap
+      // došlap nohy i (lokální fáze přejde 1 → 0): uložit světovou kotvu paty
+      a.anchors ??= [null, null];
+      for (let i = 0; i < 2; i++) {
+        const qp = (prev + i * 0.5) % 1, qn = (a.walkPhase + i * 0.5) % 1;
+        if (qn < qp) a.anchors[i] = a.dist + heelAtContact(a.stride, a.gaitW ?? 0, gait.foot) - qn * a.stride;
+      }
+      const target = clamp(speed / Math.max(1e-6, refSpeed * 0.3), 0, 1);
+      a.walkBlend += clamp(target - a.walkBlend, -dt * 3, dt * 3);
+      if (a.walkBlend >= 0.999) a.startRest = null;
+    } else if (a.walkBlend > 0) {
+      // zastavení: opřená noha zůstává, švihová dokročí; pak klid
+      if (!a.settle) a.settle = { phase: a.walkPhase, stride: a.stride ?? targetS, w: a.gaitW ?? targetW, t: 0, heelRel: heelRelOf(a) };
+      a.settle.t = Math.min(1, a.settle.t + dt / 0.5);
+      a.walkBlend = 1 - a.settle.t;
+      a.startRest = null;
+    }
   } else {
-    // V klidu se fáze plynule dotočí do neutrální polohy (nohy u sebe), žádné zamrznutí v půli kroku.
-    const targets = [0, 0.5, 1];
-    const nearest = targets.reduce((b, t) => (Math.abs(t - a.walkPhase) < Math.abs(b - a.walkPhase) ? t : b), 0);
-    const d = nearest - a.walkPhase;
-    a.walkPhase += clamp(d, -dt * 0.8, dt * 0.8);
-    if (a.walkPhase >= 1) a.walkPhase -= 1;
+    const walk = m.clips.walk;
+    const stride = (walk?.strideLength ?? 90) * scale;
+    const targetBlend = clamp(speed / Math.max(1e-6, refSpeed * 0.55), 0, 1);
+    a.walkBlend += clamp(targetBlend - a.walkBlend, -dt * 4, dt * 4);
+    if (speed > 0.5) a.walkPhase = (a.walkPhase + (speed * dt) / stride) % 1;
   }
   a.idleTime += dt;
   const act = a.action;

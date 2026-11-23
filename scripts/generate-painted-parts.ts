@@ -155,7 +155,7 @@ const adult: BodyTemplateDef = {
   gait: { strideLength: 96, stanceFraction: 0.58, stepLift: 6.5, armSwing: 0.38, maxDip: 2.2, sway: 1.1, lean: 0.035 },
   idle: { breathe: 0.55, headAmp: 0.022, shiftAmp: 1.5, shiftPeriod: 7.5 },
   proportions: { height: [0.94, 1.06], build: [0.93, 1.07] },
-  motionRanges: { strideScale: [0.94, 1.06], armSwing: [0.8, 1.15], bob: [0.8, 1.2], sway: [0.7, 1.3], idleTempo: [0.85, 1.15], lean: [0.6, 1.4], speed: [0.9, 1.1] },
+  motionRanges: { strideScale: [0.9, 1.1], armSwing: [0.65, 1.35], bob: [0.8, 1.2], sway: [0.75, 1.25], idleTempo: [0.85, 1.15], lean: [0, 3], speed: [0.85, 1.25], armLag: [-2, 4], armLR: [0.85, 1.15] },
   availableViews: VIEWS,
   viewFallbacks: { front: { use: 'front3q' }, back: { use: 'back3q' } },
   drawOrder: { side: ORDER_FRONT, front3q: ORDER_FRONT, back3q: ORDER_BACK },

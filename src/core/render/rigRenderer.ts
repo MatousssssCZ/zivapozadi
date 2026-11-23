@@ -77,7 +77,7 @@ export function scaledTemplate(tpl: BodyTemplateDef, prop: { height: number; bui
   const h = prop.height, bw = prop.build;
   const bones = Object.fromEntries(Object.entries(tpl.bones).map(([n, v]) => [n, v * h])) as SkeletonTemplate['bones'];
   const views = Object.fromEntries(Object.entries(tpl.views).map(([n, v]) => [n, { ...v!, hipSpread: v!.hipSpread * h * bw, shoulderSpread: v!.shoulderSpread * h * bw, headOffsetX: v!.headOffsetX * h, shoulderOffsetX: v!.shoulderOffsetX * h }]));
-  s = { ...tpl, bones, views, gait: { ...tpl.gait, strideLength: tpl.gait.strideLength * h, stepLift: tpl.gait.stepLift * h, maxDip: tpl.gait.maxDip * h, sway: tpl.gait.sway * h }, idle: { ...tpl.idle, shiftAmp: tpl.idle.shiftAmp * h } };
+  s = { ...tpl, bones, views, foot: tpl.foot ? { heel: tpl.foot.heel * h, toe: tpl.foot.toe * h } : undefined, gait: { ...tpl.gait, strideLength: tpl.gait.strideLength * h, stepLift: tpl.gait.stepLift * h, maxDip: tpl.gait.maxDip * h, sway: tpl.gait.sway * h }, idle: { ...tpl.idle, shiftAmp: tpl.idle.shiftAmp * h } };
   if (scaledCache.size > 500) scaledCache.clear();
   scaledCache.set(k, s);
   return s;
