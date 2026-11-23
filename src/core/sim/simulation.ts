@@ -3,7 +3,7 @@ import { buildNavGraph, findPath, nearestAccessibleNode, type NavGraph } from '.
 import { interactionPointWorld } from '../scene/geometry';
 import { seedRng, rand, randRange, pickWeighted, hashString } from '../math/rng';
 import { canonicalJson, fingerprint } from '../model/hash';
-import type { CharacterManifest } from '../anim/manifest';
+import { ALL_DIRECTIONS, resolveDirection, resolveClip, type CharacterManifest } from '../anim/manifest';
 import { initialAnimState, playAction, stepAnimator, stopAction } from '../anim/animator';
 import { getActivity } from '../activities/registry';
 import { characterVisual, localToScene } from '../render/characterPose';
@@ -91,6 +91,16 @@ export class Simulation {
     }
     for (const pts of this.points.values()) for (const pt of pts) if (!pt.entryNode && pt.point.kind !== 'counter')
       this.addDiag('warning', `Interakční bod „${pt.point.label ?? pt.point.kind}“ objektu „${this.objects.get(pt.objectId)?.name}“ není dosažitelný ze sítě tras.`, pt.objectId);
+    // Explicitní náhrady chybějících směrů a klipů (upozornění, nikdy tiché selhání).
+    for (const assetId of new Set(p.characters.map((c) => c.assetId))) {
+      const m = this.manifests[assetId]; if (!m) continue;
+      for (const d of ALL_DIRECTIONS) { const r = resolveDirection(m, d); if (r.warning) this.addDiag('warning', r.warning, assetId); }
+      for (const z of p.zones) {
+        const def = getActivity(z.activityType)?.definition; if (!def) continue;
+        if (!m.supportedActivities.includes(def.type)) this.addDiag('warning', `Postava „${m.name}“ neuvádí podporu činnosti „${def.label}“.`, assetId);
+        for (const ph of def.phases) if (ph.animation) { const r = resolveClip(m, ph.animation); if (r.warning) this.addDiag('warning', r.warning + (r.clip ? '' : ' Použije se virtuální klip s výchozí délkou a událostmi.'), assetId); }
+      }
+    }
     for (const c of p.characters) {
       if (!this.graph.nodes.has(c.startNodeId)) this.addDiag('warning', `Postava „${c.name}“ nemá platný počáteční bod trasy a nebude v simulaci.`, c.id);
       if (!this.manifests[c.assetId]) this.addDiag('error', `Postava „${c.name}“: manifest postavy chybí.`, c.id);

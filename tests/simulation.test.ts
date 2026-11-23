@@ -191,3 +191,18 @@ describe('scénář kávy, rezervace a rekvizity', () => {
     }
   });
 });
+
+describe('manifest postavy – náhrady', () => {
+  it('chybějící klip a směr ⇒ upozornění a virtuální klip; kelímek se přesto převezme', async () => {
+    const lp = await demoProject();
+    const m = structuredClone(lp.manifests['builtin_postava']);
+    delete m.clips.receive; delete m.clips.drink;
+    m.directionFallbacks = {};
+    const sim = Simulation.create(lp.project, { builtin_postava: m });
+    expect(sim.diagnostics.some((d) => d.message.includes('nemá klip „receive“'))).toBe(true);
+    expect(sim.diagnostics.some((d) => d.message.includes('nemá směr W'))).toBe(true);
+    sim.advanceTo(200);
+    expect(sim.state.stats.cupsServed).toBeGreaterThan(0);
+    expect(sim.state.stats.sips).toBeGreaterThan(0);
+  });
+});

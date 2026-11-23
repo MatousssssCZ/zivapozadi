@@ -5,7 +5,7 @@
 }
 * { box-sizing: border-box; }
 html, body, #root { margin: 0; height: 100%; background: var(--bg); overflow: hidden; }
-button { background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 5px; padding: 4px 9px; cursor: pointer; font: inherit; white-space: nowrap; }
+button { background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 5px; padding: 4px 7px; cursor: pointer; font: inherit; white-space: nowrap; }
 button:hover:not(:disabled) { border-color: var(--accent); }
 button:disabled { opacity: 0.45; cursor: default; }
 button.active { background: #34508a; border-color: var(--accent); }
@@ -20,8 +20,8 @@ input[type=color] { width: 42px; height: 24px; padding: 0 2px; }
 input[type=checkbox] { accent-color: var(--accent); }
 code { color: var(--muted); }
 .app { display: grid; grid-template-rows: auto 1fr auto; height: 100%; }
-.topbar { display: flex; gap: 14px; align-items: center; padding: 6px 10px; background: var(--panel); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
-.topbar .group { display: flex; gap: 5px; align-items: center; }
+.topbar { display: flex; gap: 10px; align-items: center; padding: 5px 8px; background: var(--panel); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.topbar .group { display: flex; gap: 4px; align-items: center; }
 .brand { font-weight: 700; margin-right: 6px; color: #cfe2ff; }
 .main { display: grid; grid-template-columns: 290px 1fr 340px; min-height: 0; }
 .panel { background: var(--panel); min-height: 0; display: flex; flex-direction: column; }

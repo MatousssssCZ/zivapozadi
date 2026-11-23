@@ -100,6 +100,15 @@ describe('export videa', () => {
     expect(ExportError).toBeTruthy();
   });
 
+  it.skipIf(process.platform === 'win32')('chyba enkodéru ⇒ srozumitelná zpráva, žádný pád', async () => {
+    const fake = path.join(out, 'fake-ffmpeg.sh');
+    await fs.writeFile(fake, '#!/bin/sh\ncat > /dev/null &\necho "Error: No space left on device" >&2\nexit 1\n', { mode: 0o755 });
+    const plan = planExport(lp.project);
+    const images = await loadNodeImages(lp);
+    const r = createNodeFrameRenderer(lp, images, plan.width, plan.height);
+    await expect(runExport(lp.project, lp.manifests, plan, new NodeEncoderHost(fake, path.join(out, 'err.mp4'), lp.dir), r)).rejects.toThrow(/došlo místo|Enkodér se neočekávaně ukončil/);
+  });
+
   it('editorové značky nejsou v exportovaném snímku', async () => {
     const images = await loadNodeImages(lp);
     const sim = Simulation.create(lp.project, lp.manifests);
