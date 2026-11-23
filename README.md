@@ -8,7 +8,9 @@ Scéna se **skutečně simuluje** (pevný krok 1/60 s, deterministicky podle see
 obrazovky ani generované video. Editor, náhled i export používají stejný model scény, stejnou simulaci
 a stejný renderer.
 
-> Testovací grafika (pozadí, stánek, strom, postavy…) je **provizorní**, vlastní, generovaná skriptem.
+> Demo **„Náměstí s radnicí“** používá dodanou malovanou grafiku (pozadí, 4 stánky, strom, lampy) –
+> viz [docs/GRAFIKA.md](docs/GRAFIKA.md) a ukázka `ukazky/namesti-radnice-20s-1080p.mp4`.
+> Postavy, stoleček a koš jsou zatím **provizorní** testovací.
 
 ![Editor se zónou činnosti](docs/img/editor-zona.png)
 
@@ -30,7 +32,7 @@ npm start
 npm run dev
 ```
 
-V aplikaci klikněte na **Otevřít demo „Vánoční náměstí“** – demo se zkopíruje do
+V aplikaci klikněte na **Otevřít demo „Náměstí s radnicí“** (nebo „Vánoční náměstí“ s testovací grafikou) – demo se zkopíruje do
 `Dokumenty/Zimní scéna/` a otevře. Pak stačí **▶ Přehrát** nebo **Export videa…**.
 
 Projekt lze otevřít i při spuštění: proměnná `ZIMNI_SCENA_OPEN=/cesta/k/projektu.zscena`.

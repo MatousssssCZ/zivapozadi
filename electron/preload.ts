@@ -8,7 +8,7 @@ const invoke = (ch: string, ...args: unknown[]) => ipcRenderer.invoke(ch, ...arg
 const api = {
   newProject: () => invoke('project:new'),
   openProject: (dir?: string) => invoke('project:open', dir),
-  openDemo: () => invoke('project:openDemo'),
+  openDemo: (which?: string) => invoke('project:openDemo', which),
   saveProject: (dir: string, project: unknown) => invoke('project:save', dir, project),
   saveProjectAs: (fromDir: string, project: unknown) => invoke('project:saveAs', fromDir, project),
   readAsset: (dir: string, rel: string) => invoke('asset:read', dir, rel),

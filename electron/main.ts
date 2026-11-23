@@ -13,7 +13,8 @@ import { IMAGE_EXTS, AUDIO_EXTS } from '../src/node/imageInfo';
 const isDev = !!process.env.ZIMNI_SCENA_DEV_URL;
 const appRoot = app.getAppPath();
 const resDir = app.isPackaged ? path.join(process.resourcesPath, 'builtin') : path.join(appRoot, 'resources', 'builtin');
-const demoSrc = app.isPackaged ? path.join(process.resourcesPath, 'demo', 'Vanocni-namesti.zscena') : path.join(appRoot, 'demo', 'Vanocni-namesti.zscena');
+const demoRoot = app.isPackaged ? path.join(process.resourcesPath, 'demo') : path.join(appRoot, 'demo');
+const DEMOS: Record<string, string> = { namesti: 'Vanocni-namesti', radnice: 'Namesti-radnice' };
 
 let win: BrowserWindow | null = null;
 let encoder: NodeEncoderHost | null = null;
@@ -74,8 +75,10 @@ handle('project:open', async (dir?: string) => {
   return openDir(dir);
 });
 
-handle('project:openDemo', async () => {
-  const target = path.join(app.getPath('documents'), 'Zimní scéna', 'Vanocni-namesti' + PROJECT_EXT);
+handle('project:openDemo', async (which: string = 'namesti') => {
+  const name = DEMOS[which] ?? DEMOS.namesti;
+  const demoSrc = path.join(demoRoot, name + PROJECT_EXT);
+  const target = path.join(app.getPath('documents'), 'Zimní scéna', name + PROJECT_EXT);
   if (!existsSync(path.join(target, 'project.json'))) {
     await fs.mkdir(path.dirname(target), { recursive: true });
     await fs.cp(demoSrc, target, { recursive: true });
