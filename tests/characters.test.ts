@@ -155,7 +155,7 @@ describe('sestavení a pohyb', () => {
       // stojná noha: zaznamenat světovou polohu kotníku během kontaktu se zemí
       let drift = 0, stanceStart: number | null = null, samples = 0;
       for (let i = 0; i < 60 * 20; i++) {
-        stepAnimator(anim, manifest, 1 / 60, v, v, strideF);
+        stepAnimator(anim, manifest, 1 / 60, v, 60, strideF);
         x += v / 60;
         if (anim.walkPhase < prev) cycles++;
         prev = anim.walkPhase;
@@ -170,12 +170,15 @@ describe('sestavení a pohyb', () => {
         }
       }
       cadence.push(cycles / 20);
-      expect(samples).toBeGreaterThan(300); // stojná fáze opravdu měřena
+      expect(samples).toBeGreaterThan(150); // fáze celého chodidla na zemi opravdu měřena
       expect(drift).toBeLessThan(0.6); // jednotek (≈ 0,8 cm) – bez klouzání
     }
-    // kadence ∝ rychlost (stejná délka kroku)
-    expect(cadence[1] / cadence[0]).toBeCloseTo(60 / 35, 1);
-    expect(cadence[2] / cadence[0]).toBeCloseTo(90 / 35, 1);
+    // rychlost = délka kroku × kadence: rychlejší chůze má delší i častější kroky (biomechanika, exponent ~0,45)
+    expect(cadence[1]).toBeGreaterThan(cadence[0]);
+    expect(cadence[2]).toBeGreaterThan(cadence[1]);
+    const strideLen = [35, 60, 90].map((v, i) => v / cadence[i]);
+    expect(strideLen[1]).toBeGreaterThan(strideLen[0]);
+    expect(cadence[2] / cadence[0]).toBeLessThan(90 / 35); // ne čistě úměrně
   });
 
   it('klid: různé postavy nejsou synchronní a pohyb je jemný', () => {

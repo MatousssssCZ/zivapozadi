@@ -1,6 +1,7 @@
 import type { CharacterManifest, Direction, LoopMode, AnimEvent } from './manifest';
 import { resolveClip } from './manifest';
 import { clamp } from '../math/vec';
+import { strideFactor } from './gaitProfile';
 
 /** Stav přehrávání animací jedné postavy. Čistá data ⇒ součást checkpointu. */
 export interface AnimState {
@@ -9,6 +10,8 @@ export interface AnimState {
   walkBlend: number;
   idleTime: number;
   action: ActionState | null;
+  /** Aktuální násobek délky kroku podle rychlosti (rychlejší chůze = delší i častější kroky). */
+  strideFactor?: number;
 }
 
 export interface ActionState {
@@ -60,7 +63,10 @@ export function stopAction(a: AnimState): void { a.action = null; }
 export function stepAnimator(a: AnimState, m: CharacterManifest, dt: number, speed: number, refSpeed: number, scale: number): string[] {
   const fired: string[] = [];
   const walk = m.clips.walk;
-  const stride = (walk?.strideLength ?? 90) * scale;
+  // délka kroku se plynule přizpůsobuje rychlosti (v/vref)^0,45; fáze = dráha / délka cyklu ⇒ bez klouzání
+  const sfTarget = speed > 0.5 ? strideFactor(speed, refSpeed) : (a.strideFactor ?? 1);
+  a.strideFactor = (a.strideFactor ?? sfTarget) + clamp(sfTarget - (a.strideFactor ?? sfTarget), -dt * 1.2, dt * 1.2);
+  const stride = (walk?.strideLength ?? 90) * scale * a.strideFactor;
   const targetBlend = clamp(speed / Math.max(1e-6, refSpeed * 0.55), 0, 1);
   a.walkBlend += clamp(targetBlend - a.walkBlend, -dt * 4, dt * 4);
   if (speed > 0.5) {

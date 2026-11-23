@@ -175,3 +175,90 @@ Díly:
 
 Končetiny (3–7) kresli přesně svisle, souměrně a celé, se stejnou šířkou jako na referenci. Nic nekresli dvakrát a nic nepřimalovávej k jinému dílu.
 ```
+
+
+## 9. Prompty pro všechny směry (stejný postup jako u šikmo zepředu)
+
+Každý prompt posílejte ve **stejné konverzaci** s referenční postavou v2 a předchozími archy.
+Společný úvod je stejný, mění se jen pohled a popis dílů.
+
+**Společný úvod (vložit na začátek každého promptu):**
+
+```text
+Podle stejné referenční postavy a ve stejném stylu jako předchozí archy dílů namaluj nový ARCH DÍLŮ pro 2D animaci v pohledu [POHLED]. Stejná postava, stejné měřítko jako předchozí arch, stejná šedá barva oblečení, světlo shora zleva. Každý díl samostatně, nic se nedotýká, mezi díly velké mezery (aspoň 60 px), rozmístění v mřížce 5 × 2. Průhledné pozadí, žádný text, žádné popisky, žádný stín. Končetiny (díly 3–7) kresli přesně svisle, souměrně a celé; nadloktí a stehno užší a delší (délka asi trojnásobek šířky); předloktí stejně široké jako nadloktí, lýtko stejně široké jako spodek stehna. Nic nekresli dvakrát a nic nepřimalovávej k jinému dílu. Trup bez tmavých otvorů v průramcích a límci, čepice bez tmavého průhledu dovnitř, otvor šály vyplněný látkou nebo stínem.
+```
+
+### Z boku (postava jde doprava)
+
+```text
+[společný úvod s POHLED = „Z BOKU – postava je otočená přesně doprava, vidíme její pravý bok“]
+
+Díly:
+1) Hlava s krkem z profilu – obličej doprava (naznačené oko, nos, tvář), vlasy, ucho; bez čepice, šály a límce; krk dole rovně uříznutý.
+2) Trup kabátu z boku BEZ RUKÁVŮ – úzký profil, přední okraj s knoflíky na pravé straně obrázku, záda vlevo, límec, spodní lem.
+3) Nadloktí – horní polovina rukávu, SVISLE, nahoře i dole zaoblené, bez ruky.
+4) Předloktí – dolní polovina rukávu s manžetou, SVISLE, bez ruky.
+5) Palčák z boku – SVISLE, palec směřuje doprava (dopředu).
+6) Stehno – horní polovina nohavice z boku, SVISLE.
+7) Lýtko – dolní polovina nohavice z boku, SVISLE, bez boty.
+8) Bota z profilu – špička přesně doprava, pata vlevo, tmavá podrážka rovně.
+9) Kulich s bambulí z boku.
+10) Šála z boku – smyčka kolem krku, konce visí dopředu (doprava) před hrudí.
+```
+
+### Šikmo zezadu (postava jde doprava a od kamery)
+
+```text
+[společný úvod s POHLED = „ŠIKMO ZEZADU – jako pravá postava na referenci; postava je natočená doprava a od kamery, vidíme hlavně záda“]
+
+Díly:
+1) Hlava s krkem zezadu – vlasy na zátylku, naznačené ucho, z obličeje nejvýš kousek tváře; bez čepice, šály a límce.
+2) Trup kabátu ze zad BEZ RUKÁVŮ – zadní šev, límec zezadu, spodní lem, žádné knoflíky.
+3) Nadloktí – SVISLE, nahoře i dole zaoblené, bez ruky.
+4) Předloktí s manžetou – SVISLE, bez ruky.
+5) Palčák ze hřbetu ruky – SVISLE.
+6) Stehno ze zadní strany – SVISLE.
+7) Lýtko ze zadní strany – SVISLE, bez boty.
+8) Bota zezadu – vidíme hlavně patu, špička míří doprava a od kamery.
+9) Kulich s bambulí zezadu.
+10) Šála zezadu – smyčka kolem krku viděná ze zad, konce visí dopředu a nejsou vidět.
+```
+
+### Zepředu (postava jde přímo ke kameře)
+
+```text
+[společný úvod s POHLED = „ZEPŘEDU – postava stojí čelem přímo ke kameře“]
+
+Díly:
+1) Hlava s krkem zepředu – souměrný obličej jen naznačený (oči, tváře), vlasy; bez čepice, šály a límce.
+2) Trup kabátu zepředu BEZ RUKÁVŮ – souměrný, knoflíky uprostřed, límec, kapsy, spodní lem.
+3) Nadloktí zepředu – SVISLE, nahoře i dole zaoblené, bez ruky.
+4) Předloktí s manžetou zepředu – SVISLE, bez ruky.
+5) Palčák zepředu (dlaní k tělu, palec dopředu) – SVISLE.
+6) Stehno zepředu – SVISLE.
+7) Lýtko zepředu – SVISLE, bez boty.
+8) Bota zepředu – špička míří přímo ke kameře, vidíme špičku a svršek.
+9) Kulich s bambulí zepředu, souměrný.
+10) Šála zepředu – smyčka kolem krku, dva souměrné konce visí dolů s krémovými proužky.
+```
+
+### Zezadu (postava jde přímo od kamery)
+
+```text
+[společný úvod s POHLED = „ZEZADU – postava stojí zády přímo ke kameře“. Nemaluj zrcadlený přední pohled – opravdu záda.]
+
+Díly:
+1) Hlava s krkem zezadu – zátylek s vlasy, obě uši naznačené, žádný obličej; bez čepice, šály a límce.
+2) Trup kabátu ze zad BEZ RUKÁVŮ – souměrný, zadní šev uprostřed, límec zezadu, spodní lem.
+3) Nadloktí zezadu – SVISLE, bez ruky.
+4) Předloktí s manžetou zezadu – SVISLE, bez ruky.
+5) Palčák ze hřbetu ruky – SVISLE.
+6) Stehno zezadu – SVISLE.
+7) Lýtko zezadu – SVISLE, bez boty.
+8) Bota zezadu – vidíme patu a zadní část svršku.
+9) Kulich s bambulí zezadu, souměrný.
+10) Šála zezadu – jen smyčka kolem krku, konce nejsou vidět.
+```
+
+Doporučené pořadí: **šikmo zezadu → z boku → zezadu → zepředu** (podle toho, jak často postavy
+v typické scéně těmito směry chodí).

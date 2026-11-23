@@ -8,6 +8,7 @@
 import type { Vec2 } from '../math/vec';
 import { clamp, smoothstep } from '../math/vec';
 import { hashNoise } from '../math/rng';
+import { GAIT_PROFILE, curve } from './gaitProfile';
 import type { AnimState } from './animator';
 import type { Direction } from './manifest';
 
@@ -150,58 +151,110 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
   const restHipY = -(B.ankleHeight + legLen * 0.99);
   const tIdle = a.idleTime * motion.idleTempo + motion.phase * 10;
 
-  // --- nohy (stojná / švihová fáze)
-  const range = G.stanceFraction * G.strideLength * motion.strideScale;
-  const f = G.stanceFraction;
-  const ankles: Vec2[] = [], footAng: number[] = [], rel: number[] = [];
+  // --- nohy: biomechanický model chůze (viz gaitProfile.ts)
+  // Souřadnice nohy: u = vzdálenost vpřed od pánve (ve směru chůze), h = výška nad zemí.
+  const GP = GAIT_PROFILE;
+  const S = G.strideLength * motion.strideScale * (a.strideFactor ?? 1); // délka cyklu (2 kroky)
+  const T = B.thigh, Sh = B.shin, AH = B.ankleHeight;
+  const footHB = GP.heelBack * (legLen / 62), footBF = GP.ballFront * (legLen / 62);
+  const rot = (x: number, y: number, t: number) => ({ u: x * Math.cos(t) - y * Math.sin(t), h: x * Math.sin(t) + y * Math.cos(t) });
+  // při došlapu je kotník ~0,3 délky nohy před pánví (úměrně délce kroku); zbytek dráhy je za tělem
+  const uHeel0 = GP.heelStrikeReach * S - footHB;
+  /** kotník a úhel chodidla ve stojné fázi (planted body se vůči zemi nehýbou) */
+  const stance = (p: number) => {
+    if (p < GP.footFlat) {
+      const th = GP.heelStrikeFoot * (1 - smoothstep(p / GP.footFlat));
+      const heelU = uHeel0 - p * S; const r = rot(footHB, AH, th);
+      return { u: heelU + r.u, h: r.h, foot: th };
+    }
+    if (p < GP.heelOff) return { u: uHeel0 - p * S + footHB, h: AH, foot: 0 };
+    const ball0 = uHeel0 - GP.heelOff * S + footHB + footBF;
+    const k = (p - GP.heelOff) / (GP.toeOff - GP.heelOff);
+    const th = GP.toeOffFoot * Math.pow(k, 1.6);
+    const ballU = ball0 - (p - GP.heelOff) * S; const r = rot(-footBF, AH, th);
+    return { u: ballU + r.u, h: r.h, foot: th };
+  };
+  const st0 = stance(0), stEnd = stance(GP.toeOff);
+  /** švih: dráha kotníku přes klíčové body (zvednutí paty vzadu, průchod pod pánví, natažení vpřed) */
+  const swing = (p: number) => {
+    const q = (p - GP.toeOff) / (1 - GP.toeOff);
+    const ku: [number, number][] = [[0, stEnd.u], ...GP.swingAnkle.map(([t, f]) => [t, stEnd.u + (st0.u - stEnd.u) * f] as [number, number]), [1, st0.u]];
+    const kh: [number, number][] = [[0, stEnd.h], ...GP.swingAnkle.map(([t, , hh]) => [t, AH + hh * legLen] as [number, number]), [1, st0.h]];
+    return { u: curve(ku, q), h: curve(kh, q), foot: curve(GP.swingFoot, q) };
+  };
+  const ankles: Vec2[] = [], footAng: number[] = [], legPh: number[] = [], legRel: number[] = [];
+  const hipsU: number[] = [];
+  let hipH = 0;
+  const idleH = AH + legLen * 0.99;
   for (let i = 0; i < 2; i++) {
     const p = (ph + (i === 0 ? 0 : 0.5)) % 1;
-    let r: number, lift = 0, ang = 0;
-    if (p < f) r = 0.5 - p / f;
-    else { const s = (p - f) / (1 - f); r = -0.5 + smoothstep(s); lift = Math.sin(Math.PI * s) * G.stepLift; ang = -Math.sin(Math.PI * s) * 0.25; }
-    rel.push(r);
+    legPh.push(p);
+    const w = p < GP.toeOff ? stance(p) : swing(p);
+    // pánev se otáčí vpřed na straně nohy, která jde dopředu
+    const pr = GP.pelvisRotation * Math.cos(2 * Math.PI * p) * (legLen / 62);
+    hipsU.push(pr);
     const side = (i === 0 ? -1 : 1) * ns;
-    ankles.push({ x: side * v.hipSpread + fx * r * range * b, y: -B.ankleHeight - lift * b + fy * r * range * b * 0.35 });
-    footAng.push(ang * b);
+    const uu = w.u * b, hh = AH + (w.h - AH) * b;
+    ankles.push({ x: side * v.hipSpread + fx * uu, y: -hh + fy * uu * 0.35 });
+    footAng.push(-w.foot * b * (Math.abs(fx) > 0.9 ? 1 : 0.75));
+    legRel.push(w.u / Math.max(1e-6, S)); // poloha nohy vpřed (−0,3…+0,3)
   }
-  // pokles pánve, aby obě nohy dosáhly (omezený – zbytek je odvalení přes špičku)
-  let hipY = restHipY;
-  for (let i = 0; i < 2; i++) {
-    const dx = ankles[i].x - (i === 0 ? -1 : 1) * ns * v.hipSpread;
-    const need = ankles[i].y - Math.sqrt(Math.max(0, (legLen * 0.985) ** 2 - dx * dx));
-    hipY = Math.max(hipY, need);
+  // Výška pánve: nejníž při došlapu (obě nohy na zemi), nejvýš ve středu stoje; dvakrát za cyklus.
+  // Spodní hodnota = přední noha při došlapu téměř natažená (koleno ~5°), rozkmit ~3,5 % délky nohy.
+  {
+    const pr0 = GP.pelvisRotation * (legLen / 62);
+    const kf = (GP.stanceKnee[0][1] * Math.PI) / 180;
+    const l = Math.sqrt(T * T + Sh * Sh + 2 * T * Sh * Math.cos(kf));
+    const hLow = st0.h + Math.sqrt(Math.max(0, l * l - (st0.u - pr0) ** 2));
+    const hTop = Math.min(AH + (T + Sh) * 0.995, hLow + GP.pelvisBob * legLen * motion.bob);
+    // fáze nohy 0: došlap ⇒ minimum; ~0,25: střed stoje ⇒ maximum (cos 4π)
+    hipH = hLow + (hTop - hLow) * (0.5 - 0.5 * Math.cos(4 * Math.PI * (ph - GP.pelvisBobShift)));
   }
-  hipY = Math.min(hipY, restHipY + G.maxDip * motion.bob);
   // přenesení váhy: při chůzi nad stojnou nohu, v klidu občasný přesun
-  const swayWalk = Math.cos(ph * Math.PI * 2) * G.sway * motion.sway * b * (view === 'side' ? 0 : 1);
+  const swayWalk = Math.cos(ph * Math.PI * 2) * G.sway * motion.sway * b * (view === 'side' ? 0 : 1) * ns;
   const shiftIdle = weightShift(tIdle, I.shiftPeriod, seed) * I.shiftAmp * (1 - b) * (view === 'side' ? 0.3 : 1);
-  const hip = { x: swayWalk + shiftIdle, y: hipY };
+  const hip = { x: swayWalk + shiftIdle, y: -(idleH + (hipH - idleH) * b) };
   const legs = [0, 1].map((i) => {
     const side = (i === 0 ? -1 : 1) * ns;
-    const root = { x: hip.x + side * v.hipSpread, y: hip.y };
+    const drop = legPh[i] >= GP.toeOff ? Math.sin(Math.PI * (legPh[i] - GP.toeOff) / (1 - GP.toeOff)) * GP.pelvisDrop * b * (view === 'side' ? 0.3 : 1) : 0;
+    const root = { x: hip.x + side * v.hipSpread + fx * hipsU[i] * b, y: hip.y + drop + fy * hipsU[i] * b * 0.35 };
     return ik(root, ankles[i], B.thigh, B.shin, -1);
   }) as [Limb, Limb];
 
-  // --- trup, krk, hlava
+  // --- trup, krk, hlava (mírný předklon rostoucí s rychlostí, kmitání 2× za cyklus, stabilizace hlavy)
   const breathe = (0.5 + 0.5 * Math.sin((tIdle / 3.6) * Math.PI * 2)) * I.breathe;
-  const torsoAngle = -Math.PI / 2 + G.lean * motion.lean * b * Math.sign(fx || 1) - shiftIdle * 0.004;
+  const pitch = GP.torsoPitch * Math.cos(4 * Math.PI * (ph - 0.1)) * b;
+  const torsoAngle = -Math.PI / 2 + (G.lean * motion.lean * (0.6 + 0.4 * (a.strideFactor ?? 1)) * b + pitch) * Math.sign(fx || 1) - shiftIdle * 0.004;
   const neck = { x: hip.x + Math.cos(torsoAngle) * B.torso, y: hip.y + Math.sin(torsoAngle) * B.torso - breathe };
   const headTiltIdle = I.headAmp * (Math.sin(tIdle * 0.71 + motion.phase * 6.2) + 0.5 * Math.sin(tIdle * 1.37 + motion.phase * 3.1));
-  let headTilt = headTiltIdle * (1 - b * 0.6);
+  let headTilt = headTiltIdle * (1 - b * 0.6) - pitch * Math.sign(fx || 1) * 0.8; // hlava drží pohled
   const head = { x: neck.x + v.headOffsetX, y: neck.y - B.neck };
   const shoulder = { x: neck.x + v.shoulderOffsetX, y: neck.y + B.shoulderDrop };
 
-  // --- paže: protipohyb k opačné noze
-  const armLen = B.upperArm + B.forearm;
-  const armRoot = (side: number) => ({ x: shoulder.x + side * v.shoulderSpread, y: shoulder.y });
-  const swingTarget = (root: Vec2, legRel: number) => {
-    const th = legRel * 2 * G.armSwing * motion.armSwing * b; // rad
-    return { x: root.x + Math.sin(th) * (armLen - 3) * fx + (v.shoulderSpread ? Math.sign(root.x - shoulder.x) * 2.5 : 0), y: root.y + Math.cos(th) * (armLen - 3) + Math.sin(th) * fy * 6 };
+  // --- paže: kyv v rameni proti opačné noze, loket se víc ohýbá při kyvu vpřed, hrudník protirotuje
+  const armAmpScale = (G.armSwing / 0.4) * motion.armSwing * (0.55 + 0.45 * (a.strideFactor ?? 1));
+  const armRoot = (side: number, legIdx: number) => {
+    const counter = -GP.thoraxCounter * GAIT_PROFILE.pelvisRotation * Math.cos(2 * Math.PI * legPh[legIdx]) * b * (legLen / 62);
+    return { x: shoulder.x + side * v.shoulderSpread + fx * counter, y: shoulder.y + fy * counter * 0.35 };
   };
-  const backRoot = armRoot(-ns), frontRoot = armRoot(ns);
-  let backTarget = swingTarget(backRoot, rel[1]);
+  const armFK = (root: Vec2, contraPh: number, side: number): Limb => {
+    const c = Math.cos(2 * Math.PI * (contraPh - GP.armLag));
+    const ths = (-0.03 + (GP.armMean + GP.armAmp * armAmpScale * c + 0.03) * b);
+    const el = 0.2 + (GP.elbowBase - 0.2 + GP.elbowAmp * armAmpScale * (0.5 + 0.5 * Math.cos(2 * Math.PI * (contraPh - GP.armLag - 0.05)))) * b;
+    const out = v.shoulderSpread ? side * 2.5 : 0;
+    const vec = (t: number, len: number) => ({ x: Math.sin(t) * len * fx, y: Math.cos(t) * len + Math.sin(t) * len * fy * 0.4 });
+    const e = vec(ths, B.upperArm), w2 = vec(ths + el, B.forearm);
+    const joint = { x: root.x + e.x + out * 0.5, y: root.y + e.y };
+    return { root, joint, end: { x: joint.x + w2.x + out * 0.5, y: joint.y + w2.y } };
+  };
+  const backRoot = armRoot(-ns, 0), frontRoot = armRoot(ns, 1);
+  // paže na straně nohy i se kývá s opačnou nohou (1 − i)
+  const armBackFK = armFK(backRoot, legPh[1], -ns), armFrontFK = armFK(frontRoot, legPh[0], ns);
+  const swingTarget = (root: Vec2, _r: number) => (root === frontRoot ? armFrontFK.end : armBackFK.end);
+  void legRel;
+  let backTarget: Vec2 | null = null;
   const holdPos = { x: frontRoot.x + 13 * fx + (v.shoulderSpread ? 3 * ns : 0), y: hip.y - 4 };
-  let frontTarget = holding ? holdPos : swingTarget(frontRoot, rel[0]);
+  let frontTarget: Vec2 | null = holding ? holdPos : null;
 
   const act = a.action;
   if (act && act.clip !== null) {
@@ -236,7 +289,7 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
       }
     }
   }
-  const arms = [ik(backRoot, backTarget, B.upperArm, B.forearm, 1), ik(frontRoot, frontTarget, B.upperArm, B.forearm, 1)] as [Limb, Limb];
+  const arms = [backTarget ? ik(backRoot, backTarget, B.upperArm, B.forearm, 1) : armBackFK, frontTarget ? ik(frontRoot, frontTarget, B.upperArm, B.forearm, 1) : armFrontFK] as [Limb, Limb];
   return { view, mirror, root: { x: 0, y: 0 }, hip, neck, shoulder, head, headTilt, torsoAngle, legs, arms, feet: [footAng[0], footAng[1]], handR: arms[1].end };
 }
 

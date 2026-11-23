@@ -70,17 +70,28 @@ kořen (země mezi chodidly)
 * Vzdálená končetina se kreslí za tělem a mírně ztmavená (`farShade`), blízká před ním;
   pořadí určuje `drawOrder` šablony pro každý pohled (`far.<slot>`, `near.<slot>`, `held`).
 
-## Pohyb
+## Pohyb (biomechanický model chůze)
 
-* **Chůze:** stojná noha se vůči pánvi posouvá přesně o uraženou dráhu (fáze = dráha / délka
-  cyklu) ⇒ na zemi neklouže (test: posun stojného kotníku < 0,6 jednotky). Švihová noha se zvedá
-  po oblouku, pánev mírně klesá (omezeno `maxDip`), paže jdou protichůdně, váha se přenáší.
-  Tempo kroků je úměrné rychlosti (test: kadence 35/60/90 jednotek/s).
-* **Klid:** jemné dýchání, drobný pohyb hlavy, občasné přenesení váhy (deterministické podle času
-  a ID postavy) a různá počáteční fáze ⇒ lidé nejsou synchronní.
-* Rozdíly mezi lidmi jen z omezených parametrů (`motionRanges`: délka kroku, švih paží, pohup,
-  přenos váhy, tempo klidu, předklon, rychlost). Žádné náhodné třesení končetin.
-* Animace běží v čase simulace (pevný krok 1/60 s) – náhled i export mají stejný průběh.
+Profil je v `src/core/anim/gaitProfile.ts` (data s popisem zdrojů), kinematika v `skeleton.ts`.
+Cyklus = dva kroky, fáze začíná došlapem paty dané nohy.
+
+| Jev | Hodnota v modelu | Normativní údaj |
+|---|---|---|
+| Stojná / švihová fáze | 60 % / 40 % | ~60 / 40 % |
+| Došlap na patu, chodidlo špičkou nahoru | 20°, položení do 8 % cyklu | odvalení přes patu |
+| Zvednutí paty, odvalení přes špičku | od 34 %, špička dolů až 45° při odrazu | pata 30–35 %, kotník ~20° PF |
+| Flexe kolena po došlapu (tlumení) | ~15–19° kolem 12 % | 10–15° kolem 15 % |
+| Flexe kolena ve švihu | ~54° | 60–65° |
+| Dráha kotníku ve švihu | pata vysoko vzadu v počátečním švihu, nízko ve středním, natažení v konečném | počáteční 60–73 %, střední 73–87 %, konečný 87–100 % |
+| Pohyb pánve nahoru/dolů | ~2,2 % délky nohy, nejníž při došlapu | 3,3–3,7 % délky nohy |
+| Rotace pánve, pokles strany švihu, přenos váhy | ano (dle pohledu) | ano |
+| Protirotace hrudníku, kmitání trupu, stabilizace hlavy | ano | ano |
+| Paže | kyv v rameni proti opačné noze, víc vzad než vpřed; loket se ohýbá víc při kyvu vpřed; rozsah roste s rychlostí | rameno ~20–25°, loket 15–30° |
+| Rychlost | delší **i** častější kroky (délka ∝ (v/v₀)^0,45) | rychlost = délka kroku × kadence |
+
+Stojná noha je vázaná na zem: pata, celé chodidlo a pak bříško prstů se vůči zemi nehýbou (fáze
+cyklu = uražená dráha / délka cyklu). Test ověřuje posun kotníku < 0,6 jednotky. Klidová animace
+(dýchání, pohyb hlavy, přenášení váhy, nesynchronní fáze) zůstala.
 
 ![Chůze a pohledy](img/generator-chuze.png)
 
