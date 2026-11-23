@@ -527,23 +527,23 @@
    "texture": "kabat-predlokti-front3q.png",
    "mask": "kabat-predlokti-front3q.maska.png",
    "sourceSize": {
-    "w": 48,
-    "h": 149
+    "w": 96,
+    "h": 197
    },
    "trim": {
-    "x": 5,
-    "y": 29,
+    "x": 29,
+    "y": 44,
     "w": 38,
-    "h": 97
+    "h": 106
    },
    "pivot": {
-    "x": 23.95,
-    "y": 36.37
+    "x": 47.95,
+    "y": 60.37
    },
    "anchors": {
     "end": {
-     "x": 23.3,
-     "y": 120.37
+     "x": 47.3,
+     "y": 144.37
     }
    },
    "boneDir": 1.5707963267948966,
@@ -624,7 +624,7 @@
     "x": 6,
     "y": 7,
     "w": 46,
-    "h": 169
+    "h": 168
    },
    "pivot": {
     "x": 28.7,
@@ -658,23 +658,23 @@
    "texture": "kalhoty-lytko-front3q.png",
    "mask": "kalhoty-lytko-front3q.maska.png",
    "sourceSize": {
-    "w": 58,
-    "h": 134
+    "w": 106,
+    "h": 182
    },
    "trim": {
-    "x": 6,
-    "y": 8,
+    "x": 30,
+    "y": 19,
     "w": 45,
-    "h": 116
+    "h": 129
    },
    "pivot": {
-    "x": 29.59,
-    "y": 14.45
+    "x": 53.59,
+    "y": 38.45
    },
    "anchors": {
     "end": {
-     "x": 26.29,
-     "y": 134.45
+     "x": 50.29,
+     "y": 158.45
     }
    },
    "boneDir": 1.5707963267948966,

@@ -49,7 +49,7 @@ export function stepSpacing(list: SpacingInput[], dt: number): void {
     const curLat = off.x * r.x + off.y * r.y;
     if (moving) {
       let want = a.lane * scale; // přirozený mírný pruh každé postavy
-      let lo = -Infinity, hi = Infinity;
+      let lo = -Infinity, hi = Infinity, capFollow = Infinity;
       for (let j = 0; j < list.length; j++) {
         if (j === i) continue;
         const b = list[j].a;
@@ -69,8 +69,7 @@ export function stepSpacing(list: SpacingInput[], dt: number): void {
         // následování pomalejšího ve stejném směru (než se podaří obejít)
         const same = !opposite && (b.speed <= MOVING || bh.x * h.x + bh.y * h.y > 0.4);
         if (same && fwd > 0 && fwd < W * 1.7 && Math.abs(lat) < need * 0.85) {
-          const cap = Math.max(b.speed * 0.95, fwd > W * 1.1 ? a.speed * 0.6 : 0);
-          a.speedCap = Math.min(a.speedCap ?? Infinity, cap);
+          capFollow = Math.min(capFollow, b.speed * 0.95);
         }
       }
       if (lo > -Infinity || hi < Infinity) {
@@ -78,6 +77,11 @@ export function stepSpacing(list: SpacingInput[], dt: number): void {
         else want = clamp(want, lo, hi);
       }
       const maxLat = W * 1.4;
+      // zpomalit za pomalejším; úplně zastavit jen když nejde obejít (jinak by se zastavil i úhyb)
+      if (capFollow < Infinity) {
+        const blocked = lo > hi || Math.max(Math.abs(lo), Math.abs(hi)) > maxLat && (lo > maxLat || hi < -maxLat);
+        a.speedCap = blocked ? capFollow : Math.max(capFollow, Math.min(a.speed, 16 * scale));
+      }
       want = clamp(want, -maxLat, maxLat);
       // posun kolmo ke směru rychlostí úměrnou chůzi (úhel do ~30°); složka podél směru (po zatáčce)
       // se rozpouští jen pomalu, aby kořen nikdy necouval proti směru chůze
@@ -133,7 +137,9 @@ export function stepFollower(f: AgentState, leader: AgentState, scaleF: number, 
   const L = P(visualRoot(leader)), fp = P(f.pos);
   const lh = dirOf(leader.facing), lr = { x: -lh.y, y: lh.x };
   const side = f.follow?.side ?? 1, gap = PAIR_GAP * scaleF;
-  const target = { x: L.x + lr.x * side * gap, y: L.y + lr.y * side * gap };
+  // vedle vůdce a o kousek za ním – při chůzi napříč obrazem se postavy jinak celé zakryjí
+  const back = 0.7 * gap;
+  const target = { x: L.x + lr.x * side * gap - lh.x * back, y: L.y + lr.y * side * gap - lh.y * back };
   const d = { x: target.x - fp.x, y: target.y - fp.y };
   const along = d.x * lh.x + d.y * lh.y, lat = d.x * lr.x + d.y * lr.y;
   let tv: Vec2;
@@ -146,11 +152,12 @@ export function stepFollower(f: AgentState, leader: AgentState, scaleF: number, 
     const v = D < 2 * scaleF ? 0 : Math.min(vmaxF * 0.7, D * 1.8);
     tv = D > 1e-6 ? { x: (d.x / D) * v, y: (d.y / D) * v } : { x: 0, y: 0 };
   }
-  const fd = dirOf(f.facing), cur = { x: fd.x * f.speed, y: fd.y * f.speed };
+  const cur = f.follow?.vel ?? { x: 0, y: 0 };
   const acc = 110 * scaleF * dt;
   const dv = { x: tv.x - cur.x, y: tv.y - cur.y }, dl = Math.hypot(dv.x, dv.y);
   const nv = dl <= acc ? tv : { x: cur.x + (dv.x / dl) * acc, y: cur.y + (dv.y / dl) * acc };
   const sp = Math.hypot(nv.x, nv.y);
+  if (f.follow) f.follow.vel = { x: nv.x, y: nv.y };
   const sv = S(nv);
   f.pos = { x: f.pos.x + sv.x * dt, y: f.pos.y + sv.y * dt };
   if (sp > MOVING) { f.facing = approachAngle(f.facing, Math.atan2(sv.y, sv.x), 7 * dt); f.speed = sp; }

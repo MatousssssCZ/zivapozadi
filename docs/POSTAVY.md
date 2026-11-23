@@ -112,6 +112,43 @@ Implementace podle zadání [`docs/zdroje/zadani-prirozene-chuze-2D.md`](zdroje/
 | Zastavení | opora drží, obě boty na zemi | splněno | |
 | Rozejití | kratší první krok | splněno | |
 
+### Chůze ve scéně (bez klouzání), rozestupy a dvojice
+
+* **Opora ve světě scény.** Při došlapu se uloží poloha paty *ve scéně* a směr boty; po celou
+  opěrnou fázi se chodidlo počítá od tohoto bodu, takže drží i v zatáčce, při změně hloubkového
+  měřítka nebo při úhybu. Kotník se dopočítá IK, švih navazuje na skutečný konec opory.
+  Pojistka: pokud by se kotva vzdálila od těla víc než 0,3 L (prudká otočka), plynule se přitáhne.
+* **Nohy pohání skutečný pohyb** vizuálního kořene postavy (trasa + posun z rozestupů), ne nominální
+  rychlost – boční úhyb proto postava „odkráčí“, nikdy se nesune.
+* **Perspektiva hloubky.** Pohyb svisle po obrazovce je pohyb do hloubky, zkrácený faktorem
+  K = 0,4 (`GROUND_DEPTH_K`). Rychlost chůze je fyzická, takže do hloubky postava po obrazovce
+  postupuje pomaleji a kroky se do svislé osy promítají zkrácené (noha vždy dosáhne).
+* **Otočka**: když se trasa obrací o víc než ~70°, postava se nejdřív otočí na místě, pak vykročí;
+  rozejití navazuje na místa, kde boty právě stojí.
+* **Pohledy**: při chůzi se nepoužívá čistě čelní (S) ani zadní (N) pohled – vždy šikmý SE/SW nebo
+  NE/NW podle vodorovné složky směru (s hysterezí).
+* **Rozestupy** (`src/core/sim/spacing.ts`): protijdoucí se míjejí vpravo, pomalejší nebo stojící
+  postavu před sebou postava obejde stranou (posun max. 1,4 šířky postavy, plynulá příčná rychlost
+  do 40 % rychlosti chůze), a když obejít nejde, zpomalí za ní. Ve stoje: když dvě postavy stojí na
+  stejném místě, ta s vyšším id udělá klidný úkrok stranou (postavy ve frontě/činnosti mají místo
+  dané činností).
+* **Dvojice**: `companionId` (+ `companionSide` 1 = vpravo, −1 = vlevo) u druhé postavy. Ta jde
+  vedle vůdce a kousek za ním, sladí rychlost (vůdce jde tempem pomalejšího z dvojice), v klidu se
+  natočí stejně jako vůdce; vlastní činnosti ani plánované události nemá. V generátoru volba
+  „Ve dvojicích %“, ve vlastnostech postavy „Chodí ve dvojici s“. Demo náměstí má dvě dvojice.
+
+Ověření (`tests/scene-walk.test.ts`, náměstí, 12 postav): opřená pata se mezi snímky neposune
+o víc než 0,05 px v 99,7 % snímků (výjimky jen při převrácení pohledu za chůze, max. 0,5 px);
+dvojice jsou od sebe dál než 60 j. 0 % času; překryvy postav ve stoje 0 (dříve ~1 900 snímko-dvojic
+za 90 s), za chůze ~600 (dříve ~3 600, zbytek jsou krátká křížení drah).
+
+### Klouby (koleno, loket)
+
+Při zpracování dílů (`scripts/process-character-parts.ts`, `smoothJoint`) dostane lýtko a předloktí
+nahoře zaoblenou „čéšku“ se středem v kloubu (barva z látky pod ní) – při ohnutí nevyčnívá hranatý
+roh. Stehno a nadloktí mají dole odstraněnou tmavou konturu a měkký okraj, takže se do spodního
+dílu prolnou barevně i tvarově (horní díl se kreslí přes spodní).
+
 ### Ze zadání zatím neimplementováno
 
 * plánování kroků v zatáčkách (natočení budoucích došlapů podle zakřivení, ostré otočky

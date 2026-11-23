@@ -28,7 +28,7 @@ Projekt je tedy přenositelný jako celá složka. Ukládání: dočasný soubor
 | `nav` | `nodes[] {id, x, y, name?, stop?}`, `edges[] {id, a, b, oneWay, narrow}` |
 | `areas[]` | `{id, name, kind: obstacle|snow, polygon[]}` |
 | `zones[]` | `{id, name, activityType, activityVersion, enabled, bounds[], objectRoles{role: objectId[]}, params}` |
-| `characters[]` | `{id, name, assetId, startNodeId, baseScale, walkSpeed, palette, wander, activities{type: {enabled, firstDelayMin/Max, intervalMin/Max}}}` |
+| `characters[]` | `{id, name, assetId, startNodeId, baseScale, walkSpeed, palette, wander, activities{type: {enabled, firstDelayMin/Max, intervalMin/Max}}, appearance?, companionId?, companionSide?}` – `companionId` = postava, se kterou tato chodí ve dvojici (vůdce), `companionSide` 1/−1 = vpravo/vlevo |
 | `schedule[]` | `{id, name, time, activityType, characterId|null, zoneId|null, onUnavailable: wait|skip|report, waitLimit}` |
 | `export` | rozlišení, fps (30), režim délky (`manual`/`audio`), délka, `audioAssetId`, `audioWhenShorter` (`loop`/`silence`), CRF, preset, délka části, výstupní cesta, diagnostický PNG režim |
 

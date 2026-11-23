@@ -72,7 +72,7 @@ export interface AgentState {
   /** Omezení rychlosti z rozestupů (následování pomalejšího), px/s; null = bez omezení. */
   speedCap?: number | null;
   /** Dvojice: tato postava jde s vůdcem (id) na dané straně. */
-  follow?: { leaderId: string; side: number } | null;
+  follow?: { leaderId: string; side: number; vel?: Vec2 } | null;
 }
 
 export type PropKind = 'cup';

@@ -231,6 +231,69 @@ function makeMask(c: Canvas, slot: PartSlot): { mask: Canvas | null; brighten: n
   return { mask: m, brighten: f };
 }
 
+/**
+ * Plynulé klouby (koleno, loket):
+ * - spodní díl (lýtko, předloktí) dostane nahoře zaoblenou „čéšku“ se středem v kloubu, takže při ohnutí
+ *   nevyčnívá hranatý roh a tvar kloubu je kulatý (barva čéšky se bere z řádků pod ní);
+ * - horní díl (stehno, nadloktí) má dole měkký okraj bez tmavé kontury, takže se do spodního dílu
+ *   prolne barevně i tvarově (horní díl se kreslí přes spodní).
+ */
+function smoothJoint(c: Canvas, slot: PartSlot, pivot: V, end: V | null) {
+  if (!['shin', 'forearm', 'thigh', 'upperArm'].includes(slot)) return;
+  const ctx = c.getContext('2d'); const id = ctx.getImageData(0, 0, c.width, c.height); const d = id.data; const W = c.width, H = c.height;
+  const A = (x: number, y: number) => (x < 0 || y < 0 || x >= W || y >= H ? 0 : d[(y * W + x) * 4 + 3]);
+  const extent = (y: number) => { let x0 = -1, x1 = -1; for (let x = 0; x < W; x++) if (A(x, y) > 128) { if (x0 < 0) x0 = x; x1 = x; } return x0 < 0 ? null : { x0, x1 }; };
+  if (slot === 'shin' || slot === 'forearm') {
+    // poloměr = polovina šířky kousek pod kloubem
+    let ref = null as { x0: number; x1: number } | null, yRef = Math.round(pivot.y + 3 * P);
+    for (; yRef < H && !(ref = extent(yRef)); yRef++);
+    if (!ref) return;
+    const r = (ref.x1 - ref.x0 + 1) / 2 * 0.98, cx = pivot.x, cy = pivot.y;
+    const src = new Uint8ClampedArray(d);
+    const yTop = Math.max(0, Math.floor(cy - r - 2));
+    for (let y = yTop; y <= Math.ceil(cy + 2); y++) for (let x = 0; x < W; x++) {
+      const i = (y * W + x) * 4;
+      const dist = Math.hypot(x - cx, y - cy), cov = Math.max(0, Math.min(1, r - dist + 0.5));
+      // nad středem kloubu: jen uvnitř kruhu; pod ním: původní tvar, ale kruh doplní chybějící okraj
+      const inside = y <= cy ? cov : Math.max(cov, src[i + 3] / 255);
+      if (inside <= 0) { d[i + 3] = 0; continue; }
+      if (src[i + 3] < 250) {
+        // barva z nejbližšího plně krytého pixelu pod (stejný sloupec, jinak nejbližší sloupec v referenčním řádku)
+        let yy = y, xx = Math.max(ref.x0 + 2, Math.min(ref.x1 - 2, x));
+        while (yy < H && src[(yy * W + xx) * 4 + 3] < 250) yy++;
+        if (yy >= H) continue;
+        const j = (yy * W + xx) * 4;
+        d[i] = src[j]; d[i + 1] = src[j + 1]; d[i + 2] = src[j + 2];
+      }
+      d[i + 3] = Math.round(255 * Math.min(inside, y <= cy ? cov : 1));
+    }
+  } else if (end) {
+    // spodní okraj horního dílu: tmavé obrysové pixely nahradit látkou zevnitř a okraj změkčit
+    const src = new Uint8ClampedArray(d);
+    const yStart = Math.round(end.y - 3 * P);
+    const lum = (j: number) => 0.3 * src[j] + 0.59 * src[j + 1] + 0.11 * src[j + 2];
+    const distT = (x: number, y: number) => { for (let k = 1; k <= 8; k++) for (const [dx, dy] of [[0, k], [k, 0], [-k, 0], [0, -k], [k, k], [-k, k]]) if (A(x + dx, y + dy) < 40) return k; return 9; };
+    for (let y = Math.max(0, yStart); y < H; y++) for (let x = 0; x < W; x++) {
+      const i = (y * W + x) * 4;
+      if (src[i + 3] === 0) continue;
+      const dt = distT(x, y);
+      if (dt <= 5) {
+        // barva z vnitřku (6 px směrem ke středu kloubu)
+        const vx = end.x - x, vy = end.y - y - 2 * P, vl = Math.hypot(vx, vy) || 1;
+        const sx = Math.round(x + (vx / vl) * 6), sy = Math.round(y + (vy / vl) * 6);
+        if (sx >= 0 && sy >= 0 && sx < W && sy < H) {
+          const j = (sy * W + sx) * 4;
+          if (src[j + 3] > 200 && lum(i) < lum(j) - 6) { const t = Math.min(1, (lum(j) - lum(i)) / 40) * (dt <= 3 ? 1 : 0.5); for (let k = 0; k < 3; k++) d[i + k] = Math.round(src[i + k] + (src[j + k] - src[i + k]) * t); }
+        }
+        // měkký okraj (jen dole – po stranách zůstává ostrý obrys nohavice/rukávu)
+        const below = y > end.y - P;
+        if (below) d[i + 3] = Math.round(src[i + 3] * Math.min(1, (dt - 0.5) / 4));
+      }
+    }
+  }
+  ctx.putImageData(id, 0, 0);
+}
+
 function scaled(src: Canvas, kx: number, k: number, pad: number): Canvas {
   const w = Math.ceil(src.width * kx) + pad * 2, h = Math.ceil(src.height * k) + pad * 2;
   const c = createCanvas(w, h); const ctx = c.getContext('2d');
@@ -263,9 +326,11 @@ async function main() {
     const cut = CUTS.find((c) => c.slot === slot)!;
     const p = extract(sheet, cut);
     const meas = measure(p, ctx);
-    const pad = 4;
+    const pad = slot === 'shin' || slot === 'forearm' ? 28 : 4; // místo pro zaoblenou čéšku / loket
     const kx = meas.kx ?? meas.k;
     const sc = scaled(p.c, kx, meas.k, pad);
+    const toS = (q: V) => ({ x: q.x * kx + pad, y: q.y * meas.k + pad });
+    smoothJoint(sc, slot, toS(meas.pivot), meas.anchors.end ? toS(meas.anchors.end) : null);
     if (Math.abs(kx / meas.k - 1) > 0.12) artFixes.push({ ref: `${slot}`, issue: `Poměr stran neodpovídá referenci – šířka upravena ×${(kx / meas.k).toFixed(2)} vůči délce. Přemalovat ${kx < meas.k ? 'užší a delší' : 'širší a kratší'} (cílová šířka ${WIDTH[slot]} j. při délce kosti).` });
     const { mask, brighten } = makeMask(sc, slot);
     const trim = trimBox(sc);
