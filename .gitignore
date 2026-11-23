@@ -5,3 +5,4 @@ release/
 out/
 *.log
 .tmp/
+/ukazky-*.mp4
