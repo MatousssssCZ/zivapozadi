@@ -140,6 +140,7 @@ export function drawOverlay(ctx: Ctx, o: OverlayInput) {
   // Postavy: jméno, stav, označení provizorního vzhledu
   if (o.sim) {
     for (const a of o.sim.state.agents) {
+      if (a.hidden) continue; // návštěvník mimo scénu
       const c = o.sim.characterOf(a.id); if (!c) continue;
       const m = o.sim.manifests[c.assetId]; if (!m) continue;
       const cv = characterVisual(a, m, c, p.scene.depth);

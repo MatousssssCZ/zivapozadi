@@ -33,6 +33,18 @@ export interface ActivityRun {
   data: Record<string, unknown>;
 }
 
+export type VisitMode = 'offstage' | 'choose' | 'leave' | 'coffee' | 'meet-go' | 'meet-wait' | 'greet' | 'with';
+export interface VisitState {
+  mode: VisitMode;
+  until: number;
+  /** Uzel, kam návštěvník odchází (vstup/výstup), nebo kde se setkává. */
+  target?: string | null;
+  friendId?: string | null;
+  /** Kdo z dvojice přátel vede (jde na kávu, ostatní ho následují). */
+  lead?: boolean;
+  since?: number;
+}
+
 export interface AgentState {
   id: string;
   name: string;
@@ -73,6 +85,12 @@ export interface AgentState {
   speedCap?: number | null;
   /** Dvojice: tato postava jde s vůdcem (id) na dané straně. */
   follow?: { leaderId: string; side: number; vel?: Vec2 } | null;
+  /** Postava je mimo scénu (návštěvník čeká za vstupem) – nekreslí se a neovlivňuje ostatní. */
+  hidden?: boolean;
+  /** Návštěvník: co právě dělá. */
+  visit?: VisitState | null;
+  /** Po společné činnosti se postava znovu připojí k vůdci dvojice. */
+  rejoin?: { leaderId: string; side: number; permanent: boolean } | null;
 }
 
 export type PropKind = 'cup';

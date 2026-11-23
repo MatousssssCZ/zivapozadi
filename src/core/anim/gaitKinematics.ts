@@ -83,6 +83,9 @@ export function restFeet(phase: number, S: number, w: number, g: FootGeom, heelR
     else out.push(f.u);
   }
   for (let i = 0; i < 2; i++) if (!contact[i]) out[i] = (contact[1 - i] ? out[1 - i] : 0) - 0.12 * g.L * Math.sign(out[1 - i] || 1);
+  // klidný postoj: přední bota zůstane, zadní se přisune k ní (chodidla u sebe, ne „na schodech“)
+  const f = out[0] >= out[1] ? 0 : 1, b = 1 - f;
+  if (out[f] - out[b] > 0.1 * g.L) out[b] = out[f] - 0.06 * g.L;
   return [out[0], out[1]];
 }
 

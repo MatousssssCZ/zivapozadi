@@ -227,7 +227,7 @@ export function GeneratorPanel() {
         const ci: CharacterInstance = {
           id: newId('ch'), name: names[i] ?? `Postava ${d.characters.length + 1}`, assetId: rig.assetId,
           startNodeId: nodes[(d.characters.length + i * 3) % nodes.length].id, baseScale: 1, walkSpeed: Math.round(60 * c.app.motion.speed * 10) / 10,
-          palette: { coat: '#888888', hat: '#888888', scarf: '#888888', skin: '#e8c0a0', trousers: '#444444' }, wander: true, appearance: c.app,
+          palette: { coat: '#888888', hat: '#888888', scarf: '#888888', skin: '#e8c0a0', trousers: '#444444' }, wander: true, appearance: c.app, routine: nodes.some((n) => n.portal) ? 'visitor' : 'wander',
           activities: { coffee: { enabled: true, firstDelayMin: 5 + i * 5, firstDelayMax: 12 + i * 5, intervalMin: 70, intervalMax: 160 } },
         };
         d.characters.push(ci);

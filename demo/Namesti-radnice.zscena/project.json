@@ -3,8 +3,8 @@
   "formatVersion": 1,
   "meta": {
     "name": "Náměstí s radnicí (test dodané grafiky)",
-    "createdAt": "2026-11-23T20:58:16.030Z",
-    "modifiedAt": "2026-11-23T20:58:16.078Z",
+    "createdAt": "2026-11-23T21:21:52.316Z",
+    "modifiedAt": "2026-11-23T21:21:52.361Z",
     "appVersion": "0.1.0"
   },
   "seed": 1224,
@@ -366,6 +366,26 @@
             "label": "Fronta 2"
           },
           {
+            "id": "queue3",
+            "kind": "queue",
+            "offset": {
+              "x": -435,
+              "y": 134
+            },
+            "facing": -0.4,
+            "label": "Fronta 3"
+          },
+          {
+            "id": "queue4",
+            "kind": "queue",
+            "offset": {
+              "x": -570,
+              "y": 146
+            },
+            "facing": -0.3,
+            "label": "Fronta 4"
+          },
+          {
             "id": "counter",
             "kind": "counter",
             "offset": {
@@ -583,6 +603,62 @@
       }
     },
     {
+      "id": "obj_stolecek2",
+      "name": "Stoleček u stromu",
+      "assetId": "builtin_stolecek",
+      "x": 1290,
+      "y": 1005,
+      "scale": 0.78,
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "footprint": [
+        {
+          "x": -22,
+          "y": -8
+        },
+        {
+          "x": 22,
+          "y": -8
+        },
+        {
+          "x": 22,
+          "y": 6
+        },
+        {
+          "x": -22,
+          "y": 6
+        }
+      ],
+      "interaction": {
+        "kind": "table",
+        "points": [
+          {
+            "id": "seat1",
+            "kind": "seat",
+            "offset": {
+              "x": -52,
+              "y": 12
+            },
+            "facing": -0.2,
+            "label": "Místo 1"
+          },
+          {
+            "id": "seat2",
+            "kind": "seat",
+            "offset": {
+              "x": 52,
+              "y": 12
+            },
+            "facing": 3.3415926535897933,
+            "label": "Místo 2"
+          }
+        ]
+      }
+    },
+    {
       "id": "obj_kos",
       "name": "Koš (test)",
       "assetId": "builtin_kos",
@@ -652,7 +728,8 @@
             "mode": "none"
           },
           "next": []
-        }
+        },
+        "portal": true
       },
       {
         "id": "b",
@@ -726,7 +803,8 @@
             "mode": "none"
           },
           "next": []
-        }
+        },
+        "portal": true
       },
       {
         "id": "j",
@@ -955,6 +1033,7 @@
         ],
         "seating": [
           "obj_stolecek",
+          "obj_stolecek2",
           "obj_strom"
         ],
         "bin": [
@@ -1020,6 +1099,7 @@
         },
         "locks": []
       },
+      "routine": "visitor",
       "activities": {
         "coffee": {
           "enabled": true,
@@ -1085,6 +1165,7 @@
         },
         "locks": []
       },
+      "routine": "visitor",
       "activities": {
         "coffee": {
           "enabled": true,
@@ -1150,6 +1231,7 @@
         },
         "locks": []
       },
+      "routine": "visitor",
       "activities": {
         "coffee": {
           "enabled": false,
@@ -1215,6 +1297,7 @@
         },
         "locks": []
       },
+      "routine": "visitor",
       "activities": {
         "coffee": {
           "enabled": true,
@@ -1280,6 +1363,7 @@
         },
         "locks": []
       },
+      "routine": "visitor",
       "activities": {
         "coffee": {
           "enabled": true,
@@ -1345,6 +1429,7 @@
         },
         "locks": []
       },
+      "routine": "visitor",
       "activities": {},
       "companionId": "ch_5",
       "companionSide": 1
@@ -1404,6 +1489,7 @@
         },
         "locks": []
       },
+      "routine": "visitor",
       "activities": {
         "coffee": {
           "enabled": true,
@@ -1469,6 +1555,7 @@
         },
         "locks": []
       },
+      "routine": "visitor",
       "activities": {
         "coffee": {
           "enabled": true,
@@ -1534,6 +1621,7 @@
         },
         "locks": []
       },
+      "routine": "visitor",
       "activities": {
         "coffee": {
           "enabled": true,
@@ -1599,6 +1687,7 @@
         },
         "locks": []
       },
+      "routine": "visitor",
       "activities": {},
       "companionId": "ch_9",
       "companionSide": -1
@@ -1658,6 +1747,7 @@
         },
         "locks": []
       },
+      "routine": "visitor",
       "activities": {
         "coffee": {
           "enabled": true,
@@ -1723,6 +1813,7 @@
         },
         "locks": []
       },
+      "routine": "visitor",
       "activities": {
         "coffee": {
           "enabled": true,

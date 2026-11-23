@@ -93,7 +93,11 @@ export interface StopConfig {
   next: { nodeId: string; weight: number }[];
 }
 
-export interface NavNode { id: string; x: number; y: number; name?: string; stop?: StopConfig }
+export interface NavNode {
+  id: string; x: number; y: number; name?: string; stop?: StopConfig;
+  /** Vstup/výstup ze scény (obvykle mimo obraz): tudy návštěvníci přicházejí a odcházejí. */
+  portal?: boolean;
+}
 
 export interface NavEdge {
   id: string;
@@ -146,6 +150,11 @@ export interface CharacterInstance {
   companionId?: string | null;
   /** Strana vedle vůdce: 1 = vpravo, −1 = vlevo (výchozí 1). */
   companionSide?: number;
+  /**
+   * Chování: `wander` = volná procházka po trasách (původní), `visitor` = návštěvník: přijde vstupem,
+   * scénou buď jen projde, nebo si dojde na kávu, nebo se potká s přítelem a jdou na kávu spolu; pak odejde.
+   */
+  routine?: 'wander' | 'visitor';
 }
 
 export type UnavailablePolicy = 'wait' | 'skip' | 'report';

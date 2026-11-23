@@ -80,7 +80,8 @@ export function stepSpacing(list: SpacingInput[], dt: number): void {
       // zpomalit za pomalejším; úplně zastavit jen když nejde obejít (jinak by se zastavil i úhyb)
       if (capFollow < Infinity) {
         const blocked = lo > hi || Math.max(Math.abs(lo), Math.abs(hi)) > maxLat && (lo > maxLat || hi < -maxLat);
-        a.speedCap = blocked ? capFollow : Math.max(capFollow, Math.min(a.speed, 16 * scale));
+        // nikdy se nezaseknout: i když obejít nejde, projde pomalu kolem (fronta, úzké místo)
+        a.speedCap = blocked ? Math.max(capFollow, 9 * scale) : Math.max(capFollow, Math.min(a.speed, 16 * scale));
       }
       want = clamp(want, -maxLat, maxLat);
       // posun kolmo ke směru rychlostí úměrnou chůzi (úhel do ~30°); složka podél směru (po zatáčce)

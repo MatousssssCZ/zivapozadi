@@ -6,6 +6,7 @@ import { canonicalJson, fingerprint } from '../model/hash';
 import { ALL_DIRECTIONS, resolveDirection, resolveClip, type CharacterManifest } from '../anim/manifest';
 import { initialAnimState, playAction, stepAnimator, stopAction } from '../anim/animator';
 import { getActivity } from '../activities/registry';
+import { coffeeFreeSlots } from '../activities/coffee';
 import { characterVisual, localToScene, gaitContextFor } from '../render/characterPose';
 import { depthScaleAt, groundLen, groundAngle, GROUND_DEPTH_K } from '../scene/geometry';
 import { Reservations } from './reservations';
@@ -56,6 +57,7 @@ export class Simulation {
     for (const ev of project.schedule) st.schedule[ev.id] = { status: 'pending' };
     for (const c of project.characters) sim.spawnAgent(c);
     sim.linkPairs();
+    sim.initVisitors();
     return sim;
   }
 
@@ -145,6 +147,18 @@ export class Simulation {
     a.wander.waitUntil = randRange(a.rng, 0.3, 2.5);
     for (const [type, cfg] of Object.entries(c.activities)) if (cfg.enabled) a.cooldowns[type] = randRange(a.rng, cfg.firstDelayMin, cfg.firstDelayMax);
     this.state.agents.push(a);
+  }
+
+  /** Návštěvníci: část začíná ve scéně (rovnou se rozhodne), část přijde později vstupem. */
+  private initVisitors() {
+    const hasPortals = this.portals().length > 0;
+    for (const a of this.state.agents) {
+      const c = this.chars.get(a.id)!;
+      if (c.routine !== 'visitor' || a.follow) continue;
+      if (hasPortals && rand(a.rng) < 0.35) { a.hidden = true; a.visit = { mode: 'offstage', until: randRange(a.rng, 2, 25), since: 0 }; a.status = 'Mimo scénu'; }
+      else a.visit = { mode: 'choose', until: randRange(a.rng, 0.3, 3), since: 0 };
+    }
+    for (const a of this.state.agents) if (a.follow) { const l = this.state.agents.find((x) => x.id === a.follow!.leaderId); if (l?.hidden) a.hidden = true; }
   }
 
   /** Dvojice: druhý člen začne vedle vůdce a dál ho následuje. */
@@ -322,7 +336,7 @@ export class Simulation {
     this.stepSchedule(t);
     // 1) pohyb (trasy, dvojice), 2) rozestupy, 3) animace a rozhodování
     for (const a of this.state.agents) this.stepMotion(a);
-    stepSpacing(this.state.agents.map((a) => ({ a, scale: this.scaleOf(a) })), SIM_DT);
+    stepSpacing(this.state.agents.filter((a) => !a.hidden).map((a) => ({ a, scale: this.scaleOf(a) })), SIM_DT);
     for (const a of this.state.agents) this.stepAgent(a, t);
     this.stepProps(t);
     this.state.step++;
@@ -376,8 +390,11 @@ export class Simulation {
 
   /** Pohyb po trase (nebo vedle vůdce dvojice) a natáčení v klidu. */
   private stepMotion(a: AgentState) {
+    if (a.hidden && !a.follow) { a.speed = 0; this.motion.set(a.id, { arrived: false, waitingNarrow: false }); return; }
     if (a.follow) {
       const leader = this.state.agents.find((x) => x.id === a.follow!.leaderId);
+      if (leader && leader.hidden) { a.hidden = true; a.pos = { ...leader.pos }; a.speed = 0; a.follow!.vel = { x: 0, y: 0 }; a.visPrev = undefined; this.motion.set(a.id, { arrived: false, waitingNarrow: false }); return; }
+      if (leader && a.hidden) { a.hidden = false; a.pos = { ...leader.pos }; a.visPrev = undefined; }
       if (leader) { stepFollower(a, leader, this.scaleOf(a), this.vmax(a), SIM_DT, this.project.scene.maxWalkSlopeDeg ?? 45); this.motion.set(a.id, { arrived: false, waitingNarrow: false }); return; }
       a.follow = null;
     }
@@ -424,10 +441,18 @@ export class Simulation {
     this.latchFootAnchors(a, c, m, heelsNow);
     if (mv.waitingNarrow) a.status = 'Čeká před úzkým průchodem';
     // 3) rozhodování + účast v činnosti
-    if (a.follow) { const l = this.state.agents.find((x) => x.id === a.follow!.leaderId); a.status = l ? `Jde s postavou ${l.name}` : 'Stojí'; return; }
+    if (a.follow) { const l = this.state.agents.find((x) => x.id === a.follow!.leaderId); a.status = l ? (a.hidden ? 'Mimo scénu' : `Jde s postavou ${l.name}`) : 'Stojí'; return; }
     if (a.activity) { this.stepActivity(a, events); return; }
+    // po společné činnosti se druhý z dvojice znovu připojí k vůdci
+    if (a.rejoin && !a.pendingActivity) {
+      const l = this.state.agents.find((x) => x.id === a.rejoin!.leaderId);
+      if (l && !l.hidden) { a.follow = { leaderId: l.id, side: a.rejoin.side }; if (a.visit) a.visit = { mode: 'with', until: 0, friendId: l.id }; a.rejoin = null; return; }
+      a.rejoin = null;
+    }
+    if (a.hidden && a.pendingActivity) this.enterScene(a, t); // plánovaná činnost: návštěvník přijde
     if (a.pendingActivity && !a.route) { this.tryStartPending(a); if (a.activity) return; }
-    if (a.route) { if (!mv.waitingNarrow) a.status = a.pendingActivity ? 'Jde k činnosti' : 'Prochází se'; return; }
+    if (a.route) { if (!mv.waitingNarrow) a.status = a.pendingActivity ? 'Jde k činnosti' : this.routeStatus(a); return; }
+    if (c.routine === 'visitor') { this.stepVisitor(a, c, t); return; }
     // automatické činnosti
     for (const [type, cfg] of Object.entries(c.activities)) {
       if (!cfg.enabled || t < (a.cooldowns[type] ?? Infinity)) continue;
@@ -450,6 +475,13 @@ export class Simulation {
     const runner = getActivity(p.type);
     const zone = p.zoneId ? this.zones.get(p.zoneId) : undefined;
     if (!runner || !zone) return;
+    // dvojice jde na kávu jen tehdy, když se u stánku vejdou obě postavy (jinak chvíli počkají)
+    if (p.type === 'coffee' && this.state.agents.some((x) => x.follow?.leaderId === a.id) && coffeeFreeSlots(this.ctx, a, zone) < 2) {
+      a.pendingActivity = p; a.status = 'Čekají, až se uvolní fronta';
+      a.wander.waitUntil = this.time() + 2;
+      if (a.visit) { a.visit.since ??= this.time(); if (this.time() - (a.visit.since ?? 0) > 60) { a.pendingActivity = null; } }
+      return;
+    }
     const run = runner.start(this.ctx, a, zone, p.source, p.sourceId);
     if (!run) {
       a.cooldowns[p.type] = this.time() + 10;
@@ -457,7 +489,197 @@ export class Simulation {
       return;
     }
     a.activity = run; a.wander.atStop = false; a.look = a.look ?? null;
+    this.startGroupActivity(a, run, zone);
   }
+
+  /** Vůdce dvojice začal činnost (káva): druhý z dvojice ji dělá s ním (fronta, stolek, povídání). */
+  private startGroupActivity(a: AgentState, run: NonNullable<AgentState['activity']>, zone: ActivityZone) {
+    if (run.type !== 'coffee') return;
+    const f = this.state.agents.find((x) => x.follow?.leaderId === a.id && !x.activity && !x.holding);
+    if (!f) return;
+    const runner = getActivity(run.type)!;
+    const fc = this.chars.get(f.id)!;
+    const saved = f.follow!;
+    f.follow = null;
+    const run2 = runner.start(this.ctx, f, zone, 'auto', null);
+    if (!run2) { f.follow = saved; this.log("info", `${f.name}: na kávu s ${a.name} nejde (${runner.canStart(this.ctx, f, zone).reason ?? "start se nezdařil"}).`, f.id); return; }
+    f.activity = run2; f.look = null;
+    f.rejoin = { leaderId: a.id, side: saved.side, permanent: fc.companionId === a.id };
+    (run.data as Record<string, unknown>).partnerId = f.id; (run.data as Record<string, unknown>).groupLead = true;
+    (run2.data as Record<string, unknown>).partnerId = a.id; (run2.data as Record<string, unknown>).groupLead = false;
+    this.log('info', `${a.name} a ${f.name} jdou spolu na kávu.`, a.id);
+  }
+
+  private routeStatus(a: AgentState): string {
+    const v = a.visit;
+    if (!v) return 'Prochází se';
+    if (v.mode === 'leave') return 'Odchází ze scény';
+    if (v.mode === 'meet-go') { const f = this.state.agents.find((x) => x.id === v.friendId); return f ? `Jde naproti: ${f.name}` : 'Jde na setkání'; }
+    return 'Prochází se';
+  }
+
+  // ---------------------------------------------------------------- návštěvníci
+  private portals(): string[] { return this.project.nav.nodes.filter((n) => n.portal && this.graph.nodes.has(n.id)).map((n) => n.id); }
+
+  /** Návštěvník vstoupí do scény vstupem (z místa mimo obraz). */
+  private enterScene(a: AgentState, t: number, avoid?: string | null) {
+    const ps = this.portals().filter((p) => p !== avoid);
+    const pid = ps.length ? ps[Math.floor(rand(a.rng) * ps.length)] : (this.anchorOf(a));
+    const n = this.graph.nodes.get(pid)!;
+    a.pos = { x: n.x, y: n.y }; a.loc = { kind: 'node', nodeId: pid }; a.route = null; a.arrived = false;
+    a.hidden = false; a.visPrev = undefined; a.off = { x: 0, y: 0 }; a.look = null;
+    a.anim.walkBlend = 0; a.anim.settle = null; a.anim.anchors = undefined; a.anim.anchorsXY = undefined;
+    a.visit = { mode: 'choose', until: t, since: t };
+    // stálý druhý z dvojice přichází s ním
+    const f = this.state.agents.find((x) => x.follow?.leaderId === a.id);
+    if (f) { f.pos = { ...a.pos }; f.loc = a.loc; f.hidden = false; f.visPrev = undefined; }
+  }
+
+  /** Vstup/výstup nejdál od daného místa (průchod přes celou scénu). */
+  private exitFor(a: AgentState): string | null {
+    const here = this.anchorOf(a);
+    const ps = this.portals().filter((p) => p !== here && this.reachable(here, p));
+    if (!ps.length) return null;
+    ps.sort((x, y) => dist(this.graph.nodes.get(y)!, a.pos) - dist(this.graph.nodes.get(x)!, a.pos));
+    // většinou nejvzdálenější (projde celou scénu), občas jiný
+    return ps.length > 1 && rand(a.rng) < 0.25 ? ps[1] : ps[0];
+  }
+
+  private leaveScene(a: AgentState, t: number) {
+    const ex = this.exitFor(a);
+    if (ex) { a.visit = { mode: 'leave', until: 0, target: ex, since: t }; this.ctx.goToNode(a, ex, 'odchod'); return; }
+    // scéna bez vstupů: dojít na vzdálený bod a chvíli postát
+    const nodes = this.project.nav.nodes.filter((n) => this.reachable(this.anchorOf(a), n.id) && n.id !== this.anchorOf(a));
+    if (nodes.length) { const n = nodes[Math.floor(rand(a.rng) * nodes.length)]; a.visit = { mode: 'choose', until: t + randRange(a.rng, 3, 8), since: t }; this.ctx.goToNode(a, n.id, 'procházka'); }
+  }
+
+  private goOffstage(a: AgentState, t: number) {
+    a.hidden = true; a.speed = 0; a.look = null; stopAction(a.anim);
+    a.visit = { mode: 'offstage', until: t + randRange(a.rng, 6, 30), since: t };
+    a.status = 'Mimo scénu';
+    for (const f of this.state.agents.filter((x) => x.follow?.leaderId === a.id)) {
+      const fc = this.chars.get(f.id)!;
+      if (fc.companionId === a.id) continue; // stálá dvojice zůstává spolu (skryje se s vůdcem)
+      f.follow = null; f.hidden = true; f.speed = 0;
+      f.visit = { mode: 'offstage', until: t + randRange(f.rng, 10, 40), since: t };
+      f.status = 'Mimo scénu';
+    }
+  }
+
+  private coffeeZone(a: AgentState, c: CharacterInstance): ActivityZone | null {
+    if (c.activities.coffee && !c.activities.coffee.enabled) return null;
+    if (a.holding) return null;
+    const runner = getActivity('coffee');
+    if (!runner) return null;
+    return this.project.zones.find((z) => z.enabled && z.activityType === 'coffee' && runner.canStart(this.ctx, a, z).ok) ?? null;
+  }
+
+  private stepVisitor(a: AgentState, c: CharacterInstance, t: number) {
+    const v = (a.visit ??= { mode: 'choose', until: t, since: t });
+    switch (v.mode) {
+      case 'offstage': {
+        a.hidden = true; a.status = 'Mimo scénu';
+        if (t >= v.until) this.enterScene(a, t);
+        return;
+      }
+      case 'choose': {
+        if (t < v.until) { a.status = 'Stojí'; return; }
+        const r = rand(a.rng);
+        const zone = this.coffeeZone(a, c);
+        const friend = r >= 0.62 ? this.pickFriend(a) : null;
+        if (friend && zone) { this.startMeeting(a, friend, t); return; }
+        if (r >= 0.35 && zone) {
+          a.pendingActivity = { type: 'coffee', zoneId: zone.id, source: 'auto', sourceId: null };
+          a.visit = { mode: 'coffee', until: 0, since: t };
+          a.status = 'Jde na kávu';
+          return;
+        }
+        this.leaveScene(a, t); // jen projde scénou
+        return;
+      }
+      case 'leave': {
+        if (a.route) return;
+        if (v.target && this.anchorOf(a) === v.target) { this.goOffstage(a, t); return; }
+        this.leaveScene(a, t);
+        return;
+      }
+      case 'coffee': {
+        // káva skončila (nebo se nepodařila): počkat na přítele, pak odejít
+        const partner = this.state.agents.find((x) => x.rejoin?.leaderId === a.id && x.activity);
+        if (partner) { a.status = `Čeká na ${partner.name}`; return; }
+        this.leaveScene(a, t);
+        return;
+      }
+      case 'meet-go': {
+        if (a.route) return;
+        v.mode = 'meet-wait'; v.since = t;
+        return;
+      }
+      case 'meet-wait': {
+        const f = this.state.agents.find((x) => x.id === v.friendId);
+        if (!f || f.hidden || f.visit?.friendId !== a.id) { this.leaveScene(a, t); return; }
+        a.status = `Čeká na: ${f.name}`;
+        if (f.visit.mode === 'meet-wait' && !f.route && dist(f.pos, a.pos) < 120) {
+          // pozdrav: natočit se k sobě, chvíli si povídat
+          for (const [x, y] of [[a, f], [f, a]] as const) {
+            x.visit!.mode = 'greet'; x.visit!.until = t + randRange(a.rng, 3, 5); x.look = { x: y.pos.x, y: y.pos.y };
+            this.ctx.playAction(x, 'talk', { duration: 1.4, loop: 'loop' });
+          }
+          this.log('info', `${a.name} a ${f.name} se zdraví.`, a.id);
+          return;
+        }
+        if (t - (v.since ?? t) > 45) { this.log('info', `${a.name}: přítel nepřišel, odchází.`, a.id); this.leaveScene(a, t); }
+        return;
+      }
+      case 'greet': {
+        const f = this.state.agents.find((x) => x.id === v.friendId);
+        a.status = f ? `Zdraví se: ${f.name}` : 'Zdraví se';
+        if (f) a.look = { x: f.pos.x, y: f.pos.y };
+        if (t < v.until) return;
+        stopAction(a.anim);
+        if (!f || !v.lead) { if (!f) this.leaveScene(a, t); return; } // vede ten, kdo setkání začal
+        stopAction(f.anim);
+        f.look = null; a.look = null;
+        f.follow = { leaderId: a.id, side: rand(a.rng) < 0.5 ? 1 : -1 };
+        f.visit = { mode: 'with', until: 0, friendId: a.id, since: t };
+        const zone = this.coffeeZone(a, c);
+        if (zone) { a.pendingActivity = { type: 'coffee', zoneId: zone.id, source: 'auto', sourceId: null }; a.visit = { mode: 'coffee', until: 0, friendId: f.id, since: t }; }
+        else this.leaveScene(a, t);
+        return;
+      }
+      case 'with': {
+        // druhý z dvojice bez vůdce (např. vůdce zmizel): odejít
+        this.leaveScene(a, t);
+        return;
+      }
+    }
+  }
+
+  /** Přítel pro setkání: jiný návštěvník, který je právě mimo scénu a nemá stálou dvojici. */
+  private pickFriend(a: AgentState): AgentState | null {
+    if (this.state.agents.some((x) => x.follow?.leaderId === a.id)) return null;
+    const cands = this.state.agents.filter((x) => x.id !== a.id && x.hidden && x.visit?.mode === 'offstage' && !x.follow
+      && this.chars.get(x.id)?.routine === 'visitor' && !this.chars.get(x.id)?.companionId
+      && !this.state.agents.some((y) => y.follow?.leaderId === x.id) && !x.pendingActivity);
+    return cands.length ? cands[Math.floor(rand(a.rng) * cands.length)] : null;
+  }
+
+  private startMeeting(a: AgentState, f: AgentState, t: number) {
+    const here = this.anchorOf(a);
+    const nodes = this.project.nav.nodes.filter((n) => !n.portal && this.reachable(here, n.id) && n.id !== here);
+    if (!nodes.length) { this.leaveScene(a, t); return; }
+    // místo setkání: raději zastávka, jinak libovolný bod uprostřed scény
+    const stops = nodes.filter((n) => n.stop);
+    const pool = stops.length && rand(a.rng) < 0.6 ? stops : nodes;
+    const m = pool[Math.floor(rand(a.rng) * pool.length)];
+    this.enterScene(f, t, a.loc.kind === 'node' ? a.loc.nodeId : null);
+    if (!this.reachable(this.anchorOf(f), m.id)) { this.goOffstage(f, t); this.leaveScene(a, t); return; }
+    a.visit = { mode: 'meet-go', until: 0, target: m.id, friendId: f.id, lead: true, since: t };
+    f.visit = { mode: 'meet-go', until: 0, target: m.id, friendId: a.id, lead: false, since: t };
+    this.ctx.goToNode(a, m.id, 'na setkání'); this.ctx.goToNode(f, m.id, 'na setkání');
+    this.log('info', `${a.name} jde naproti: ${f.name} (${m.name ?? m.id}).`, a.id);
+  }
+
 
   private stepActivity(a: AgentState, events: string[]) {
     const run = a.activity!;

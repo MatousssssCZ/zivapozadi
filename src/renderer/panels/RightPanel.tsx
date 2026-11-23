@@ -79,6 +79,8 @@ function NodeProps({ id, p }: { id: string; p: ProjectFile }) {
     <Section title="Bod trasy">
       <Row label="Název"><TextField value={n.name ?? ''} onCommit={(v) => set('Přejmenování', (x) => { x.name = v; })} /></Row>
       <Row label="X / Y"><NumField value={n.x} onCommit={(v) => set('Poloha', (x) => { x.x = v; })} /><NumField value={n.y} onCommit={(v) => set('Poloha', (x) => { x.y = v; })} /></Row>
+      <Check label="Vstup / výstup ze scény" value={!!n.portal} onChange={(v) => set('Vstup/výstup', (x) => { x.portal = v || undefined; })} />
+      <div className="muted small">Tudy návštěvníci přicházejí a odcházejí (bod dejte kousek za okraj obrazu).</div>
       <Check label="Zastávka" value={!!s} onChange={(v) => set('Zastávka', (x) => { x.stop = v ? { waitMin: 2, waitMax: 5, look: { mode: 'none' }, next: [] } : undefined; })} />
       {s && <>
         <Row label="Čekání od–do (s)"><NumField value={s.waitMin} min={0} step={0.5} onCommit={(v) => setStop('Čekání', (q) => { q.waitMin = v; q.waitMax = Math.max(q.waitMax, v); })} /><NumField value={s.waitMax} min={0} step={0.5} onCommit={(v) => setStop('Čekání', (q) => { q.waitMax = Math.max(v, q.waitMin); })} /></Row>
@@ -186,7 +188,9 @@ function CharacterProps({ id, p }: { id: string; p: ProjectFile }) {
         <Row label="Počáteční bod"><Select value={c.startNodeId} options={p.nav.nodes.map((n) => ({ value: n.id, label: n.name ?? n.id }))} onChange={(v) => set('Počáteční bod', (x) => { x.startNodeId = v; })} /></Row>
         <Row label="Rychlost chůze"><NumField value={c.walkSpeed} min={10} max={200} step={2} onCommit={(v) => set('Rychlost', (x) => { x.walkSpeed = v; })} /></Row>
         <Row label="Měřítko"><NumField value={c.baseScale} min={0.3} max={3} step={0.05} onCommit={(v) => set('Měřítko postavy', (x) => { x.baseScale = v; })} /></Row>
-        <Check label="Volná procházka po trasách" value={c.wander} onChange={(v) => set('Procházka', (x) => { x.wander = v; })} />
+        <Row label="Chování"><Select value={c.routine ?? 'wander'} options={[{ value: 'visitor', label: 'Návštěvník (projde / káva / setkání)' }, { value: 'wander', label: 'Volná procházka po trasách' }]} onChange={(v) => set('Chování postavy', (x) => { x.routine = v as 'wander' | 'visitor'; })} /></Row>
+        {(c.routine ?? 'wander') === 'visitor' && <div className="muted small">Přijde vstupem, scénou buď jen projde, nebo si dojde na kávu, nebo se potká s přítelem a jdou na kávu spolu (fronta, stolek, povídání); pak odejde a po chvíli přijde znovu.{p.nav.nodes.some((x) => x.portal) ? '' : ' Pozor: trasa nemá žádný vstup/výstup – návštěvník bude jen chodit mezi body.'}</div>}
+        {(c.routine ?? 'wander') === 'wander' && <Check label="Volná procházka po trasách" value={c.wander} onChange={(v) => set('Procházka', (x) => { x.wander = v; })} />}
         <Row label="Chodí ve dvojici s"><Select value={c.companionId ?? ''} options={[{ value: '', label: '— sám/sama —' }, ...p.characters.filter((o) => o.id !== c.id && !o.companionId).map((o) => ({ value: o.id, label: o.name }))]}
           onChange={(v) => set('Dvojice', (x) => { x.companionId = v || null; if (v) { const l = p.characters.find((o) => o.id === v); if (l) x.startNodeId = l.startNodeId; } })} /></Row>
         {c.companionId && <Row label="Strana"><Select value={String(c.companionSide === -1 ? -1 : 1)} options={[{ value: '1', label: 'vpravo od partnera' }, { value: '-1', label: 'vlevo od partnera' }]} onChange={(v) => set('Strana ve dvojici', (x) => { x.companionSide = Number(v); })} /></Row>}

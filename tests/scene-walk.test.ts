@@ -56,14 +56,15 @@ describe('chůze ve scéně (náměstí, 12 postav, 2 dvojice)', () => {
       const ags = sim.state.agents;
       for (const [f, l] of pairs) {
         const A = ags.find((x) => x.id === f)!, B = ags.find((x) => x.id === l)!;
+        if (!A.follow || A.hidden) continue; // u kávy má každý své místo ve frontě / u stolku
         const va = visualRoot(A), vb = visualRoot(B);
         const d = groundLen(va.x - vb.x, va.y - vb.y) / depthScaleAt(lp.project.scene.depth, vb.y);
         n++; if (d > 60) far++;
-        if (A.activity) pairActivities++;
+        if (A.activity) pairActivities++; // když jde s vůdcem, nemá vlastní činnost
       }
       for (let x = 0; x < ags.length; x++) for (let y = x + 1; y < ags.length; y++) {
         const a = ags[x], b = ags[y];
-        if (a.follow?.leaderId === b.id || b.follow?.leaderId === a.id) continue;
+        if (a.follow?.leaderId === b.id || b.follow?.leaderId === a.id || a.hidden || b.hidden) continue;
         const va = visualRoot(a), vb = visualRoot(b);
         const d = groundLen(va.x - vb.x, va.y - vb.y) / depthScaleAt(lp.project.scene.depth, va.y);
         if (d < BODY_W * 0.5) { overlap++; if (a.speed < 4 && b.speed < 4) overlapStanding++; }
@@ -109,6 +110,38 @@ describe('chůze ve scéně (náměstí, 12 postav, 2 dvojice)', () => {
     console.log(`strmě (> 45°): ${(100 * steep / total).toFixed(1)} % dráhy, nejdelší strmý úsek ${longest.toFixed(0)} px`);
     expect(steep / total).toBeLessThan(0.03);
     expect(longest).toBeLessThan(30); // jen obrat mezi dvěma šikmými úseky
+  });
+
+  it('návštěvníci: průchod scénou, setkání přátel, společná káva u stolku, odchod; kelímky nemizí', () => {
+    const sim = Simulation.create(lp.project, lp.manifests);
+    let exits = 0, entries = 0, greets = 0, together = 0, atTable = 0;
+    const wasHidden = new Map(sim.state.agents.map((a) => [a.id, !!a.hidden]));
+    const tableTalk = new Set<string>();
+    for (let i = 0; i < 60 * 300; i++) {
+      sim.step();
+      for (const a of sim.state.agents) {
+        const h = !!a.hidden;
+        if (h && !wasHidden.get(a.id)) exits++;
+        if (!h && wasHidden.get(a.id)) entries++;
+        wasHidden.set(a.id, h);
+        if (a.status.startsWith('Povídá si s')) tableTalk.add(a.id);
+      }
+    }
+    const log = sim.state.log.map((l) => l.msg);
+    greets = log.filter((m) => m.includes('se zdraví')).length;
+    together = log.filter((m) => m.includes('jdou spolu na kávu')).length;
+    atTable = log.filter((m) => m.includes('si jdou sednout ke stolku')).length;
+    console.log(`návštěvníci za 300 s: ${entries} příchodů, ${exits} odchodů, ${greets} pozdravů, ${together}× káva ve dvou, ${atTable}× ke stolku, povídalo si ${tableTalk.size} postav`);
+    expect(exits).toBeGreaterThanOrEqual(6);
+    expect(entries).toBeGreaterThanOrEqual(6);
+    expect(greets).toBeGreaterThanOrEqual(2);
+    expect(together).toBeGreaterThanOrEqual(3);
+    expect(atTable).toBeGreaterThanOrEqual(2);
+    expect(tableTalk.size).toBeGreaterThanOrEqual(4);
+    // každý vydaný kelímek je v ruce, padá nebo je v koši (nikdy nezmizí)
+    expect(sim.state.stats.cupsServed).toBeGreaterThan(5);
+    for (const p of sim.state.props) expect(['held', 'falling', 'inBin', 'counter', 'ground']).toContain(p.place.kind);
+    expect(log.filter((m) => m.includes('na zem')).length).toBe(0);
   });
 
   it('dvojice se obnoví z checkpointu beze změny průběhu', () => {

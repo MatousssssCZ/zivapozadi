@@ -41,7 +41,22 @@ interface CoffeeData {
   spotKey?: string | null; binId?: string; dropKey?: string;
   cupId?: string; orderEnd?: number; sipsTarget?: number; sipsDone?: number; nextSipAt?: number;
   deadline?: number; spotWaitUntil?: number; standingNode?: string | null;
+  /** Společná káva dvojice: druhý účastník, kdo vybírá místo, zda už je místo přidělené. */
+  partnerId?: string; groupLead?: boolean; go?: boolean; steppedAside?: boolean;
+  nextTalkAt?: number; acting?: 'talk' | 'drink' | null;
 }
+
+/** Druhý účastník společné kávy (jen pokud ji opravdu ještě dělá). */
+function partnerOf(ctx: SimContext, self: AgentState, run: ActivityRun): { agent: AgentState; data: CoffeeData; run: ActivityRun } | null {
+  const id = d(run).partnerId;
+  if (!id) return null;
+  const agent = ctx.state.agents.find((a) => a.id === id);
+  const pr = agent?.activity;
+  if (!agent || !pr || pr.type !== 'coffee' || d(pr).partnerId !== self.id) return null;
+  return { agent, data: d(pr), run: pr };
+}
+const PHASE_ORDER = ['to-stand', 'to-queue', 'queue', 'to-service', 'order', 'receive', 'choose-spot', 'to-spot', 'drink', 'choose-bin', 'to-bin', 'drop'];
+const phaseIdx = (r: ActivityRun) => PHASE_ORDER.indexOf(r.phase);
 
 const num = (z: ActivityZone, k: string): number => {
   const v = z.params[k];
@@ -69,6 +84,18 @@ function standOptions(ctx: SimContext, agent: AgentState, zone: ActivityZone): {
     options.push({ standId: sid, service: freeService, queue: freeQueue, load: qLen + busy });
   }
   return { options, unreachable };
+}
+
+/** Kolik postav se teď vejde ke stánku (volná obslužná místa + volná místa ve frontě) – pro dvojice. */
+export function coffeeFreeSlots(ctx: SimContext, agent: AgentState, zone: ActivityZone): number {
+  let best = 0;
+  for (const sid of role(ctx, zone, 'stand')) {
+    const qLen = (ctx.state.queues[`stand:${sid}`] ?? []).length;
+    const svc = qLen === 0 ? ctx.points(sid, 'service').filter((p) => ctx.res.isFree(p.key) && ctx.canReach(agent, p)).length : 0;
+    const q = ctx.points(sid, 'queue').filter((p) => ctx.res.isFree(p.key) && ctx.canReach(agent, p)).length;
+    best = Math.max(best, svc + q);
+  }
+  return best;
 }
 
 export const coffeeRunner: ActivityRunner = {
@@ -174,6 +201,39 @@ export const coffeeRunner: ActivityRunner = {
       }
       case 'choose-spot': {
         agent.status = 'Hledá místo k pití';
+        const pt = partnerOf(ctx, agent, run);
+        if (pt) {
+          // společná káva: uvolnit obslužné místo a počkat na přítele; místo vybírá vůdce pro oba
+          if (!data.steppedAside && agent.loc.kind === 'point') { data.steppedAside = true; ctx.goToNode(agent, agent.loc.anchor, 'odstoupit od stánku'); }
+          if (!data.groupLead) {
+            agent.status = `Čeká na: ${pt.agent.name}`;
+            if (!data.go || moving) return 'running';
+            if (data.spotKey) { const p = ctx.pointByKey(data.spotKey); if (p && ctx.goToPoint(agent, p, 'k místu s kávou')) { setPhase(ctx, run, 'to-spot'); return 'running'; } }
+            data.spotKey = null; setPhase(ctx, run, 'to-spot');
+            return 'running';
+          }
+          if (phaseIdx(pt.run) < phaseIdx(run) || moving) { agent.status = `Čeká na: ${pt.agent.name}`; return 'running'; }
+          // stoleček (nebo místo) pro dva: dvě volná místa u stejného objektu
+          for (const id of role(ctx, zone, 'seating')) {
+            const free = [...ctx.points(id, 'seat'), ...ctx.points(id, 'view')].filter((p) => ctx.res.isFree(p.key) && ctx.canReach(agent, p) && ctx.canReach(pt.agent, p));
+            if (free.length < 2) continue;
+            const [p1, p2] = free;
+            if (Math.hypot(p1.pos.x - p2.pos.x, p1.pos.y - p2.pos.y) > 160) continue; // ať si můžou povídat
+            ctx.res.tryReserve(p1.key, agent.id); ctx.res.tryReserve(p2.key, pt.agent.id);
+            data.spotKey = p1.key; pt.data.spotKey = p2.key; pt.data.go = true;
+            if (!ctx.goToPoint(agent, p1, 'ke stolku s přítelem')) { data.spotKey = null; }
+            setPhase(ctx, run, 'to-spot');
+            ctx.log('info', `${agent.name} a ${pt.agent.name} si jdou sednout ke stolku „${ctx.object(id)?.name}“.`, agent.id);
+            return 'running';
+          }
+          // žádný volný stolek pro dva: vypijí to vestoje vedle sebe
+          if (data.spotWaitUntil === undefined) data.spotWaitUntil = now + num(zone, 'spotWaitMax');
+          if (now < data.spotWaitUntil) return 'running';
+          data.spotKey = null; pt.data.spotKey = null; pt.data.go = true;
+          setPhase(ctx, run, 'to-spot');
+          ctx.log('info', `${agent.name} a ${pt.agent.name}: žádný volný stolek, pijí vestoje.`, agent.id);
+          return 'running';
+        }
         const pts = role(ctx, zone, 'seating').flatMap((id) => [...ctx.points(id, 'seat'), ...ctx.points(id, 'view')])
           .filter((p) => ctx.res.isFree(p.key) && ctx.canReach(agent, p));
         if (pts.length) {
@@ -204,7 +264,9 @@ export const coffeeRunner: ActivityRunner = {
         return 'running';
       }
       case 'drink': {
-        agent.status = `Pije kávu (${data.sipsDone}/${data.sipsTarget})`;
+        const pt = partnerOf(ctx, agent, run);
+        agent.status = pt ? `Povídá si s: ${pt.agent.name} (káva ${data.sipsDone}/${data.sipsTarget})` : `Pije kávu (${data.sipsDone}/${data.sipsTarget})`;
+        if (pt) agent.look = { x: pt.agent.pos.x, y: pt.agent.pos.y }; // natočení k příteli
         if (events.includes('sip')) {
           data.sipsDone!++; ctx.state.stats.sips++;
           const cup = ctx.prop(data.cupId!); if (cup) cup.sips++;
@@ -212,15 +274,37 @@ export const coffeeRunner: ActivityRunner = {
         if (agent.anim.action) {
           if (!ctx.actionFinished(agent)) return 'running';
           ctx.stopAction(agent);
+          const was = data.acting ?? 'drink'; data.acting = null;
+          if (was === 'talk') return 'running';
           if (data.sipsDone! >= data.sipsTarget!) { setPhase(ctx, run, 'choose-bin'); return 'running'; }
-          data.nextSipAt = now + ctx.randRange(agent, num(zone, 'sipPauseMin'), num(zone, 'sipPauseMax'));
+          // ve dvojici jsou pauzy delší – povídají si
+          data.nextSipAt = now + ctx.randRange(agent, num(zone, 'sipPauseMin'), num(zone, 'sipPauseMax')) * (pt ? 1.6 : 1);
           return 'running';
         }
-        if (now >= data.nextSipAt!) ctx.playAction(agent, 'drink', { duration: 2.6, events: [{ time: 1.1, name: 'sip' }] });
+        if (now >= data.nextSipAt!) { data.acting = 'drink'; ctx.playAction(agent, 'drink', { duration: 2.6, events: [{ time: 1.1, name: 'sip' }] }); return 'running'; }
+        if (pt && now >= (data.nextTalkAt ?? 0) && data.nextSipAt! - now > 2.2 && !pt.agent.anim.action) {
+          // střídají se v mluvení: mluví jen ten, kdo zrovna nic nedělá a druhý neposlouchá… mluví
+          data.acting = 'talk';
+          ctx.playAction(agent, 'talk', { duration: ctx.randRange(agent, 1.4, 2.4), loop: 'once' });
+          data.nextTalkAt = now + ctx.randRange(agent, 2.5, 5);
+        }
         return 'running';
       }
       case 'choose-bin': {
         agent.status = 'Hledá koš';
+        const ptb = partnerOf(ctx, agent, run);
+        if (ptb && phaseIdx(ptb.run) < phaseIdx(run)) {
+          // od stolku se odchází spolu: dopovídat, než druhý dopije
+          agent.status = `Čeká, až ${ptb.agent.name} dopije`;
+          agent.look = { x: ptb.agent.pos.x, y: ptb.agent.pos.y };
+          if (!agent.anim.action && now >= (data.nextTalkAt ?? 0) && !ptb.agent.anim.action) {
+            ctx.playAction(agent, 'talk', { duration: ctx.randRange(agent, 1.4, 2.2), loop: 'once' }); data.nextTalkAt = now + ctx.randRange(agent, 3, 5);
+          }
+          if (agent.anim.action && ctx.actionFinished(agent)) ctx.stopAction(agent);
+          return 'running';
+        }
+        if (agent.anim.action) ctx.stopAction(agent);
+        agent.look = null;
         const reachable = role(ctx, zone, 'bin').flatMap((id) => ctx.points(id, 'drop')).filter((p) => ctx.canReach(agent, p));
         if (!reachable.length) {
           // Žádný dosažitelný koš: kelímek se viditelně odloží vedle postavy (nikdy nezmizí).

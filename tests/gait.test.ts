@@ -2,6 +2,7 @@
  * Akceptační kritéria chůze podle docs/zdroje/zadani-prirozene-chuze-2D.md (oddíl E).
  * Postava jde rovně z boku; pózu počítá stejný animátor a kostra jako simulace a export.
  */
+import { gaitEvents } from '../src/core/anim/gaitProfile';
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { skeletonPose, footGeomOf, DEFAULT_MOTION, type SkeletonTemplate } from '../src/core/anim/skeleton';
@@ -131,7 +132,8 @@ describe('chůze – akceptační kritéria zadání', () => {
     expect(settleStart).toBeGreaterThan(0);
     const x0 = s[settleStart];
     const phase = x0.a.settle!.phase;
-    const stanceLeg = [0, 1].find((i) => ((phase + i * 0.5) % 1) < 0.5)!;
+    // drží přední opřená bota (zadní se v klidu přisune k ní)
+    const stanceLeg = [0, 1].sort((i, j) => heelToe(x0, j).heel.x - heelToe(x0, i).heel.x).find((i) => ((phase + i * 0.5) % 1) < gaitEvents(x0.a.gaitW ?? 0).toeOff)!;
     const ref = heelToe(x0, stanceLeg);
     const end = heelToe(last, stanceLeg);
     const q = (phase + stanceLeg * 0.5) % 1;

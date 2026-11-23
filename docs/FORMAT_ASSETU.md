@@ -29,7 +29,8 @@ Projekt je tedy přenositelný jako celá složka. Ukládání: dočasný soubor
 | `areas[]` | `{id, name, kind: obstacle|snow, polygon[]}` |
 | `zones[]` | `{id, name, activityType, activityVersion, enabled, bounds[], objectRoles{role: objectId[]}, params}` |
 | `scene.maxWalkSlopeDeg` | volitelné, největší sklon chůze po obrazovce od vodorovné ve stupních (výchozí 45, 90 = bez omezení) |
-| `characters[]` | `{id, name, assetId, startNodeId, baseScale, walkSpeed, palette, wander, activities{type: {enabled, firstDelayMin/Max, intervalMin/Max}}, appearance?, companionId?, companionSide?}` – `companionId` = postava, se kterou tato chodí ve dvojici (vůdce), `companionSide` 1/−1 = vpravo/vlevo |
+| `nav.nodes[].portal` | volitelné, `true` = vstup/výstup ze scény pro návštěvníky |
+| `characters[]` | `{id, name, assetId, startNodeId, baseScale, walkSpeed, palette, wander, activities{type: {enabled, firstDelayMin/Max, intervalMin/Max}}, appearance?, companionId?, companionSide?, routine?}` – `routine`: `wander` (volná procházka) nebo `visitor` (návštěvník: průchod / káva / setkání s přítelem) – `companionId` = postava, se kterou tato chodí ve dvojici (vůdce), `companionSide` 1/−1 = vpravo/vlevo |
 | `schedule[]` | `{id, name, time, activityType, characterId|null, zoneId|null, onUnavailable: wait|skip|report, waitLimit}` |
 | `export` | rozlišení, fps (30), režim délky (`manual`/`audio`), délka, `audioAssetId`, `audioWhenShorter` (`loop`/`silence`), CRF, preset, délka části, výstupní cesta, diagnostický PNG režim |
 

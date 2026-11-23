@@ -100,7 +100,11 @@ export interface MotionParams {
 
 export const DEFAULT_MOTION: MotionParams = { strideScale: 1, armSwing: 1, bob: 1, sway: 1, idleTempo: 1, lean: 1, speed: 1, phase: 0 };
 
-export interface Limb { root: Vec2; joint: Vec2; end: Vec2 }
+export interface Limb {
+  root: Vec2; joint: Vec2; end: Vec2;
+  /** Perspektivní zkrácení/prodloužení horního a dolního segmentu (1 = délka kosti). */
+  k1?: number; k2?: number;
+}
 
 export interface SkeletonPose {
   view: ViewId;
@@ -193,7 +197,8 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
     const st = a.settle, tt = smoothstep(st.t);
     const fr = [footAt(st.phase, st.stride, st.w, geom, st.heelRel?.[0] ?? undefined), footAt(st.phase + 0.5, st.stride, st.w, geom, st.heelRel?.[1] ?? undefined)];
     const rest = restFeet(st.phase, st.stride, st.w, geom, st.heelRel);
-    feet = fr.map((f, i) => ({ u: f.u + (rest[i] - f.u) * tt, h: f.h + (AH - f.h) * tt + (f.contact === 'swing' ? Math.sin(Math.PI * tt) * 0.02 * L : 0), theta: f.theta * (1 - tt) }));
+    // bota, která se přesouvá (švihová nebo přisouvaná zadní), se zvedne malým obloukem
+    feet = fr.map((f, i) => ({ u: f.u + (rest[i] - f.u) * tt, h: f.h + (AH - f.h) * tt + (f.contact === 'swing' || Math.abs(rest[i] - f.u) > 0.08 * L ? Math.sin(Math.PI * tt) * 0.03 * L : 0), theta: f.theta * (1 - tt) }));
     // opřené nohy: navázat na světovou kotvu z chůze (rozdíl vůči odhadu z dráhy se během dokročení rozplyne)
     for (let i = 0; i < 2; i++) {
       const o = opts.anchors?.[i], hr = st.heelRel?.[i];
@@ -244,8 +249,14 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
   const anchorAt = (i: number): Vec2 => { const o = opts.anchors![i]!; return { x: o.x + anchorPull[i].x, y: o.y + anchorPull[i].y }; };
   const ankleXY = (f: { u: number; h: number }, i: number) => { const o = isAnch(i) ? anchorAt(i) : baseOf(i), g = gOf(i); return { x: o.x + g.x * f.u, y: o.y - f.h + g.y * f.u }; };
   for (let i = 0; i < 2; i++) if (anchored[i] && gaitFeet[i].contact !== 'swing') { const f = footAt(qs[i], S, w, geom, 0); feet[i] = b < 1 ? { ...f, theta: f.theta * b } : f; }
+  // Perspektiva hloubky: krok do hloubky posune chodidlo i svisle (výš = dál). Nohy se proto
+  // počítají v „plochém“ prostoru (jako z boku) a výsledek se zkosí – noha se zkrátí/prodlouží
+  // perspektivou, místo aby se ohnula v koleni jako na schodech.
+  const shear = Math.abs(gfx) > 0.05 ? Math.max(-1.2, Math.min(1.2, gfy / gfx)) : 0;
+  const flat = (p: Vec2, i: number): Vec2 => ({ x: p.x, y: p.y - shear * (p.x - hipRoots[i].x) });
+  const unflat = (p: Vec2, i: number): Vec2 => ({ x: p.x, y: p.y + shear * (p.x - hipRoots[i].x) });
   const reachAdjust = (f: { u: number; h: number; theta: number }, i: number) => {
-    const reach = (ff: { u: number; h: number }) => Math.hypot(ankleXY(ff, i).x - hipRoots[i].x, ankleXY(ff, i).y - hipRoots[i].y);
+    const reach = (ff: { u: number; h: number }) => { const q = flat(ankleXY(ff, i), i); return Math.hypot(q.x - hipRoots[i].x, q.y - hipRoots[i].y); };
     if (reach(f) <= maxD) return f;
     // přednoží (pevný bod) a natočení: A = toe + R(θ)·(−toe, AH)
     const toeU = f.u - (-geom.toe * Math.cos(f.theta) - geom.AH * Math.sin(f.theta));
@@ -272,7 +283,7 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
             // skutečný konec opory (z kotvy, včetně úpravy dosahu) → posun v obraze vůči odhadu z dráhy
             const oa = opts.anchors![i]!, o = anchorAt(i), ag = oa.gx !== undefined ? { x: oa.gx, y: oa.gy! } : { x: gfx, y: gfy };
             const at = (ff: { u: number; h: number }) => ({ x: o.x + ag.x * ff.u, y: o.y - ff.h + ag.y * ff.u });
-            const reach = (ff: { u: number; h: number }) => Math.hypot(at(ff).x - hipRoots[i].x, at(ff).y - hipRoots[i].y);
+            const reach = (ff: { u: number; h: number }) => { const q = flat(at(ff), i); return Math.hypot(q.x - hipRoots[i].x, q.y - hipRoots[i].y); };
             let fa: { u: number; h: number; theta: number } = footAt(ev.toeOff - 1e-6, S, w, geom, 0);
             if (reach(fa) > maxD) {
               const toeU = fa.u - (-geom.toe * Math.cos(fa.theta) - geom.AH * Math.sin(fa.theta));
@@ -296,11 +307,17 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
   for (let i = 0; i < 2; i++) {
     const inContact = a.settle || b < 1 || gaitFeet[i].contact !== 'swing';
     if (!inContact) continue;
-    const dx = ankles[i].x - hipRoots[i].x, dy = ankles[i].y - hipRoots[i].y; // dy > 0: kotník pod kyčlí
+    const fa = flat(ankles[i], i);
+    const dx = fa.x - hipRoots[i].x, dy = fa.y - hipRoots[i].y; // dy > 0: kotník pod kyčlí
     if (dx * dx + dy * dy > maxD * maxD) lower = Math.max(lower, dy - Math.sqrt(Math.max(0, maxD * maxD - dx * dx)));
   }
   if (lower > 0) { hip.y += lower; for (const r of hipRoots) r.y += lower; }
-  const legs = [0, 1].map((i) => ik(hipRoots[i], ankles[i], T, Sh, -1)) as [Limb, Limb];
+  const legs = [0, 1].map((i) => {
+    const l = ik(hipRoots[i], flat(ankles[i], i), T, Sh, -1);
+    if (!shear) return l;
+    const joint = unflat(l.joint, i), end = unflat(l.end, i);
+    return { root: l.root, joint, end, k1: Math.hypot(joint.x - l.root.x, joint.y - l.root.y) / T, k2: Math.hypot(end.x - joint.x, end.y - joint.y) / Sh };
+  }) as [Limb, Limb];
   const footAng = feet.map((f) => -f.theta * (Math.abs(fx) > 0.9 ? 1 : 0.75));
   // body paty v lokálních souřadnicích (pro uložení kotvy při došlapu)
   const heelPts = ankles.map((A, i) => { const g = gOf(i), th = feet[i].theta, hu = -geom.heel * Math.cos(th) + geom.AH * Math.sin(th), hh = -geom.heel * Math.sin(th) - geom.AH * Math.cos(th); return { x: A.x + g.x * hu, y: A.y - hh + g.y * hu }; }) as [Vec2, Vec2];

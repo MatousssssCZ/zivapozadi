@@ -109,7 +109,7 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
     items.push({ key, tie: i, draw: () => drawObject(ctx, o, assets.get(o.assetId), images.get(o.assetId)) });
   }
   if (sim) {
-    for (const a of sim.state.agents) items.push({ key: a.pos.y, tie: 10000 + sim.state.agents.indexOf(a), draw: () => drawAgent(ctx, project, sim, a, 1, images) });
+    for (const a of sim.state.agents) if (!a.hidden) items.push({ key: a.pos.y, tie: 10000 + sim.state.agents.indexOf(a), draw: () => drawAgent(ctx, project, sim, a, 1, images) });
     for (const p of sim.state.props) {
       const s = depthScaleAt(sc.depth, propY(p)) * 1.0;
       if (p.place.kind === 'counter') {

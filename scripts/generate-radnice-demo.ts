@@ -44,6 +44,8 @@ export async function generateRadnice(dir: string): Promise<ProjectFile> {
     { id: 'service1', kind: 'service', offset: { x: 0, y: 92 }, facing: -Math.PI / 2, label: 'Obsluha' },
     { id: 'queue1', kind: 'queue', offset: { x: -165, y: 110 }, facing: -0.9, label: 'Fronta 1' },
     { id: 'queue2', kind: 'queue', offset: { x: -300, y: 122 }, facing: -0.6, label: 'Fronta 2' },
+    { id: 'queue3', kind: 'queue', offset: { x: -435, y: 134 }, facing: -0.4, label: 'Fronta 3' },
+    { id: 'queue4', kind: 'queue', offset: { x: -570, y: 146 }, facing: -0.3, label: 'Fronta 4' },
     { id: 'counter', kind: 'counter', offset: { x: 70, y: -100 }, label: 'Pult' },
   ] };
   const O = (id: string, name: string, a: AssetEntry, x: number, y: number, scale: number, extra: Partial<SceneObject> = {}): SceneObject => ({
@@ -67,9 +69,10 @@ export async function generateRadnice(dir: string): Promise<ProjectFile> {
     O('obj_lampa1', 'Lampa vlevo', lampa, 600, 1000, 0.28, { footprint: rect(-22, -10, 22, 8) }),
     O('obj_lampa2', 'Lampa vpravo', lampa, 1150, 1005, 0.28, { footprint: rect(-22, -10, 22, 8) }),
     O('obj_stolecek', 'Stoleček (test)', table, 880, 995, 0.78),
+    O('obj_stolecek2', 'Stoleček u stromu', table, 1290, 1005, 0.78),
     O('obj_kos', 'Koš (test)', bin, 1060, 985, 0.8),
   ];
-  const N = (id: string, x: number, y: number, name: string, stop?: NavNode['stop']): NavNode => ({ id, x, y, name, stop });
+  const N = (id: string, x: number, y: number, name: string, stop?: NavNode['stop']): NavNode => ({ id, x, y, name, stop, portal: x < 0 || x > 1920 || undefined });
   p.nav.nodes = [
     N('a', -40, 1055, 'Vstup západ', { waitMin: 1, waitMax: 4, look: { mode: 'none' }, next: [] }),
     N('b', 290, 1040, 'Před hračkami', { waitMin: 2, waitMax: 5, look: { mode: 'object', objectId: 'obj_st_hracky' }, next: [] }),
@@ -96,7 +99,7 @@ export async function generateRadnice(dir: string): Promise<ProjectFile> {
   p.zones = [{
     id: 'zone_kava', name: 'Káva u stánku s nápoji', activityType: 'coffee', activityVersion: 1, enabled: true,
     bounds: rect(700, 900, 1700, 1075),
-    objectRoles: { stand: ['obj_st_napoje'], seating: ['obj_stolecek', 'obj_strom'], bin: ['obj_kos'] }, params: {},
+    objectRoles: { stand: ['obj_st_napoje'], seating: ['obj_stolecek', 'obj_stolecek2', 'obj_strom'], bin: ['obj_kos'] }, params: {},
   }];
   // 12 postav z generátoru (malované díly z ChatGPT, pohled šikmo zepředu)
   const lib = JSON.parse(await fs.readFile('resources/builtin/painted-parts-cg/library.json', 'utf8')) as PartLibrary;
@@ -106,7 +109,7 @@ export async function generateRadnice(dir: string): Promise<ProjectFile> {
   const testPal = { coat: '#c8553d', hat: '#f2c14e', scarf: '#f7f3e3', skin: '#f1c9a5', trousers: '#3b4a6b' };
   p.characters = group.appearances.map((app, i): CharacterInstance => ({
     id: `ch_${i + 1}`, name: names[i], assetId: 'builtin_postava_cg', startNodeId: starts[i], baseScale: 1,
-    walkSpeed: Math.round(60 * app.motion.speed * 10) / 10, palette: testPal, wander: true, appearance: app,
+    walkSpeed: Math.round(60 * app.motion.speed * 10) / 10, palette: testPal, wander: true, appearance: app, routine: 'visitor',
     activities: { coffee: names[i] === 'Cyril' ? { enabled: false, firstDelayMin: 0, firstDelayMax: 0, intervalMin: 90, intervalMax: 180 }
       : { enabled: true, firstDelayMin: 4 + i * 6, firstDelayMax: 10 + i * 6, intervalMin: 70, intervalMax: 160 } },
   }));

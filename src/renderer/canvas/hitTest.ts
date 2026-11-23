@@ -30,6 +30,7 @@ export function hitTest(p: ProjectFile, sim: Simulation | null, sel: Selection, 
   if (markers) for (const n of [...p.nav.nodes].reverse()) if (dist(n, m) <= tol + 3 * px) return { kind: 'node', id: n.id };
   if (sim) {
     for (const a of [...sim.state.agents].sort((x, y) => y.pos.y - x.pos.y)) {
+      if (a.hidden) continue;
       const c = sim.characterOf(a.id); const man = c && sim.manifests[c.assetId]; if (!c || !man) continue;
       const cv = characterVisual(a, man, c, p.scene.depth);
       if (Math.abs(m.x - cv.x) <= 16 * cv.scale + 2 * px && m.y <= cv.y + 6 * cv.scale && m.y >= cv.y - man.height * cv.scale) return { kind: 'character', id: a.id };

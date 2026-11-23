@@ -108,9 +108,10 @@ export function assembleRig(lib: PartLibrary, tpl: BodyTemplateDef, app: Charact
     return p;
   };
   const colorOf = (slot: PartSlot) => { const c = app.colors[GROUP_OF[slot]]; return c ? pal.get(c) : undefined; };
-  const frame = (p: PartDef, origin: Vec2, angle: number): Mat => {
+  const frame = (p: PartDef, origin: Vec2, angle: number, stretch = 1): Mat => {
     const sx = BUILD_SLOTS.includes(p.slot) ? s * bw : s;
-    return mul(mul(mul(T(origin.x, origin.y), R(angle - p.boneDir)), S(sx, s)), T(-p.pivot.x, -p.pivot.y));
+    // stretch: perspektivní zkrácení segmentu podél kosti (osa y dílu míří podél kosti)
+    return mul(mul(mul(T(origin.x, origin.y), R(angle - p.boneDir)), S(sx, s * stretch)), T(-p.pivot.x, -p.pivot.y));
   };
   const push = (p: PartDef | undefined, m: Mat, side: 'far' | 'near' | null) => {
     if (!p) return;
@@ -136,8 +137,8 @@ export function assembleRig(lib: PartLibrary, tpl: BodyTemplateDef, app: Charact
   for (let i = 0; i < 2; i++) {
     const side = i === 0 ? 'far' : 'near';
     const leg = pose.legs[i], arm = pose.arms[i];
-    push(part('thigh'), frame(part('thigh')!, leg.root, ang(leg.root, leg.joint)), side);
-    push(part('shin'), frame(part('shin')!, leg.joint, ang(leg.joint, leg.end)), side);
+    push(part('thigh'), frame(part('thigh')!, leg.root, ang(leg.root, leg.joint), leg.k1 ?? 1), side);
+    push(part('shin'), frame(part('shin')!, leg.joint, ang(leg.joint, leg.end), leg.k2 ?? 1), side);
     const foot = part('foot'); if (foot) push(foot, frame(foot, leg.end, pose.feet[i]), side);
     const ua = part('upperArm'); if (ua) push(ua, frame(ua, arm.root, ang(arm.root, arm.joint)), side);
     const fa = part('forearm'); const faAng = ang(arm.joint, arm.end);

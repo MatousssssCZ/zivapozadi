@@ -153,6 +153,34 @@ o víc než 0,05 px v 99,7 % snímků (výjimky jen při převrácení pohledu z
 dvojice jsou od sebe dál než 60 j. 0 % času; překryvy postav ve stoje 0 (dříve ~1 900 snímko-dvojic
 za 90 s), za chůze ~600 (dříve ~3 600, zbytek jsou krátká křížení drah).
 
+### Postoj a perspektiva nohou
+
+* **Ve stoje** zůstane přední bota na místě a zadní se malým krokem přisune k ní (chodidla u sebe,
+  ne „v půlce kroku“ jako na schodech).
+* **Chůze do hloubky**: chodidlo dál od kamery je na obrazovce výš. Nohy se proto počítají v
+  „plochém“ prostoru (jako z boku) a výsledek se perspektivně zkosí – stehno a lýtko se zkrátí nebo
+  prodlouží podél kosti (`Limb.k1/k2`, díly se v rigu protáhnou), místo aby se koleno ohnulo jako
+  při stoupání do schodu.
+
+### Návštěvníci (chování `routine: 'visitor'`)
+
+Postavy nechodí náhodně sem a tam. Návštěvník přijde **vstupem** (bod trasy s volbou „Vstup /
+výstup ze scény“, obvykle kousek za okrajem obrazu) a pak:
+
+* **jen projde** scénou k jinému (většinou nejvzdálenějšímu) vstupu a odejde, nebo
+* **si dojde na kávu** (fronta, objednávka, místo k pití, koš) a odejde, nebo
+* **se potká s přítelem**: přítel (jiný návštěvník, který je právě mimo scénu) přijde jiným vstupem,
+  sejdou se v bodě trasy (raději zastávka), **pozdraví se** (natočí se k sobě a chvíli mluví), pak
+  jdou **spolu na kávu**: oba si vystojí frontu, počkají na sebe, vůdce vybere **stoleček pro dva**
+  (dvě volná místa u jednoho objektu do 160 px), sednou si čelem k sobě, **povídají si** (střídají se
+  v mluvení, pauzy mezi doušky jsou delší), dopijí, počkají na sebe, vyhodí kelímky a **odejdou spolu**.
+  Když u stánku není místo pro oba, chvíli počkají; když není volný stolek, pijí vestoje.
+
+Mimo scénu čeká návštěvník 6–30 s, pak přijde znovu. Stálé dvojice (`companionId`) chodí na kávu
+také spolu. Plánovaná událost pro návštěvníka mimo scénu ho přivede vstupem. Bez vstupů v trase
+chodí návštěvník mezi vzdálenými body. Ověření: `tests/scene-walk.test.ts` (300 s náměstí: desítky
+příchodů a odchodů, pozdravy, káva ve dvou, stolky, povídání; kelímky nikdy nezmizí).
+
 ### Klouby (koleno, loket)
 
 Při zpracování dílů (`scripts/process-character-parts.ts`, `smoothJoint`) dostane lýtko a předloktí
