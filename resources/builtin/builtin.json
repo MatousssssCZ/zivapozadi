@@ -1,0 +1,319 @@
+{
+  "format": "zimni-scena-knihovna",
+  "version": 1,
+  "assets": [
+    {
+      "id": "builtin_pozadi",
+      "kind": "image",
+      "name": "Pozadí – zimní náměstí (test)",
+      "file": "pozadi-namesti.png",
+      "width": 3840,
+      "height": 2160,
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "pixelScale": 0.5,
+      "provisional": true
+    },
+    {
+      "id": "builtin_stanek",
+      "kind": "image",
+      "name": "Stánek s kávou (test)",
+      "file": "stanek.png",
+      "width": 560,
+      "height": 520,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.975
+      },
+      "pixelScale": 0.5,
+      "provisional": true,
+      "defaultFootprint": [
+        {
+          "x": -125,
+          "y": -40
+        },
+        {
+          "x": 125,
+          "y": -40
+        },
+        {
+          "x": 125,
+          "y": 6
+        },
+        {
+          "x": -125,
+          "y": 6
+        }
+      ],
+      "defaultInteraction": {
+        "kind": "stand",
+        "points": [
+          {
+            "id": "service1",
+            "kind": "service",
+            "offset": {
+              "x": 0,
+              "y": 40
+            },
+            "facing": -1.5707963267948966,
+            "label": "Obsluha"
+          },
+          {
+            "id": "queue1",
+            "kind": "queue",
+            "offset": {
+              "x": -70,
+              "y": 85
+            },
+            "facing": -1.0707963267948966,
+            "label": "Fronta 1"
+          },
+          {
+            "id": "queue2",
+            "kind": "queue",
+            "offset": {
+              "x": -130,
+              "y": 120
+            },
+            "facing": -0.9707963267948966,
+            "label": "Fronta 2"
+          },
+          {
+            "id": "counter",
+            "kind": "counter",
+            "offset": {
+              "x": 20,
+              "y": -92
+            },
+            "label": "Pult"
+          }
+        ]
+      }
+    },
+    {
+      "id": "builtin_stolecek",
+      "kind": "image",
+      "name": "Stoleček (test)",
+      "file": "stolecek.png",
+      "width": 180,
+      "height": 220,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.95
+      },
+      "pixelScale": 0.5,
+      "provisional": true,
+      "defaultFootprint": [
+        {
+          "x": -22,
+          "y": -8
+        },
+        {
+          "x": 22,
+          "y": -8
+        },
+        {
+          "x": 22,
+          "y": 6
+        },
+        {
+          "x": -22,
+          "y": 6
+        }
+      ],
+      "defaultInteraction": {
+        "kind": "table",
+        "points": [
+          {
+            "id": "seat1",
+            "kind": "seat",
+            "offset": {
+              "x": -52,
+              "y": 12
+            },
+            "facing": -0.2,
+            "label": "Místo 1"
+          },
+          {
+            "id": "seat2",
+            "kind": "seat",
+            "offset": {
+              "x": 52,
+              "y": 12
+            },
+            "facing": 3.3415926535897933,
+            "label": "Místo 2"
+          }
+        ]
+      }
+    },
+    {
+      "id": "builtin_strom",
+      "kind": "image",
+      "name": "Vánoční strom (test)",
+      "file": "strom.png",
+      "width": 600,
+      "height": 960,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.975
+      },
+      "pixelScale": 0.5,
+      "provisional": true,
+      "defaultFootprint": [
+        {
+          "x": -75,
+          "y": -28
+        },
+        {
+          "x": 75,
+          "y": -28
+        },
+        {
+          "x": 75,
+          "y": 14
+        },
+        {
+          "x": -75,
+          "y": 14
+        }
+      ],
+      "defaultInteraction": {
+        "kind": "viewpoint",
+        "points": [
+          {
+            "id": "view1",
+            "kind": "view",
+            "offset": {
+              "x": -105,
+              "y": 75
+            },
+            "facing": -1,
+            "label": "Výhled 1"
+          },
+          {
+            "id": "view2",
+            "kind": "view",
+            "offset": {
+              "x": 105,
+              "y": 75
+            },
+            "facing": -2.14,
+            "label": "Výhled 2"
+          }
+        ]
+      }
+    },
+    {
+      "id": "builtin_kos",
+      "kind": "image",
+      "name": "Koš (test)",
+      "file": "kos.png",
+      "width": 108,
+      "height": 160,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.95
+      },
+      "pixelScale": 0.5,
+      "provisional": true,
+      "defaultFootprint": [
+        {
+          "x": -18,
+          "y": -8
+        },
+        {
+          "x": 18,
+          "y": -8
+        },
+        {
+          "x": 18,
+          "y": 5
+        },
+        {
+          "x": -18,
+          "y": 5
+        }
+      ],
+      "defaultInteraction": {
+        "kind": "bin",
+        "points": [
+          {
+            "id": "drop1",
+            "kind": "drop",
+            "offset": {
+              "x": 0,
+              "y": 34
+            },
+            "facing": -1.5707963267948966,
+            "label": "Vhození"
+          },
+          {
+            "id": "opening",
+            "kind": "counter",
+            "offset": {
+              "x": 0,
+              "y": -64
+            },
+            "label": "Otvor koše"
+          }
+        ]
+      }
+    },
+    {
+      "id": "builtin_lampa",
+      "kind": "image",
+      "name": "Lampa (test)",
+      "file": "lampa.png",
+      "width": 120,
+      "height": 600,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.985
+      },
+      "pixelScale": 0.5,
+      "provisional": true,
+      "defaultFootprint": [
+        {
+          "x": -9,
+          "y": -5
+        },
+        {
+          "x": 9,
+          "y": -5
+        },
+        {
+          "x": 9,
+          "y": 4
+        },
+        {
+          "x": -9,
+          "y": 4
+        }
+      ]
+    },
+    {
+      "id": "builtin_zavej",
+      "kind": "image",
+      "name": "Závěj s plotem – popředí (test)",
+      "file": "zavej-plot.png",
+      "width": 1280,
+      "height": 300,
+      "anchor": {
+        "x": 0.5,
+        "y": 1
+      },
+      "pixelScale": 0.5,
+      "provisional": true
+    },
+    {
+      "id": "builtin_postava",
+      "kind": "character",
+      "name": "Testovací postava (provizorní)",
+      "file": "test-figure.json",
+      "provisional": true
+    }
+  ]
+}

@@ -1,0 +1,1077 @@
+{
+  "format": "zimni-scena-projekt",
+  "formatVersion": 1,
+  "meta": {
+    "name": "Vánoční náměstí (demo)",
+    "createdAt": "2026-11-23T10:52:44.266Z",
+    "modifiedAt": "2026-11-23T10:52:44.275Z",
+    "appVersion": "0.1.0"
+  },
+  "seed": 20241224,
+  "scene": {
+    "width": 1920,
+    "height": 1080,
+    "backgroundAssetId": "builtin_pozadi",
+    "backgroundColor": "#dfe8f2",
+    "depth": {
+      "enabled": true,
+      "yFar": 560,
+      "scaleFar": 0.62,
+      "yNear": 1080,
+      "scaleNear": 1
+    },
+    "snowfall": {
+      "enabled": true,
+      "density": 0.6,
+      "wind": 0.25
+    }
+  },
+  "assets": [
+    {
+      "id": "builtin_pozadi",
+      "kind": "image",
+      "name": "Pozadí – zimní náměstí (test)",
+      "file": "assets/images/pozadi-namesti.png",
+      "width": 3840,
+      "height": 2160,
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "pixelScale": 0.5,
+      "provisional": true
+    },
+    {
+      "id": "builtin_stanek",
+      "kind": "image",
+      "name": "Stánek s kávou (test)",
+      "file": "assets/images/stanek.png",
+      "width": 560,
+      "height": 520,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.975
+      },
+      "pixelScale": 0.5,
+      "provisional": true,
+      "defaultFootprint": [
+        {
+          "x": -125,
+          "y": -40
+        },
+        {
+          "x": 125,
+          "y": -40
+        },
+        {
+          "x": 125,
+          "y": 6
+        },
+        {
+          "x": -125,
+          "y": 6
+        }
+      ],
+      "defaultInteraction": {
+        "kind": "stand",
+        "points": [
+          {
+            "id": "service1",
+            "kind": "service",
+            "offset": {
+              "x": 0,
+              "y": 40
+            },
+            "facing": -1.5707963267948966,
+            "label": "Obsluha"
+          },
+          {
+            "id": "queue1",
+            "kind": "queue",
+            "offset": {
+              "x": -70,
+              "y": 85
+            },
+            "facing": -1.0707963267948966,
+            "label": "Fronta 1"
+          },
+          {
+            "id": "queue2",
+            "kind": "queue",
+            "offset": {
+              "x": -130,
+              "y": 120
+            },
+            "facing": -0.9707963267948966,
+            "label": "Fronta 2"
+          },
+          {
+            "id": "counter",
+            "kind": "counter",
+            "offset": {
+              "x": 20,
+              "y": -92
+            },
+            "label": "Pult"
+          }
+        ]
+      }
+    },
+    {
+      "id": "builtin_stolecek",
+      "kind": "image",
+      "name": "Stoleček (test)",
+      "file": "assets/images/stolecek.png",
+      "width": 180,
+      "height": 220,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.95
+      },
+      "pixelScale": 0.5,
+      "provisional": true,
+      "defaultFootprint": [
+        {
+          "x": -22,
+          "y": -8
+        },
+        {
+          "x": 22,
+          "y": -8
+        },
+        {
+          "x": 22,
+          "y": 6
+        },
+        {
+          "x": -22,
+          "y": 6
+        }
+      ],
+      "defaultInteraction": {
+        "kind": "table",
+        "points": [
+          {
+            "id": "seat1",
+            "kind": "seat",
+            "offset": {
+              "x": -52,
+              "y": 12
+            },
+            "facing": -0.2,
+            "label": "Místo 1"
+          },
+          {
+            "id": "seat2",
+            "kind": "seat",
+            "offset": {
+              "x": 52,
+              "y": 12
+            },
+            "facing": 3.3415926535897933,
+            "label": "Místo 2"
+          }
+        ]
+      }
+    },
+    {
+      "id": "builtin_strom",
+      "kind": "image",
+      "name": "Vánoční strom (test)",
+      "file": "assets/images/strom.png",
+      "width": 600,
+      "height": 960,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.975
+      },
+      "pixelScale": 0.5,
+      "provisional": true,
+      "defaultFootprint": [
+        {
+          "x": -75,
+          "y": -28
+        },
+        {
+          "x": 75,
+          "y": -28
+        },
+        {
+          "x": 75,
+          "y": 14
+        },
+        {
+          "x": -75,
+          "y": 14
+        }
+      ],
+      "defaultInteraction": {
+        "kind": "viewpoint",
+        "points": [
+          {
+            "id": "view1",
+            "kind": "view",
+            "offset": {
+              "x": -105,
+              "y": 75
+            },
+            "facing": -1,
+            "label": "Výhled 1"
+          },
+          {
+            "id": "view2",
+            "kind": "view",
+            "offset": {
+              "x": 105,
+              "y": 75
+            },
+            "facing": -2.14,
+            "label": "Výhled 2"
+          }
+        ]
+      }
+    },
+    {
+      "id": "builtin_kos",
+      "kind": "image",
+      "name": "Koš (test)",
+      "file": "assets/images/kos.png",
+      "width": 108,
+      "height": 160,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.95
+      },
+      "pixelScale": 0.5,
+      "provisional": true,
+      "defaultFootprint": [
+        {
+          "x": -18,
+          "y": -8
+        },
+        {
+          "x": 18,
+          "y": -8
+        },
+        {
+          "x": 18,
+          "y": 5
+        },
+        {
+          "x": -18,
+          "y": 5
+        }
+      ],
+      "defaultInteraction": {
+        "kind": "bin",
+        "points": [
+          {
+            "id": "drop1",
+            "kind": "drop",
+            "offset": {
+              "x": 0,
+              "y": 34
+            },
+            "facing": -1.5707963267948966,
+            "label": "Vhození"
+          },
+          {
+            "id": "opening",
+            "kind": "counter",
+            "offset": {
+              "x": 0,
+              "y": -64
+            },
+            "label": "Otvor koše"
+          }
+        ]
+      }
+    },
+    {
+      "id": "builtin_lampa",
+      "kind": "image",
+      "name": "Lampa (test)",
+      "file": "assets/images/lampa.png",
+      "width": 120,
+      "height": 600,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.985
+      },
+      "pixelScale": 0.5,
+      "provisional": true,
+      "defaultFootprint": [
+        {
+          "x": -9,
+          "y": -5
+        },
+        {
+          "x": 9,
+          "y": -5
+        },
+        {
+          "x": 9,
+          "y": 4
+        },
+        {
+          "x": -9,
+          "y": 4
+        }
+      ]
+    },
+    {
+      "id": "builtin_zavej",
+      "kind": "image",
+      "name": "Závěj s plotem – popředí (test)",
+      "file": "assets/images/zavej-plot.png",
+      "width": 1280,
+      "height": 300,
+      "anchor": {
+        "x": 0.5,
+        "y": 1
+      },
+      "pixelScale": 0.5,
+      "provisional": true
+    },
+    {
+      "id": "builtin_postava",
+      "kind": "character",
+      "name": "Testovací postava (provizorní)",
+      "file": "assets/characters/test-figure.json",
+      "provisional": true
+    }
+  ],
+  "objects": [
+    {
+      "id": "obj_stanek",
+      "name": "Stánek s kávou",
+      "assetId": "builtin_stanek",
+      "x": 560,
+      "y": 650,
+      "scale": 1,
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "footprint": [
+        {
+          "x": -125,
+          "y": -40
+        },
+        {
+          "x": 125,
+          "y": -40
+        },
+        {
+          "x": 125,
+          "y": 6
+        },
+        {
+          "x": -125,
+          "y": 6
+        }
+      ],
+      "interaction": {
+        "kind": "stand",
+        "points": [
+          {
+            "id": "service1",
+            "kind": "service",
+            "offset": {
+              "x": 0,
+              "y": 40
+            },
+            "facing": -1.5707963267948966,
+            "label": "Obsluha"
+          },
+          {
+            "id": "queue1",
+            "kind": "queue",
+            "offset": {
+              "x": -70,
+              "y": 85
+            },
+            "facing": -1.0707963267948966,
+            "label": "Fronta 1"
+          },
+          {
+            "id": "queue2",
+            "kind": "queue",
+            "offset": {
+              "x": -130,
+              "y": 120
+            },
+            "facing": -0.9707963267948966,
+            "label": "Fronta 2"
+          },
+          {
+            "id": "counter",
+            "kind": "counter",
+            "offset": {
+              "x": 20,
+              "y": -92
+            },
+            "label": "Pult"
+          }
+        ]
+      }
+    },
+    {
+      "id": "obj_stolecek",
+      "name": "Stoleček",
+      "assetId": "builtin_stolecek",
+      "x": 830,
+      "y": 805,
+      "scale": 1,
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "footprint": [
+        {
+          "x": -22,
+          "y": -8
+        },
+        {
+          "x": 22,
+          "y": -8
+        },
+        {
+          "x": 22,
+          "y": 6
+        },
+        {
+          "x": -22,
+          "y": 6
+        }
+      ],
+      "interaction": {
+        "kind": "table",
+        "points": [
+          {
+            "id": "seat1",
+            "kind": "seat",
+            "offset": {
+              "x": -52,
+              "y": 12
+            },
+            "facing": -0.2,
+            "label": "Místo 1"
+          },
+          {
+            "id": "seat2",
+            "kind": "seat",
+            "offset": {
+              "x": 52,
+              "y": 12
+            },
+            "facing": 3.3415926535897933,
+            "label": "Místo 2"
+          }
+        ]
+      }
+    },
+    {
+      "id": "obj_strom",
+      "name": "Vánoční strom",
+      "assetId": "builtin_strom",
+      "x": 1290,
+      "y": 700,
+      "scale": 1,
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "footprint": [
+        {
+          "x": -75,
+          "y": -28
+        },
+        {
+          "x": 75,
+          "y": -28
+        },
+        {
+          "x": 75,
+          "y": 14
+        },
+        {
+          "x": -75,
+          "y": 14
+        }
+      ],
+      "interaction": {
+        "kind": "viewpoint",
+        "points": [
+          {
+            "id": "view1",
+            "kind": "view",
+            "offset": {
+              "x": -105,
+              "y": 75
+            },
+            "facing": -1,
+            "label": "Výhled 1"
+          },
+          {
+            "id": "view2",
+            "kind": "view",
+            "offset": {
+              "x": 105,
+              "y": 75
+            },
+            "facing": -2.14,
+            "label": "Výhled 2"
+          }
+        ]
+      }
+    },
+    {
+      "id": "obj_kos",
+      "name": "Koš",
+      "assetId": "builtin_kos",
+      "x": 1030,
+      "y": 668,
+      "scale": 1,
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "footprint": [
+        {
+          "x": -18,
+          "y": -8
+        },
+        {
+          "x": 18,
+          "y": -8
+        },
+        {
+          "x": 18,
+          "y": 5
+        },
+        {
+          "x": -18,
+          "y": 5
+        }
+      ],
+      "interaction": {
+        "kind": "bin",
+        "points": [
+          {
+            "id": "drop1",
+            "kind": "drop",
+            "offset": {
+              "x": 0,
+              "y": 34
+            },
+            "facing": -1.5707963267948966,
+            "label": "Vhození"
+          },
+          {
+            "id": "opening",
+            "kind": "counter",
+            "offset": {
+              "x": 0,
+              "y": -64
+            },
+            "label": "Otvor koše"
+          }
+        ]
+      }
+    },
+    {
+      "id": "obj_lampa1",
+      "name": "Lampa vlevo",
+      "assetId": "builtin_lampa",
+      "x": 290,
+      "y": 760,
+      "scale": 1,
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "footprint": [
+        {
+          "x": -9,
+          "y": -5
+        },
+        {
+          "x": 9,
+          "y": -5
+        },
+        {
+          "x": 9,
+          "y": 4
+        },
+        {
+          "x": -9,
+          "y": 4
+        }
+      ]
+    },
+    {
+      "id": "obj_lampa2",
+      "name": "Lampa vpravo",
+      "assetId": "builtin_lampa",
+      "x": 1660,
+      "y": 800,
+      "scale": 1.05,
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "footprint": [
+        {
+          "x": -9,
+          "y": -5
+        },
+        {
+          "x": 9,
+          "y": -5
+        },
+        {
+          "x": 9,
+          "y": 4
+        },
+        {
+          "x": -9,
+          "y": 4
+        }
+      ]
+    },
+    {
+      "id": "obj_zavej",
+      "name": "Závěj s plotem",
+      "assetId": "builtin_zavej",
+      "x": 300,
+      "y": 1092,
+      "scale": 0.9,
+      "layer": "foreground",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false
+    },
+    {
+      "id": "obj_zavej2",
+      "name": "Závěj s plotem 2",
+      "assetId": "builtin_zavej",
+      "x": 1700,
+      "y": 1100,
+      "scale": 0.8,
+      "layer": "foreground",
+      "zBias": 0,
+      "flipX": true,
+      "visible": true,
+      "locked": false
+    }
+  ],
+  "nav": {
+    "nodes": [
+      {
+        "id": "n_zapad",
+        "x": 120,
+        "y": 905,
+        "name": "Vstup západ",
+        "stop": {
+          "waitMin": 0.5,
+          "waitMax": 2,
+          "look": {
+            "mode": "none"
+          },
+          "next": []
+        }
+      },
+      {
+        "id": "n_lampa",
+        "x": 400,
+        "y": 760,
+        "name": "U lampy"
+      },
+      {
+        "id": "n_stanek",
+        "x": 650,
+        "y": 735,
+        "name": "Před stánkem"
+      },
+      {
+        "id": "n_stred",
+        "x": 900,
+        "y": 712,
+        "name": "Střed nahoře"
+      },
+      {
+        "id": "n_kos",
+        "x": 1080,
+        "y": 735,
+        "name": "U koše"
+      },
+      {
+        "id": "n_strom_l",
+        "x": 1170,
+        "y": 830,
+        "name": "Strom vlevo"
+      },
+      {
+        "id": "n_strom_p",
+        "x": 1420,
+        "y": 830,
+        "name": "Strom vpravo",
+        "stop": {
+          "waitMin": 3,
+          "waitMax": 6,
+          "look": {
+            "mode": "object",
+            "objectId": "obj_strom"
+          },
+          "next": [
+            {
+              "nodeId": "n_vychod",
+              "weight": 1
+            },
+            {
+              "nodeId": "n_strom_l",
+              "weight": 2
+            }
+          ]
+        }
+      },
+      {
+        "id": "n_vychod",
+        "x": 1800,
+        "y": 915,
+        "name": "Vstup východ"
+      },
+      {
+        "id": "n_dole",
+        "x": 1080,
+        "y": 960,
+        "name": "Dole uprostřed"
+      },
+      {
+        "id": "n_dole_l",
+        "x": 640,
+        "y": 930,
+        "name": "Dole vlevo"
+      },
+      {
+        "id": "n_stul",
+        "x": 830,
+        "y": 880,
+        "name": "U stolečku"
+      }
+    ],
+    "edges": [
+      {
+        "id": "e1",
+        "a": "n_zapad",
+        "b": "n_lampa",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e2",
+        "a": "n_lampa",
+        "b": "n_stanek",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e3",
+        "a": "n_stanek",
+        "b": "n_stred",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e4",
+        "a": "n_stred",
+        "b": "n_kos",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e5",
+        "a": "n_kos",
+        "b": "n_strom_l",
+        "oneWay": false,
+        "narrow": true
+      },
+      {
+        "id": "e6",
+        "a": "n_strom_l",
+        "b": "n_strom_p",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e7",
+        "a": "n_strom_p",
+        "b": "n_vychod",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e8",
+        "a": "n_vychod",
+        "b": "n_dole",
+        "oneWay": true,
+        "narrow": false
+      },
+      {
+        "id": "e9",
+        "a": "n_dole",
+        "b": "n_dole_l",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e10",
+        "a": "n_dole_l",
+        "b": "n_zapad",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e11",
+        "a": "n_dole_l",
+        "b": "n_stul",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e12",
+        "a": "n_stul",
+        "b": "n_dole",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e13",
+        "a": "n_stanek",
+        "b": "n_dole_l",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e14",
+        "a": "n_strom_l",
+        "b": "n_dole",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e15",
+        "a": "n_stul",
+        "b": "n_stred",
+        "oneWay": false,
+        "narrow": false
+      }
+    ]
+  },
+  "areas": [
+    {
+      "id": "area_zahon",
+      "name": "Zasněžený záhon",
+      "kind": "obstacle",
+      "polygon": [
+        {
+          "x": 1470,
+          "y": 630
+        },
+        {
+          "x": 1560,
+          "y": 612
+        },
+        {
+          "x": 1650,
+          "y": 630
+        },
+        {
+          "x": 1650,
+          "y": 670
+        },
+        {
+          "x": 1560,
+          "y": 682
+        },
+        {
+          "x": 1470,
+          "y": 668
+        }
+      ]
+    },
+    {
+      "id": "area_snih",
+      "name": "Volný sníh (pro budoucí činnosti)",
+      "kind": "snow",
+      "polygon": [
+        {
+          "x": 1250,
+          "y": 930
+        },
+        {
+          "x": 1700,
+          "y": 930
+        },
+        {
+          "x": 1760,
+          "y": 1040
+        },
+        {
+          "x": 1200,
+          "y": 1040
+        }
+      ]
+    }
+  ],
+  "zones": [
+    {
+      "id": "zone_kava",
+      "name": "Káva na náměstí",
+      "activityType": "coffee",
+      "activityVersion": 1,
+      "enabled": true,
+      "bounds": [
+        {
+          "x": 380,
+          "y": 520
+        },
+        {
+          "x": 1460,
+          "y": 520
+        },
+        {
+          "x": 1460,
+          "y": 900
+        },
+        {
+          "x": 380,
+          "y": 900
+        }
+      ],
+      "objectRoles": {
+        "stand": [
+          "obj_stanek"
+        ],
+        "seating": [
+          "obj_stolecek",
+          "obj_strom"
+        ],
+        "bin": [
+          "obj_kos"
+        ]
+      },
+      "params": {}
+    }
+  ],
+  "characters": [
+    {
+      "id": "ch_anna",
+      "name": "Anna",
+      "assetId": "builtin_postava",
+      "startNodeId": "n_zapad",
+      "baseScale": 1,
+      "walkSpeed": 64,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "activities": {
+        "coffee": {
+          "enabled": true,
+          "firstDelayMin": 2,
+          "firstDelayMax": 5,
+          "intervalMin": 35,
+          "intervalMax": 60
+        }
+      }
+    },
+    {
+      "id": "ch_bara",
+      "name": "Bára",
+      "assetId": "builtin_postava",
+      "startNodeId": "n_vychod",
+      "baseScale": 1,
+      "walkSpeed": 58,
+      "palette": {
+        "coat": "#6a8fbf",
+        "hat": "#e07a8f",
+        "scarf": "#f2c14e",
+        "skin": "#e8b98f",
+        "trousers": "#4a3b4b"
+      },
+      "wander": true,
+      "activities": {
+        "coffee": {
+          "enabled": true,
+          "firstDelayMin": 12,
+          "firstDelayMax": 18,
+          "intervalMin": 45,
+          "intervalMax": 80
+        }
+      }
+    },
+    {
+      "id": "ch_cyril",
+      "name": "Cyril",
+      "assetId": "builtin_postava",
+      "startNodeId": "n_dole",
+      "baseScale": 1,
+      "walkSpeed": 66,
+      "palette": {
+        "coat": "#5d8f6e",
+        "hat": "#c8553d",
+        "scarf": "#e9e1cf",
+        "skin": "#d9a982",
+        "trousers": "#2f2f3f"
+      },
+      "wander": true,
+      "activities": {
+        "coffee": {
+          "enabled": false,
+          "firstDelayMin": 0,
+          "firstDelayMax": 0,
+          "intervalMin": 90,
+          "intervalMax": 180
+        }
+      }
+    }
+  ],
+  "schedule": [
+    {
+      "id": "ev_cyril_kava",
+      "name": "Cyril jde na kávu",
+      "time": 20,
+      "activityType": "coffee",
+      "characterId": "ch_cyril",
+      "zoneId": "zone_kava",
+      "onUnavailable": "wait",
+      "waitLimit": 30
+    }
+  ],
+  "export": {
+    "resolution": "1920x1080",
+    "fps": 30,
+    "durationMode": "manual",
+    "durationSec": 30,
+    "audioAssetId": null,
+    "audioWhenShorter": "silence",
+    "crf": 20,
+    "preset": "medium",
+    "chunkSec": 10,
+    "outputPath": null,
+    "diagnosticPngSequence": false
+  }
+}
