@@ -11,14 +11,11 @@
     "y": 1
   },
   "directions": [
-    "SE"
+    "SE",
+    "NE"
   ],
   "directionFallbacks": {
     "E": {
-      "use": "SE",
-      "mirror": false
-    },
-    "NE": {
       "use": "SE",
       "mirror": false
     },
@@ -27,7 +24,7 @@
       "mirror": false
     },
     "N": {
-      "use": "SE",
+      "use": "NE",
       "mirror": false
     },
     "W": {
@@ -39,7 +36,7 @@
       "mirror": true
     },
     "NW": {
-      "use": "SE",
+      "use": "NE",
       "mirror": true
     }
   },

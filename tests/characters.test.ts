@@ -247,11 +247,12 @@ describe('knihovna dílů z ChatGPT (painted-parts-cg)', () => {
     let checked = 0;
     for (const seed of [1, 2]) {
       const app = generateAppearance(L, { seed });
-      for (const dir of ['SE', 'SW', 'E', 'NE'] as Direction[]) for (const [phase, blend] of [[0, 0], [0.1, 1], [0.3, 1], [0.55, 1], [0.8, 1]]) {
+      for (const dir of ['SE', 'SW', 'E', 'NE', 'NW'] as Direction[]) for (const [phase, blend] of [[0, 0], [0.1, 1], [0.3, 1], [0.55, 1], [0.8, 1]]) {
         const anim = initialAnimState(dir); anim.walkPhase = phase; anim.walkBlend = blend; anim.idleTime = 2;
         const cv = characterVisual({ id: 'a', pos: { x: 0, y: 0 }, facing: 0, lane: 0, anim, holding: null } as unknown as AgentState, man, { baseScale: 1, appearance: app }, ZD);
-        expect(cv.view!.used).toBe('front3q');
-        if (dir === 'E' || dir === 'NE') expect(cv.view!.substituted).toBe(true); // explicitní náhrada chybějícího pohledu
+        // šikmo zepředu i zezadu jsou namalované; bok je explicitní náhrada pohledem šikmo zepředu
+        expect(cv.view!.used).toBe(dir === 'NE' || dir === 'NW' ? 'back3q' : 'front3q');
+        expect(cv.view!.substituted).toBe(dir === 'E');
         ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, W, H);
         ctx.setTransform(cv.mirror ? -S : S, 0, 0, S, W / 2, H - 10 * S);
         drawRig(ctx, cv.rig!, imgs2, 'C', 0.82);

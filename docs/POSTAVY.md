@@ -132,7 +132,12 @@ Implementace podle zadání [`docs/zdroje/zadani-prirozene-chuze-2D.md`](zdroje/
   nebo „šikmo + bokem“, úzké průchody zůstávají rovné. Platí i pro druhého z dvojice. Na náměstí
   jde strměji jen 0,9 % dráhy (jen krátké obraty do 20 px), dříve 5,3 % v úsecích až 95 px.
 * **Pohledy**: při chůzi se nepoužívá čistě čelní (S) ani zadní (N) pohled – vždy šikmý SE/SW nebo
-  NE/NW podle vodorovné složky směru (s hysterezí).
+  NE/NW podle vodorovné složky směru (s hysterezí). Knihovna `painted-parts-cg` má namalované
+  pohledy **šikmo zepředu** (SE, zrcadleně SW) i **šikmo zezadu** (NE, zrcadleně NW; arch
+  `grafika/zdroje/postava-dily-3q-zezadu-v1.webp`). Postava jdoucí nahoru (od kamery, víc než
+  22,5° nad vodorovnou) je vidět zezadu. Bok (E/W, vodorovná chůze) zatím nahrazuje pohled šikmo
+  zepředu. U pohledu zezadu je blízký (pravý) bok vpravo (`nearSide: 1`), hlava zezadu má měřítko
+  podle šířky hlavy zepředu a bota podle šířky boty zepředu.
 * **Rozestupy** (`src/core/sim/spacing.ts`): protijdoucí se míjejí vpravo, pomalejší nebo stojící
   postavu před sebou postava obejde stranou (posun max. 1,4 šířky postavy, plynulá příčná rychlost
   do 40 % rychlosti chůze), a když obejít nejde, zpomalí za ní. Ve stoje: když dvě postavy stojí na

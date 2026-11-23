@@ -2,7 +2,7 @@
  "format": "zive-obrazy-dily",
  "formatVersion": 1,
  "id": "malovane-cg-v1",
- "label": "Malované díly (ChatGPT, šikmo zepředu)",
+ "label": "Malované díly (ChatGPT, šikmo zepředu a zezadu)",
  "provisional": false,
  "pxPerUnit": 4,
  "palettes": [
@@ -68,6 +68,17 @@
      "headOffsetX": 0,
      "shoulderOffsetX": 0.37,
      "nearSide": -1
+    },
+    "back3q": {
+     "forward": {
+      "x": 0.72,
+      "y": -0.3
+     },
+     "hipSpread": 6.55,
+     "shoulderSpread": 8.71,
+     "headOffsetX": 0,
+     "shoulderOffsetX": -0.1,
+     "nearSide": 1
     }
    },
    "gait": {
@@ -134,24 +145,41 @@
     ]
    },
    "availableViews": [
-    "front3q"
+    "front3q",
+    "back3q"
    ],
    "viewFallbacks": {
     "side": {
-     "use": "front3q"
-    },
-    "back3q": {
      "use": "front3q"
     },
     "front": {
      "use": "front3q"
     },
     "back": {
-     "use": "front3q"
+     "use": "back3q"
     }
    },
    "drawOrder": {
     "front3q": [
+     "far.hand",
+     "far.forearm",
+     "far.upperArm",
+     "far.foot",
+     "far.shin",
+     "far.thigh",
+     "near.foot",
+     "near.shin",
+     "near.thigh",
+     "torso",
+     "head",
+     "hat",
+     "scarf",
+     "near.hand",
+     "near.forearm",
+     "near.upperArm",
+     "held"
+    ],
+    "back3q": [
      "far.hand",
      "far.forearm",
      "far.upperArm",
@@ -814,12 +842,442 @@
    ],
    "mirrorSafe": true,
    "provisional": false
+  },
+  {
+   "id": "head_cg.head.back3q",
+   "slot": "head",
+   "variantId": "head_cg",
+   "view": "back3q",
+   "texture": "hlava-back3q.png",
+   "sourceSize": {
+    "w": 96,
+    "h": 124
+   },
+   "trim": {
+    "x": 10,
+    "y": 9,
+    "w": 75,
+    "h": 105
+   },
+   "pivot": {
+    "x": 47.08,
+    "y": 106.85
+   },
+   "anchors": {
+    "hat": {
+     "x": 47.79,
+     "y": 26.39
+    }
+   },
+   "boneDir": -1.5707963267948966,
+   "layerOrder": 0,
+   "compatibleBodyTypes": [
+    "adult-cg"
+   ],
+   "compatibilityTags": [],
+   "paletteOptions": [],
+   "mirrorSafe": true,
+   "provisional": false
+  },
+  {
+   "id": "jacket_coat_cg.torso.back3q",
+   "slot": "torso",
+   "variantId": "jacket_coat_cg",
+   "view": "back3q",
+   "texture": "kabat-trup-back3q.png",
+   "mask": "kabat-trup-back3q.maska.png",
+   "sourceSize": {
+    "w": 172,
+    "h": 293
+   },
+   "trim": {
+    "x": 14,
+    "y": 14,
+    "w": 144,
+    "h": 265
+   },
+   "pivot": {
+    "x": 85.18,
+    "y": 205.41
+   },
+   "anchors": {
+    "neck": {
+     "x": 85.27,
+     "y": 33.41
+    },
+    "scarf": {
+     "x": 85.27,
+     "y": 27.41
+    }
+   },
+   "boneDir": -1.5707963267948966,
+   "layerOrder": 0,
+   "compatibleBodyTypes": [
+    "adult-cg"
+   ],
+   "compatibilityTags": [],
+   "paletteOptions": [
+    "petrolejova",
+    "vinova",
+    "okrova",
+    "olivova",
+    "kremova",
+    "hneda",
+    "tmave-seda"
+   ],
+   "mirrorSafe": true,
+   "provisional": false
+  },
+  {
+   "id": "jacket_coat_cg.upperArm.back3q",
+   "slot": "upperArm",
+   "variantId": "jacket_coat_cg",
+   "view": "back3q",
+   "texture": "kabat-nadlokti-back3q.png",
+   "mask": "kabat-nadlokti-back3q.maska.png",
+   "sourceSize": {
+    "w": 52,
+    "h": 153
+   },
+   "trim": {
+    "x": 8,
+    "y": 9,
+    "w": 36,
+    "h": 133
+   },
+   "pivot": {
+    "x": 25.94,
+    "y": 20.68
+   },
+   "anchors": {
+    "end": {
+     "x": 25.83,
+     "y": 116.68
+    }
+   },
+   "boneDir": 1.5707963267948966,
+   "layerOrder": 0,
+   "compatibleBodyTypes": [
+    "adult-cg"
+   ],
+   "compatibilityTags": [],
+   "paletteOptions": [
+    "petrolejova",
+    "vinova",
+    "okrova",
+    "olivova",
+    "kremova",
+    "hneda",
+    "tmave-seda"
+   ],
+   "mirrorSafe": true,
+   "provisional": false
+  },
+  {
+   "id": "jacket_coat_cg.forearm.back3q",
+   "slot": "forearm",
+   "variantId": "jacket_coat_cg",
+   "view": "back3q",
+   "texture": "kabat-predlokti-back3q.png",
+   "mask": "kabat-predlokti-back3q.maska.png",
+   "sourceSize": {
+    "w": 99,
+    "h": 161
+   },
+   "trim": {
+    "x": 31,
+    "y": 24,
+    "w": 36,
+    "h": 105
+   },
+   "pivot": {
+    "x": 48.32,
+    "y": 39.24
+   },
+   "anchors": {
+    "end": {
+     "x": 48.87,
+     "y": 123.24
+    }
+   },
+   "boneDir": 1.5707963267948966,
+   "layerOrder": 0,
+   "compatibleBodyTypes": [
+    "adult-cg"
+   ],
+   "compatibilityTags": [],
+   "paletteOptions": [
+    "petrolejova",
+    "vinova",
+    "okrova",
+    "olivova",
+    "kremova",
+    "hneda",
+    "tmave-seda"
+   ],
+   "mirrorSafe": true,
+   "provisional": false
+  },
+  {
+   "id": "gloves_cg.hand.back3q",
+   "slot": "hand",
+   "variantId": "gloves_cg",
+   "view": "back3q",
+   "texture": "palcak-back3q.png",
+   "mask": "palcak-back3q.maska.png",
+   "sourceSize": {
+    "w": 46,
+    "h": 58
+   },
+   "trim": {
+    "x": 6,
+    "y": 6,
+    "w": 33,
+    "h": 46
+   },
+   "pivot": {
+    "x": 25.65,
+    "y": 14.91
+   },
+   "anchors": {
+    "grip": {
+     "x": 25.55,
+     "y": 32.43
+    }
+   },
+   "boneDir": 1.5707963267948966,
+   "layerOrder": 0,
+   "compatibleBodyTypes": [
+    "adult-cg"
+   ],
+   "compatibilityTags": [],
+   "paletteOptions": [
+    "petrolejova",
+    "vinova",
+    "okrova",
+    "olivova",
+    "kremova",
+    "hneda",
+    "tmave-seda"
+   ],
+   "mirrorSafe": true,
+   "provisional": false
+  },
+  {
+   "id": "trousers_cg.thigh.back3q",
+   "slot": "thigh",
+   "variantId": "trousers_cg",
+   "view": "back3q",
+   "texture": "kalhoty-stehno-back3q.png",
+   "mask": "kalhoty-stehno-back3q.maska.png",
+   "sourceSize": {
+    "w": 61,
+    "h": 193
+   },
+   "trim": {
+    "x": 8,
+    "y": 11,
+    "w": 45,
+    "h": 171
+   },
+   "pivot": {
+    "x": 30.11,
+    "y": 24.14
+   },
+   "anchors": {
+    "end": {
+     "x": 29.57,
+     "y": 152.14
+    }
+   },
+   "boneDir": 1.5707963267948966,
+   "layerOrder": 0,
+   "compatibleBodyTypes": [
+    "adult-cg"
+   ],
+   "compatibilityTags": [],
+   "paletteOptions": [
+    "tmave-seda",
+    "hneda",
+    "olivova"
+   ],
+   "mirrorSafe": true,
+   "provisional": false
+  },
+  {
+   "id": "trousers_cg.shin.back3q",
+   "slot": "shin",
+   "variantId": "trousers_cg",
+   "view": "back3q",
+   "texture": "kalhoty-lytko-back3q.png",
+   "mask": "kalhoty-lytko-back3q.maska.png",
+   "sourceSize": {
+    "w": 105,
+    "h": 181
+   },
+   "trim": {
+    "x": 31,
+    "y": 21,
+    "w": 42,
+    "h": 127
+   },
+   "pivot": {
+    "x": 52.19,
+    "y": 39.47
+   },
+   "anchors": {
+    "end": {
+     "x": 51.6,
+     "y": 159.47
+    }
+   },
+   "boneDir": 1.5707963267948966,
+   "layerOrder": 0,
+   "compatibleBodyTypes": [
+    "adult-cg"
+   ],
+   "compatibilityTags": [],
+   "paletteOptions": [
+    "tmave-seda",
+    "hneda",
+    "olivova"
+   ],
+   "mirrorSafe": true,
+   "provisional": false
+  },
+  {
+   "id": "boots_cg.foot.back3q",
+   "slot": "foot",
+   "variantId": "boots_cg",
+   "view": "back3q",
+   "texture": "bota-back3q.png",
+   "mask": "bota-back3q.maska.png",
+   "sourceSize": {
+    "w": 64,
+    "h": 74
+   },
+   "trim": {
+    "x": 7,
+    "y": 7,
+    "w": 49,
+    "h": 60
+   },
+   "pivot": {
+    "x": 23.83,
+    "y": 53.21
+   },
+   "anchors": {
+    "heel": {
+     "x": 8.34,
+     "y": 65.21
+    },
+    "toe": {
+     "x": 35.81,
+     "y": 65.21
+    }
+   },
+   "boneDir": 0,
+   "layerOrder": 0,
+   "compatibleBodyTypes": [
+    "adult-cg"
+   ],
+   "compatibilityTags": [],
+   "paletteOptions": [
+    "hneda",
+    "tmave-seda"
+   ],
+   "mirrorSafe": true,
+   "provisional": false
+  },
+  {
+   "id": "hat_beanie_cg.hat.back3q",
+   "slot": "hat",
+   "variantId": "hat_beanie_cg",
+   "view": "back3q",
+   "texture": "kulich-back3q.png",
+   "mask": "kulich-back3q.maska.png",
+   "sourceSize": {
+    "w": 102,
+    "h": 112
+   },
+   "trim": {
+    "x": 9,
+    "y": 10,
+    "w": 84,
+    "h": 92
+   },
+   "pivot": {
+    "x": 52.41,
+    "y": 66.58
+   },
+   "anchors": {},
+   "boneDir": -1.5707963267948966,
+   "layerOrder": 0,
+   "compatibleBodyTypes": [
+    "adult-cg"
+   ],
+   "compatibilityTags": [],
+   "paletteOptions": [
+    "petrolejova",
+    "vinova",
+    "okrova",
+    "olivova",
+    "kremova",
+    "hneda",
+    "tmave-seda"
+   ],
+   "mirrorSafe": true,
+   "provisional": false
+  },
+  {
+   "id": "scarf_long_cg.scarf.back3q",
+   "slot": "scarf",
+   "variantId": "scarf_long_cg",
+   "view": "back3q",
+   "texture": "sala-back3q.png",
+   "mask": "sala-back3q.maska.png",
+   "sourceSize": {
+    "w": 92,
+    "h": 62
+   },
+   "trim": {
+    "x": 9,
+    "y": 8,
+    "w": 74,
+    "h": 46
+   },
+   "pivot": {
+    "x": 46.4,
+    "y": 26.23
+   },
+   "anchors": {},
+   "boneDir": -1.5707963267948966,
+   "layerOrder": 0,
+   "compatibleBodyTypes": [
+    "adult-cg"
+   ],
+   "compatibilityTags": [],
+   "paletteOptions": [
+    "petrolejova",
+    "vinova",
+    "okrova",
+    "olivova",
+    "kremova",
+    "hneda",
+    "tmave-seda"
+   ],
+   "mirrorSafe": true,
+   "provisional": false
   }
  ],
  "artIssues": [
   {
    "ref": "pohledy",
-   "issue": "Dodán jen pohled šikmo zepředu. Bok, šikmo zezadu, zepředu a zezadu chybí – ve scéně explicitní náhrada pohledem šikmo zepředu (postava jdoucí od kamery je tak vidět zepředu)."
+   "issue": "Dodány pohledy šikmo zepředu a šikmo zezadu. Bok, zepředu a zezadu chybí – při chůzi se nepoužívají (chůze je vždy šikmá), v klidu explicitní náhrada nejbližším šikmým pohledem."
+  },
+  {
+   "ref": "scarf_long_cg.scarf.back3q",
+   "issue": "Šála zezadu je bez krémových proužků (konce nejsou vidět) – v pořádku, jen pro úplnost."
   },
   {
    "ref": "varianty",
@@ -834,12 +1292,24 @@
    "issue": "Pro chůzi doleva se díly zrcadlí (knoflíky se přesunou na druhou stranu)."
   },
   {
-   "ref": "upperArm",
+   "ref": "upperArm/front3q",
    "issue": "Poměr stran neodpovídá referenci – šířka upravena ×0.74 vůči délce. Přemalovat užší a delší (cílová šířka 8.6 j. při délce kosti)."
   },
   {
-   "ref": "thigh",
+   "ref": "thigh/front3q",
    "issue": "Poměr stran neodpovídá referenci – šířka upravena ×0.63 vůči délce. Přemalovat užší a delší (cílová šířka 10.2 j. při délce kosti)."
+  },
+  {
+   "ref": "upperArm/back3q",
+   "issue": "Poměr stran neodpovídá referenci – šířka upravena ×0.68 vůči délce. Přemalovat užší a delší (cílová šířka 8.6 j. při délce kosti)."
+  },
+  {
+   "ref": "forearm/back3q",
+   "issue": "Poměr stran neodpovídá referenci – šířka upravena ×0.86 vůči délce. Přemalovat užší a delší (cílová šířka 7.9 j. při délce kosti)."
+  },
+  {
+   "ref": "thigh/back3q",
+   "issue": "Poměr stran neodpovídá referenci – šířka upravena ×0.57 vůči délce. Přemalovat užší a delší (cílová šířka 10.2 j. při délce kosti)."
   }
  ]
 }

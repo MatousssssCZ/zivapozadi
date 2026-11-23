@@ -15,17 +15,33 @@ import path from 'node:path';
 import type { PartLibrary, PartDef, VariantDef, PartSlot, BodyTemplateDef, GroupId } from '../src/core/anim/partLibrary';
 import { testFigureManifest, type CharacterManifest } from '../src/core/anim/manifest';
 
-const SRC = 'grafika/zdroje/postava-dily-3q-zepredu-v1.webp';
+// Archy dílů: šikmo zepředu (schválená reference v2) a šikmo zezadu (stejný styl a měřítko).
 const OUT = path.resolve('resources/builtin/painted-parts-cg');
 const P = 4; // px na jednotku ve výstupu
-const VIEW = 'front3q' as const;
+type SheetView = 'front3q' | 'back3q';
 const ALL_PAL = ['petrolejova', 'vinova', 'okrova', 'olivova', 'kremova', 'hneda', 'tmave-seda'];
 type V = { x: number; y: number };
 
 // Šablona dospělého podle schválené reference v2 (~7 hlav): délky kostí v jednotkách (postava 130).
 const BONES = { thigh: 32, shin: 30, ankleHeight: 3, torso: 43, neck: 13, shoulderDrop: 4, upperArm: 24, forearm: 21 };
 
-interface Cut { name: string; slot: PartSlot; box: [number, number, number, number] }
+interface Cut { name: string; slot: PartSlot; box: [number, number, number, number]; view?: SheetView }
+const CUTS_BACK: Cut[] = [
+  { name: 'hlava', slot: 'head', box: [70, 118, 267, 384] },
+  { name: 'kabat-trup', slot: 'torso', box: [347, 50, 582, 471] },
+  { name: 'kabat-nadlokti', slot: 'upperArm', box: [682, 106, 820, 434] },
+  { name: 'kabat-predlokti', slot: 'forearm', box: [958, 102, 1099, 424] },
+  { name: 'palcak', slot: 'hand', box: [1214, 163, 1402, 421] },
+  { name: 'kalhoty-stehno', slot: 'thigh', box: [73, 553, 248, 922] },
+  { name: 'kalhoty-lytko', slot: 'shin', box: [364, 545, 514, 916] },
+  { name: 'bota', slot: 'foot', box: [609, 659, 809, 900] },
+  { name: 'kulich', slot: 'hat', box: [901, 583, 1139, 846] },
+  { name: 'sala', slot: 'scarf', box: [1200, 601, 1443, 750] },
+];
+const SHEETS: { src: string; view: SheetView; cuts: () => Cut[] }[] = [
+  { src: 'grafika/zdroje/postava-dily-3q-zepredu-v1.webp', view: 'front3q', cuts: () => CUTS },
+  { src: 'grafika/zdroje/postava-dily-3q-zezadu-v1.webp', view: 'back3q', cuts: () => CUTS_BACK },
+];
 const CUTS: Cut[] = [
   { name: 'hlava', slot: 'head', box: [74, 72, 268, 470] },
   { name: 'kabat-trup', slot: 'torso', box: [384, 72, 591, 470] },
@@ -51,9 +67,9 @@ function extract(sheet: Canvas, cut: Cut, margin = 8): Part {
   for (let i = 3; i < id.data.length; i += 4) id.data[i] = id.data[i] < 28 ? 0 : id.data[i] > 235 ? 255 : id.data[i];
   // ponechat jen hlavní souvislou oblast (odstraní skvrny pozadí uvnitř výřezu)
   keepLargest(id.data, w, h);
-  if (cut.slot === 'hat') removeHatInterior(id.data, w, h);
+  if (cut.slot === 'hat' && cut.view !== 'back3q') removeHatInterior(id.data, w, h);
   let hole: Part['hole'];
-  if (cut.slot === 'scarf') { hole = holeCenter({ cut, c, d: id.data, w, h }); fillScarfHole(id.data, w, h); }
+  if (cut.slot === 'scarf' && cut.view !== 'back3q') { hole = holeCenter({ cut, c, d: id.data, w, h }); fillScarfHole(id.data, w, h); }
   ctx.putImageData(id, 0, 0);
   return { cut, c, d: id.data, w, h, hole };
 }
@@ -105,7 +121,7 @@ interface Measure { k: number; kx?: number; pivot: V; anchors: Record<string, V>
 /** Cílové šířky končetin podle reference v2 (jednotky) – sjednocení tloušťky navazujících dílů. */
 const WIDTH: Partial<Record<PartSlot, number>> = { upperArm: 8.6, forearm: 7.9, thigh: 10.2, shin: 9.4 };
 
-function measure(p: Part, ctx: { headWidthU?: number; neckWidthU?: number }): Measure {
+function measure(p: Part, ctx: { headWidthU?: number; neckWidthU?: number; frontHeadWidthU?: number; frontSoleU?: number }): Measure {
   const r = rows(p); const H = r.bottom - r.top;
   const t10 = (a: number, b: number) => avgOver(r.cx, r.top + H * a, r.top + H * b);
   const wAvg = (a: number, b: number) => avgOver(r.width, r.top + H * a, r.top + H * b);
@@ -142,11 +158,15 @@ function measure(p: Part, ctx: { headWidthU?: number; neckWidthU?: number }): Me
       return { k, pivot, anchors: { grip: { x: t10(0.05, 0.15), y: r.top + H * 0.58 } }, boneDir: Math.PI / 2, info: '' };
     }
     case 'foot': {
-      const k = (9.8 * P) / H;
+      let k = (9.8 * P) / H;
       const shaft = t10(0.05, 0.3);
       // skutečná podrážka: pata = nejzadnější bod spodních řádků, přednoží = 85 % délky ke špičce
       let sl = p.w, sr = 0; for (let y = Math.round(r.bottom - H * 0.12); y <= r.bottom; y++) { if (r.L[y] >= 0) { sl = Math.min(sl, r.L[y]); sr = Math.max(sr, r.R[y]); } }
       const heel = { x: sl, y: r.bottom }, toe = { x: shaft + (sr - shaft) * 0.85, y: r.bottom };
+      // zezadu je holínka v perspektivě vyšší – měřítko podle délky podrážky (90 % boty zepředu)
+      let bl = p.w, br = 0; for (let y = r.top; y <= r.bottom; y++) if (r.L[y] >= 0) { bl = Math.min(bl, r.L[y]); br = Math.max(br, r.R[y]); }
+      if (p.cut.view === 'back3q' && ctx.frontSoleU) k = (ctx.frontSoleU * 0.92 * P) / (br - bl);
+      else ctx.frontSoleU = ((br - bl) * k) / P;
       return { k, pivot: { x: shaft, y: r.bottom - (BONES.ankleHeight * P) / k }, anchors: { heel, toe }, boneDir: 0, info: `pata ${((shaft - sl) * k / P).toFixed(1)} j., přednoží ${((toe.x - shaft) * k / P).toFixed(1)} j.` };
     }
     case 'torso': {
@@ -162,9 +182,12 @@ function measure(p: Part, ctx: { headWidthU?: number; neckWidthU?: number }): Me
       // brada = místo, kde se od spodu (krk) náhle rozšíří obrys
       const neckW = avgOver(r.width, r.bottom - H * 0.08, r.bottom - 2);
       let chin = r.bottom; for (let y = r.bottom - 2; y > r.top; y--) if (r.width(y) > neckW * 1.35) { chin = y; break; }
-      const k = (18 * P) / (chin - r.top);
+      let k = (18 * P) / (chin - r.top);
       let wide = r.top; for (let y = r.top; y < chin; y++) if (r.width(y) > r.width(wide)) wide = y;
+      // zezadu není brada vidět: měřítko podle šířky hlavy z pohledu zepředu, „brada“ = 18 j. pod temenem
+      if (p.cut.view === 'back3q' && ctx.frontHeadWidthU) { k = (ctx.frontHeadWidthU * P) / r.width(wide); chin = Math.min(r.bottom - 2, r.top + (18 * P) / k); }
       ctx.headWidthU = (r.width(wide) * k) / P; ctx.neckWidthU = (neckW * k) / P;
+      if (p.cut.view !== 'back3q') ctx.frontHeadWidthU = ctx.headWidthU;
       const pivot = { x: avgOver(r.cx, r.bottom - H * 0.08, r.bottom - 2), y: r.bottom - (1.5 * P) / k };
       return { k, pivot, anchors: { hat: { x: r.cx(wide), y: r.top + (chin - r.top) * 0.22 } }, boneDir: -Math.PI / 2, info: `hlava ${ctx.headWidthU.toFixed(1)}×18 j., krk ${ctx.neckWidthU.toFixed(1)} j.` };
     }
@@ -176,6 +199,11 @@ function measure(p: Part, ctx: { headWidthU?: number; neckWidthU?: number }): Me
       return { k, pivot: { x: r.cx(rimY), y: rimY }, anchors: {}, boneDir: -Math.PI / 2, info: `okraj ${(rimW * k / P).toFixed(1)} j.` };
     }
     case 'scarf': {
+      if (!p.hole) {
+        // zezadu: smyčka bez otvoru – krk prochází asi ve 40 % výšky smyčky
+        const k = (21 * P) / p.w;
+        return { k, pivot: { x: avgOver(r.cx, r.top, r.top + H * 0.5), y: r.top + H * 0.4 }, anchors: {}, boneDir: -Math.PI / 2, info: `smyčka zezadu, šířka ${(p.w * k / P).toFixed(1)} j.` };
+      }
       const hole = p.hole!;
       const k = (21 * P) / p.w; // šířka šály podle reference (krk prosvítá otvorem)
       return { k, pivot: { x: hole.x, y: hole.y }, anchors: {}, boneDir: -Math.PI / 2, info: `otvor ${(hole.w * k / P).toFixed(1)} j., šířka ${(p.w * k / P).toFixed(1)} j.` };
@@ -311,19 +339,23 @@ function crop(cv: Canvas, t: { x: number; y: number; w: number; h: number }) { c
 const r2 = (x: number) => Math.round(x * 100) / 100;
 
 async function main() {
-  const img = await loadImage(SRC);
-  const sheet = createCanvas(img.width, img.height); sheet.getContext('2d').drawImage(img, 0, 0);
   await fs.rm(OUT, { recursive: true, force: true }); await fs.mkdir(OUT, { recursive: true });
-  const ctx: { headWidthU?: number; neckWidthU?: number } = {};
+  const ctx: { headWidthU?: number; neckWidthU?: number; frontHeadWidthU?: number; frontSoleU?: number } = {};
   const order: PartSlot[] = ['head', 'torso', 'upperArm', 'forearm', 'hand', 'thigh', 'shin', 'foot', 'hat', 'scarf'];
-  const measured = new Map<PartSlot, { part: PartDef; meas: Measure }>();
+  const measured = new Map<string, { part: PartDef; meas: Measure }>();
   const groupOf: Record<PartSlot, GroupId> = { head: 'head', torso: 'jacket', upperArm: 'jacket', forearm: 'jacket', hand: 'gloves', thigh: 'trousers', shin: 'trousers', foot: 'boots', hat: 'hat', scarf: 'scarf' };
   const variantOf: Record<GroupId, string> = { head: 'head_cg', jacket: 'jacket_coat_cg', gloves: 'gloves_cg', trousers: 'trousers_cg', boots: 'boots_cg', hat: 'hat_beanie_cg', scarf: 'scarf_long_cg' };
   const palOf: Record<GroupId, string[]> = { head: [], jacket: ALL_PAL, gloves: ALL_PAL, trousers: ['tmave-seda', 'hneda', 'olivova'], boots: ['hneda', 'tmave-seda'], hat: ALL_PAL, scarf: ALL_PAL };
   const report: string[] = [];
   const artFixes: { ref: string; issue: string }[] = [];
+  const viewGeom: Partial<Record<SheetView, { hipSpread: number; shoulderSpread: number; shoulderOffsetX: number }>> = {};
+  for (const sh of SHEETS) {
+  const VIEW = sh.view;
+  const img = await loadImage(sh.src);
+  const sheet = createCanvas(img.width, img.height); sheet.getContext('2d').drawImage(img, 0, 0);
+  report.push(`--- ${VIEW} (${sh.src})`);
   for (const slot of order) {
-    const cut = CUTS.find((c) => c.slot === slot)!;
+    const cut = { ...sh.cuts().find((c) => c.slot === slot)!, view: VIEW };
     const p = extract(sheet, cut);
     const meas = measure(p, ctx);
     const pad = slot === 'shin' || slot === 'forearm' ? 28 : 4; // místo pro zaoblenou čéšku / loket
@@ -331,7 +363,7 @@ async function main() {
     const sc = scaled(p.c, kx, meas.k, pad);
     const toS = (q: V) => ({ x: q.x * kx + pad, y: q.y * meas.k + pad });
     smoothJoint(sc, slot, toS(meas.pivot), meas.anchors.end ? toS(meas.anchors.end) : null);
-    if (Math.abs(kx / meas.k - 1) > 0.12) artFixes.push({ ref: `${slot}`, issue: `Poměr stran neodpovídá referenci – šířka upravena ×${(kx / meas.k).toFixed(2)} vůči délce. Přemalovat ${kx < meas.k ? 'užší a delší' : 'širší a kratší'} (cílová šířka ${WIDTH[slot]} j. při délce kosti).` });
+    if (Math.abs(kx / meas.k - 1) > 0.12) artFixes.push({ ref: `${slot}/${VIEW}`, issue: `Poměr stran neodpovídá referenci – šířka upravena ×${(kx / meas.k).toFixed(2)} vůči délce. Přemalovat ${kx < meas.k ? 'užší a delší' : 'širší a kratší'} (cílová šířka ${WIDTH[slot]} j. při délce kosti).` });
     const { mask, brighten } = makeMask(sc, slot);
     const trim = trimBox(sc);
     const file = `${cut.name}-${VIEW}.png`;
@@ -346,36 +378,45 @@ async function main() {
       boneDir: meas.boneDir, layerOrder: 0, compatibleBodyTypes: ['adult-cg'], compatibilityTags: [], paletteOptions: mask ? palOf[g] : [],
       mirrorSafe: true, provisional: false,
     };
-    measured.set(slot, { part, meas });
+    measured.set(`${VIEW}|${slot}`, { part, meas });
     report.push(`${slot.padEnd(9)} měřítko ×${meas.k.toFixed(3)}${kx !== meas.k ? ` (šířka ×${kx.toFixed(3)})` : ''}  ${meas.info}${mask ? `  maska (zesvětlení ×${brighten.toFixed(2)})` : ''}`);
   }
-  // rozestupy ramen a kyčlí z trupu (blízká strana vlevo)
-  const torso = measured.get('torso')!.part;
+  // rozestupy ramen a kyčlí z trupu
+  const torso = measured.get(`${VIEW}|torso`)!.part;
   const a = torso.anchors;
   const u = (px: number) => px / P;
-  const shoulderSpread = r2(u((a.shoulderR.x - a.shoulderL.x) / 2) * 0.62);
-  const shoulderOffsetX = r2(u((a.shoulderR.x + a.shoulderL.x) / 2 - a.neck.x));
-  const hipSpread = r2(u((a.hipR.x - a.hipL.x) / 2) * 0.42);
+  viewGeom[VIEW] = {
+    shoulderSpread: r2(u((a.shoulderR.x - a.shoulderL.x) / 2) * 0.62),
+    shoulderOffsetX: r2(u((a.shoulderR.x + a.shoulderL.x) / 2 - a.neck.x)),
+    hipSpread: r2(u((a.hipR.x - a.hipL.x) / 2) * 0.42),
+  };
   for (const k of ['shoulderL', 'shoulderR', 'hipL', 'hipR']) delete a[k];
-  const boot = measured.get('foot')!.part;
+  }
+  const { hipSpread, shoulderSpread, shoulderOffsetX } = viewGeom.front3q!;
+  const gb = viewGeom.back3q!;
+  const boot = measured.get('front3q|foot')!.part;
   const footGeom = { heel: r2((boot.pivot.x - boot.anchors.heel.x) / P), toe: r2((boot.anchors.toe.x - boot.pivot.x) / P) };
   const order3q = ['far.hand', 'far.forearm', 'far.upperArm', 'far.foot', 'far.shin', 'far.thigh', 'near.foot', 'near.shin', 'near.thigh', 'torso', 'head', 'hat', 'scarf', 'near.hand', 'near.forearm', 'near.upperArm', 'held'];
   const tpl: BodyTemplateDef = {
     id: 'adult-cg', label: 'Dospělý (reference v2)', height: 130, bones: BONES,
-    views: { front3q: { forward: { x: 0.72, y: 0.3 }, hipSpread, shoulderSpread, headOffsetX: 0, shoulderOffsetX, nearSide: -1 } },
+    views: {
+      front3q: { forward: { x: 0.72, y: 0.3 }, hipSpread, shoulderSpread, headOffsetX: 0, shoulderOffsetX, nearSide: -1 },
+      // šikmo zezadu: postava jde doprava a od kamery, blízký (pravý) bok je vpravo
+      back3q: { forward: { x: 0.72, y: -0.3 }, hipSpread: gb.hipSpread, shoulderSpread: gb.shoulderSpread, headOffsetX: 0, shoulderOffsetX: gb.shoulderOffsetX, nearSide: 1 },
+    },
     gait: { strideLength: 100, stanceFraction: 0.58, stepLift: 6.5, armSwing: 0.36, maxDip: 2.2, sway: 1.1, lean: 0.035 },
     idle: { breathe: 0.5, headAmp: 0.02, shiftAmp: 1.4, shiftPeriod: 7.5 },
     proportions: { height: [0.95, 1.05], build: [0.95, 1.05] },
     motionRanges: { strideScale: [0.9, 1.1], armSwing: [0.65, 1.35], bob: [0.8, 1.2], sway: [0.75, 1.25], idleTempo: [0.85, 1.15], lean: [0, 3], speed: [0.85, 1.25], armLag: [-2, 4], armLR: [0.85, 1.15] },
-    availableViews: [VIEW],
-    viewFallbacks: { side: { use: VIEW }, back3q: { use: VIEW }, front: { use: VIEW }, back: { use: VIEW } },
-    drawOrder: { front3q: order3q },
+    availableViews: ['front3q', 'back3q'],
+    viewFallbacks: { side: { use: 'front3q' }, front: { use: 'front3q' }, back: { use: 'back3q' } },
+    drawOrder: { front3q: order3q, back3q: order3q },
     farShade: 0.82,
     foot: footGeom,
   };
   const V = (id: string, group: GroupId, label: string, extra: Partial<VariantDef> = {}): VariantDef => ({ id, group, label, compatibleBodyTypes: ['adult-cg'], tags: [], excludesTags: [], requiresAnchors: [], paletteOptions: palOf[group], provisional: false, ...extra });
   const lib: PartLibrary = {
-    format: 'zive-obrazy-dily', formatVersion: 1, id: 'malovane-cg-v1', label: 'Malované díly (ChatGPT, šikmo zepředu)', provisional: false, pxPerUnit: P,
+    format: 'zive-obrazy-dily', formatVersion: 1, id: 'malovane-cg-v1', label: 'Malované díly (ChatGPT, šikmo zepředu a zezadu)', provisional: false, pxPerUnit: P,
     palettes: [
       { id: 'petrolejova', label: 'Petrolejová', color: '#2f6b70' }, { id: 'vinova', label: 'Vínová', color: '#7a2e3b' },
       { id: 'okrova', label: 'Okrová', color: '#c08a2e' }, { id: 'olivova', label: 'Olivová', color: '#6b7340' },
@@ -399,7 +440,8 @@ async function main() {
     ],
     parts: [...measured.values()].map((m) => m.part),
     artIssues: [
-      { ref: 'pohledy', issue: 'Dodán jen pohled šikmo zepředu. Bok, šikmo zezadu, zepředu a zezadu chybí – ve scéně explicitní náhrada pohledem šikmo zepředu (postava jdoucí od kamery je tak vidět zepředu).' },
+      { ref: 'pohledy', issue: 'Dodány pohledy šikmo zepředu a šikmo zezadu. Bok, zepředu a zezadu chybí – při chůzi se nepoužívají (chůze je vždy šikmá), v klidu explicitní náhrada nejbližším šikmým pohledem.' },
+      { ref: 'scarf_long_cg.scarf.back3q', issue: 'Šála zezadu je bez krémových proužků (konce nejsou vidět) – v pořádku, jen pro úplnost.' },
       { ref: 'varianty', issue: 'Jedna bunda, jedna čepice, jedna šála – další varianty (prošívaná bunda, baret, beranice, nákrčník) ještě nejsou namalované.' },
       { ref: 'jacket_coat_cg.torso', issue: 'Průramky a otevřený límec ukazují tmavý vnitřek; zakrývá ho rukáv, krk a šála. Při úpravě raději vyplnit látkou.' },
       { ref: 'zrcadlení', issue: 'Pro chůzi doleva se díly zrcadlí (knoflíky se přesunou na druhou stranu).' },
@@ -411,7 +453,7 @@ async function main() {
   const manifest: CharacterManifest = {
     ...base, id: 'painted-cg', name: 'Malovaná postava (ChatGPT díly)', provisional: false, backend: 'skeleton',
     clips: { ...base.clips, walk: { ...base.clips.walk, strideLength: tpl.gait.strideLength } },
-    directions: ['SE'], directionFallbacks: { E: { use: 'SE', mirror: false }, NE: { use: 'SE', mirror: false }, S: { use: 'SE', mirror: false }, N: { use: 'SE', mirror: false }, W: { use: 'SE', mirror: true }, SW: { use: 'SE', mirror: true }, NW: { use: 'SE', mirror: true } },
+    directions: ['SE', 'NE'], directionFallbacks: { E: { use: 'SE', mirror: false }, S: { use: 'SE', mirror: false }, N: { use: 'NE', mirror: false }, W: { use: 'SE', mirror: true }, SW: { use: 'SE', mirror: true }, NW: { use: 'NE', mirror: true } },
     attachPoints: {}, rig: { library: 'painted-parts-cg/library.json', bodyTemplate: 'adult-cg' },
   };
   await fs.writeFile(path.resolve('resources/builtin/malovana-postava-cg.json'), JSON.stringify(manifest, null, 2));

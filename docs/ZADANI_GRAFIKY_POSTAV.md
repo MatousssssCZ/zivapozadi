@@ -206,7 +206,32 @@ Díly:
 10) Šála z boku – smyčka kolem krku, konce visí dopředu (doprava) před hrudí.
 ```
 
-### Šikmo zezadu (postava jde doprava a od kamery)
+### Šikmo zezadu (postava jde doprava a od kamery) – DODÁNO, zpracováno
+
+Arch `grafika/zdroje/postava-dily-3q-zezadu-v1.webp` je zpracovaný do knihovny `painted-parts-cg`
+(pohled `back3q`). Použitý prompt (podrobnější verze):
+
+```text
+Podle stejné referenční postavy a ve stejném stylu jako předchozí arch dílů (šikmo zepředu) namaluj nový ARCH DÍLŮ pro 2D animaci v pohledu ŠIKMO ZEZADU: postava je natočená doprava a od kamery (asi 45°), vidíme hlavně záda a pravý bok, z obličeje nanejvýš kousek tváře. Je to přesně zrcadlový protějšek pohledu šikmo zepředu – postava jde stejným směrem doprava, jen se od nás vzdaluje.
+
+Stejná postava, stejné měřítko a stejné proporce jako předchozí arch (díly musí jít zaměnit kus za kus), stejná šedá barva oblečení, světlo shora zleva. Každý díl samostatně, nic se nedotýká, mezi díly velké mezery (aspoň 60 px), rozmístění v mřížce 5 × 2. Průhledné pozadí, žádný text, žádné popisky, žádný stín na zemi.
+
+Díly:
+1) Hlava s krkem zezadu – vlasy na zátylku, pravé ucho, z obličeje jen okraj tváře; bez čepice, šály a límce; krk dole rovně uříznutý.
+2) Trup kabátu ze zad BEZ RUKÁVŮ – zadní šev, límec zezadu, spodní lem kabátu, žádné knoflíky ani kapsy vpředu; ramena zaoblená, žádné začátky rukávů; průramky a límec bez tmavých otvorů.
+3) Nadloktí – horní polovina rukávu viděná zezadu, SVISLE, nahoře zaoblené (rameno), dole zaoblené (loket), bez ruky.
+4) Předloktí – dolní polovina rukávu s ohrnutou manžetou, SVISLE, nahoře zaoblené (navazuje na loket), bez ruky.
+5) Palčák ze hřbetu ruky – SVISLE, palec jen naznačený, nahoře otevřený okraj.
+6) Stehno – horní polovina nohavice ze zadní strany, SVISLE, nahoře rovně uříznutá, dole zaoblená (koleno zezadu – podkolenní jamka jen jemně, žádná tmavá linka po obvodu).
+7) Lýtko – dolní polovina nohavice ze zadní strany, SVISLE, nahoře zaoblené, dole rovný okraj nohavice, bez boty.
+8) Bota zezadu – vidíme hlavně patu a kus boku, špička míří doprava a od kamery, tmavá podrážka.
+9) Kulich s bambulí zezadu – jen čepice, bez hlavy a vlasů, spodní okraj kopíruje tvar hlavy, bez tmavého průhledu dovnitř.
+10) Šála zezadu – smyčka kolem krku viděná ze zad, otvor uprostřed vyplněný látkou nebo stínem, konce visí dopředu a nejsou vidět (případně jen kousek přes rameno).
+
+Končetiny (díly 3–7) kresli přesně svisle, souměrně a celé, stejně široké jako v předchozím archu: nadloktí a stehno asi třikrát delší než široké, předloktí stejně široké jako nadloktí, lýtko stejně široké jako spodek stehna. Kolena a lokty bez tmavých obrysových čar – přechody měkké. Nic nekresli dvakrát a nic nepřimalovávej k jinému dílu.
+```
+
+Původní kratší verze:
 
 ```text
 [společný úvod s POHLED = „ŠIKMO ZEZADU – jako pravá postava na referenci; postava je natočená doprava a od kamery, vidíme hlavně záda“]
