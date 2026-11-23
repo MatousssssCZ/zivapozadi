@@ -233,11 +233,11 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
   // opřená bota leží na zemi ve směru, ve kterém došlápla (i když tělo mezitím zatáčí)
   const gOf = (i: number): Vec2 => { const o = opts.anchors?.[i]; return isAnch(i) && o && o.gx !== undefined ? { x: o.gx, y: o.gy! } : { x: gfx, y: gfy }; };
   // pojistka: kotva, která se od odhadu z dráhy vzdálí víc než o MIS (prudký úhyb, otočka), se k němu přitáhne
-  const MIS = 0.3 * L;
+  const MIS = 0.35 * L;
   const anchorPull = [0, 1].map((i) => {
     const o = opts.anchors?.[i];
     if (!o || !anchored[i] || rel[i] == null) return { x: 0, y: 0 };
-    const est = { x: sideX(i) * v.hipSpread + gfx * rel[i]!, y: gfy * rel[i]! };
+    const est = { x: gfx * rel[i]!, y: gfy * rel[i]! }; // bez strany kyčle – nemění se při převrácení pohledu
     const dx = o.x - est.x, dy = o.y - est.y, m = Math.hypot(dx, dy);
     return m > MIS ? { x: -dx * (1 - MIS / m), y: -dy * (1 - MIS / m) } : { x: 0, y: 0 };
   });

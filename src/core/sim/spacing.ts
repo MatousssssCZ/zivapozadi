@@ -133,7 +133,7 @@ function step(off: Vec2, target: Vec2, maxStep: number) {
  * Druhý člen dvojice: jde vedle vůdce (vpravo/vlevo od jeho směru), sladí rychlost a směr.
  * Nikdy se neotáčí proti směru vůdce – když je napřed, jen zpomalí.
  */
-export function stepFollower(f: AgentState, leader: AgentState, scaleF: number, vmaxF: number, dt: number): void {
+export function stepFollower(f: AgentState, leader: AgentState, scaleF: number, vmaxF: number, dt: number, maxSlopeDeg = 90): void {
   const L = P(visualRoot(leader)), fp = P(f.pos);
   const lh = dirOf(leader.facing), lr = { x: -lh.y, y: lh.x };
   const side = f.follow?.side ?? 1, gap = PAIR_GAP * scaleF;
@@ -159,6 +159,11 @@ export function stepFollower(f: AgentState, leader: AgentState, scaleF: number, 
   const sp = Math.hypot(nv.x, nv.y);
   if (f.follow) f.follow.vel = { x: nv.x, y: nv.y };
   const sv = S(nv);
+  // ani druhý z dvojice nejde po obrazovce strměji než mezní úhel (jinak by šel čistě dopředu/dozadu)
+  if (maxSlopeDeg < 89.5 && sp > MOVING) {
+    const t = Math.tan((maxSlopeDeg * Math.PI) / 180);
+    if (Math.abs(sv.y) > Math.abs(sv.x) * t) sv.x = (sv.x !== 0 ? Math.sign(sv.x) : Math.sign(lh.x) || 1) * (Math.abs(sv.y) / t);
+  }
   f.pos = { x: f.pos.x + sv.x * dt, y: f.pos.y + sv.y * dt };
   if (sp > MOVING) { f.facing = approachAngle(f.facing, Math.atan2(sv.y, sv.x), 7 * dt); f.speed = sp; }
   else {

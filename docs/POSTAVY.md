@@ -125,6 +125,12 @@ Implementace podle zadání [`docs/zdroje/zadani-prirozene-chuze-2D.md`](zdroje/
   postupuje pomaleji a kroky se do svislé osy promítají zkrácené (noha vždy dosáhne).
 * **Otočka**: když se trasa obrací o víc než ~70°, postava se nejdřív otočí na místě, pak vykročí;
   rozejití navazuje na místa, kde boty právě stojí.
+* **Sklon chůze max. 45°** (`scene.maxWalkSlopeDeg`, v panelu scény „Max. sklon chůze“; 90 = bez
+  omezení): postava nikdy nejde po obrazovce strměji než 45° od vodorovné. Strmý úsek trasy
+  (`src/core/nav/slope.ts`) projde šikmo pod mezním úhlem – cik-cak kolem původní přímky (zub
+  ~200 px na výšku) se zaoblenými obraty; když by šikmý úsek protnul překážku, zkusí se druhá strana
+  nebo „šikmo + bokem“, úzké průchody zůstávají rovné. Platí i pro druhého z dvojice. Na náměstí
+  jde strměji jen 0,9 % dráhy (jen krátké obraty do 20 px), dříve 5,3 % v úsecích až 95 px.
 * **Pohledy**: při chůzi se nepoužívá čistě čelní (S) ani zadní (N) pohled – vždy šikmý SE/SW nebo
   NE/NW podle vodorovné složky směru (s hysterezí).
 * **Rozestupy** (`src/core/sim/spacing.ts`): protijdoucí se míjejí vpravo, pomalejší nebo stojící

@@ -259,6 +259,8 @@ function SceneProps({ p }: { p: ProjectFile }) {
         <div className="muted small">Postavy se zmenšují lineárně podle svislé polohy chodidel (mimo rozsah se měřítko nemění). Vodorovný pohyb velikost nemění.</div>
       </Section>
       <Section title="Sněžení">
+        <Row label="Max. sklon chůze (°)"><NumField value={sc.maxWalkSlopeDeg ?? 45} min={20} max={90} step={5} onCommit={(v) => upd('Sklon chůze', (d) => { d.scene.maxWalkSlopeDeg = v; })} /></Row>
+        <div className="muted small">Postavy nikdy nejdou po obrazovce strměji (čistě dopředu/dozadu) – strmý úsek projdou šikmo. 90 = bez omezení.</div>
         <Check label="Padající sníh" value={sc.snowfall.enabled} onChange={(v) => upd('Sněžení', (d) => { d.scene.snowfall.enabled = v; })} />
         <Row label="Hustota"><NumField value={sc.snowfall.density} min={0} max={3} step={0.1} onCommit={(v) => upd('Sněžení', (d) => { d.scene.snowfall.density = v; })} /></Row>
         <Row label="Vítr"><NumField value={sc.snowfall.wind} min={-2} max={2} step={0.05} onCommit={(v) => upd('Sněžení', (d) => { d.scene.snowfall.wind = v; })} /></Row>

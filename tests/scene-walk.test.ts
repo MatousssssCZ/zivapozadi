@@ -90,6 +90,27 @@ describe('chůze ve scéně (náměstí, 12 postav, 2 dvojice)', () => {
     expect(seen.has('S') || seen.has('N')).toBe(false);
   });
 
+  it('postavy nechodí strměji než 45° (čistě dopředu/dozadu jen v krátkých obratech)', () => {
+    const sim = Simulation.create(lp.project, lp.manifests);
+    const prev = new Map<string, { x: number; y: number }>(); const run = new Map<string, number>();
+    let steep = 0, total = 0, longest = 0;
+    for (let i = 0; i < 60 * 90; i++) {
+      sim.step();
+      for (const a of sim.state.agents) {
+        const p = prev.get(a.id); prev.set(a.id, { ...a.pos });
+        if (!p) continue;
+        const dx = a.pos.x - p.x, dy = a.pos.y - p.y, d = Math.hypot(dx, dy);
+        if (d < 0.05) { run.set(a.id, 0); continue; }
+        total += d;
+        if (Math.abs(dy) > Math.abs(dx) * Math.tan((47 * Math.PI) / 180)) { steep += d; const r = (run.get(a.id) ?? 0) + d; run.set(a.id, r); longest = Math.max(longest, r); }
+        else run.set(a.id, 0);
+      }
+    }
+    console.log(`strmě (> 45°): ${(100 * steep / total).toFixed(1)} % dráhy, nejdelší strmý úsek ${longest.toFixed(0)} px`);
+    expect(steep / total).toBeLessThan(0.03);
+    expect(longest).toBeLessThan(30); // jen obrat mezi dvěma šikmými úseky
+  });
+
   it('dvojice se obnoví z checkpointu beze změny průběhu', () => {
     const a = Simulation.create(lp.project, lp.manifests); a.advanceTo(20);
     const b = Simulation.restore(lp.project, lp.manifests, a.snapshot());

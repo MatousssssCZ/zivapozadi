@@ -107,7 +107,8 @@ export function stepMovement(agent: AgentState, g: NavGraph, res: Reservations, 
     if (dd > move) { agent.pos = { x: agent.pos.x + (dx / dd) * move, y: agent.pos.y + (dy / dd) * move }; move = 0; break; }
     // Dosažen bod trasy.
     agent.pos = { x: wp.x, y: wp.y }; move -= dd;
-    if (wp.edgeId && r.heldEdges.includes(wp.edgeId)) { res.release(edgeKey(wp.edgeId), agent.id); r.heldEdges = r.heldEdges.filter((e) => e !== wp.edgeId); }
+    // úsek uvolnit až na jeho konci (tvarovaný úsek má mezilehlé body se stejným edgeId)
+    if (wp.edgeId && r.heldEdges.includes(wp.edgeId) && wps[r.idx + 1]?.edgeId !== wp.edgeId) { res.release(edgeKey(wp.edgeId), agent.id); r.heldEdges = r.heldEdges.filter((e) => e !== wp.edgeId); }
     if (wp.nodeId) agent.loc = { kind: 'node', nodeId: wp.nodeId };
     if (r.idx >= wps.length - 1) { arrived = true; break; }
     if (r.idx >= effEnd) { r.idx++; agent.speed = 0; break; } // zastavit před úzkým průchodem

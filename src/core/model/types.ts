@@ -198,6 +198,8 @@ export interface SceneSettings {
   depth: DepthSettings;
   /** Atmosférické sněžení (deterministické podle seedu). */
   snowfall: { enabled: boolean; density: number; wind: number };
+  /** Největší sklon chůze po obrazovce od vodorovné (°, výchozí 45; 90 = bez omezení). */
+  maxWalkSlopeDeg?: number;
 }
 
 export interface ProjectFile {

@@ -15,6 +15,7 @@ import { ALL_VIEWS } from '../anim/skeleton';
 import { gaitEvents } from '../anim/gaitProfile';
 import { SIM_DT, SIM_STATE_VERSION, type AgentState, type SimState, type Waypoint, type PropState, type LogEntry } from './types';
 import { dist, approachAngle, type Vec2 } from '../math/vec';
+import { limitSlope } from '../nav/slope';
 import { stepSpacing, stepFollower, visualRoot, PAIR_GAP } from './spacing';
 
 export interface Diagnostic { level: 'warning' | 'error'; message: string; ref?: string }
@@ -197,7 +198,12 @@ export class Simulation {
     const wps = [...prefix];
     for (let i = 1; i < path.nodes.length; i++) { const n = this.graph.nodes.get(path.nodes[i])!; wps.push({ x: n.x, y: n.y, nodeId: n.id, edgeId: path.edges[i - 1] }); }
     if (finalPos) wps.push({ x: finalPos.x, y: finalPos.y, nodeId: null, edgeId: null });
-    return wps.filter((w, i) => i === 0 ? dist(w, a.pos) > 0.01 || wps.length === 1 : true);
+    const clean = wps.filter((w, i) => i === 0 ? dist(w, a.pos) > 0.01 || wps.length === 1 : true);
+    // nikdy čistě dopředu/dozadu: strmé úseky šikmo pod mezním úhlem (úzké průchody zůstávají rovné)
+    return limitSlope(a.pos, clean, {
+      maxDeg: this.project.scene.maxWalkSlopeDeg ?? 45, obstacles: this.graph.obstacles,
+      keepStraight: (e) => !!e && !!this.graph.edges.get(e)?.narrow,
+    });
   }
 
   private startRoute(a: AgentState, wps: Waypoint[], purpose: string, finalKey: string | null, anchor: string) {
@@ -372,7 +378,7 @@ export class Simulation {
   private stepMotion(a: AgentState) {
     if (a.follow) {
       const leader = this.state.agents.find((x) => x.id === a.follow!.leaderId);
-      if (leader) { stepFollower(a, leader, this.scaleOf(a), this.vmax(a), SIM_DT); this.motion.set(a.id, { arrived: false, waitingNarrow: false }); return; }
+      if (leader) { stepFollower(a, leader, this.scaleOf(a), this.vmax(a), SIM_DT, this.project.scene.maxWalkSlopeDeg ?? 45); this.motion.set(a.id, { arrived: false, waitingNarrow: false }); return; }
       a.follow = null;
     }
     const dest = a.route?.dest ?? null;
