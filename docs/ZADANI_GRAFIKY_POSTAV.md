@@ -153,3 +153,25 @@ Ukázkový pokyn pro jeden díl:
 * Díly zapíšu do knihovny.
 * Spustím testy mezer v kloubech a čitelnosti na náměstí.
 * Co nepůjde připravit čistě, označím jako dočasné a sepíšu požadovanou opravu.
+
+## 8. Prompt – arch dílů, pohled šikmo zepředu (schválená reference v2)
+
+Reference: `grafika/zdroje/postava-reference-v2.webp` (dospělý, ~7 hlav, styl schválen).
+
+```text
+Podle této referenční postavy namaluj ARCH DÍLŮ pro 2D animaci – stejný styl, stejná postava, stejné měřítko, pohled ŠIKMO ZEPŘEDU (jako prostřední postava). Každý díl samostatně, nic se nedotýká, mezi díly velké mezery (aspoň 60 px), rozmístění v mřížce 5 × 2. Průhledné pozadí, žádný text, žádné popisky, žádný stín, světlo shora zleva, šedé oblečení stejné jako na referenci.
+
+Díly:
+1) Hlava s krkem – bez čepice, bez šály, bez límce; krátké vlasy těsně u hlavy; krk dole rovně uříznutý.
+2) Trup kabátu BEZ RUKÁVŮ – od límce po spodní lem kabátu, knoflíky, kapsy; v místě ramen jen zaoblená ramena, žádné rukávy ani jejich začátky; bez hlavy a bez šály (límec ano).
+3) Nadloktí – horní polovina rukávu kabátu, SVISLE, nahoře zaoblená (rameno), dole zaoblená (loket), bez ruky.
+4) Předloktí – dolní polovina rukávu s ohrnutou manžetou, SVISLE, bez ruky.
+5) Palčák – SVISLE, palec naznačený, nahoře otevřený okraj (navazuje na manžetu).
+6) Stehno – horní polovina nohavice, SVISLE, nahoře rovně uříznutá, dole zaoblené koleno.
+7) Lýtko – dolní polovina nohavice, SVISLE, dole rovný okraj nohavice, bez boty.
+8) Bota – jedna zimní bota s tmavou podrážkou, špička doprava a mírně ke kameře.
+9) Kulich s bambulí – jen čepice, bez hlavy a vlasů, spodní okraj kopíruje tvar hlavy.
+10) Šála – omotaná kolem neviditelného krku (prázdný otvor uprostřed), dva souměrné konce visící dolů, krémové proužky.
+
+Končetiny (3–7) kresli přesně svisle, souměrně a celé, se stejnou šířkou jako na referenci. Nic nekresli dvakrát a nic nepřimalovávej k jinému dílu.
+```
