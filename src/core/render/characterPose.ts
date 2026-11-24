@@ -55,7 +55,7 @@ export function characterVisual(agent: AgentState, m: CharacterManifest, look: C
         if (sk < 0.05) return null;
         const A = pose.legs[i].end;
         // celá podrážka: od paty po špičku (s malým přesahem)
-        return { x: A.x + (g.toe - g.heel) / 2, y: A.y + g.AH - sk, w: (g.heel + g.toe) * 1.12, h: Math.max(0.5, sk * 0.9) };
+        return { x: A.x + (g.toe - g.heel) / 2, y: A.y + g.AH - sk, w: (g.heel + g.toe) * 1.12, h: Math.max(0.5, sk * 0.9), px: A.x, py: A.y, rot: pose.feet[i] };
       }) as RigAssembly['snowLips'];
     }
     return { x, y, scale, mirror: req.mirror, pose, rig, grip: rig.grip, view: { requested: req.view, used: rv.use, substituted: rv.substituted },

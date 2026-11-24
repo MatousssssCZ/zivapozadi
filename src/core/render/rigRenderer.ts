@@ -65,7 +65,7 @@ export interface RigAssembly {
   view: ViewId;
   heldOrder: number;
   /** Závěje přes zabořené boty (vzdálená, blízká) v lokálních souřadnicích. */
-  snowLips?: [{ x: number; y: number; w: number; h: number } | null, { x: number; y: number; w: number; h: number } | null];
+  snowLips?: [SnowLip | null, SnowLip | null];
 }
 
 const GROUP_OF: Record<PartSlot, GroupId> = { torso: 'jacket', upperArm: 'jacket', forearm: 'jacket', hat: 'hat', scarf: 'scarf', thigh: 'trousers', shin: 'trousers', foot: 'boots', hand: 'gloves', head: 'head' };
@@ -161,8 +161,12 @@ export function assembleRig(lib: PartLibrary, tpl: BodyTemplateDef, app: Charact
   return { items, grip, joints, anchors, missing, view, heldOrder: (ho < 0 ? 999 : ho) * 100 };
 }
 
-function drawSnowLip(ctx: CanvasRenderingContext2D, l: { x: number; y: number; w: number; h: number }, color: string) {
+/** Sníh na podrážce zabořené boty; otáčí se s botou kolem kotníku (px, py) o úhel rot. */
+export interface SnowLip { x: number; y: number; w: number; h: number; px: number; py: number; rot: number }
+
+function drawSnowLip(ctx: CanvasRenderingContext2D, l: SnowLip, color: string) {
   ctx.save();
+  ctx.translate(l.px, l.py); ctx.rotate(l.rot); ctx.translate(-l.px, -l.py);
   ctx.fillStyle = color;
   ctx.globalAlpha = 0.88;
   ctx.beginPath();
