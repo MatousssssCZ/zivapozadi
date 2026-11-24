@@ -1,0 +1,1150 @@
+{
+  "lamp": {
+    "asset": "furniture_sheet",
+    "rect": [
+      127,
+      0,
+      255,
+      545
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "bench": {
+    "asset": "furniture_sheet",
+    "rect": [
+      498,
+      133,
+      457,
+      356
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "table": {
+    "asset": "furniture_sheet",
+    "rect": [
+      1107,
+      41,
+      261,
+      475
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "mailbox": {
+    "asset": "furniture_sheet",
+    "rect": [
+      140,
+      565,
+      229,
+      434
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "fir": {
+    "asset": "furniture_sheet",
+    "rect": [
+      512,
+      544,
+      287,
+      453
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "nativity": {
+    "asset": "furniture_sheet",
+    "rect": [
+      923,
+      564,
+      531,
+      402
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "phone_front": {
+    "asset": "small_props",
+    "rect": [
+      85,
+      97,
+      230,
+      415
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "phone_back": {
+    "asset": "small_props",
+    "rect": [
+      412,
+      97,
+      356,
+      415
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "mitten_ground": {
+    "asset": "small_props",
+    "rect": [
+      768,
+      152,
+      333,
+      347
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "mitten_held": {
+    "asset": "small_props",
+    "rect": [
+      1198,
+      42,
+      242,
+      470
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "cloth_folded": {
+    "asset": "small_props",
+    "rect": [
+      23,
+      512,
+      338,
+      413
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "cloth_held": {
+    "asset": "small_props",
+    "rect": [
+      385,
+      512,
+      343,
+      443
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "mug_red": {
+    "asset": "small_props",
+    "rect": [
+      769,
+      628,
+      332,
+      286
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "mug_cream": {
+    "asset": "small_props",
+    "rect": [
+      1154,
+      512,
+      346,
+      402
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "steam_1": {
+    "asset": "steam_sheet",
+    "rect": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "pivot": [
+      0.5,
+      0.5
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "steam_2": {
+    "asset": "steam_sheet",
+    "rect": [
+      512,
+      0,
+      512,
+      512
+    ],
+    "pivot": [
+      0.5,
+      0.5
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "steam_3": {
+    "asset": "steam_sheet",
+    "rect": [
+      1024,
+      0,
+      512,
+      512
+    ],
+    "pivot": [
+      0.5,
+      0.5
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "steam_4": {
+    "asset": "steam_sheet",
+    "rect": [
+      55,
+      512,
+      405,
+      442
+    ],
+    "pivot": [
+      0.5,
+      0.5
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "steam_5": {
+    "asset": "steam_sheet",
+    "rect": [
+      589,
+      512,
+      343,
+      439
+    ],
+    "pivot": [
+      0.5,
+      0.5
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "steam_6": {
+    "asset": "steam_sheet",
+    "rect": [
+      1093,
+      512,
+      415,
+      438
+    ],
+    "pivot": [
+      0.5,
+      0.5
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "shovel": {
+    "asset": "snow_tools",
+    "rect": [
+      64,
+      9,
+      857,
+      394
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "shovel_snow": {
+    "asset": "snow_tools",
+    "rect": [
+      1050,
+      182,
+      312,
+      189
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "pavement": {
+    "asset": "snow_tools",
+    "rect": [
+      33,
+      474,
+      1473,
+      226
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "snow_pile": {
+    "asset": "snow_tools",
+    "rect": [
+      190,
+      772,
+      1153,
+      214
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "snowman_base": {
+    "asset": "snowman_parts",
+    "rect": [
+      85,
+      33,
+      455,
+      456
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "snowman_middle": {
+    "asset": "snowman_parts",
+    "rect": [
+      540,
+      118,
+      470,
+      351
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "snowman_head": {
+    "asset": "snowman_parts",
+    "rect": [
+      1122,
+      187,
+      270,
+      268
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "carrot": {
+    "asset": "snowman_parts",
+    "rect": [
+      186,
+      538,
+      217,
+      86
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "scarf": {
+    "asset": "snowman_parts",
+    "rect": [
+      62,
+      670,
+      356,
+      325
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "twig_left": {
+    "asset": "snowman_parts",
+    "rect": [
+      492,
+      714,
+      273,
+      226
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "twig_right": {
+    "asset": "snowman_parts",
+    "rect": [
+      878,
+      716,
+      232,
+      218
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "snowball": {
+    "asset": "snowman_parts",
+    "rect": [
+      1224,
+      741,
+      223,
+      219
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "coal_0": {
+    "asset": "snowman_parts",
+    "rect": [
+      564,
+      546,
+      80,
+      76
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "coal_1": {
+    "asset": "snowman_parts",
+    "rect": [
+      744,
+      550,
+      82,
+      73
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "coal_2": {
+    "asset": "snowman_parts",
+    "rect": [
+      930,
+      552,
+      76,
+      68
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "coal_3": {
+    "asset": "snowman_parts",
+    "rect": [
+      1100,
+      553,
+      77,
+      69
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "coal_4": {
+    "asset": "snowman_parts",
+    "rect": [
+      1271,
+      552,
+      76,
+      68
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "garland_1": {
+    "asset": "garlands_sheet",
+    "rect": [
+      69,
+      12,
+      951,
+      193
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "garland_2": {
+    "asset": "garlands_sheet",
+    "rect": [
+      83,
+      205,
+      928,
+      145
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "garland_3": {
+    "asset": "garlands_sheet",
+    "rect": [
+      62,
+      350,
+      946,
+      170
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "bow_1": {
+    "asset": "garlands_sheet",
+    "rect": [
+      1072,
+      65,
+      182,
+      178
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "bow_2": {
+    "asset": "garlands_sheet",
+    "rect": [
+      1294,
+      67,
+      190,
+      177
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "star_1": {
+    "asset": "garlands_sheet",
+    "rect": [
+      1060,
+      270,
+      186,
+      240
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "star_2": {
+    "asset": "garlands_sheet",
+    "rect": [
+      1300,
+      270,
+      139,
+      203
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "child_front_head": {
+    "asset": "child_parts",
+    "rect": [
+      12,
+      150,
+      206,
+      248
+    ],
+    "pivot": [
+      0.5,
+      0.5
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "child_front_hat": {
+    "asset": "child_parts",
+    "rect": [
+      215,
+      101,
+      202,
+      211
+    ],
+    "pivot": [
+      0.5,
+      0.5
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "child_front_scarf": {
+    "asset": "child_parts",
+    "rect": [
+      420,
+      147,
+      188,
+      283
+    ],
+    "pivot": [
+      0.5,
+      0.5
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "child_front_torso": {
+    "asset": "child_parts",
+    "rect": [
+      21,
+      432,
+      234,
+      360
+    ],
+    "pivot": [
+      0.5,
+      0.5
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "child_front_upper_arm": {
+    "asset": "child_parts",
+    "rect": [
+      255,
+      506,
+      99,
+      236
+    ],
+    "pivot": [
+      0.5,
+      0.12
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "child_front_forearm": {
+    "asset": "child_parts",
+    "rect": [
+      372,
+      513,
+      94,
+      230
+    ],
+    "pivot": [
+      0.5,
+      0.12
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "child_front_mitten": {
+    "asset": "child_parts",
+    "rect": [
+      490,
+      536,
+      129,
+      178
+    ],
+    "pivot": [
+      0.5,
+      0.5
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "child_front_thigh": {
+    "asset": "child_parts",
+    "rect": [
+      29,
+      845,
+      130,
+      288
+    ],
+    "pivot": [
+      0.5,
+      0.12
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "child_front_shin": {
+    "asset": "child_parts",
+    "rect": [
+      177,
+      853,
+      105,
+      280
+    ],
+    "pivot": [
+      0.5,
+      0.12
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "child_front_boot": {
+    "asset": "child_parts",
+    "rect": [
+      296,
+      937,
+      194,
+      196
+    ],
+    "pivot": [
+      0.5,
+      0.5
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "child_front_spare_mitten": {
+    "asset": "child_parts",
+    "rect": [
+      485,
+      889,
+      123,
+      222
+    ],
+    "pivot": [
+      0.5,
+      0.5
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "child_back_head": {
+    "asset": "child_parts",
+    "rect": [
+      642,
+      129,
+      205,
+      266
+    ],
+    "pivot": [
+      0.5,
+      0.5
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "child_back_hat": {
+    "asset": "child_parts",
+    "rect": [
+      842,
+      101,
+      200,
+      219
+    ],
+    "pivot": [
+      0.5,
+      0.5
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "child_back_scarf": {
+    "asset": "child_parts",
+    "rect": [
+      1047,
+      146,
+      192,
+      281
+    ],
+    "pivot": [
+      0.5,
+      0.5
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "child_back_torso": {
+    "asset": "child_parts",
+    "rect": [
+      637,
+      431,
+      245,
+      365
+    ],
+    "pivot": [
+      0.5,
+      0.5
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "child_back_upper_arm": {
+    "asset": "child_parts",
+    "rect": [
+      882,
+      507,
+      96,
+      235
+    ],
+    "pivot": [
+      0.5,
+      0.12
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "child_back_forearm": {
+    "asset": "child_parts",
+    "rect": [
+      999,
+      514,
+      120,
+      230
+    ],
+    "pivot": [
+      0.5,
+      0.12
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "child_back_mitten": {
+    "asset": "child_parts",
+    "rect": [
+      1117,
+      536,
+      118,
+      179
+    ],
+    "pivot": [
+      0.5,
+      0.5
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "child_back_thigh": {
+    "asset": "child_parts",
+    "rect": [
+      659,
+      845,
+      129,
+      287
+    ],
+    "pivot": [
+      0.5,
+      0.12
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "child_back_shin": {
+    "asset": "child_parts",
+    "rect": [
+      807,
+      854,
+      103,
+      278
+    ],
+    "pivot": [
+      0.5,
+      0.12
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "child_back_boot": {
+    "asset": "child_parts",
+    "rect": [
+      923,
+      939,
+      194,
+      194
+    ],
+    "pivot": [
+      0.5,
+      0.5
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "child_back_spare_mitten": {
+    "asset": "child_parts",
+    "rect": [
+      1112,
+      892,
+      107,
+      172
+    ],
+    "pivot": [
+      0.5,
+      0.5
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "closed_door": {
+    "asset": "architecture_patches",
+    "rect": [
+      141,
+      20,
+      302,
+      402
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "door_leaf": {
+    "asset": "architecture_patches",
+    "rect": [
+      542,
+      20,
+      171,
+      402
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "door_interior": {
+    "asset": "architecture_patches",
+    "rect": [
+      820,
+      29,
+      251,
+      392
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "door_neutral": {
+    "asset": "architecture_patches",
+    "rect": [
+      1165,
+      30,
+      247,
+      390
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "window_1_lit": {
+    "asset": "architecture_patches",
+    "rect": [
+      61,
+      458,
+      171,
+      248
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "window_1_dark": {
+    "asset": "architecture_patches",
+    "rect": [
+      60,
+      731,
+      173,
+      258
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "window_2_lit": {
+    "asset": "architecture_patches",
+    "rect": [
+      309,
+      458,
+      172,
+      248
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "window_2_dark": {
+    "asset": "architecture_patches",
+    "rect": [
+      308,
+      731,
+      173,
+      258
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "window_3_lit": {
+    "asset": "architecture_patches",
+    "rect": [
+      558,
+      458,
+      170,
+      248
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "window_3_dark": {
+    "asset": "architecture_patches",
+    "rect": [
+      558,
+      731,
+      171,
+      259
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "window_4_lit": {
+    "asset": "architecture_patches",
+    "rect": [
+      806,
+      458,
+      172,
+      248
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "window_4_dark": {
+    "asset": "architecture_patches",
+    "rect": [
+      806,
+      731,
+      172,
+      259
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "window_5_lit": {
+    "asset": "architecture_patches",
+    "rect": [
+      1056,
+      458,
+      172,
+      249
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "window_5_dark": {
+    "asset": "architecture_patches",
+    "rect": [
+      1054,
+      731,
+      174,
+      259
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "window_6_lit": {
+    "asset": "architecture_patches",
+    "rect": [
+      1302,
+      457,
+      173,
+      249
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  },
+  "window_6_dark": {
+    "asset": "architecture_patches",
+    "rect": [
+      1303,
+      730,
+      173,
+      259
+    ],
+    "pivot": [
+      0.5,
+      1
+    ],
+    "pivotStatus": "initial_estimate_review_in_rig"
+  }
+}

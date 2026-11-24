@@ -275,6 +275,14 @@ function drawFootprints(ctx: Ctx, project: ProjectFile, sim: Simulation, time: n
  * Prodavač ve stánku: postava za pultem (ve stavu klidu), vidět jen v okně stánku nad pultem.
  * Když zákazník objednává, mluví s ním a natočí se k němu; při předání podává zboží.
  */
+/** Měřítko prodavače: podíl výšky stánku (koncept) vůči výšce postavy v dané hloubce scény. */
+function sellerBaseScale(project: ProjectFile, o: SceneObject, sl: NonNullable<SceneObject['seller']>, y: number): number {
+  if (!sl.heightOfStall) return 1;
+  const a = project.assets.find((x) => x.id === o.assetId);
+  const H = (a?.height ?? 100) * (a?.pixelScale ?? 1) * o.scale;
+  return (sl.heightOfStall * H) / 130 / Math.max(0.05, depthScaleAt(project.scene.depth, y));
+}
+
 function drawSeller(ctx: Ctx, project: ProjectFile, sim: Simulation, o: SceneObject, images: AssetImages) {
   const sl = o.seller!;
   const m = sim.manifests[sl.assetId];
@@ -308,7 +316,7 @@ function drawSeller(ctx: Ctx, project: ProjectFile, sim: Simulation, o: SceneObj
     anim.action = { requested: 'receive', clip: 'receive', time: Math.min(1.1, t - cust.activity.phaseStart), duration: 1.1, loop: 'once', events: [], finished: false };
   }
   const agent = { id: 'seller:' + o.id, name: sl.name ?? 'Prodavač', pos, facing: dir === 'SE' ? 0.6 : Math.PI - 0.6, anim, holding: null } as unknown as AgentState;
-  const cv = characterVisual(agent, m, { baseScale: 1, appearance: sl.appearance }, project.scene);
+  const cv = characterVisual(agent, m, { baseScale: sellerBaseScale(project, o, sl, pos.y), appearance: sl.appearance }, project.scene);
   if (!cv.rig || !m.rigLibrary) return;
   const a0 = objectLocalToScene(o, { x: sl.window.x0, y: sl.window.y0 }), a1 = objectLocalToScene(o, { x: sl.window.x1, y: sl.window.y1 });
   const win = { x: Math.min(a0.x, a1.x), y: a0.y, w: Math.abs(a1.x - a0.x), h: a1.y - a0.y };

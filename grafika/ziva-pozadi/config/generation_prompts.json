@@ -1,0 +1,117 @@
+[
+  {
+    "name": "background_clean",
+    "transparent": false,
+    "prompt": "Match reference 1 (approved ground-level Christmas market, NOT elevated camera) in soft detailed painterly style, blue-lilac winter ambient light and localized warm amber highlights, traditional green garlands red bows natural wood. Reference 2 is exact character style. Assets for 2D cutout animated scene. No text labels watermarks, no people unless specifically requested, generous transparent separation and margins, no ground or cast shadows. True alpha transparency. Edit reference 1 into a clean 16:9 background plate at exactly the same camera and framing. Keep town hall architecture, entire tower, sky, side houses and pavement perspective. REMOVE ALL people, animals, six market stalls, all four large freestanding lamps, tree, nativity, mailbox, benches, tables, potted firs, snowman, sled, foreground props and falling snow particles. Reconstruct underlying buildings and snow naturally. Keep central cobblestone path. No added objects. This is background only, no transparent background."
+  },
+  {
+    "name": "child_parts",
+    "transparent": true,
+    "prompt": "Match reference 1 (approved ground-level Christmas market, NOT elevated camera) in soft detailed painterly style, blue-lilac winter ambient light and localized warm amber highlights, traditional green garlands red bows natural wood. Reference 2 is exact character style. Assets for 2D cutout animated scene. No text labels watermarks, no people unless specifically requested, generous transparent separation and margins, no ground or cast shadows. True alpha transparency. Create child 7 years old, height 1.2m, slightly larger head proportions, neutral cream winter clothes for later tinting. Two clearly separate halves front three-quarter facing right and back three-quarter facing right. Each half contains eleven separately floating body parts: head hair, pompom hat, scarf, short coat torso WITHOUT limbs, upper arm, forearm, mitten, thigh, shin, boot, spare mitten. Rounded overlapping joint ends, straight neutral parts. No assembled figures. Large 2048 square sheet."
+  },
+  {
+    "name": "stall_drinks",
+    "transparent": true,
+    "prompt": "Match reference 1 (approved ground-level Christmas market, NOT elevated camera) in soft detailed painterly style, blue-lilac winter ambient light and localized warm amber highlights, traditional green garlands red bows natural wood. Reference 2 is exact character style. Assets for 2D cutout animated scene. No text labels watermarks, no people unless specifically requested, generous transparent separation and margins, no ground or cast shadows. True alpha transparency. ONE isolated hot drink stall master, square canvas. Almost frontal with subtle visible left side, matching left foreground booth reference. Snowy roof, green garlands, amber bulbs, red bow. Width 3.2m height 2.65m depth 1.8m counter 1.05m. Brass samovar at left, cups and cocoa tins at right rear. Central vendor space empty, full height dark interior behind counter. No vendor. Complete booth all edges within canvas."
+  },
+  {
+    "name": "stall_food",
+    "transparent": true,
+    "prompt": "Match reference 1 (approved ground-level Christmas market, NOT elevated camera) in soft detailed painterly style, blue-lilac winter ambient light and localized warm amber highlights, traditional green garlands red bows natural wood. Reference 2 is exact character style. Assets for 2D cutout animated scene. No text labels watermarks, no people unless specifically requested, generous transparent separation and margins, no ground or cast shadows. True alpha transparency. ONE isolated food Christmas booth square master, left row orientation nearly frontal slightly visible left side. Same 3.2m roof width 2.65m height design as drinks, snowy roof green garlands red bow amber bulbs. Baked breads and pastries in baskets to sides, cooking pot at rear left, central vendor position empty. No people."
+  },
+  {
+    "name": "stall_gingerbread",
+    "transparent": true,
+    "prompt": "Match reference 1 (approved ground-level Christmas market, NOT elevated camera) in soft detailed painterly style, blue-lilac winter ambient light and localized warm amber highlights, traditional green garlands red bows natural wood. Reference 2 is exact character style. Assets for 2D cutout animated scene. No text labels watermarks, no people unless specifically requested, generous transparent separation and margins, no ground or cast shadows. True alpha transparency. ONE isolated gingerbread and sweets Christmas booth square master, left row orientation nearly frontal slightly visible left side. Snowy roof green garlands red bow amber bulbs natural wood. Hanging heart and star gingerbread, trays of sweets to sides; center empty vendor space. Same 3.2m wide 2.65m tall architecture. No text no people."
+  },
+  {
+    "name": "stall_ornaments",
+    "transparent": true,
+    "prompt": "Match reference 1 (approved ground-level Christmas market, NOT elevated camera) in soft detailed painterly style, blue-lilac winter ambient light and localized warm amber highlights, traditional green garlands red bows natural wood. Reference 2 is exact character style. Assets for 2D cutout animated scene. No text labels watermarks, no people unless specifically requested, generous transparent separation and margins, no ground or cast shadows. True alpha transparency. ONE isolated Christmas ornaments crafts booth square master, right row nearly frontal subtly visible right side. Snowy roof green garlands red bow amber bulbs natural wood. Hanging glass gold and red baubles, wooden stars and small carved decorations on side shelves, central empty vendor space. 3.2m roof width 2.65m height. No people."
+  },
+  {
+    "name": "stall_candles",
+    "transparent": true,
+    "prompt": "Match reference 1 (approved ground-level Christmas market, NOT elevated camera) in soft detailed painterly style, blue-lilac winter ambient light and localized warm amber highlights, traditional green garlands red bows natural wood. Reference 2 is exact character style. Assets for 2D cutout animated scene. No text labels watermarks, no people unless specifically requested, generous transparent separation and margins, no ground or cast shadows. True alpha transparency. ONE isolated candle and gifts Christmas booth square master, right row nearly frontal subtly visible right side. Snowy roof green garlands red bow amber bulbs natural wood. Cream beeswax candles, lanterns and small wrapped gifts on shelves and side counter, central empty vendor space. 3.2m roof width 2.65m height. No people."
+  },
+  {
+    "name": "stall_toys",
+    "transparent": true,
+    "prompt": "Match reference 1 (approved ground-level Christmas market, NOT elevated camera) in soft detailed painterly style, blue-lilac winter ambient light and localized warm amber highlights, traditional green garlands red bows natural wood. Reference 2 is exact character style. Assets for 2D cutout animated scene. No text labels watermarks, no people unless specifically requested, generous transparent separation and margins, no ground or cast shadows. True alpha transparency. ONE isolated toys and knitted goods Christmas booth square master, right row nearly frontal subtly visible right side. Snowy roof green garlands red bow amber bulbs natural wood. Small wooden toys, teddy bears, scarves and mittens on side shelves, central empty vendor space. 3.2m roof width 2.65m height. No people."
+  },
+  {
+    "name": "tree",
+    "transparent": true,
+    "prompt": "Match reference 1 (approved ground-level Christmas market, NOT elevated camera) in soft detailed painterly style, blue-lilac winter ambient light and localized warm amber highlights, traditional green garlands red bows natural wood. Reference 2 is exact character style. Assets for 2D cutout animated scene. No text labels watermarks, no people unless specifically requested, generous transparent separation and margins, no ground or cast shadows. True alpha transparency. One complete Christmas fir tree matching approved scene: star on top, hundreds of warm tiny lights, traditional gold and muted red ornaments, natural green branches with blue-lilac snow. Whole tree including short trunk at base, no nativity no mailbox no ground no glow outside silhouette. Tall portrait canvas."
+  },
+  {
+    "name": "furniture_sheet",
+    "transparent": true,
+    "prompt": "Match reference 1 (approved ground-level Christmas market, NOT elevated camera) in soft detailed painterly style, blue-lilac winter ambient light and localized warm amber highlights, traditional green garlands red bows natural wood. Reference 2 is exact character style. Assets for 2D cutout animated scene. No text labels watermarks, no people unless specifically requested, generous transparent separation and margins, no ground or cast shadows. True alpha transparency. Production atlas, six isolated separated props in 3 columns 2 rows: ornate dark iron three-arm historical street lamp with snow and garland red bow and lit amber lanterns (entire base included); snowy wood-and-iron bench three quarter facing right; high round wooden drinks table with two ceramic cups; red Christmas letterbox no letters no text; small snow-covered fir in wicker planter; small wooden roofed nativity with painted figurines. Match ground-level reference perspective, no shadows or ground. Large sheet, no overlapping assets."
+  },
+  {
+    "name": "crouch_parts",
+    "transparent": true,
+    "prompt": "Match reference 1 (approved ground-level Christmas market, NOT elevated camera) in soft detailed painterly style, blue-lilac winter ambient light and localized warm amber highlights, traditional green garlands red bows natural wood. Reference 2 is exact character style. Assets for 2D cutout animated scene. No text labels watermarks, no people unless specifically requested, generous transparent separation and margins, no ground or cast shadows. True alpha transparency. Production sheet additional rig parts, four separated groups: adult front three-quarter, adult back three-quarter, child front three-quarter, child back three-quarter, all facing right. Adult same cream coat as character reference, child same cream short coat. Each group has separate torso bent forward 15 degrees with bunched short hem, separate thigh, separate shin, separate boot for 100-degree bent knee pose. DO NOT assemble legs: each segment detached with round covered joint ends. No heads no full bodies. Large transparent sheet."
+  },
+  {
+    "name": "dog_parts",
+    "transparent": true,
+    "prompt": "Match reference 1 (approved ground-level Christmas market, NOT elevated camera) in soft detailed painterly style, blue-lilac winter ambient light and localized warm amber highlights, traditional green garlands red bows natural wood. Reference 2 is exact character style. Assets for 2D cutout animated scene. No text labels watermarks, no people unless specifically requested, generous transparent separation and margins, no ground or cast shadows. True alpha transparency. Production rig atlas friendly medium beagle-like mixed dog brown cream dark patches. Two halves front three-quarter facing right and rear three-quarter facing right. In EACH half separate torso without legs, head with collar ring, two separate ears, tail, front upper leg, front lower leg with paw, hind upper leg, hind lower leg with paw. Plus extra lowered sniffing head, seated torso and folded hind-leg pieces along bottom. Clear spaces rounded joint overlap ends, no complete standing dog, no clothing."
+  },
+  {
+    "name": "cat_parts",
+    "transparent": true,
+    "prompt": "Match reference 1 (approved ground-level Christmas market, NOT elevated camera) in soft detailed painterly style, blue-lilac winter ambient light and localized warm amber highlights, traditional green garlands red bows natural wood. Reference 2 is exact character style. Assets for 2D cutout animated scene. No text labels watermarks, no people unless specifically requested, generous transparent separation and margins, no ground or cast shadows. True alpha transparency. Production rig atlas slender grey brown tabby cat no collar. Two halves front three-quarter right and back three-quarter right. EACH half separate torso without legs, head, two ears, tail as three separated segments, fore upper leg, fore lower leg paw, hind upper leg, hind lower leg paw. Extra seated torso, folded hind leg and crouched-before-jump torso along bottom. Detached rounded joint pieces, no assembled cats."
+  },
+  {
+    "name": "sled_child_parts",
+    "transparent": true,
+    "prompt": "Match reference 1 (approved ground-level Christmas market, NOT elevated camera) in soft detailed painterly style, blue-lilac winter ambient light and localized warm amber highlights, traditional green garlands red bows natural wood. Reference 2 is exact character style. Assets for 2D cutout animated scene. No text labels watermarks, no people unless specifically requested, generous transparent separation and margins, no ground or cast shadows. True alpha transparency. Production sheet for wooden sled facing right three-quarter front: SEPARATE floating runners frame, wooden seat, front rope attachment, curved rope. Separately child 7 years cream coat matching child sheet sitting pose: head, pompom hat, scarf, upright short coat torso, horizontal thigh, downward angled shin, boot, upper arm forearm mitten. All parts detached rounded overlap joints. No assembled child or sled. No ground shadows."
+  },
+  {
+    "name": "small_props",
+    "transparent": true,
+    "prompt": "Match reference 1 (approved ground-level Christmas market, NOT elevated camera) in soft detailed painterly style, blue-lilac winter ambient light and localized warm amber highlights, traditional green garlands red bows natural wood. Reference 2 is exact character style. Assets for 2D cutout animated scene. No text labels watermarks, no people unless specifically requested, generous transparent separation and margins, no ground or cast shadows. True alpha transparency. Small props production atlas evenly spaced: upright smartphone front dark faint screen; same smartphone back grey camera; knitted cream mitten lying seen slightly above; same mitten hanging as held by fingers; folded cream kitchen cloth; crumpled cloth for holding; ceramic red mug front; ceramic cream mug side. No hands no text logos shadows, transparent."
+  },
+  {
+    "name": "snow_tools",
+    "transparent": true,
+    "prompt": "Match reference 1 (approved ground-level Christmas market, NOT elevated camera) in soft detailed painterly style, blue-lilac winter ambient light and localized warm amber highlights, traditional green garlands red bows natural wood. Reference 2 is exact character style. Assets for 2D cutout animated scene. No text labels watermarks, no people unless specifically requested, generous transparent separation and margins, no ground or cast shadows. True alpha transparency. Three-row separated asset sheet: row1 long wooden handle dark metal snow shovel angled for two-hand hold, separate snow lump for blade; row2 horizontal patch of cleared cobblestone 3m wide 1m deep in very flat ground-level perspective camera 2.6m about30m away, soft snowy irregular edges; row3 low shovelled snow heap 0.5m high same perspective. Separate objects no shadows outside objects."
+  },
+  {
+    "name": "snowman_parts",
+    "transparent": true,
+    "prompt": "Match reference 1 (approved ground-level Christmas market, NOT elevated camera) in soft detailed painterly style, blue-lilac winter ambient light and localized warm amber highlights, traditional green garlands red bows natural wood. Reference 2 is exact character style. Assets for 2D cutout animated scene. No text labels watermarks, no people unless specifically requested, generous transparent separation and margins, no ground or cast shadows. True alpha transparency. Snowman production sheet: three separate painterly blue-lilac white snowballs large medium small, carrot nose, five separate coal eyes/buttons, short red knitted scarf, two twig arms, one loose snowball. Generous spaces no assembled snowman."
+  },
+  {
+    "name": "steam_sheet",
+    "transparent": true,
+    "prompt": "Match reference 1 (approved ground-level Christmas market, NOT elevated camera) in soft detailed painterly style, blue-lilac winter ambient light and localized warm amber highlights, traditional green garlands red bows natural wood. Reference 2 is exact character style. Assets for 2D cutout animated scene. No text labels watermarks, no people unless specifically requested, generous transparent separation and margins, no ground or cast shadows. True alpha transparency. Six separate soft translucent painterly steam/smoke puff sprites arranged 3 columns 2 rows, irregular white pale grey, different gently curling shapes, low opacity edges, true alpha, no background no other objects."
+  },
+  {
+    "name": "garlands_sheet",
+    "transparent": true,
+    "prompt": "Match reference 1 (approved ground-level Christmas market, NOT elevated camera) in soft detailed painterly style, blue-lilac winter ambient light and localized warm amber highlights, traditional green garlands red bows natural wood. Reference 2 is exact character style. Assets for 2D cutout animated scene. No text labels watermarks, no people unless specifically requested, generous transparent separation and margins, no ground or cast shadows. True alpha transparency. Christmas decoration production sheet: three separate evergreen hanging garlands gently drooping, each with red bow and warm gold small bulbs; two separate red ribbon bows; two hanging gold stars. All separate on transparent, no backdrop no shadow no posts. Soft painterly detailed matching booths."
+  },
+  {
+    "name": "animal_walk_supplement",
+    "transparent": true,
+    "prompt": "Match reference 1 (approved ground-level Christmas market, NOT elevated camera) in soft detailed painterly style, blue-lilac winter ambient light and localized warm amber highlights, traditional green garlands red bows natural wood. Reference 2 is exact character style. Assets for 2D cutout animated scene. No text labels watermarks, no people unless specifically requested, generous transparent separation and margins, no ground or cast shadows. True alpha transparency. Supplemental flat 2D puppet rig atlas. Top half BEAGLE-like dog: two elongated HORIZONTAL torso pieces for WALKING on four legs, one front three-quarter facing right and one back three-quarter facing right, NO head legs or tail attached. Two separated front upper legs, two front lower legs with paws, two hind thighs, two hind lower legs paws. Bottom half grey brown TABBY CAT: two slender elongated HORIZONTAL walking torsos front and rear three-quarter facing right, four separated upper leg segments and four separated lower segments paws, two separate triangular ears, three separate tail segments. Generous clear gaps every component, natural animal body anatomy NOT upright seated humanlike torsos, rounded overlap ends."
+  },
+  {
+    "name": "adult_back_parts",
+    "transparent": true,
+    "prompt": "Match reference 1 (approved ground-level Christmas market, NOT elevated camera) in soft detailed painterly style, blue-lilac winter ambient light and localized warm amber highlights, traditional green garlands red bows natural wood. Reference 2 is exact character style. Assets for 2D cutout animated scene. No text labels watermarks, no people unless specifically requested, generous transparent separation and margins, no ground or cast shadows. True alpha transparency. Adult back three-quarter facing right rig production sheet matching exact supplied adult cream clothes reference. Every part separated: back of brown-haired head, pompom hat, scarf, back of long cream winter coat torso, upper arm, forearm, mitten, thigh, shin, boot. Rounded covered joint ends for rotation, no full figure, no text."
+  },
+  {
+    "name": "architecture_patches",
+    "transparent": true,
+    "prompt": "Match reference 1 (approved ground-level Christmas market, NOT elevated camera) in soft detailed painterly style, blue-lilac winter ambient light and localized warm amber highlights, traditional green garlands red bows natural wood. Reference 2 is exact character style. Assets for 2D cutout animated scene. No text labels watermarks, no people unless specifically requested, generous transparent separation and margins, no ground or cast shadows. True alpha transparency. Production atlas of Liberec town hall door/window REPLACEMENT PATCHES matching reference town hall, not a full scene. Top row four clearly separated pieces: main carved brown wooden double door closed straight frontal no stone surrounding; single door leaf isolated; dark open doorway interior with subtle warm golden light; neutral dark doorway backing. Lower area six narrow arched windows each shown as pair: warm lit glass and identical dark unlit glass, simple dark mullions, NO surrounding stone facade. 12 window patches total arranged 6 columns 2 rows under doors. Generous spacing transparent no text. These are small replaceable animation patches, intricate warm painterly architectural details."
+  },
+  {
+    "name": "lamp_tall",
+    "transparent": true,
+    "prompt": "One isolated full-height tall elegant historical cast iron street lamp for the approved painted Liberec Christmas market, true transparent background. Overall physical height 4.5m, overall width across three ornate curving arms and lanterns 1.25m. Crucial tall slender lamppost: long slim shaft from bottom to 70% of total height; branching ornate arms and three warm amber lanterns only in top 30%. Small base, no giant pedestal. Snow on lantern caps, modest green garland and red ribbon wrapped around shaft halfway up. Same painterly blue-lilac ambient lighting as approved reference, finely detailed dark bronze cast iron. Entire object within portrait canvas with generous transparent margins. No background, no glow haze outside the lamp, no ground, no people, no shadows, no text. Ground-level viewpoint matching approved reference."
+  }
+]

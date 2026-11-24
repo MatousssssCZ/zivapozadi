@@ -76,6 +76,8 @@ export interface StallSeller {
   offset: Vec2;
   /** Okno stánku, ve kterém je prodavač vidět (vůči kotvě, logické jednotky při měřítku 1); spodní hrana = horní hrana pultu. */
   window: { x0: number; y0: number; x1: number; y1: number };
+  /** Výška prodavače jako podíl výšky obrázku stánku (např. 0,62); chybí = podle hloubky scény. */
+  heightOfStall?: number;
 }
 
 /** Světelný zdroj objektu (lucerna): poloha v obrázku (0..1), výška nad zemí a účinky. */

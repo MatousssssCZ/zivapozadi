@@ -1,0 +1,4880 @@
+{
+  "format": "zimni-scena-projekt",
+  "formatVersion": 1,
+  "meta": {
+    "name": "Liberec – živý vánoční trh",
+    "createdAt": "2026-11-24T17:40:50.135Z",
+    "modifiedAt": "2026-11-24T17:40:50.214Z",
+    "appVersion": "0.1.0"
+  },
+  "seed": 2611,
+  "scene": {
+    "width": 1920,
+    "height": 1080,
+    "backgroundAssetId": "asset_image_background-clean_d99d31bd",
+    "backgroundColor": "#dfe8f2",
+    "depth": {
+      "enabled": true,
+      "yFar": 640,
+      "scaleFar": 0.365,
+      "yNear": 1080,
+      "scaleNear": 2.414
+    },
+    "snowfall": {
+      "enabled": true,
+      "density": 0.55,
+      "wind": 0.15
+    },
+    "environment": {
+      "variableSnow": true,
+      "gusts": true,
+      "cupSteam": true,
+      "stallSteam": true,
+      "sources": []
+    }
+  },
+  "assets": [
+    {
+      "id": "asset_image_background-clean_d99d31bd",
+      "kind": "image",
+      "name": "background",
+      "file": "assets/images/background-clean-d99d31bd.png",
+      "width": 1672,
+      "height": 941,
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "builtin_kos",
+      "kind": "image",
+      "name": "Koš (test)",
+      "file": "assets/images/kos.png",
+      "width": 108,
+      "height": 160,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.95
+      },
+      "pixelScale": 0.5,
+      "provisional": true,
+      "defaultFootprint": [
+        {
+          "x": -18,
+          "y": -8
+        },
+        {
+          "x": 18,
+          "y": -8
+        },
+        {
+          "x": 18,
+          "y": 5
+        },
+        {
+          "x": -18,
+          "y": 5
+        }
+      ],
+      "defaultInteraction": {
+        "kind": "bin",
+        "points": [
+          {
+            "id": "drop1",
+            "kind": "drop",
+            "offset": {
+              "x": -42,
+              "y": 6
+            },
+            "facing": 0,
+            "label": "Vhození zleva"
+          },
+          {
+            "id": "drop2",
+            "kind": "drop",
+            "offset": {
+              "x": 42,
+              "y": 6
+            },
+            "facing": 3.141592653589793,
+            "label": "Vhození zprava"
+          },
+          {
+            "id": "opening",
+            "kind": "counter",
+            "offset": {
+              "x": 0,
+              "y": -64
+            },
+            "label": "Otvor koše"
+          }
+        ]
+      },
+      "shape": {
+        "bodyU0": 0.185,
+        "bodyU1": 0.806,
+        "depthM": 0.45
+      }
+    },
+    {
+      "id": "builtin_kos_vika",
+      "kind": "image",
+      "name": "Koš s víkem (test)",
+      "file": "assets/images/kos-vika.png",
+      "width": 108,
+      "height": 160,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.95
+      },
+      "pixelScale": 0.5,
+      "provisional": true,
+      "defaultFootprint": [
+        {
+          "x": -18,
+          "y": -8
+        },
+        {
+          "x": 18,
+          "y": -8
+        },
+        {
+          "x": 18,
+          "y": 5
+        },
+        {
+          "x": -18,
+          "y": 5
+        }
+      ],
+      "lid": {
+        "x": 2,
+        "y": 7,
+        "w": 50,
+        "h": 7,
+        "color": "#474c5a",
+        "snow": true,
+        "hinge": "left",
+        "maxAngle": 1.75
+      },
+      "defaultInteraction": {
+        "kind": "bin",
+        "points": [
+          {
+            "id": "drop1",
+            "kind": "drop",
+            "offset": {
+              "x": 42,
+              "y": 6
+            },
+            "facing": 3.141592653589793,
+            "label": "Vhození (strana otvírání víka)"
+          },
+          {
+            "id": "opening",
+            "kind": "counter",
+            "offset": {
+              "x": 0,
+              "y": -60
+            },
+            "label": "Otvor koše"
+          }
+        ]
+      },
+      "shape": {
+        "bodyU0": 0.167,
+        "bodyU1": 0.824,
+        "depthM": 0.45
+      }
+    },
+    {
+      "id": "builtin_postava_cg",
+      "kind": "character",
+      "name": "Malovaná postava – díly z ChatGPT",
+      "file": "assets/characters/malovana-postava-cg.json",
+      "includeDir": "painted-parts-cg"
+    },
+    {
+      "id": "asset_image_tree_331ccb9a",
+      "kind": "image",
+      "name": "Vánoční strom",
+      "file": "assets/images/tree-331ccb9a.png",
+      "width": 1024,
+      "height": 1536,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.974
+      },
+      "pixelScale": 1,
+      "shape": {
+        "bodyU0": 0.43,
+        "bodyU1": 0.57,
+        "depthM": 2.4
+      }
+    },
+    {
+      "id": "asset_image_stall-gingerbread_ed2d9c10",
+      "kind": "image",
+      "name": "Stánek – perníčky",
+      "file": "assets/images/stall-gingerbread-ed2d9c10.png",
+      "width": 1380,
+      "height": 1140,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.955
+      },
+      "pixelScale": 1,
+      "shape": {
+        "bodyU0": 0.08,
+        "bodyU1": 0.92,
+        "depthM": 1.8,
+        "lights": []
+      }
+    },
+    {
+      "id": "asset_image_stall-food_9b9899b7",
+      "kind": "image",
+      "name": "Stánek – pečivo a jídlo",
+      "file": "assets/images/stall-food-9b9899b7.png",
+      "width": 1254,
+      "height": 1254,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.923
+      },
+      "pixelScale": 1,
+      "shape": {
+        "bodyU0": 0.08,
+        "bodyU1": 0.92,
+        "depthM": 1.8,
+        "lights": []
+      }
+    },
+    {
+      "id": "asset_image_stall-drinks_4faa9c6d",
+      "kind": "image",
+      "name": "Stánek – teplé nápoje",
+      "file": "assets/images/stall-drinks-4faa9c6d.png",
+      "width": 1254,
+      "height": 1254,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.967
+      },
+      "pixelScale": 1,
+      "shape": {
+        "bodyU0": 0.08,
+        "bodyU1": 0.92,
+        "depthM": 1.8,
+        "lights": []
+      }
+    },
+    {
+      "id": "asset_image_stall-toys_4941c03f",
+      "kind": "image",
+      "name": "Stánek – hračky",
+      "file": "assets/images/stall-toys-4941c03f.png",
+      "width": 1374,
+      "height": 1145,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.947
+      },
+      "pixelScale": 1,
+      "shape": {
+        "bodyU0": 0.08,
+        "bodyU1": 0.92,
+        "depthM": 1.8,
+        "lights": []
+      }
+    },
+    {
+      "id": "asset_image_stall-candles_3d9c5681",
+      "kind": "image",
+      "name": "Stánek – svíčky",
+      "file": "assets/images/stall-candles-3d9c5681.png",
+      "width": 1382,
+      "height": 1138,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.964
+      },
+      "pixelScale": 1,
+      "shape": {
+        "bodyU0": 0.08,
+        "bodyU1": 0.92,
+        "depthM": 1.8,
+        "lights": []
+      }
+    },
+    {
+      "id": "asset_image_stall-ornaments_58e0b276",
+      "kind": "image",
+      "name": "Stánek – ozdoby",
+      "file": "assets/images/stall-ornaments-58e0b276.png",
+      "width": 1254,
+      "height": 1254,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.939
+      },
+      "pixelScale": 1,
+      "shape": {
+        "bodyU0": 0.08,
+        "bodyU1": 0.92,
+        "depthM": 1.8,
+        "lights": []
+      }
+    },
+    {
+      "id": "asset_image_lamp-tall_e218bf06",
+      "kind": "image",
+      "name": "Lampa",
+      "file": "assets/images/lamp-tall-e218bf06.png",
+      "width": 724,
+      "height": 2172,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.986
+      },
+      "pixelScale": 1,
+      "shape": {
+        "bodyU0": 0.416,
+        "bodyU1": 0.587,
+        "depthM": 0.35,
+        "lights": [
+          {
+            "u": 0.242,
+            "v": 0.216,
+            "color": "#FFD6A0",
+            "heightM": 5.6,
+            "radiusM": 3,
+            "groundGain": 0.13,
+            "haloOpacity": 0.04,
+            "haloSigmaPx": 3.5,
+            "characterGain": 0.12,
+            "flicker": 0.015
+          },
+          {
+            "u": 0.499,
+            "v": 0.233,
+            "color": "#FFD6A0",
+            "heightM": 5.6,
+            "radiusM": 3,
+            "groundGain": 0.13,
+            "haloOpacity": 0.04,
+            "haloSigmaPx": 3.5,
+            "characterGain": 0.12,
+            "flicker": 0.015
+          },
+          {
+            "u": 0.756,
+            "v": 0.216,
+            "color": "#FFD6A0",
+            "heightM": 5.6,
+            "radiusM": 3,
+            "groundGain": 0.13,
+            "haloOpacity": 0.04,
+            "haloSigmaPx": 3.5,
+            "characterGain": 0.12,
+            "flicker": 0.015
+          }
+        ]
+      }
+    },
+    {
+      "id": "asset_image_nativity_4a91067f",
+      "kind": "image",
+      "name": "Betlém",
+      "file": "assets/images/nativity-4a91067f.png",
+      "width": 531,
+      "height": 402,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.985
+      },
+      "pixelScale": 1,
+      "shape": {
+        "bodyU0": 0.15,
+        "bodyU1": 0.85,
+        "depthM": 0.4
+      }
+    },
+    {
+      "id": "asset_image_mailbox_72c785e5",
+      "kind": "image",
+      "name": "Schránka Ježíškovi",
+      "file": "assets/images/mailbox-72c785e5.png",
+      "width": 229,
+      "height": 434,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.985
+      },
+      "pixelScale": 1,
+      "shape": {
+        "bodyU0": 0.15,
+        "bodyU1": 0.85,
+        "depthM": 0.4
+      }
+    },
+    {
+      "id": "asset_image_bench_2d36a449",
+      "kind": "image",
+      "name": "Lavička",
+      "file": "assets/images/bench-2d36a449.png",
+      "width": 457,
+      "height": 356,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.985
+      },
+      "pixelScale": 1,
+      "shape": {
+        "bodyU0": 0.15,
+        "bodyU1": 0.85,
+        "depthM": 0.6
+      }
+    },
+    {
+      "id": "asset_image_table_b48f2e96",
+      "kind": "image",
+      "name": "Stolek na nápoje",
+      "file": "assets/images/table-b48f2e96.png",
+      "width": 261,
+      "height": 475,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.985
+      },
+      "pixelScale": 1,
+      "shape": {
+        "bodyU0": 0.15,
+        "bodyU1": 0.85,
+        "depthM": 0.4
+      }
+    },
+    {
+      "id": "asset_image_fir_6ddab808",
+      "kind": "image",
+      "name": "Smrček",
+      "file": "assets/images/fir-6ddab808.png",
+      "width": 287,
+      "height": 453,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.985
+      },
+      "pixelScale": 1,
+      "shape": {
+        "bodyU0": 0.15,
+        "bodyU1": 0.85,
+        "depthM": 0.4
+      }
+    }
+  ],
+  "objects": [
+    {
+      "id": "obj_tree",
+      "name": "Vánoční strom",
+      "assetId": "asset_image_tree_331ccb9a",
+      "x": 1238,
+      "y": 667,
+      "scale": 0.3236,
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": false,
+          "saturation": 0.94,
+          "contrast": 0.97,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": false,
+          "gain": 1
+        }
+      },
+      "footprint": [
+        {
+          "x": -122.88,
+          "y": -46.08
+        },
+        {
+          "x": 122.88,
+          "y": -46.08
+        },
+        {
+          "x": 122.88,
+          "y": 7.68
+        },
+        {
+          "x": -122.88,
+          "y": 7.68
+        }
+      ],
+      "interaction": {
+        "kind": "viewpoint",
+        "points": [
+          {
+            "id": "view1",
+            "kind": "view",
+            "offset": {
+              "x": -355,
+              "y": 292
+            },
+            "facing": -1.2707963267948965,
+            "label": "Výhled 1"
+          },
+          {
+            "id": "view2",
+            "kind": "view",
+            "offset": {
+              "x": -177,
+              "y": 325
+            },
+            "facing": -1.7707963267948965,
+            "label": "Výhled 2"
+          }
+        ]
+      }
+    },
+    {
+      "id": "obj_stall_gingerbread",
+      "name": "Stánek – perníčky",
+      "assetId": "asset_image_stall-gingerbread_ed2d9c10",
+      "x": 595,
+      "y": 677,
+      "scale": 0.1706,
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": false,
+          "saturation": 0.94,
+          "contrast": 0.97,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": false,
+          "gain": 1
+        }
+      },
+      "footprint": [
+        {
+          "x": -607.2,
+          "y": -114
+        },
+        {
+          "x": 607.2,
+          "y": -114
+        },
+        {
+          "x": 607.2,
+          "y": -5.7
+        },
+        {
+          "x": -607.2,
+          "y": -5.7
+        }
+      ],
+      "interaction": {
+        "kind": "stand",
+        "points": [
+          {
+            "id": "service1",
+            "kind": "service",
+            "offset": {
+              "x": 828,
+              "y": -170
+            },
+            "facing": -2.0707963267948966,
+            "label": "Obsluha"
+          },
+          {
+            "id": "queue1",
+            "kind": "queue",
+            "offset": {
+              "x": 828,
+              "y": 52
+            },
+            "facing": -2.0707963267948966,
+            "label": "Fronta 1"
+          },
+          {
+            "id": "queue2",
+            "kind": "queue",
+            "offset": {
+              "x": 828,
+              "y": 242
+            },
+            "facing": -2.0707963267948966,
+            "label": "Fronta 2"
+          },
+          {
+            "id": "counter",
+            "kind": "counter",
+            "offset": {
+              "x": 497,
+              "y": -433
+            },
+            "label": "Pult"
+          }
+        ]
+      },
+      "seller": {
+        "assetId": "builtin_postava_cg",
+        "appearance": {
+          "generator": "parts",
+          "libraryId": "malovane-cg-v1",
+          "seed": 1721889013,
+          "bodyTemplate": "adult-cg",
+          "variants": {
+            "jacket": "jacket_coat_cg",
+            "hat": "hat_beanie_cg",
+            "scarf": "scarf_long_cg",
+            "trousers": "trousers_cg",
+            "boots": "boots_cg",
+            "gloves": "gloves_cg",
+            "head": "head_cg"
+          },
+          "colors": {
+            "jacket": "kremova",
+            "hat": "olivova",
+            "scarf": "vinova",
+            "gloves": "vinova",
+            "trousers": "olivova",
+            "boots": "tmave-seda"
+          },
+          "proportions": {
+            "height": 0.954,
+            "build": 1.04
+          },
+          "motion": {
+            "strideScale": 0.967,
+            "armSwing": 1.076,
+            "bob": 1.142,
+            "sway": 0.869,
+            "idleTempo": 1.127,
+            "lean": 2.261,
+            "speed": 1.174,
+            "phase": 0.523,
+            "armLag": 2.573,
+            "armLR": 1.088
+          },
+          "locks": []
+        },
+        "name": "Prodavač",
+        "heightOfStall": 0.425,
+        "offset": {
+          "x": 0,
+          "y": -17
+        },
+        "window": {
+          "x0": -138,
+          "y0": -541,
+          "x1": 138,
+          "y1": -313
+        }
+      }
+    },
+    {
+      "id": "obj_stall_food",
+      "name": "Stánek – pečivo a jídlo",
+      "assetId": "asset_image_stall-food_9b9899b7",
+      "x": 413,
+      "y": 754,
+      "scale": 0.2413,
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": false,
+          "saturation": 0.94,
+          "contrast": 0.97,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": false,
+          "gain": 1
+        }
+      },
+      "footprint": [
+        {
+          "x": -551.76,
+          "y": -125.4
+        },
+        {
+          "x": 551.76,
+          "y": -125.4
+        },
+        {
+          "x": 551.76,
+          "y": -6.2700000000000005
+        },
+        {
+          "x": -551.76,
+          "y": -6.2700000000000005
+        }
+      ],
+      "interaction": {
+        "kind": "stand",
+        "points": [
+          {
+            "id": "service1",
+            "kind": "service",
+            "offset": {
+              "x": 890,
+              "y": -59
+            },
+            "facing": -2.0707963267948966,
+            "label": "Obsluha"
+          },
+          {
+            "id": "queue1",
+            "kind": "queue",
+            "offset": {
+              "x": 890,
+              "y": 98
+            },
+            "facing": -2.0707963267948966,
+            "label": "Fronta 1"
+          },
+          {
+            "id": "queue2",
+            "kind": "queue",
+            "offset": {
+              "x": 890,
+              "y": 232
+            },
+            "facing": -2.0707963267948966,
+            "label": "Fronta 2"
+          },
+          {
+            "id": "counter",
+            "kind": "counter",
+            "offset": {
+              "x": 534,
+              "y": -477
+            },
+            "label": "Pult"
+          }
+        ]
+      },
+      "seller": {
+        "assetId": "builtin_postava_cg",
+        "appearance": {
+          "generator": "parts",
+          "libraryId": "malovane-cg-v1",
+          "seed": 106512160,
+          "bodyTemplate": "adult-cg",
+          "variants": {
+            "jacket": "jacket_coat_cg",
+            "hat": "hat_beanie_cg",
+            "scarf": "scarf_long_cg",
+            "trousers": "trousers_cg",
+            "boots": "boots_cg",
+            "gloves": "gloves_cg",
+            "head": "head_cg"
+          },
+          "colors": {
+            "jacket": "okrova",
+            "hat": "vinova",
+            "scarf": "olivova",
+            "gloves": "olivova",
+            "trousers": "olivova",
+            "boots": "tmave-seda"
+          },
+          "proportions": {
+            "height": 0.986,
+            "build": 0.981
+          },
+          "motion": {
+            "strideScale": 1.09,
+            "armSwing": 0.922,
+            "bob": 1.017,
+            "sway": 0.857,
+            "idleTempo": 0.985,
+            "lean": 1.812,
+            "speed": 0.872,
+            "phase": 0.719,
+            "armLag": 1.153,
+            "armLR": 0.897
+          },
+          "locks": []
+        },
+        "name": "Prodavač",
+        "heightOfStall": 0.475,
+        "offset": {
+          "x": -113,
+          "y": 21
+        },
+        "window": {
+          "x0": -188,
+          "y0": -618,
+          "x1": -38,
+          "y1": -430
+        }
+      }
+    },
+    {
+      "id": "obj_stall_drinks",
+      "name": "Stánek – teplé nápoje",
+      "assetId": "asset_image_stall-drinks_4faa9c6d",
+      "x": 163,
+      "y": 886,
+      "scale": 0.3705,
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": false,
+          "saturation": 0.94,
+          "contrast": 0.97,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": false,
+          "gain": 1
+        }
+      },
+      "footprint": [
+        {
+          "x": -551.76,
+          "y": -125.4
+        },
+        {
+          "x": 551.76,
+          "y": -125.4
+        },
+        {
+          "x": 551.76,
+          "y": -6.2700000000000005
+        },
+        {
+          "x": -551.76,
+          "y": -6.2700000000000005
+        }
+      ],
+      "interaction": {
+        "kind": "stand",
+        "points": [
+          {
+            "id": "service1",
+            "kind": "service",
+            "offset": {
+              "x": 853,
+              "y": -59
+            },
+            "facing": -2.0707963267948966,
+            "label": "Obsluha"
+          },
+          {
+            "id": "queue1",
+            "kind": "queue",
+            "offset": {
+              "x": 853,
+              "y": 43
+            },
+            "facing": -2.0707963267948966,
+            "label": "Fronta 1"
+          },
+          {
+            "id": "queue2",
+            "kind": "queue",
+            "offset": {
+              "x": 853,
+              "y": 130
+            },
+            "facing": -2.0707963267948966,
+            "label": "Fronta 2"
+          },
+          {
+            "id": "counter",
+            "kind": "counter",
+            "offset": {
+              "x": 512,
+              "y": -477
+            },
+            "label": "Pult"
+          }
+        ]
+      },
+      "seller": {
+        "assetId": "builtin_postava_cg",
+        "appearance": {
+          "generator": "parts",
+          "libraryId": "malovane-cg-v1",
+          "seed": 1360382029,
+          "bodyTemplate": "adult-cg",
+          "variants": {
+            "jacket": "jacket_coat_cg",
+            "hat": "hat_beanie_cg",
+            "scarf": "scarf_long_cg",
+            "trousers": "trousers_cg",
+            "boots": "boots_cg",
+            "gloves": "gloves_cg",
+            "head": "head_cg"
+          },
+          "colors": {
+            "jacket": "tmave-seda",
+            "hat": "vinova",
+            "scarf": "okrova",
+            "gloves": "vinova",
+            "trousers": "hneda",
+            "boots": "tmave-seda"
+          },
+          "proportions": {
+            "height": 0.999,
+            "build": 0.988
+          },
+          "motion": {
+            "strideScale": 0.943,
+            "armSwing": 0.979,
+            "bob": 0.878,
+            "sway": 1.174,
+            "idleTempo": 1.136,
+            "lean": 1.086,
+            "speed": 1.028,
+            "phase": 0.47,
+            "armLag": -1.648,
+            "armLR": 1.083
+          },
+          "locks": []
+        },
+        "name": "Prodavač",
+        "heightOfStall": 0.475,
+        "offset": {
+          "x": 6,
+          "y": -34
+        },
+        "window": {
+          "x0": -163,
+          "y0": -673,
+          "x1": 176,
+          "y1": -416
+        }
+      }
+    },
+    {
+      "id": "obj_stall_toys",
+      "name": "Stánek – hračky",
+      "assetId": "asset_image_stall-toys_4941c03f",
+      "x": 1421,
+      "y": 691,
+      "scale": 0.1793,
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": false,
+          "saturation": 0.94,
+          "contrast": 0.97,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": false,
+          "gain": 1
+        }
+      },
+      "footprint": [
+        {
+          "x": -604.5600000000001,
+          "y": -114.5
+        },
+        {
+          "x": 604.5600000000001,
+          "y": -114.5
+        },
+        {
+          "x": 604.5600000000001,
+          "y": -5.7250000000000005
+        },
+        {
+          "x": -604.5600000000001,
+          "y": -5.7250000000000005
+        }
+      ],
+      "interaction": {
+        "kind": "stand",
+        "points": [
+          {
+            "id": "service1",
+            "kind": "service",
+            "offset": {
+              "x": -788,
+              "y": -149
+            },
+            "facing": -1.0707963267948966,
+            "label": "Obsluha"
+          },
+          {
+            "id": "queue1",
+            "kind": "queue",
+            "offset": {
+              "x": -788,
+              "y": 61
+            },
+            "facing": -1.0707963267948966,
+            "label": "Fronta 1"
+          },
+          {
+            "id": "queue2",
+            "kind": "queue",
+            "offset": {
+              "x": -788,
+              "y": 242
+            },
+            "facing": -1.0707963267948966,
+            "label": "Fronta 2"
+          },
+          {
+            "id": "counter",
+            "kind": "counter",
+            "offset": {
+              "x": -473,
+              "y": -435
+            },
+            "label": "Pult"
+          }
+        ]
+      },
+      "seller": {
+        "assetId": "builtin_postava_cg",
+        "appearance": {
+          "generator": "parts",
+          "libraryId": "malovane-cg-v1",
+          "seed": 1074754881,
+          "bodyTemplate": "adult-cg",
+          "variants": {
+            "jacket": "jacket_coat_cg",
+            "hat": "hat_beanie_cg",
+            "scarf": "scarf_long_cg",
+            "trousers": "trousers_cg",
+            "boots": "boots_cg",
+            "gloves": "gloves_cg",
+            "head": "head_cg"
+          },
+          "colors": {
+            "jacket": "olivova",
+            "hat": "vinova",
+            "scarf": "tmave-seda",
+            "gloves": "tmave-seda",
+            "trousers": "olivova",
+            "boots": "tmave-seda"
+          },
+          "proportions": {
+            "height": 0.968,
+            "build": 0.965
+          },
+          "motion": {
+            "strideScale": 1.014,
+            "armSwing": 1.235,
+            "bob": 0.807,
+            "sway": 1.087,
+            "idleTempo": 1.118,
+            "lean": 1.832,
+            "speed": 1.113,
+            "phase": 0.872,
+            "armLag": -0.569,
+            "armLR": 0.907
+          },
+          "locks": []
+        },
+        "name": "Prodavač",
+        "heightOfStall": 0.495,
+        "offset": {
+          "x": -7,
+          "y": -8
+        },
+        "window": {
+          "x0": -151,
+          "y0": -615,
+          "x1": 137,
+          "y1": -306
+        }
+      }
+    },
+    {
+      "id": "obj_stall_candles",
+      "name": "Stánek – svíčky",
+      "assetId": "asset_image_stall-candles_3d9c5681",
+      "x": 1574,
+      "y": 777,
+      "scale": 0.2706,
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": false,
+          "saturation": 0.94,
+          "contrast": 0.97,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": false,
+          "gain": 1
+        }
+      },
+      "footprint": [
+        {
+          "x": -608.08,
+          "y": -113.80000000000001
+        },
+        {
+          "x": 608.08,
+          "y": -113.80000000000001
+        },
+        {
+          "x": 608.08,
+          "y": -5.69
+        },
+        {
+          "x": -608.08,
+          "y": -5.69
+        }
+      ],
+      "interaction": {
+        "kind": "stand",
+        "points": [
+          {
+            "id": "service1",
+            "kind": "service",
+            "offset": {
+              "x": -768,
+              "y": -98
+            },
+            "facing": -1.0707963267948966,
+            "label": "Obsluha"
+          },
+          {
+            "id": "queue1",
+            "kind": "queue",
+            "offset": {
+              "x": -768,
+              "y": 42
+            },
+            "facing": -1.0707963267948966,
+            "label": "Fronta 1"
+          },
+          {
+            "id": "queue2",
+            "kind": "queue",
+            "offset": {
+              "x": -768,
+              "y": 162
+            },
+            "facing": -1.0707963267948966,
+            "label": "Fronta 2"
+          },
+          {
+            "id": "counter",
+            "kind": "counter",
+            "offset": {
+              "x": -461,
+              "y": -432
+            },
+            "label": "Pult"
+          }
+        ]
+      },
+      "seller": {
+        "assetId": "builtin_postava_cg",
+        "appearance": {
+          "generator": "parts",
+          "libraryId": "malovane-cg-v1",
+          "seed": 1384460308,
+          "bodyTemplate": "adult-cg",
+          "variants": {
+            "jacket": "jacket_coat_cg",
+            "hat": "hat_beanie_cg",
+            "scarf": "scarf_long_cg",
+            "trousers": "trousers_cg",
+            "boots": "boots_cg",
+            "gloves": "gloves_cg",
+            "head": "head_cg"
+          },
+          "colors": {
+            "jacket": "vinova",
+            "hat": "tmave-seda",
+            "scarf": "kremova",
+            "gloves": "tmave-seda",
+            "trousers": "olivova",
+            "boots": "tmave-seda"
+          },
+          "proportions": {
+            "height": 0.951,
+            "build": 0.969
+          },
+          "motion": {
+            "strideScale": 0.947,
+            "armSwing": 0.793,
+            "bob": 1.063,
+            "sway": 0.948,
+            "idleTempo": 0.906,
+            "lean": 0.895,
+            "speed": 1.101,
+            "phase": 0.671,
+            "armLag": -0.722,
+            "armLR": 1.032
+          },
+          "locks": []
+        },
+        "name": "Prodavač",
+        "heightOfStall": 0.485,
+        "offset": {
+          "x": -21,
+          "y": -27
+        },
+        "window": {
+          "x0": -221,
+          "y0": -619,
+          "x1": 180,
+          "y1": -323
+        }
+      }
+    },
+    {
+      "id": "obj_stall_ornaments",
+      "name": "Stánek – ozdoby",
+      "assetId": "asset_image_stall-ornaments_58e0b276",
+      "x": 1776,
+      "y": 873,
+      "scale": 0.3705,
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": false,
+          "saturation": 0.94,
+          "contrast": 0.97,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": false,
+          "gain": 1
+        }
+      },
+      "footprint": [
+        {
+          "x": -551.76,
+          "y": -125.4
+        },
+        {
+          "x": 551.76,
+          "y": -125.4
+        },
+        {
+          "x": 551.76,
+          "y": -6.2700000000000005
+        },
+        {
+          "x": -551.76,
+          "y": -6.2700000000000005
+        }
+      ],
+      "interaction": {
+        "kind": "stand",
+        "points": [
+          {
+            "id": "service1",
+            "kind": "service",
+            "offset": {
+              "x": -852,
+              "y": -24
+            },
+            "facing": -1.0707963267948966,
+            "label": "Obsluha"
+          },
+          {
+            "id": "queue1",
+            "kind": "queue",
+            "offset": {
+              "x": -852,
+              "y": 78
+            },
+            "facing": -1.0707963267948966,
+            "label": "Fronta 1"
+          },
+          {
+            "id": "queue2",
+            "kind": "queue",
+            "offset": {
+              "x": -852,
+              "y": 165
+            },
+            "facing": -1.0707963267948966,
+            "label": "Fronta 2"
+          },
+          {
+            "id": "counter",
+            "kind": "counter",
+            "offset": {
+              "x": -511,
+              "y": -477
+            },
+            "label": "Pult"
+          }
+        ]
+      },
+      "seller": {
+        "assetId": "builtin_postava_cg",
+        "appearance": {
+          "generator": "parts",
+          "libraryId": "malovane-cg-v1",
+          "seed": 1115610779,
+          "bodyTemplate": "adult-cg",
+          "variants": {
+            "jacket": "jacket_coat_cg",
+            "hat": "hat_beanie_cg",
+            "scarf": "scarf_long_cg",
+            "trousers": "trousers_cg",
+            "boots": "boots_cg",
+            "gloves": "gloves_cg",
+            "head": "head_cg"
+          },
+          "colors": {
+            "jacket": "petrolejova",
+            "hat": "kremova",
+            "scarf": "hneda",
+            "gloves": "kremova",
+            "trousers": "hneda",
+            "boots": "tmave-seda"
+          },
+          "proportions": {
+            "height": 0.965,
+            "build": 0.961
+          },
+          "motion": {
+            "strideScale": 0.996,
+            "armSwing": 0.75,
+            "bob": 1.169,
+            "sway": 1.065,
+            "idleTempo": 0.979,
+            "lean": 0.664,
+            "speed": 1.008,
+            "phase": 0.511,
+            "armLag": -0.347,
+            "armLR": 1.147
+          },
+          "locks": []
+        },
+        "name": "Prodavač",
+        "heightOfStall": 0.445,
+        "offset": {
+          "x": -13,
+          "y": 1
+        },
+        "window": {
+          "x0": -201,
+          "y0": -601,
+          "x1": 176,
+          "y1": -337
+        }
+      }
+    },
+    {
+      "id": "obj_lamp_left_rear",
+      "name": "Lampa",
+      "assetId": "asset_image_lamp-tall_e218bf06",
+      "x": 547,
+      "y": 686,
+      "scale": 0.1741,
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": false,
+          "saturation": 0.94,
+          "contrast": 0.97,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": true,
+          "gain": 1
+        }
+      },
+      "footprint": [
+        {
+          "x": -72.4,
+          "y": -26.064
+        },
+        {
+          "x": 72.4,
+          "y": -26.064
+        },
+        {
+          "x": 72.4,
+          "y": 8.688
+        },
+        {
+          "x": -72.4,
+          "y": 8.688
+        }
+      ]
+    },
+    {
+      "id": "obj_lamp_right_rear",
+      "name": "Lampa",
+      "assetId": "asset_image_lamp-tall_e218bf06",
+      "x": 1440,
+      "y": 697,
+      "scale": 0.1741,
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": false,
+          "saturation": 0.94,
+          "contrast": 0.97,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": true,
+          "gain": 1
+        }
+      },
+      "footprint": [
+        {
+          "x": -72.4,
+          "y": -26.064
+        },
+        {
+          "x": 72.4,
+          "y": -26.064
+        },
+        {
+          "x": 72.4,
+          "y": 8.688
+        },
+        {
+          "x": -72.4,
+          "y": 8.688
+        }
+      ]
+    },
+    {
+      "id": "obj_lamp_left_front",
+      "name": "Lampa",
+      "assetId": "asset_image_lamp-tall_e218bf06",
+      "x": 127,
+      "y": 863,
+      "scale": 0.3831,
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": false,
+          "saturation": 0.94,
+          "contrast": 0.97,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": true,
+          "gain": 1
+        }
+      },
+      "footprint": [
+        {
+          "x": -72.4,
+          "y": -26.064
+        },
+        {
+          "x": 72.4,
+          "y": -26.064
+        },
+        {
+          "x": 72.4,
+          "y": 8.688
+        },
+        {
+          "x": -72.4,
+          "y": 8.688
+        }
+      ]
+    },
+    {
+      "id": "obj_lamp_right_front",
+      "name": "Lampa",
+      "assetId": "asset_image_lamp-tall_e218bf06",
+      "x": 1805,
+      "y": 863,
+      "scale": 0.3831,
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": false,
+          "saturation": 0.94,
+          "contrast": 0.97,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": true,
+          "gain": 1
+        }
+      },
+      "footprint": [
+        {
+          "x": -72.4,
+          "y": -26.064
+        },
+        {
+          "x": 72.4,
+          "y": -26.064
+        },
+        {
+          "x": 72.4,
+          "y": 8.688
+        },
+        {
+          "x": -72.4,
+          "y": 8.688
+        }
+      ]
+    },
+    {
+      "id": "obj_nativity",
+      "name": "Betlém",
+      "assetId": "asset_image_nativity_4a91067f",
+      "x": 1181,
+      "y": 690,
+      "scale": 0.2473,
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": false,
+          "saturation": 0.94,
+          "contrast": 0.97,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": false,
+          "gain": 1
+        }
+      },
+      "footprint": [
+        {
+          "x": -238.95000000000002,
+          "y": -60.3
+        },
+        {
+          "x": 238.95000000000002,
+          "y": -60.3
+        },
+        {
+          "x": 238.95000000000002,
+          "y": 4.0200000000000005
+        },
+        {
+          "x": -238.95000000000002,
+          "y": 4.0200000000000005
+        }
+      ]
+    },
+    {
+      "id": "obj_mailbox",
+      "name": "Schránka Ježíškovi",
+      "assetId": "asset_image_mailbox_72c785e5",
+      "x": 1306,
+      "y": 701,
+      "scale": 0.2116,
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": false,
+          "saturation": 0.94,
+          "contrast": 0.97,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": false,
+          "gain": 1
+        }
+      },
+      "footprint": [
+        {
+          "x": -68.7,
+          "y": -26.04
+        },
+        {
+          "x": 68.7,
+          "y": -26.04
+        },
+        {
+          "x": 68.7,
+          "y": 4.34
+        },
+        {
+          "x": -68.7,
+          "y": 4.34
+        }
+      ]
+    },
+    {
+      "id": "obj_bench_left",
+      "name": "Lavička",
+      "assetId": "asset_image_bench_2d36a449",
+      "x": 154,
+      "y": 1023,
+      "scale": 0.607,
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": false,
+          "saturation": 0.94,
+          "contrast": 0.97,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": false,
+          "gain": 1
+        }
+      },
+      "footprint": [
+        {
+          "x": -205.65,
+          "y": -89
+        },
+        {
+          "x": 205.65,
+          "y": -89
+        },
+        {
+          "x": 205.65,
+          "y": 7.12
+        },
+        {
+          "x": -205.65,
+          "y": 7.12
+        }
+      ]
+    },
+    {
+      "id": "obj_bench_right",
+      "name": "Lavička",
+      "assetId": "asset_image_bench_2d36a449",
+      "x": 1766,
+      "y": 1023,
+      "scale": 0.607,
+      "layer": "world",
+      "zBias": 0,
+      "flipX": true,
+      "visible": true,
+      "locked": false,
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": false,
+          "saturation": 0.94,
+          "contrast": 0.97,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": false,
+          "gain": 1
+        }
+      },
+      "footprint": [
+        {
+          "x": -205.65,
+          "y": -89
+        },
+        {
+          "x": 205.65,
+          "y": -89
+        },
+        {
+          "x": 205.65,
+          "y": 7.12
+        },
+        {
+          "x": -205.65,
+          "y": 7.12
+        }
+      ]
+    },
+    {
+      "id": "obj_table_left_1",
+      "name": "Stolek na nápoje",
+      "assetId": "asset_image_table_b48f2e96",
+      "x": 288,
+      "y": 915,
+      "scale": 0.364,
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": false,
+          "saturation": 0.94,
+          "contrast": 0.97,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": false,
+          "gain": 1
+        }
+      },
+      "footprint": [
+        {
+          "x": -65.25,
+          "y": -19
+        },
+        {
+          "x": 65.25,
+          "y": -19
+        },
+        {
+          "x": 65.25,
+          "y": 4.75
+        },
+        {
+          "x": -65.25,
+          "y": 4.75
+        }
+      ],
+      "interaction": {
+        "kind": "table",
+        "points": [
+          {
+            "id": "seat1",
+            "kind": "seat",
+            "offset": {
+              "x": 248,
+              "y": 2
+            },
+            "facing": 3.141592653589793,
+            "label": "Místo 1"
+          },
+          {
+            "id": "seat2",
+            "kind": "seat",
+            "offset": {
+              "x": 26,
+              "y": 76
+            },
+            "facing": -1.5707963267948966,
+            "label": "Místo 2"
+          }
+        ]
+      }
+    },
+    {
+      "id": "obj_table_left_2",
+      "name": "Stolek na nápoje",
+      "assetId": "asset_image_table_b48f2e96",
+      "x": 422,
+      "y": 786,
+      "scale": 0.273,
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": false,
+          "saturation": 0.94,
+          "contrast": 0.97,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": false,
+          "gain": 1
+        }
+      },
+      "footprint": [
+        {
+          "x": -65.25,
+          "y": -19
+        },
+        {
+          "x": 65.25,
+          "y": -19
+        },
+        {
+          "x": 65.25,
+          "y": 4.75
+        },
+        {
+          "x": -65.25,
+          "y": 4.75
+        }
+      ],
+      "interaction": {
+        "kind": "table",
+        "points": [
+          {
+            "id": "seat1",
+            "kind": "seat",
+            "offset": {
+              "x": -248,
+              "y": 4
+            },
+            "facing": 0,
+            "label": "Místo 1"
+          },
+          {
+            "id": "seat2",
+            "kind": "seat",
+            "offset": {
+              "x": 248,
+              "y": 6
+            },
+            "facing": 3.141592653589793,
+            "label": "Místo 2"
+          }
+        ]
+      }
+    },
+    {
+      "id": "obj_fir_0",
+      "name": "Smrček",
+      "assetId": "asset_image_fir_6ddab808",
+      "x": 48,
+      "y": 1013,
+      "scale": 0.3817,
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": false,
+          "saturation": 0.94,
+          "contrast": 0.97,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": false,
+          "gain": 1
+        }
+      },
+      "footprint": [
+        {
+          "x": -86.1,
+          "y": -27.18
+        },
+        {
+          "x": 86.1,
+          "y": -27.18
+        },
+        {
+          "x": 86.1,
+          "y": 4.53
+        },
+        {
+          "x": -86.1,
+          "y": 4.53
+        }
+      ]
+    },
+    {
+      "id": "obj_fir_1",
+      "name": "Smrček",
+      "assetId": "asset_image_fir_6ddab808",
+      "x": 1862,
+      "y": 1013,
+      "scale": 0.3817,
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": false,
+          "saturation": 0.94,
+          "contrast": 0.97,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": false,
+          "gain": 1
+        }
+      },
+      "footprint": [
+        {
+          "x": -86.1,
+          "y": -27.18
+        },
+        {
+          "x": 86.1,
+          "y": -27.18
+        },
+        {
+          "x": 86.1,
+          "y": 4.53
+        },
+        {
+          "x": -86.1,
+          "y": 4.53
+        }
+      ]
+    },
+    {
+      "id": "obj_fir_2",
+      "name": "Smrček",
+      "assetId": "asset_image_fir_6ddab808",
+      "x": 480,
+      "y": 754,
+      "scale": 0.2386,
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": false,
+          "saturation": 0.94,
+          "contrast": 0.97,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": false,
+          "gain": 1
+        }
+      },
+      "footprint": [
+        {
+          "x": -86.1,
+          "y": -27.18
+        },
+        {
+          "x": 86.1,
+          "y": -27.18
+        },
+        {
+          "x": 86.1,
+          "y": 4.53
+        },
+        {
+          "x": -86.1,
+          "y": 4.53
+        }
+      ]
+    },
+    {
+      "id": "obj_fir_3",
+      "name": "Smrček",
+      "assetId": "asset_image_fir_6ddab808",
+      "x": 1517,
+      "y": 754,
+      "scale": 0.2386,
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": false,
+          "saturation": 0.94,
+          "contrast": 0.97,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": false,
+          "gain": 1
+        }
+      },
+      "footprint": [
+        {
+          "x": -86.1,
+          "y": -27.18
+        },
+        {
+          "x": 86.1,
+          "y": -27.18
+        },
+        {
+          "x": 86.1,
+          "y": 4.53
+        },
+        {
+          "x": -86.1,
+          "y": 4.53
+        }
+      ]
+    },
+    {
+      "id": "obj_fir_4",
+      "name": "Smrček",
+      "assetId": "asset_image_fir_6ddab808",
+      "x": 1152,
+      "y": 701,
+      "scale": 0.1909,
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": false,
+          "saturation": 0.94,
+          "contrast": 0.97,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": false,
+          "gain": 1
+        }
+      },
+      "footprint": [
+        {
+          "x": -86.1,
+          "y": -27.18
+        },
+        {
+          "x": 86.1,
+          "y": -27.18
+        },
+        {
+          "x": 86.1,
+          "y": 4.53
+        },
+        {
+          "x": -86.1,
+          "y": 4.53
+        }
+      ]
+    },
+    {
+      "id": "obj_fir_5",
+      "name": "Smrček",
+      "assetId": "asset_image_fir_6ddab808",
+      "x": 1344,
+      "y": 701,
+      "scale": 0.1909,
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": false,
+          "saturation": 0.94,
+          "contrast": 0.97,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": false,
+          "gain": 1
+        }
+      },
+      "footprint": [
+        {
+          "x": -86.1,
+          "y": -27.18
+        },
+        {
+          "x": 86.1,
+          "y": -27.18
+        },
+        {
+          "x": 86.1,
+          "y": 4.53
+        },
+        {
+          "x": -86.1,
+          "y": 4.53
+        }
+      ]
+    },
+    {
+      "id": "obj_kos",
+      "name": "Koš s víkem",
+      "assetId": "builtin_kos_vika",
+      "x": 520,
+      "y": 830,
+      "scale": 0.7747740890688258,
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "footprint": [
+        {
+          "x": -18,
+          "y": -8
+        },
+        {
+          "x": 18,
+          "y": -8
+        },
+        {
+          "x": 18,
+          "y": 5
+        },
+        {
+          "x": -18,
+          "y": 5
+        }
+      ],
+      "interaction": {
+        "kind": "bin",
+        "points": [
+          {
+            "id": "drop1",
+            "kind": "drop",
+            "offset": {
+              "x": 42,
+              "y": 6
+            },
+            "facing": 3.141592653589793,
+            "label": "Vhození (strana otvírání víka)"
+          },
+          {
+            "id": "opening",
+            "kind": "counter",
+            "offset": {
+              "x": 0,
+              "y": -60
+            },
+            "label": "Otvor koše"
+          }
+        ]
+      },
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": false,
+          "saturation": 0.94,
+          "contrast": 0.97,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": false,
+          "gain": 1
+        }
+      }
+    },
+    {
+      "id": "obj_kos2",
+      "name": "Koš (bez víka)",
+      "assetId": "builtin_kos",
+      "x": 1395,
+      "y": 905,
+      "scale": 0.9912720647773278,
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "footprint": [
+        {
+          "x": -18,
+          "y": -8
+        },
+        {
+          "x": 18,
+          "y": -8
+        },
+        {
+          "x": 18,
+          "y": 5
+        },
+        {
+          "x": -18,
+          "y": 5
+        }
+      ],
+      "interaction": {
+        "kind": "bin",
+        "points": [
+          {
+            "id": "drop1",
+            "kind": "drop",
+            "offset": {
+              "x": -42,
+              "y": 6
+            },
+            "facing": 0,
+            "label": "Vhození zleva"
+          },
+          {
+            "id": "drop2",
+            "kind": "drop",
+            "offset": {
+              "x": 42,
+              "y": 6
+            },
+            "facing": 3.141592653589793,
+            "label": "Vhození zprava"
+          },
+          {
+            "id": "opening",
+            "kind": "counter",
+            "offset": {
+              "x": 0,
+              "y": -64
+            },
+            "label": "Otvor koše"
+          }
+        ]
+      },
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": false,
+          "saturation": 0.94,
+          "contrast": 0.97,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": false,
+          "gain": 1
+        }
+      }
+    }
+  ],
+  "nav": {
+    "nodes": [
+      {
+        "id": "n1",
+        "x": 960,
+        "y": 1134,
+        "name": "main 1",
+        "portal": true
+      },
+      {
+        "id": "n2",
+        "x": 941,
+        "y": 961,
+        "name": "main 2"
+      },
+      {
+        "id": "n3",
+        "x": 883,
+        "y": 832,
+        "name": "main 3"
+      },
+      {
+        "id": "n4",
+        "x": 922,
+        "y": 713,
+        "name": "main 4"
+      },
+      {
+        "id": "n5",
+        "x": 960,
+        "y": 637,
+        "name": "Schody radnice",
+        "stop": {
+          "waitMin": 3,
+          "waitMax": 7,
+          "look": {
+            "mode": "direction",
+            "angle": -1.5707963267948966
+          },
+          "next": []
+        }
+      },
+      {
+        "id": "n6",
+        "x": -96,
+        "y": 956,
+        "name": "left_entry 1",
+        "portal": true
+      },
+      {
+        "id": "n7",
+        "x": 499,
+        "y": 907,
+        "name": "left_entry 2"
+      },
+      {
+        "id": "n8",
+        "x": 691,
+        "y": 832,
+        "name": "left_entry 3"
+      },
+      {
+        "id": "n9",
+        "x": 2016,
+        "y": 918,
+        "name": "right_entry 1",
+        "portal": true
+      },
+      {
+        "id": "n10",
+        "x": 1517,
+        "y": 918,
+        "name": "right_entry 2"
+      },
+      {
+        "id": "n11",
+        "x": 1421,
+        "y": 842,
+        "name": "right_entry 3"
+      },
+      {
+        "id": "n12",
+        "x": 1344,
+        "y": 767,
+        "name": "right_entry 4"
+      },
+      {
+        "id": "n13",
+        "x": 1037,
+        "y": 745,
+        "name": "right_entry 5"
+      },
+      {
+        "id": "n14",
+        "x": 653,
+        "y": 821,
+        "name": "crossing 1"
+      },
+      {
+        "id": "n15",
+        "x": 1056,
+        "y": 821,
+        "name": "crossing 3"
+      },
+      {
+        "id": "n16",
+        "x": 1306,
+        "y": 788,
+        "name": "crossing 4"
+      },
+      {
+        "id": "n17",
+        "x": 768,
+        "y": 670,
+        "name": "rear 1"
+      },
+      {
+        "id": "n18",
+        "x": 1056,
+        "y": 670,
+        "name": "rear 3"
+      }
+    ],
+    "edges": [
+      {
+        "id": "e1",
+        "a": "n1",
+        "b": "n2",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e2",
+        "a": "n2",
+        "b": "n3",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e3",
+        "a": "n3",
+        "b": "n4",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e4",
+        "a": "n4",
+        "b": "n5",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e5",
+        "a": "n6",
+        "b": "n7",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e6",
+        "a": "n7",
+        "b": "n8",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e7",
+        "a": "n8",
+        "b": "n3",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e8",
+        "a": "n9",
+        "b": "n10",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e9",
+        "a": "n10",
+        "b": "n11",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e10",
+        "a": "n11",
+        "b": "n12",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e11",
+        "a": "n12",
+        "b": "n13",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e12",
+        "a": "n13",
+        "b": "n4",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e13",
+        "a": "n14",
+        "b": "n3",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e14",
+        "a": "n3",
+        "b": "n15",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e15",
+        "a": "n15",
+        "b": "n16",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e16",
+        "a": "n16",
+        "b": "n11",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e17",
+        "a": "n17",
+        "b": "n5",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e18",
+        "a": "n5",
+        "b": "n18",
+        "oneWay": false,
+        "narrow": false
+      }
+    ]
+  },
+  "areas": [
+    {
+      "id": "area_snih_l",
+      "name": "Sníh vlevo",
+      "kind": "snow",
+      "polygon": [
+        {
+          "x": 0,
+          "y": 600
+        },
+        {
+          "x": 880,
+          "y": 612
+        },
+        {
+          "x": 800,
+          "y": 1080
+        },
+        {
+          "x": 0,
+          "y": 1080
+        }
+      ]
+    },
+    {
+      "id": "area_snih_p",
+      "name": "Sníh vpravo",
+      "kind": "snow",
+      "polygon": [
+        {
+          "x": 1040,
+          "y": 612
+        },
+        {
+          "x": 1920,
+          "y": 600
+        },
+        {
+          "x": 1920,
+          "y": 1080
+        },
+        {
+          "x": 1560,
+          "y": 1080
+        }
+      ]
+    }
+  ],
+  "zones": [
+    {
+      "id": "zone_nakup",
+      "name": "Nákup u stánků",
+      "activityType": "shop",
+      "activityVersion": 1,
+      "enabled": true,
+      "bounds": [
+        {
+          "x": 0,
+          "y": 600
+        },
+        {
+          "x": 1920,
+          "y": 600
+        },
+        {
+          "x": 1920,
+          "y": 1080
+        },
+        {
+          "x": 0,
+          "y": 1080
+        }
+      ],
+      "objectRoles": {
+        "stand": [
+          "obj_stall_food",
+          "obj_stall_gingerbread",
+          "obj_stall_toys",
+          "obj_stall_candles",
+          "obj_stall_ornaments"
+        ]
+      },
+      "params": {
+        "queueTimeout": 420
+      }
+    },
+    {
+      "id": "zone_kava",
+      "name": "Teplé nápoje",
+      "activityType": "coffee",
+      "activityVersion": 1,
+      "enabled": true,
+      "bounds": [
+        {
+          "x": 0,
+          "y": 600
+        },
+        {
+          "x": 1920,
+          "y": 600
+        },
+        {
+          "x": 1920,
+          "y": 1080
+        },
+        {
+          "x": 0,
+          "y": 1080
+        }
+      ],
+      "objectRoles": {
+        "stand": [
+          "obj_stall_drinks"
+        ],
+        "seating": [
+          "obj_table_left_1",
+          "obj_table_left_2"
+        ],
+        "bin": [
+          "obj_kos",
+          "obj_kos2"
+        ]
+      },
+      "params": {
+        "queueTimeout": 420
+      }
+    },
+    {
+      "id": "zone_vyhled",
+      "name": "Prohlížení stromu",
+      "activityType": "viewing",
+      "activityVersion": 1,
+      "enabled": true,
+      "bounds": [
+        {
+          "x": 1094,
+          "y": 713
+        },
+        {
+          "x": 1210,
+          "y": 713
+        },
+        {
+          "x": 1210,
+          "y": 778
+        },
+        {
+          "x": 1094,
+          "y": 778
+        }
+      ],
+      "objectRoles": {
+        "view": [
+          "obj_tree"
+        ]
+      },
+      "params": {
+        "lookMin": 5,
+        "lookMax": 18
+      }
+    },
+    {
+      "id": "zone_snehulak",
+      "name": "Dětský sníh – sněhulák",
+      "activityType": "snowman",
+      "activityVersion": 1,
+      "enabled": true,
+      "bounds": [
+        {
+          "x": 1056,
+          "y": 853
+        },
+        {
+          "x": 1344,
+          "y": 853
+        },
+        {
+          "x": 1421,
+          "y": 950
+        },
+        {
+          "x": 1075,
+          "y": 983
+        }
+      ],
+      "objectRoles": {},
+      "params": {
+        "chance": 0.5
+      }
+    },
+    {
+      "id": "zone_koulovacka",
+      "name": "Dětský sníh – koulovačka",
+      "activityType": "snowballFight",
+      "activityVersion": 1,
+      "enabled": true,
+      "bounds": [
+        {
+          "x": 1056,
+          "y": 853
+        },
+        {
+          "x": 1344,
+          "y": 853
+        },
+        {
+          "x": 1421,
+          "y": 950
+        },
+        {
+          "x": 1075,
+          "y": 983
+        }
+      ],
+      "objectRoles": {},
+      "params": {
+        "chance": 0.4,
+        "allowAdults": false
+      }
+    }
+  ],
+  "characters": [
+    {
+      "id": "ch_1",
+      "name": "Alena",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n1",
+      "baseScale": 1,
+      "walkSpeed": 63.2,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 509904246,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
+        },
+        "colors": {
+          "jacket": "hneda",
+          "hat": "okrova",
+          "scarf": "kremova",
+          "gloves": "kremova",
+          "trousers": "olivova",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 1.038,
+          "build": 0.966
+        },
+        "motion": {
+          "strideScale": 0.951,
+          "armSwing": 0.684,
+          "bob": 1.018,
+          "sway": 0.905,
+          "idleTempo": 1.114,
+          "lean": 2.624,
+          "speed": 1.054,
+          "phase": 0.566,
+          "armLag": 1.009,
+          "armLR": 0.985
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {
+        "coffee": {
+          "enabled": true,
+          "firstDelayMin": 4,
+          "firstDelayMax": 10,
+          "intervalMin": 70,
+          "intervalMax": 160
+        }
+      }
+    },
+    {
+      "id": "ch_2",
+      "name": "Bohdan",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n11",
+      "baseScale": 1,
+      "walkSpeed": 71.6,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 789572989,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
+        },
+        "colors": {
+          "jacket": "okrova",
+          "hat": "petrolejova",
+          "scarf": "kremova",
+          "gloves": "petrolejova",
+          "trousers": "olivova",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 0.994,
+          "build": 1.037
+        },
+        "motion": {
+          "strideScale": 0.962,
+          "armSwing": 1.141,
+          "bob": 0.926,
+          "sway": 1.215,
+          "idleTempo": 0.945,
+          "lean": 1.087,
+          "speed": 1.193,
+          "phase": 0.372,
+          "armLag": 0.813,
+          "armLR": 0.876
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {
+        "coffee": {
+          "enabled": true,
+          "firstDelayMin": 10,
+          "firstDelayMax": 16,
+          "intervalMin": 70,
+          "intervalMax": 160
+        }
+      }
+    },
+    {
+      "id": "ch_3",
+      "name": "Cecílie",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n18",
+      "baseScale": 1,
+      "walkSpeed": 74.9,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 487168222,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
+        },
+        "colors": {
+          "jacket": "hneda",
+          "hat": "kremova",
+          "scarf": "olivova",
+          "gloves": "kremova",
+          "trousers": "olivova",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 1.044,
+          "build": 1.048
+        },
+        "motion": {
+          "strideScale": 1.046,
+          "armSwing": 0.78,
+          "bob": 0.858,
+          "sway": 0.886,
+          "idleTempo": 1.135,
+          "lean": 1.439,
+          "speed": 1.249,
+          "phase": 0.038,
+          "armLag": -0.953,
+          "armLR": 1.102
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {
+        "coffee": {
+          "enabled": true,
+          "firstDelayMin": 16,
+          "firstDelayMax": 22,
+          "intervalMin": 70,
+          "intervalMax": 160
+        }
+      }
+    },
+    {
+      "id": "ch_4",
+      "name": "David",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n1",
+      "baseScale": 1,
+      "walkSpeed": 51.5,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1806918035,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
+        },
+        "colors": {
+          "jacket": "olivova",
+          "hat": "vinova",
+          "scarf": "hneda",
+          "gloves": "vinova",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 1.01,
+          "build": 1.008
+        },
+        "motion": {
+          "strideScale": 1.094,
+          "armSwing": 0.994,
+          "bob": 1.043,
+          "sway": 0.962,
+          "idleTempo": 0.865,
+          "lean": 1.443,
+          "speed": 0.858,
+          "phase": 0.471,
+          "armLag": -0.087,
+          "armLR": 1.097
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {
+        "coffee": {
+          "enabled": true,
+          "firstDelayMin": 22,
+          "firstDelayMax": 28,
+          "intervalMin": 70,
+          "intervalMax": 160
+        }
+      }
+    },
+    {
+      "id": "ch_5",
+      "name": "Eliška",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n17",
+      "baseScale": 1,
+      "walkSpeed": 60.5,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 446312324,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
+        },
+        "colors": {
+          "jacket": "vinova",
+          "hat": "hneda",
+          "scarf": "okrova",
+          "gloves": "okrova",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 0.963,
+          "build": 0.978
+        },
+        "motion": {
+          "strideScale": 0.986,
+          "armSwing": 0.76,
+          "bob": 0.834,
+          "sway": 1.045,
+          "idleTempo": 0.999,
+          "lean": 0.71,
+          "speed": 1.009,
+          "phase": 0.121,
+          "armLag": 0.61,
+          "armLR": 0.964
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {
+        "coffee": {
+          "enabled": true,
+          "firstDelayMin": 28,
+          "firstDelayMax": 34,
+          "intervalMin": 70,
+          "intervalMax": 160
+        }
+      }
+    },
+    {
+      "id": "ch_6",
+      "name": "Filip",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n8",
+      "baseScale": 1,
+      "walkSpeed": 62.5,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1766062137,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
+        },
+        "colors": {
+          "jacket": "okrova",
+          "hat": "vinova",
+          "scarf": "hneda",
+          "gloves": "hneda",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 0.986,
+          "build": 1.031
+        },
+        "motion": {
+          "strideScale": 0.907,
+          "armSwing": 0.841,
+          "bob": 1.101,
+          "sway": 0.806,
+          "idleTempo": 0.957,
+          "lean": 2.701,
+          "speed": 1.041,
+          "phase": 0.685,
+          "armLag": 3.356,
+          "armLR": 0.867
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {
+        "coffee": {
+          "enabled": true,
+          "firstDelayMin": 34,
+          "firstDelayMax": 40,
+          "intervalMin": 70,
+          "intervalMax": 160
+        }
+      }
+    },
+    {
+      "id": "ch_7",
+      "name": "Gabriela",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n1",
+      "baseScale": 1,
+      "walkSpeed": 64.9,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 2119786947,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
+        },
+        "colors": {
+          "jacket": "tmave-seda",
+          "hat": "olivova",
+          "scarf": "kremova",
+          "gloves": "olivova",
+          "trousers": "olivova",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 1.022,
+          "build": 1.017
+        },
+        "motion": {
+          "strideScale": 1.002,
+          "armSwing": 0.669,
+          "bob": 1.142,
+          "sway": 0.973,
+          "idleTempo": 1.141,
+          "lean": 2.337,
+          "speed": 1.081,
+          "phase": 0.08,
+          "armLag": 2.097,
+          "armLR": 0.999
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {
+        "coffee": {
+          "enabled": true,
+          "firstDelayMin": 40,
+          "firstDelayMax": 46,
+          "intervalMin": 70,
+          "intervalMax": 160
+        }
+      }
+    },
+    {
+      "id": "ch_8",
+      "name": "Hynek",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n7",
+      "baseScale": 1,
+      "walkSpeed": 66.5,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1828936919,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
+        },
+        "colors": {
+          "jacket": "vinova",
+          "hat": "okrova",
+          "scarf": "kremova",
+          "gloves": "kremova",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 0.992,
+          "build": 1.049
+        },
+        "motion": {
+          "strideScale": 0.985,
+          "armSwing": 0.897,
+          "bob": 0.82,
+          "sway": 1.25,
+          "idleTempo": 0.859,
+          "lean": 1.8,
+          "speed": 1.109,
+          "phase": 0.975,
+          "armLag": -0.596,
+          "armLR": 1.073
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {
+        "coffee": {
+          "enabled": true,
+          "firstDelayMin": 46,
+          "firstDelayMax": 52,
+          "intervalMin": 70,
+          "intervalMax": 160
+        }
+      }
+    },
+    {
+      "id": "ch_9",
+      "name": "Irena",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n15",
+      "baseScale": 1,
+      "walkSpeed": 56.9,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1600314409,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
+        },
+        "colors": {
+          "jacket": "tmave-seda",
+          "hat": "petrolejova",
+          "scarf": "vinova",
+          "gloves": "vinova",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 0.965,
+          "build": 0.985
+        },
+        "motion": {
+          "strideScale": 0.901,
+          "armSwing": 0.654,
+          "bob": 0.891,
+          "sway": 0.806,
+          "idleTempo": 1.045,
+          "lean": 0.918,
+          "speed": 0.948,
+          "phase": 0.062,
+          "armLag": 3.55,
+          "armLR": 1.13
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {
+        "coffee": {
+          "enabled": true,
+          "firstDelayMin": 52,
+          "firstDelayMax": 58,
+          "intervalMin": 70,
+          "intervalMax": 160
+        }
+      }
+    },
+    {
+      "id": "ch_10",
+      "name": "Jakub",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n1",
+      "baseScale": 1,
+      "walkSpeed": 61.9,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1788081021,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
+        },
+        "colors": {
+          "jacket": "hneda",
+          "hat": "petrolejova",
+          "scarf": "olivova",
+          "gloves": "petrolejova",
+          "trousers": "tmave-seda",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 0.983,
+          "build": 0.972
+        },
+        "motion": {
+          "strideScale": 0.983,
+          "armSwing": 1.166,
+          "bob": 0.88,
+          "sway": 1.139,
+          "idleTempo": 1.11,
+          "lean": 0.783,
+          "speed": 1.031,
+          "phase": 0.801,
+          "armLag": 2.361,
+          "armLR": 1.142
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {
+        "coffee": {
+          "enabled": true,
+          "firstDelayMin": 58,
+          "firstDelayMax": 64,
+          "intervalMin": 70,
+          "intervalMax": 160
+        }
+      }
+    },
+    {
+      "id": "ch_11",
+      "name": "Klára",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n14",
+      "baseScale": 1,
+      "walkSpeed": 68.6,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1326954345,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
+        },
+        "colors": {
+          "jacket": "okrova",
+          "hat": "tmave-seda",
+          "scarf": "hneda",
+          "gloves": "hneda",
+          "trousers": "olivova",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 1.032,
+          "build": 0.989
+        },
+        "motion": {
+          "strideScale": 1.045,
+          "armSwing": 0.682,
+          "bob": 0.923,
+          "sway": 1.162,
+          "idleTempo": 0.932,
+          "lean": 1.841,
+          "speed": 1.143,
+          "phase": 0.571,
+          "armLag": 0.448,
+          "armLR": 0.933
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {
+        "coffee": {
+          "enabled": true,
+          "firstDelayMin": 64,
+          "firstDelayMax": 70,
+          "intervalMin": 70,
+          "intervalMax": 160
+        }
+      }
+    },
+    {
+      "id": "ch_12",
+      "name": "Libor",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n4",
+      "baseScale": 1,
+      "walkSpeed": 68.3,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1942459444,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
+        },
+        "colors": {
+          "jacket": "tmave-seda",
+          "hat": "olivova",
+          "scarf": "vinova",
+          "gloves": "olivova",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 1.026,
+          "build": 0.976
+        },
+        "motion": {
+          "strideScale": 0.921,
+          "armSwing": 1.187,
+          "bob": 1.103,
+          "sway": 1.225,
+          "idleTempo": 1.086,
+          "lean": 0.519,
+          "speed": 1.139,
+          "phase": 0.775,
+          "armLag": 3.266,
+          "armLR": 1.036
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {
+        "coffee": {
+          "enabled": true,
+          "firstDelayMin": 70,
+          "firstDelayMax": 76,
+          "intervalMin": 70,
+          "intervalMax": 160
+        }
+      }
+    },
+    {
+      "id": "ch_13",
+      "name": "Magda",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n1",
+      "baseScale": 1,
+      "walkSpeed": 56.4,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1156812040,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
+        },
+        "colors": {
+          "jacket": "olivova",
+          "hat": "vinova",
+          "scarf": "tmave-seda",
+          "gloves": "tmave-seda",
+          "trousers": "olivova",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 1.05,
+          "build": 0.982
+        },
+        "motion": {
+          "strideScale": 0.911,
+          "armSwing": 0.995,
+          "bob": 0.871,
+          "sway": 0.848,
+          "idleTempo": 0.855,
+          "lean": 2.77,
+          "speed": 0.94,
+          "phase": 0.151,
+          "armLag": 0.909,
+          "armLR": 1.079
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {
+        "coffee": {
+          "enabled": true,
+          "firstDelayMin": 76,
+          "firstDelayMax": 82,
+          "intervalMin": 70,
+          "intervalMax": 160
+        }
+      }
+    },
+    {
+      "id": "ch_14",
+      "name": "Norbert",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n3",
+      "baseScale": 1,
+      "walkSpeed": 52.7,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1447610483,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
+        },
+        "colors": {
+          "jacket": "vinova",
+          "hat": "petrolejova",
+          "scarf": "hneda",
+          "gloves": "petrolejova",
+          "trousers": "tmave-seda",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 0.997,
+          "build": 1.004
+        },
+        "motion": {
+          "strideScale": 1.09,
+          "armSwing": 0.817,
+          "bob": 1.101,
+          "sway": 1.093,
+          "idleTempo": 0.882,
+          "lean": 1.348,
+          "speed": 0.878,
+          "phase": 0.028,
+          "armLag": 0.262,
+          "armLR": 0.901
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {
+        "coffee": {
+          "enabled": true,
+          "firstDelayMin": 82,
+          "firstDelayMax": 88,
+          "intervalMin": 70,
+          "intervalMax": 160
+        }
+      }
+    },
+    {
+      "id": "ch_15",
+      "name": "Olga",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n12",
+      "baseScale": 1,
+      "walkSpeed": 53,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 138236460,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
+        },
+        "colors": {
+          "jacket": "tmave-seda",
+          "hat": "kremova",
+          "scarf": "vinova",
+          "gloves": "kremova",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 1.044,
+          "build": 0.966
+        },
+        "motion": {
+          "strideScale": 0.961,
+          "armSwing": 1.245,
+          "bob": 1.05,
+          "sway": 0.829,
+          "idleTempo": 1.129,
+          "lean": 2.015,
+          "speed": 0.884,
+          "phase": 0.635,
+          "armLag": -1.653,
+          "armLR": 0.941
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {
+        "coffee": {
+          "enabled": true,
+          "firstDelayMin": 88,
+          "firstDelayMax": 94,
+          "intervalMin": 70,
+          "intervalMax": 160
+        }
+      }
+    },
+    {
+      "id": "ch_16",
+      "name": "Pavel",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n1",
+      "baseScale": 1,
+      "walkSpeed": 61.4,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 479419345,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
+        },
+        "colors": {
+          "jacket": "vinova",
+          "hat": "kremova",
+          "scarf": "okrova",
+          "gloves": "okrova",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 1.028,
+          "build": 0.997
+        },
+        "motion": {
+          "strideScale": 0.977,
+          "armSwing": 1.028,
+          "bob": 1.051,
+          "sway": 1.107,
+          "idleTempo": 1.035,
+          "lean": 2.722,
+          "speed": 1.024,
+          "phase": 0.423,
+          "armLag": 0.67,
+          "armLR": 0.991
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {
+        "coffee": {
+          "enabled": true,
+          "firstDelayMin": 94,
+          "firstDelayMax": 100,
+          "intervalMin": 70,
+          "intervalMax": 160
+        }
+      }
+    },
+    {
+      "id": "ch_17",
+      "name": "Renata",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n11",
+      "baseScale": 1,
+      "walkSpeed": 70.4,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1155581508,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
+        },
+        "colors": {
+          "jacket": "petrolejova",
+          "hat": "olivova",
+          "scarf": "kremova",
+          "gloves": "kremova",
+          "trousers": "olivova",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 0.996,
+          "build": 0.955
+        },
+        "motion": {
+          "strideScale": 0.968,
+          "armSwing": 0.745,
+          "bob": 0.966,
+          "sway": 1.181,
+          "idleTempo": 1.082,
+          "lean": 0.302,
+          "speed": 1.173,
+          "phase": 0.549,
+          "armLag": -0.618,
+          "armLR": 0.955
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {
+        "coffee": {
+          "enabled": true,
+          "firstDelayMin": 100,
+          "firstDelayMax": 106,
+          "intervalMin": 70,
+          "intervalMax": 160
+        }
+      }
+    },
+    {
+      "id": "ch_18",
+      "name": "Stanislav",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n18",
+      "baseScale": 1,
+      "walkSpeed": 70.1,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1983315342,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
+        },
+        "colors": {
+          "jacket": "hneda",
+          "hat": "olivova",
+          "scarf": "kremova",
+          "gloves": "kremova",
+          "trousers": "tmave-seda",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 1.004,
+          "build": 0.999
+        },
+        "motion": {
+          "strideScale": 1.021,
+          "armSwing": 1.208,
+          "bob": 1.177,
+          "sway": 1.106,
+          "idleTempo": 0.947,
+          "lean": 2.582,
+          "speed": 1.169,
+          "phase": 0.983,
+          "armLag": -0.443,
+          "armLR": 1.047
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {
+        "coffee": {
+          "enabled": true,
+          "firstDelayMin": 106,
+          "firstDelayMax": 112,
+          "intervalMin": 70,
+          "intervalMax": 160
+        }
+      }
+    },
+    {
+      "id": "ch_19",
+      "name": "Tereza",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n1",
+      "baseScale": 1,
+      "walkSpeed": 61.1,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 127645873,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
+        },
+        "colors": {
+          "jacket": "kremova",
+          "hat": "olivova",
+          "scarf": "petrolejova",
+          "gloves": "olivova",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 1.012,
+          "build": 1.025
+        },
+        "motion": {
+          "strideScale": 0.907,
+          "armSwing": 0.67,
+          "bob": 1.162,
+          "sway": 0.943,
+          "idleTempo": 1.077,
+          "lean": 0.998,
+          "speed": 1.018,
+          "phase": 0.276,
+          "armLag": -1.577,
+          "armLR": 1.07
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {
+        "coffee": {
+          "enabled": true,
+          "firstDelayMin": 112,
+          "firstDelayMax": 118,
+          "intervalMin": 70,
+          "intervalMax": 160
+        }
+      }
+    },
+    {
+      "id": "ch_20",
+      "name": "Vít",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n17",
+      "baseScale": 1,
+      "walkSpeed": 70.9,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 463605878,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
+        },
+        "colors": {
+          "jacket": "hneda",
+          "hat": "vinova",
+          "scarf": "petrolejova",
+          "gloves": "vinova",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 0.968,
+          "build": 0.98
+        },
+        "motion": {
+          "strideScale": 0.955,
+          "armSwing": 0.925,
+          "bob": 0.957,
+          "sway": 1.236,
+          "idleTempo": 1,
+          "lean": 2.164,
+          "speed": 1.181,
+          "phase": 0.689,
+          "armLag": -1.708,
+          "armLR": 0.927
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {
+        "coffee": {
+          "enabled": true,
+          "firstDelayMin": 118,
+          "firstDelayMax": 124,
+          "intervalMin": 70,
+          "intervalMax": 160
+        }
+      }
+    },
+    {
+      "id": "ch_21",
+      "name": "Wanda",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n8",
+      "baseScale": 1,
+      "walkSpeed": 64.7,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 152949441,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
+        },
+        "colors": {
+          "jacket": "olivova",
+          "hat": "petrolejova",
+          "scarf": "vinova",
+          "gloves": "vinova",
+          "trousers": "olivova",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 0.961,
+          "build": 0.952
+        },
+        "motion": {
+          "strideScale": 1.087,
+          "armSwing": 0.86,
+          "bob": 1.177,
+          "sway": 0.776,
+          "idleTempo": 1.014,
+          "lean": 0.114,
+          "speed": 1.079,
+          "phase": 0.437,
+          "armLag": 0.188,
+          "armLR": 0.988
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {
+        "coffee": {
+          "enabled": true,
+          "firstDelayMin": 124,
+          "firstDelayMax": 130,
+          "intervalMin": 70,
+          "intervalMax": 160
+        }
+      }
+    },
+    {
+      "id": "ch_22",
+      "name": "Zbyněk",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n1",
+      "baseScale": 1,
+      "walkSpeed": 66.1,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 2009634645,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
+        },
+        "colors": {
+          "jacket": "hneda",
+          "hat": "okrova",
+          "scarf": "vinova",
+          "gloves": "vinova",
+          "trousers": "olivova",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 1.039,
+          "build": 1.042
+        },
+        "motion": {
+          "strideScale": 0.938,
+          "armSwing": 1.277,
+          "bob": 0.906,
+          "sway": 0.769,
+          "idleTempo": 0.863,
+          "lean": 1.319,
+          "speed": 1.101,
+          "phase": 0.449,
+          "armLag": -0.014,
+          "armLR": 1.014
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {
+        "coffee": {
+          "enabled": true,
+          "firstDelayMin": 130,
+          "firstDelayMax": 136,
+          "intervalMin": 70,
+          "intervalMax": 160
+        }
+      }
+    },
+    {
+      "id": "ch_23",
+      "name": "Žofie",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n7",
+      "baseScale": 1,
+      "walkSpeed": 60.5,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1656845438,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
+        },
+        "colors": {
+          "jacket": "okrova",
+          "hat": "kremova",
+          "scarf": "hneda",
+          "gloves": "kremova",
+          "trousers": "olivova",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 1.041,
+          "build": 0.983
+        },
+        "motion": {
+          "strideScale": 1.023,
+          "armSwing": 0.673,
+          "bob": 0.977,
+          "sway": 1.094,
+          "idleTempo": 0.88,
+          "lean": 1.124,
+          "speed": 1.009,
+          "phase": 0.758,
+          "armLag": 1.669,
+          "armLR": 0.863
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {
+        "coffee": {
+          "enabled": true,
+          "firstDelayMin": 136,
+          "firstDelayMax": 142,
+          "intervalMin": 70,
+          "intervalMax": 160
+        }
+      }
+    },
+    {
+      "id": "ch_24",
+      "name": "Matěj",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n15",
+      "baseScale": 1,
+      "walkSpeed": 52.3,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1041391924,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
+        },
+        "colors": {
+          "jacket": "vinova",
+          "hat": "olivova",
+          "scarf": "okrova",
+          "gloves": "olivova",
+          "trousers": "tmave-seda",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 1.025,
+          "build": 1.03
+        },
+        "motion": {
+          "strideScale": 1.044,
+          "armSwing": 1.228,
+          "bob": 1.036,
+          "sway": 0.828,
+          "idleTempo": 0.96,
+          "lean": 1.34,
+          "speed": 0.871,
+          "phase": 0.017,
+          "armLag": -1.646,
+          "armLR": 0.9
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {
+        "coffee": {
+          "enabled": true,
+          "firstDelayMin": 142,
+          "firstDelayMax": 148,
+          "intervalMin": 70,
+          "intervalMax": 160
+        }
+      }
+    }
+  ],
+  "schedule": [],
+  "export": {
+    "resolution": "1920x1080",
+    "fps": 30,
+    "durationMode": "manual",
+    "durationSec": 60,
+    "audioAssetId": null,
+    "audioWhenShorter": "silence",
+    "crf": 20,
+    "preset": "medium",
+    "chunkSec": 20,
+    "outputPath": null,
+    "diagnosticPngSequence": false
+  }
+}

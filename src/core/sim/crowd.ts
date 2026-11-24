@@ -33,6 +33,18 @@ export interface CrowdItem {
   head?: World | null;
 }
 export interface ObstacleW { poly: World[] }
+/** Ohraničující kruh překážky (počítá se jednou, uloží se mimo JSON stav) – rychlý předvýběr blízkých překážek. */
+const boundCache = new WeakMap<ObstacleW, { X: number; Z: number; r: number }>();
+function boundOf(ob: ObstacleW): { X: number; Z: number; r: number } {
+  let b = boundCache.get(ob);
+  if (!b) {
+    const X = ob.poly.reduce((s, p) => s + p.X, 0) / ob.poly.length, Z = ob.poly.reduce((s, p) => s + p.Z, 0) / ob.poly.length;
+    b = { X, Z, r: Math.max(...ob.poly.map((p) => Math.hypot(p.X - X, p.Z - Z))) };
+    boundCache.set(ob, b);
+  }
+  return b;
+}
+const nearObstacles = (obs: ObstacleW[], p: World, reach: number) => obs.filter((ob) => { const b = boundOf(ob); return Math.hypot(b.X - p.X, b.Z - p.Z) <= b.r + reach; });
 
 const len = (v: World) => Math.hypot(v.X, v.Z);
 const sub = (a: World, b: World): World => ({ X: a.X - b.X, Z: a.Z - b.Z });
@@ -85,6 +97,8 @@ export function planCrowd(items: CrowdItem[], obstacles: ObstacleW[]): void {
       if (first) ignore.add(o.id);
     }
     let best = { ang: 0, k: 1 }, bestC = Infinity, bestSafe = false;
+    // jen překážky v dosahu 1,5 s chůze, a jen ty, ve kterých postava nestojí
+    const nearOb = nearObstacles(obstacles, me.p, sp * 1.5 * 1.3 + 0.3).filter((ob) => !insidePoly(me.p, ob.poly));
     for (const ang of ANGLES) for (const k of SPEEDS) {
       const v = rot({ X: dir.X * sp * k, Z: dir.Z * sp * k }, ang);
       let C = 12 * (1 - k) ** 2 + 1.2 * (ang / (Math.PI / 6)) ** 2;
@@ -109,7 +123,7 @@ export function planCrowd(items: CrowdItem[], obstacles: ObstacleW[]): void {
       }
       // budoucí průchod pevnou překážkou (1,5 s dopředu)
       const ahead = { X: me.p.X + v.X * 1.5, Z: me.p.Z + v.Z * 1.5 };
-      for (const ob of obstacles) if (k > 0 && !insidePoly(me.p, ob.poly) && segHitsPoly(me.p, ahead, ob.poly)) { C += 50; safe = false; break; }
+      for (const ob of nearOb) if (k > 0 && segHitsPoly(me.p, ahead, ob.poly)) { C += 50; safe = false; break; }
       if (safe && !bestSafe) { bestSafe = true; bestC = C; best = { ang, k }; continue; }
       if (safe === bestSafe && C < bestC - 1e-9) { bestC = C; best = { ang, k }; }
     }
@@ -167,7 +181,7 @@ export function solveCrowd(items: CrowdItem[], want: World[], obstacles: Obstacl
   for (let i = 0; i < n; i++) {
     const a = items[i];
     if (a.fixed) continue;
-    for (const ob of obstacles) {
+    for (const ob of nearObstacles(obstacles, a.p, 0.6 + a.vmax * dt)) {
       const q = nearestOnPoly(a.p, ob.poly);
       if (!q || q.inside) continue;
       const d = q.d;

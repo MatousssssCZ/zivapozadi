@@ -1,0 +1,134 @@
+{
+  "stall_drinks": {
+    "vendorOpening": [
+      [
+        0.37,
+        0.43
+      ],
+      [
+        0.64,
+        0.43
+      ],
+      [
+        0.64,
+        0.635
+      ],
+      [
+        0.37,
+        0.635
+      ]
+    ],
+    "status": "conservative initial central opening; extend only after checking props",
+    "strategy": "draw master; clip vendor to opening; master retains pixel-perfect counter and roof"
+  },
+  "stall_food": {
+    "vendorOpening": [
+      [
+        0.35,
+        0.43
+      ],
+      [
+        0.47,
+        0.43
+      ],
+      [
+        0.47,
+        0.58
+      ],
+      [
+        0.35,
+        0.58
+      ]
+    ],
+    "status": "conservative initial central opening; extend only after checking props",
+    "strategy": "draw master; clip vendor to opening; master retains pixel-perfect counter and roof"
+  },
+  "stall_gingerbread": {
+    "vendorOpening": [
+      [
+        0.4,
+        0.48
+      ],
+      [
+        0.6000000000000001,
+        0.48
+      ],
+      [
+        0.6000000000000001,
+        0.6799999999999999
+      ],
+      [
+        0.4,
+        0.6799999999999999
+      ]
+    ],
+    "status": "conservative initial central opening; extend only after checking props",
+    "strategy": "draw master; clip vendor to opening; master retains pixel-perfect counter and roof"
+  },
+  "stall_ornaments": {
+    "vendorOpening": [
+      [
+        0.34,
+        0.46
+      ],
+      [
+        0.64,
+        0.46
+      ],
+      [
+        0.64,
+        0.67
+      ],
+      [
+        0.34,
+        0.67
+      ]
+    ],
+    "status": "conservative initial central opening; extend only after checking props",
+    "strategy": "draw master; clip vendor to opening; master retains pixel-perfect counter and roof"
+  },
+  "stall_candles": {
+    "vendorOpening": [
+      [
+        0.34,
+        0.42
+      ],
+      [
+        0.63,
+        0.42
+      ],
+      [
+        0.63,
+        0.6799999999999999
+      ],
+      [
+        0.34,
+        0.6799999999999999
+      ]
+    ],
+    "status": "conservative initial central opening; extend only after checking props",
+    "strategy": "draw master; clip vendor to opening; master retains pixel-perfect counter and roof"
+  },
+  "stall_toys": {
+    "vendorOpening": [
+      [
+        0.39,
+        0.41
+      ],
+      [
+        0.6,
+        0.41
+      ],
+      [
+        0.6,
+        0.6799999999999999
+      ],
+      [
+        0.39,
+        0.6799999999999999
+      ]
+    ],
+    "status": "conservative initial central opening; extend only after checking props",
+    "strategy": "draw master; clip vendor to opening; master retains pixel-perfect counter and roof"
+  }
+}

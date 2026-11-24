@@ -1,0 +1,335 @@
+{
+  "adult_back_parts": {
+    "file": "assets/adult_back_parts.png",
+    "width": 1536,
+    "height": 1024,
+    "mode": "RGBA",
+    "sha256": "f6219b26d3e44f74281381920d2f4f51938ded2f2971e39a7affa861ff48f82b",
+    "bytes": 2164093,
+    "alphaRange": [
+      0,
+      254
+    ],
+    "transparentFraction": 0.5377,
+    "status": "source_atlas_needs_rigging"
+  },
+  "adult_front_parts": {
+    "file": "assets/adult_front_parts.png",
+    "width": 1536,
+    "height": 1024,
+    "mode": "RGBA",
+    "sha256": "c299cfa72fd215a6f9df84b51547307dd90bd7db0a6a35eb3211891938f2e853",
+    "bytes": 1241437,
+    "alphaRange": [
+      0,
+      254
+    ],
+    "transparentFraction": 0.6542,
+    "status": "source_atlas_needs_rigging"
+  },
+  "animal_walk_supplement": {
+    "file": "assets/animal_walk_supplement.png",
+    "width": 1536,
+    "height": 1024,
+    "mode": "RGBA",
+    "sha256": "71d7d2634f00d24549b9ef4c5a6456b5a1a06d873c645728548db553b4a2dccb",
+    "bytes": 2226085,
+    "alphaRange": [
+      0,
+      254
+    ],
+    "transparentFraction": 0.469,
+    "status": "source_atlas_needs_rigging"
+  },
+  "architecture_patches": {
+    "file": "assets/architecture_patches.png",
+    "width": 1536,
+    "height": 1024,
+    "mode": "RGBA",
+    "sha256": "1c38d0674226938f15b6d91094eaf568220d7743bc98412614f3b5d480473143",
+    "bytes": 2417998,
+    "alphaRange": [
+      0,
+      254
+    ],
+    "transparentFraction": 0.4282,
+    "status": "source_png"
+  },
+  "background_clean": {
+    "file": "assets/background_clean.png",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "sha256": "f37e3f0107964bccd9e62014fd00257da4ebd444f455ae2b435ffa110d6455fb",
+    "bytes": 2749754,
+    "alphaRange": null,
+    "transparentFraction": 0,
+    "status": "source_png"
+  },
+  "cat_parts": {
+    "file": "assets/cat_parts.png",
+    "width": 1536,
+    "height": 1024,
+    "mode": "RGBA",
+    "sha256": "4f198132180f37309f1abd1798cbf225b062d5d94a760bed9106ff446a3f09e5",
+    "bytes": 2272182,
+    "alphaRange": [
+      0,
+      254
+    ],
+    "transparentFraction": 0.4768,
+    "status": "source_atlas_needs_rigging"
+  },
+  "child_parts": {
+    "file": "assets/child_parts.png",
+    "width": 1254,
+    "height": 1254,
+    "mode": "RGBA",
+    "sha256": "705a2244f2615d420f9b57c64ee580dc9fb3471dc19930c96c28fc589c1fa698",
+    "bytes": 1755132,
+    "alphaRange": [
+      0,
+      255
+    ],
+    "transparentFraction": 0.458,
+    "status": "source_atlas_needs_rigging"
+  },
+  "crouch_parts": {
+    "file": "assets/crouch_parts.png",
+    "width": 1536,
+    "height": 1024,
+    "mode": "RGBA",
+    "sha256": "a02754d6fb6c4d5d4067d0802dbddca43e62562bc65c896c94ff2b46cc03a1f7",
+    "bytes": 1995506,
+    "alphaRange": [
+      0,
+      254
+    ],
+    "transparentFraction": 0.6132,
+    "status": "source_atlas_needs_rigging"
+  },
+  "dog_parts": {
+    "file": "assets/dog_parts.png",
+    "width": 1536,
+    "height": 1024,
+    "mode": "RGBA",
+    "sha256": "4cd701ed38cd504b21c48c3b6bb99c8ca1e1708274ca01728c4bf29a2bb38fa0",
+    "bytes": 2169678,
+    "alphaRange": [
+      0,
+      254
+    ],
+    "transparentFraction": 0.592,
+    "status": "source_atlas_needs_rigging"
+  },
+  "furniture_sheet": {
+    "file": "assets/furniture_sheet.png",
+    "width": 1536,
+    "height": 1024,
+    "mode": "RGBA",
+    "sha256": "0300c178dd505501f3fb1506d422cda6ba859ac4447d7f6fa4c6f5812fa7ebb2",
+    "bytes": 2318075,
+    "alphaRange": [
+      0,
+      254
+    ],
+    "transparentFraction": 0.5757,
+    "status": "source_png"
+  },
+  "garlands_sheet": {
+    "file": "assets/garlands_sheet.png",
+    "width": 1536,
+    "height": 1024,
+    "mode": "RGBA",
+    "sha256": "42c0b1c79a1fd0460ae112073cda6907cfd88b06483053dabbf82f0ea25f1998",
+    "bytes": 2759044,
+    "alphaRange": [
+      0,
+      254
+    ],
+    "transparentFraction": 0.3774,
+    "status": "source_png"
+  },
+  "lamp_tall": {
+    "file": "assets/lamp_tall.png",
+    "width": 724,
+    "height": 2172,
+    "mode": "RGBA",
+    "sha256": "8b3a91e02e9696d69043aaaf03f070a4ed9b5ae2c22d75c063538c743b3da03a",
+    "bytes": 736138,
+    "alphaRange": [
+      0,
+      255
+    ],
+    "transparentFraction": 0.8293,
+    "status": "source_png"
+  },
+  "sled_child_parts": {
+    "file": "assets/sled_child_parts.png",
+    "width": 1536,
+    "height": 1024,
+    "mode": "RGBA",
+    "sha256": "e13b3eed4783ebda9c21b8265783806c23fb43d819bd30a7e59ac51b9ff2dab3",
+    "bytes": 2341374,
+    "alphaRange": [
+      0,
+      254
+    ],
+    "transparentFraction": 0.5262,
+    "status": "source_atlas_needs_rigging"
+  },
+  "small_props": {
+    "file": "assets/small_props.png",
+    "width": 1536,
+    "height": 1024,
+    "mode": "RGBA",
+    "sha256": "fc2d3fb54622b0064c30a2e2951331bbf80c527b5a870306f73e98736ecd0a77",
+    "bytes": 2170130,
+    "alphaRange": [
+      0,
+      254
+    ],
+    "transparentFraction": 0.4772,
+    "status": "source_png"
+  },
+  "snow_tools": {
+    "file": "assets/snow_tools.png",
+    "width": 1536,
+    "height": 1024,
+    "mode": "RGBA",
+    "sha256": "8798286ba3f249394454fff8b28b84ba00b27152653adf86e78295d8bcf1778d",
+    "bytes": 2012698,
+    "alphaRange": [
+      0,
+      254
+    ],
+    "transparentFraction": 0.6256,
+    "status": "source_png"
+  },
+  "snowman_parts": {
+    "file": "assets/snowman_parts.png",
+    "width": 1536,
+    "height": 1024,
+    "mode": "RGBA",
+    "sha256": "dc8d609ba9bc62bf47dde2efae25d0e024b9fc31cb028bb744c400b1ad5bcfde",
+    "bytes": 1967515,
+    "alphaRange": [
+      0,
+      254
+    ],
+    "transparentFraction": 0.6484,
+    "status": "source_atlas_needs_rigging"
+  },
+  "stall_candles": {
+    "file": "assets/stall_candles.png",
+    "width": 1382,
+    "height": 1138,
+    "mode": "RGBA",
+    "sha256": "d9e9c503d0b40efcb6f69ebf85aa49477c30d168db871f831eb433bb0bbe0b5d",
+    "bytes": 2412570,
+    "alphaRange": [
+      0,
+      255
+    ],
+    "transparentFraction": 0.2899,
+    "status": "source_png"
+  },
+  "stall_drinks": {
+    "file": "assets/stall_drinks.png",
+    "width": 1254,
+    "height": 1254,
+    "mode": "RGBA",
+    "sha256": "061c357a25d795e978246b5d4e09e772da6c784c8072e71434d00b05aa82e0db",
+    "bytes": 2390579,
+    "alphaRange": [
+      0,
+      255
+    ],
+    "transparentFraction": 0.3043,
+    "status": "source_png"
+  },
+  "stall_food": {
+    "file": "assets/stall_food.png",
+    "width": 1254,
+    "height": 1254,
+    "mode": "RGBA",
+    "sha256": "120355971f319f80d6206cad5d5a7a117f2e7a3257d075d24476ac720f364e67",
+    "bytes": 2276207,
+    "alphaRange": [
+      0,
+      255
+    ],
+    "transparentFraction": 0.3776,
+    "status": "source_png"
+  },
+  "stall_gingerbread": {
+    "file": "assets/stall_gingerbread.png",
+    "width": 1380,
+    "height": 1140,
+    "mode": "RGBA",
+    "sha256": "1ba3ee710f2c1c5a3290fcf43e9cc72f809d5285c34f77ca873f2c4b8690a4bf",
+    "bytes": 2359314,
+    "alphaRange": [
+      0,
+      255
+    ],
+    "transparentFraction": 0.3407,
+    "status": "source_png"
+  },
+  "stall_ornaments": {
+    "file": "assets/stall_ornaments.png",
+    "width": 1254,
+    "height": 1254,
+    "mode": "RGBA",
+    "sha256": "e1a26a9f415c2794284147f4df7a3087ce3d3494db4675fb43c0c300168f5c28",
+    "bytes": 2328892,
+    "alphaRange": [
+      0,
+      255
+    ],
+    "transparentFraction": 0.3344,
+    "status": "source_png"
+  },
+  "stall_toys": {
+    "file": "assets/stall_toys.png",
+    "width": 1374,
+    "height": 1145,
+    "mode": "RGBA",
+    "sha256": "e0846273604b7dd3f5c40de8a7a778d94d53cd54586e0e629547e78b758c5f24",
+    "bytes": 2273266,
+    "alphaRange": [
+      0,
+      255
+    ],
+    "transparentFraction": 0.3673,
+    "status": "source_png"
+  },
+  "steam_sheet": {
+    "file": "assets/steam_sheet.png",
+    "width": 1536,
+    "height": 1024,
+    "mode": "RGBA",
+    "sha256": "214157b917687c351554348984bc12e251a34fd85349a3d0a4d36326edb80517",
+    "bytes": 1719251,
+    "alphaRange": [
+      0,
+      253
+    ],
+    "transparentFraction": 0.0484,
+    "status": "source_png"
+  },
+  "tree": {
+    "file": "assets/tree.png",
+    "width": 1024,
+    "height": 1536,
+    "mode": "RGBA",
+    "sha256": "c07d5c023412c7db9df6e4465e9518defb5640551bc14c142904cffc81fc570f",
+    "bytes": 2630270,
+    "alphaRange": [
+      0,
+      254
+    ],
+    "transparentFraction": 0.5381,
+    "status": "source_png"
+  }
+}

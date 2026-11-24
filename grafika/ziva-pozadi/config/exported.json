@@ -1,0 +1,1244 @@
+{
+  "sprites": {
+    "lamp": {
+      "file": "exported/lamp.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "furniture_sheet",
+      "sourceRect": [
+        127,
+        0,
+        255,
+        545
+      ]
+    },
+    "bench": {
+      "file": "exported/bench.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "furniture_sheet",
+      "sourceRect": [
+        498,
+        133,
+        457,
+        356
+      ]
+    },
+    "table": {
+      "file": "exported/table.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "furniture_sheet",
+      "sourceRect": [
+        1107,
+        41,
+        261,
+        475
+      ]
+    },
+    "mailbox": {
+      "file": "exported/mailbox.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "furniture_sheet",
+      "sourceRect": [
+        140,
+        565,
+        229,
+        434
+      ]
+    },
+    "fir": {
+      "file": "exported/fir.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "furniture_sheet",
+      "sourceRect": [
+        512,
+        544,
+        287,
+        453
+      ]
+    },
+    "nativity": {
+      "file": "exported/nativity.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "furniture_sheet",
+      "sourceRect": [
+        923,
+        564,
+        531,
+        402
+      ]
+    },
+    "phone_front": {
+      "file": "exported/phone_front.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "small_props",
+      "sourceRect": [
+        85,
+        97,
+        230,
+        415
+      ]
+    },
+    "phone_back": {
+      "file": "exported/phone_back.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "small_props",
+      "sourceRect": [
+        412,
+        97,
+        356,
+        415
+      ]
+    },
+    "mitten_ground": {
+      "file": "exported/mitten_ground.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "small_props",
+      "sourceRect": [
+        768,
+        152,
+        333,
+        347
+      ]
+    },
+    "mitten_held": {
+      "file": "exported/mitten_held.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "small_props",
+      "sourceRect": [
+        1198,
+        42,
+        242,
+        470
+      ]
+    },
+    "cloth_folded": {
+      "file": "exported/cloth_folded.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "small_props",
+      "sourceRect": [
+        23,
+        512,
+        338,
+        413
+      ]
+    },
+    "cloth_held": {
+      "file": "exported/cloth_held.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "small_props",
+      "sourceRect": [
+        385,
+        512,
+        343,
+        443
+      ]
+    },
+    "mug_red": {
+      "file": "exported/mug_red.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "small_props",
+      "sourceRect": [
+        769,
+        628,
+        332,
+        286
+      ]
+    },
+    "mug_cream": {
+      "file": "exported/mug_cream.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "small_props",
+      "sourceRect": [
+        1154,
+        512,
+        346,
+        402
+      ]
+    },
+    "steam_1": {
+      "file": "exported/steam_1.png",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "source": "steam_sheet",
+      "sourceRect": [
+        0,
+        0,
+        512,
+        512
+      ]
+    },
+    "steam_2": {
+      "file": "exported/steam_2.png",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "source": "steam_sheet",
+      "sourceRect": [
+        512,
+        0,
+        512,
+        512
+      ]
+    },
+    "steam_3": {
+      "file": "exported/steam_3.png",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "source": "steam_sheet",
+      "sourceRect": [
+        1024,
+        0,
+        512,
+        512
+      ]
+    },
+    "steam_4": {
+      "file": "exported/steam_4.png",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "source": "steam_sheet",
+      "sourceRect": [
+        55,
+        512,
+        405,
+        442
+      ]
+    },
+    "steam_5": {
+      "file": "exported/steam_5.png",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "source": "steam_sheet",
+      "sourceRect": [
+        589,
+        512,
+        343,
+        439
+      ]
+    },
+    "steam_6": {
+      "file": "exported/steam_6.png",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "source": "steam_sheet",
+      "sourceRect": [
+        1093,
+        512,
+        415,
+        438
+      ]
+    },
+    "shovel": {
+      "file": "exported/shovel.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "snow_tools",
+      "sourceRect": [
+        64,
+        9,
+        857,
+        394
+      ]
+    },
+    "shovel_snow": {
+      "file": "exported/shovel_snow.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "snow_tools",
+      "sourceRect": [
+        1050,
+        182,
+        312,
+        189
+      ]
+    },
+    "pavement": {
+      "file": "exported/pavement.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "snow_tools",
+      "sourceRect": [
+        33,
+        474,
+        1473,
+        226
+      ]
+    },
+    "snow_pile": {
+      "file": "exported/snow_pile.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "snow_tools",
+      "sourceRect": [
+        190,
+        772,
+        1153,
+        214
+      ]
+    },
+    "snowman_base": {
+      "file": "exported/snowman_base.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "snowman_parts",
+      "sourceRect": [
+        85,
+        33,
+        455,
+        456
+      ]
+    },
+    "snowman_middle": {
+      "file": "exported/snowman_middle.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "snowman_parts",
+      "sourceRect": [
+        540,
+        118,
+        470,
+        351
+      ]
+    },
+    "snowman_head": {
+      "file": "exported/snowman_head.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "snowman_parts",
+      "sourceRect": [
+        1122,
+        187,
+        270,
+        268
+      ]
+    },
+    "carrot": {
+      "file": "exported/carrot.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "snowman_parts",
+      "sourceRect": [
+        186,
+        538,
+        217,
+        86
+      ]
+    },
+    "scarf": {
+      "file": "exported/scarf.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "snowman_parts",
+      "sourceRect": [
+        62,
+        670,
+        356,
+        325
+      ]
+    },
+    "twig_left": {
+      "file": "exported/twig_left.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "snowman_parts",
+      "sourceRect": [
+        492,
+        714,
+        273,
+        226
+      ]
+    },
+    "twig_right": {
+      "file": "exported/twig_right.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "snowman_parts",
+      "sourceRect": [
+        878,
+        716,
+        232,
+        218
+      ]
+    },
+    "snowball": {
+      "file": "exported/snowball.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "snowman_parts",
+      "sourceRect": [
+        1224,
+        741,
+        223,
+        219
+      ]
+    },
+    "coal_0": {
+      "file": "exported/coal_0.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "snowman_parts",
+      "sourceRect": [
+        564,
+        546,
+        80,
+        76
+      ]
+    },
+    "coal_1": {
+      "file": "exported/coal_1.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "snowman_parts",
+      "sourceRect": [
+        744,
+        550,
+        82,
+        73
+      ]
+    },
+    "coal_2": {
+      "file": "exported/coal_2.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "snowman_parts",
+      "sourceRect": [
+        930,
+        552,
+        76,
+        68
+      ]
+    },
+    "coal_3": {
+      "file": "exported/coal_3.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "snowman_parts",
+      "sourceRect": [
+        1100,
+        553,
+        77,
+        69
+      ]
+    },
+    "coal_4": {
+      "file": "exported/coal_4.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "snowman_parts",
+      "sourceRect": [
+        1271,
+        552,
+        76,
+        68
+      ]
+    },
+    "garland_1": {
+      "file": "exported/garland_1.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "garlands_sheet",
+      "sourceRect": [
+        69,
+        12,
+        951,
+        193
+      ]
+    },
+    "garland_2": {
+      "file": "exported/garland_2.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "garlands_sheet",
+      "sourceRect": [
+        83,
+        205,
+        928,
+        145
+      ]
+    },
+    "garland_3": {
+      "file": "exported/garland_3.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "garlands_sheet",
+      "sourceRect": [
+        62,
+        350,
+        946,
+        170
+      ]
+    },
+    "bow_1": {
+      "file": "exported/bow_1.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "garlands_sheet",
+      "sourceRect": [
+        1072,
+        65,
+        182,
+        178
+      ]
+    },
+    "bow_2": {
+      "file": "exported/bow_2.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "garlands_sheet",
+      "sourceRect": [
+        1294,
+        67,
+        190,
+        177
+      ]
+    },
+    "star_1": {
+      "file": "exported/star_1.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "garlands_sheet",
+      "sourceRect": [
+        1060,
+        270,
+        186,
+        240
+      ]
+    },
+    "star_2": {
+      "file": "exported/star_2.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "garlands_sheet",
+      "sourceRect": [
+        1300,
+        270,
+        139,
+        203
+      ]
+    },
+    "child_front_head": {
+      "file": "exported/child_front_head.png",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "source": "child_parts",
+      "sourceRect": [
+        12,
+        150,
+        206,
+        248
+      ]
+    },
+    "child_front_hat": {
+      "file": "exported/child_front_hat.png",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "source": "child_parts",
+      "sourceRect": [
+        215,
+        101,
+        202,
+        211
+      ]
+    },
+    "child_front_scarf": {
+      "file": "exported/child_front_scarf.png",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "source": "child_parts",
+      "sourceRect": [
+        420,
+        147,
+        188,
+        283
+      ]
+    },
+    "child_front_torso": {
+      "file": "exported/child_front_torso.png",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "source": "child_parts",
+      "sourceRect": [
+        21,
+        432,
+        234,
+        360
+      ]
+    },
+    "child_front_upper_arm": {
+      "file": "exported/child_front_upper_arm.png",
+      "pivot": [
+        0.5,
+        0.12
+      ],
+      "source": "child_parts",
+      "sourceRect": [
+        255,
+        506,
+        99,
+        236
+      ]
+    },
+    "child_front_forearm": {
+      "file": "exported/child_front_forearm.png",
+      "pivot": [
+        0.5,
+        0.12
+      ],
+      "source": "child_parts",
+      "sourceRect": [
+        372,
+        513,
+        94,
+        230
+      ]
+    },
+    "child_front_mitten": {
+      "file": "exported/child_front_mitten.png",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "source": "child_parts",
+      "sourceRect": [
+        490,
+        536,
+        129,
+        178
+      ]
+    },
+    "child_front_thigh": {
+      "file": "exported/child_front_thigh.png",
+      "pivot": [
+        0.5,
+        0.12
+      ],
+      "source": "child_parts",
+      "sourceRect": [
+        29,
+        845,
+        130,
+        288
+      ]
+    },
+    "child_front_shin": {
+      "file": "exported/child_front_shin.png",
+      "pivot": [
+        0.5,
+        0.12
+      ],
+      "source": "child_parts",
+      "sourceRect": [
+        177,
+        853,
+        105,
+        280
+      ]
+    },
+    "child_front_boot": {
+      "file": "exported/child_front_boot.png",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "source": "child_parts",
+      "sourceRect": [
+        296,
+        937,
+        194,
+        196
+      ]
+    },
+    "child_front_spare_mitten": {
+      "file": "exported/child_front_spare_mitten.png",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "source": "child_parts",
+      "sourceRect": [
+        485,
+        889,
+        123,
+        222
+      ]
+    },
+    "child_back_head": {
+      "file": "exported/child_back_head.png",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "source": "child_parts",
+      "sourceRect": [
+        642,
+        129,
+        205,
+        266
+      ]
+    },
+    "child_back_hat": {
+      "file": "exported/child_back_hat.png",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "source": "child_parts",
+      "sourceRect": [
+        842,
+        101,
+        200,
+        219
+      ]
+    },
+    "child_back_scarf": {
+      "file": "exported/child_back_scarf.png",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "source": "child_parts",
+      "sourceRect": [
+        1047,
+        146,
+        192,
+        281
+      ]
+    },
+    "child_back_torso": {
+      "file": "exported/child_back_torso.png",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "source": "child_parts",
+      "sourceRect": [
+        637,
+        431,
+        245,
+        365
+      ]
+    },
+    "child_back_upper_arm": {
+      "file": "exported/child_back_upper_arm.png",
+      "pivot": [
+        0.5,
+        0.12
+      ],
+      "source": "child_parts",
+      "sourceRect": [
+        882,
+        507,
+        96,
+        235
+      ]
+    },
+    "child_back_forearm": {
+      "file": "exported/child_back_forearm.png",
+      "pivot": [
+        0.5,
+        0.12
+      ],
+      "source": "child_parts",
+      "sourceRect": [
+        999,
+        514,
+        120,
+        230
+      ]
+    },
+    "child_back_mitten": {
+      "file": "exported/child_back_mitten.png",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "source": "child_parts",
+      "sourceRect": [
+        1117,
+        536,
+        118,
+        179
+      ]
+    },
+    "child_back_thigh": {
+      "file": "exported/child_back_thigh.png",
+      "pivot": [
+        0.5,
+        0.12
+      ],
+      "source": "child_parts",
+      "sourceRect": [
+        659,
+        845,
+        129,
+        287
+      ]
+    },
+    "child_back_shin": {
+      "file": "exported/child_back_shin.png",
+      "pivot": [
+        0.5,
+        0.12
+      ],
+      "source": "child_parts",
+      "sourceRect": [
+        807,
+        854,
+        103,
+        278
+      ]
+    },
+    "child_back_boot": {
+      "file": "exported/child_back_boot.png",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "source": "child_parts",
+      "sourceRect": [
+        923,
+        939,
+        194,
+        194
+      ]
+    },
+    "child_back_spare_mitten": {
+      "file": "exported/child_back_spare_mitten.png",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "source": "child_parts",
+      "sourceRect": [
+        1112,
+        892,
+        107,
+        172
+      ]
+    },
+    "closed_door": {
+      "file": "exported/closed_door.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "architecture_patches",
+      "sourceRect": [
+        141,
+        20,
+        302,
+        402
+      ]
+    },
+    "door_leaf": {
+      "file": "exported/door_leaf.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "architecture_patches",
+      "sourceRect": [
+        542,
+        20,
+        171,
+        402
+      ]
+    },
+    "door_interior": {
+      "file": "exported/door_interior.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "architecture_patches",
+      "sourceRect": [
+        820,
+        29,
+        251,
+        392
+      ]
+    },
+    "door_neutral": {
+      "file": "exported/door_neutral.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "architecture_patches",
+      "sourceRect": [
+        1165,
+        30,
+        247,
+        390
+      ]
+    },
+    "window_1_lit": {
+      "file": "exported/window_1_lit.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "architecture_patches",
+      "sourceRect": [
+        61,
+        458,
+        171,
+        248
+      ]
+    },
+    "window_1_dark": {
+      "file": "exported/window_1_dark.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "architecture_patches",
+      "sourceRect": [
+        60,
+        731,
+        173,
+        258
+      ]
+    },
+    "window_2_lit": {
+      "file": "exported/window_2_lit.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "architecture_patches",
+      "sourceRect": [
+        309,
+        458,
+        172,
+        248
+      ]
+    },
+    "window_2_dark": {
+      "file": "exported/window_2_dark.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "architecture_patches",
+      "sourceRect": [
+        308,
+        731,
+        173,
+        258
+      ]
+    },
+    "window_3_lit": {
+      "file": "exported/window_3_lit.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "architecture_patches",
+      "sourceRect": [
+        558,
+        458,
+        170,
+        248
+      ]
+    },
+    "window_3_dark": {
+      "file": "exported/window_3_dark.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "architecture_patches",
+      "sourceRect": [
+        558,
+        731,
+        171,
+        259
+      ]
+    },
+    "window_4_lit": {
+      "file": "exported/window_4_lit.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "architecture_patches",
+      "sourceRect": [
+        806,
+        458,
+        172,
+        248
+      ]
+    },
+    "window_4_dark": {
+      "file": "exported/window_4_dark.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "architecture_patches",
+      "sourceRect": [
+        806,
+        731,
+        172,
+        259
+      ]
+    },
+    "window_5_lit": {
+      "file": "exported/window_5_lit.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "architecture_patches",
+      "sourceRect": [
+        1056,
+        458,
+        172,
+        249
+      ]
+    },
+    "window_5_dark": {
+      "file": "exported/window_5_dark.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "architecture_patches",
+      "sourceRect": [
+        1054,
+        731,
+        174,
+        259
+      ]
+    },
+    "window_6_lit": {
+      "file": "exported/window_6_lit.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "architecture_patches",
+      "sourceRect": [
+        1302,
+        457,
+        173,
+        249
+      ]
+    },
+    "window_6_dark": {
+      "file": "exported/window_6_dark.png",
+      "pivot": [
+        0.5,
+        1
+      ],
+      "source": "architecture_patches",
+      "sourceRect": [
+        1303,
+        730,
+        173,
+        259
+      ]
+    }
+  },
+  "stalls": {
+    "stall_drinks": {
+      "front": "exported/stall_drinks_front.png",
+      "rear": "exported/stall_drinks_rear.png",
+      "canvas": [
+        1254,
+        1254
+      ],
+      "vendorClipPx": [
+        463,
+        539,
+        340,
+        258
+      ],
+      "note": "Exact central-window split, not a reconstructed full hidden interior. Keep vendor clipped to this opening."
+    },
+    "stall_food": {
+      "front": "exported/stall_food_front.png",
+      "rear": "exported/stall_food_rear.png",
+      "canvas": [
+        1254,
+        1254
+      ],
+      "vendorClipPx": [
+        438,
+        539,
+        152,
+        189
+      ],
+      "note": "Exact central-window split, not a reconstructed full hidden interior. Keep vendor clipped to this opening."
+    },
+    "stall_gingerbread": {
+      "front": "exported/stall_gingerbread_front.png",
+      "rear": "exported/stall_gingerbread_rear.png",
+      "canvas": [
+        1380,
+        1140
+      ],
+      "vendorClipPx": [
+        552,
+        547,
+        277,
+        229
+      ],
+      "note": "Exact central-window split, not a reconstructed full hidden interior. Keep vendor clipped to this opening."
+    },
+    "stall_ornaments": {
+      "front": "exported/stall_ornaments_front.png",
+      "rear": "exported/stall_ornaments_rear.png",
+      "canvas": [
+        1254,
+        1254
+      ],
+      "vendorClipPx": [
+        426,
+        576,
+        377,
+        265
+      ],
+      "note": "Exact central-window split, not a reconstructed full hidden interior. Keep vendor clipped to this opening."
+    },
+    "stall_candles": {
+      "front": "exported/stall_candles_front.png",
+      "rear": "exported/stall_candles_rear.png",
+      "canvas": [
+        1382,
+        1138
+      ],
+      "vendorClipPx": [
+        469,
+        477,
+        402,
+        297
+      ],
+      "note": "Exact central-window split, not a reconstructed full hidden interior. Keep vendor clipped to this opening."
+    },
+    "stall_toys": {
+      "front": "exported/stall_toys_front.png",
+      "rear": "exported/stall_toys_rear.png",
+      "canvas": [
+        1374,
+        1145
+      ],
+      "vendorClipPx": [
+        535,
+        469,
+        290,
+        310
+      ],
+      "note": "Exact central-window split, not a reconstructed full hidden interior. Keep vendor clipped to this opening."
+    }
+  }
+}

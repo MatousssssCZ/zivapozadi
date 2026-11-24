@@ -2,7 +2,7 @@
   "format": "zimni-scena-postava",
   "formatVersion": 1,
   "id": "test-figure",
-  "name": "Testovac\u00ed postava (provizorn\u00ed)",
+  "name": "Testovací postava (provizorní)",
   "provisional": true,
   "backend": "procedural-test-figure",
   "height": 130,
@@ -132,6 +132,9 @@
   ],
   "supportedActivities": [
     "coffee",
-    "shop"
+    "shop",
+    "viewing",
+    "snowman",
+    "snowballFight"
   ]
 }

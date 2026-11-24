@@ -90,6 +90,6 @@ export function testFigureManifest(): CharacterManifest {
     clipFallbacks: { look: 'idle' },
     attachPoints: { handR: { E: { x: 14, y: -64 }, SE: { x: 12, y: -62 }, NE: { x: 12, y: -64 } } },
     capabilities: ['walk', 'look', 'hold-cup', 'drink', 'talk'],
-    supportedActivities: ['coffee', 'shop'],
+    supportedActivities: ['coffee', 'shop', 'viewing', 'snowman', 'snowballFight'],
   };
 }
