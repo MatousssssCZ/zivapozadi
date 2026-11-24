@@ -21,6 +21,8 @@ import { limitSlope } from '../nav/slope';
 import { pointInPolygon } from '../math/geom';
 import { planCrowd, solveCrowd, wantVelocity, comfortRadius, insidePoly, R_BODY, type CrowdItem, type ObstacleW } from './crowd';
 import { cameraFor, toWorld, toScreen, worldAngleOfScreen, screenAngleOfWorld, Q, type World } from '../scene/camera';
+import { viewForDirection } from '../anim/skeleton';
+import { canSip, clearGesturesFor, emptySocialWorld, endConversationOf, ensureSocial, greetPair, releaseArm, startConversation, stepAgentSocial, stepConversations, thanks, waveTo, type SocialEnv, type SocialWorld } from '../social/social';
 
 export interface Diagnostic { level: 'warning' | 'error'; message: string; ref?: string }
 
@@ -281,6 +283,9 @@ export class Simulation {
         lids[id] = { from: cur, to, t0: now, t1: now + Math.max(0.01, duration) };
       },
       playAction(a, clip, defaults) {
+        // nutná akce (pití, převzetí, koš) má přednost před gestem na stejné paži (C.7)
+        const res = clip === 'lidDrop' ? ['arm0', 'arm1', 'head'] as const : clip === 'drink' ? ['arm1', 'head'] as const : ['receive', 'drop'].includes(clip) ? ['arm1'] as const : [];
+        if (res.length) clearGesturesFor(a, [...res]);
         const w = playAction(a.anim, self.manifests[self.chars.get(a.id)!.assetId], clip, defaults);
         if (w) self.addDiag('warning', w);
       },
@@ -297,6 +302,13 @@ export class Simulation {
       randRange: (a, lo, hi) => randRange(a.rng, lo, hi),
       isRemoved: (id) => self.state.removedObjects.includes(id),
       character: self.characterControl(),
+      social: {
+        converse: (members, kind) => { startConversation(self.socialWorld(), members, kind, self.project.seed, self.time()); },
+        end: (a) => endConversationOf(self.socialWorld(), a.id, self.socialEnv()),
+        canSip: (a, dur) => canSip(self.socialWorld(), a.id, self.time(), dur),
+        releaseArm: (a, arm) => releaseArm(a, arm),
+        thanks: (a) => thanks(a, self.time()),
+      },
     };
   }
 
@@ -375,8 +387,69 @@ export class Simulation {
     // 2) animace a rozhodování
     this.stepCrowdMotion();
     for (const a of this.state.agents) this.stepAgent(a, t);
+    this.stepSocial(t);
     this.stepProps(t);
     this.state.step++;
+  }
+
+  // ---------------------------------------------------------------- sociální vrstva
+  socialWorld(): SocialWorld { return (this.state.social ??= emptySocialWorld()); }
+  private socialEnvCache: SocialEnv | null = null;
+  socialEnv(): SocialEnv {
+    const self = this;
+    if (!this.socialEnvCache) {
+      const byId = () => new Map(self.state.agents.map((a) => [a.id, a]));
+      let idx = byId(), idxStep = -1;
+      this.socialEnvCache = {
+        get now() { return self.time(); },
+        seed: self.project.seed,
+        agent(id) { if (idxStep !== self.state.step || idx.size !== self.state.agents.length) { idx = byId(); idxStep = self.state.step; } return idx.get(id); },
+        queueStill: (a) => { const x = a as AgentState; return x.activity?.phase === 'queue' && x.social?.stillSince != null ? self.time() - x.social.stillSince : 0; },
+        canWarmCup: (a) => { const x = a as AgentState; return x.activity?.type === 'coffee' && x.activity.phase === 'drink' && !x.anim.action; },
+        pointTarget: (a) => self.pointTargetFor(a as AgentState),
+        outward: (a, arm) => {
+          const { view, mirror } = viewForDirection((a as AgentState).anim.dir);
+          const ns = view === 'front3q' ? -1 : 1, sx = (arm === 0 ? -1 : 1) * ns;
+          return mirror ? -sx : sx;
+        },
+      };
+    }
+    return this.socialEnvCache;
+  }
+  /** Co ukázat při povídání: nejbližší stánek nebo strom ve vzdálenosti 2–25 m. */
+  private pointTargetFor(a: AgentState): Vec2 | null {
+    const cam = cameraFor(this.project.scene), P = toWorld(cam, a.pos);
+    let best: Vec2 | null = null, bd = Infinity;
+    for (const o of this.project.objects) {
+      if (!o.visible || o.layer !== 'world') continue;
+      if (!o.seller && !/strom|tree|smrk/i.test(o.assetId + (o.name ?? ''))) continue;
+      const W = toWorld(cam, { x: o.x, y: o.y }), d = Math.hypot(W.X - P.X, W.Z - P.Z);
+      if (d < 2 || d > 25 || d >= bd) continue;
+      bd = d; best = { x: o.x - a.pos.x, y: o.y - 120 - a.pos.y };
+    }
+    return best;
+  }
+  /** Rozhovor platí, dokud spolu účastníci stojí/jdou poblíž a jsou ve scéně. */
+  private conversationValid(members: string[]): boolean {
+    const real = members.filter((m) => !m.startsWith('v:')).map((m) => this.state.agents.find((a) => a.id === m));
+    if (real.some((a) => !a || a.hidden)) return false;
+    if (members.some((m) => m.startsWith('v:'))) return real.every((a) => (a!.activity?.phase === 'order'));
+    if (real.length < 2) return false;
+    const cam = cameraFor(this.project.scene);
+    const P = real.map((a) => toWorld(cam, a!.pos));
+    return Math.hypot(P[0].X - P[1].X, P[0].Z - P[1].Z) < 3.2;
+  }
+  private stepSocial(t: number) {
+    const world = this.socialWorld(), env = this.socialEnv();
+    for (const c of [...world.convs]) if (!this.conversationValid(c.members)) endConversationOf(world, c.members.find((m) => !m.startsWith('v:'))!, env);
+    stepConversations(world, env);
+    for (const a of this.state.agents) {
+      const s = ensureSocial(a, this.project.seed);
+      // fronta: jak dlouho postava stojí bez posunu
+      if (a.activity?.phase === 'queue' && a.speed < 0.5) s.stillSince ??= t; else s.stillSince = undefined;
+      stepAgentSocial(a, env, world, SIM_DT);
+      if (a.anim.action?.requested === 'drink' && a.anim.speaking) world.stats.sipDuringSpeech++;
+    }
   }
 
   private stepSchedule(t: number) {
@@ -854,6 +927,7 @@ export class Simulation {
         return;
       }
       case 'meet-go': {
+        this.maybeWave(a, v, t);
         if (a.route) return;
         v.mode = 'meet-wait'; v.since = t;
         return;
@@ -862,12 +936,15 @@ export class Simulation {
         const f = this.state.agents.find((x) => x.id === v.friendId);
         if (!f || f.hidden || f.visit?.friendId !== a.id) { this.leaveScene(a, t); return; }
         a.status = `Čeká na: ${f.name}`;
+        this.maybeWave(a, v, t);
         if (f.visit.mode === 'meet-wait' && !f.route && dist(f.pos, a.pos) < 120) {
           // pozdrav: natočit se k sobě, chvíli si povídat
           for (const [x, y] of [[a, f], [f, a]] as const) {
-            x.visit!.mode = 'greet'; x.visit!.until = t + randRange(a.rng, 3, 5); x.look = { x: y.pos.x, y: y.pos.y };
-            this.ctx.playAction(x, 'talk', { duration: 1.4, loop: 'loop' });
+            x.visit!.mode = 'greet'; x.visit!.until = t + randRange(a.rng, 4, 7); x.look = { x: y.pos.x, y: y.pos.y };
           }
+          // pozdrav kývnutím (druhý odpoví se zpožděním), pak si začnou povídat
+          greetPair(a, f, t);
+          startConversation(this.socialWorld(), [a.id, f.id], 'pair', this.project.seed, t + 0.9);
           this.log('info', `${a.name} a ${f.name} se zdraví.`, a.id);
           return;
         }
@@ -896,6 +973,18 @@ export class Simulation {
         return;
       }
     }
+  }
+
+  /** Zamávání příteli, který se objevil 2,5–5 m daleko (jednou za setkání, p = 0,65). */
+  private maybeWave(a: AgentState, v: NonNullable<AgentState['visit']>, t: number) {
+    if (v.waved) return;
+    const f = this.state.agents.find((x) => x.id === v.friendId);
+    if (!f || f.hidden) return;
+    const cam = cameraFor(this.project.scene), P = toWorld(cam, a.pos), F = toWorld(cam, f.pos);
+    const d = Math.hypot(P.X - F.X, P.Z - F.Z);
+    if (d < 2.5 || d > 5) return;
+    v.waved = true;
+    waveTo(a, this.socialWorld(), t);
   }
 
   /** Přítel pro setkání: jiný návštěvník, který je právě mimo scénu a nemá stálou dvojici. */

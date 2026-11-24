@@ -22,7 +22,7 @@ export const coffeeDefinition: ActivityDefinition = {
   phases: [
     { id: 'to-stand', label: 'Cesta ke stánku / do fronty' },
     { id: 'queue', label: 'Čekání ve frontě' },
-    { id: 'order', label: 'Objednávka', animation: 'talk' },
+    { id: 'order', label: 'Objednávka (rozhovor s prodavačem)' },
     { id: 'receive', label: 'Převzetí kelímku', animation: 'receive', events: ['take'] },
     { id: 'choose-spot', label: 'Výběr místa' },
     { id: 'to-spot', label: 'Cesta s kelímkem' },
@@ -43,7 +43,7 @@ interface CoffeeData {
   deadline?: number; spotWaitUntil?: number; standingNode?: string | null;
   /** Společná káva dvojice: druhý účastník, kdo vybírá místo, zda už je místo přidělené. */
   partnerId?: string; groupLead?: boolean; go?: boolean; steppedAside?: boolean;
-  nextTalkAt?: number; acting?: 'talk' | 'drink' | null;
+  acting?: 'drink' | null;
 }
 
 /** Druhý účastník společné kávy (jen pokud ji opravdu ještě dělá). */
@@ -165,7 +165,8 @@ export const coffeeRunner: ActivityRunner = {
         if (moving) return 'running';
         ctx.res.dequeue(data.queueName!, agent.id);
         data.orderEnd = now + ctx.randRange(agent, num(zone, 'orderMin'), num(zone, 'orderMax'));
-        ctx.playAction(agent, 'talk', { duration: 1.4, loop: 'loop' });
+        // objednávka = krátký rozhovor zákazník–prodavač (prodavač je virtuální účastník)
+        ctx.social.converse([agent.id, `v:${data.standId}`], 'order');
         setPhase(ctx, run, 'order');
         return 'running';
       }
@@ -191,6 +192,7 @@ export const coffeeRunner: ActivityRunner = {
           ctx.character.attachToHand(agent, cup.id);
           ctx.state.stats.cupsServed++;
           ctx.log('info', `${agent.name} převzal(a) kelímek.`, agent.id);
+          ctx.social.thanks(agent);
         }
         if (!ctx.actionFinished(agent)) return 'running';
         ctx.stopAction(agent);
@@ -266,7 +268,10 @@ export const coffeeRunner: ActivityRunner = {
       case 'drink': {
         const pt = partnerOf(ctx, agent, run);
         agent.status = pt ? `Povídá si s: ${pt.agent.name} (káva ${data.sipsDone}/${data.sipsTarget})` : `Pije kávu (${data.sipsDone}/${data.sipsTarget})`;
-        if (pt) agent.look = { x: pt.agent.pos.x, y: pt.agent.pos.y }; // natočení k příteli
+        if (pt) {
+          agent.look = { x: pt.agent.pos.x, y: pt.agent.pos.y }; // natočení k příteli
+          ctx.social.converse([data.groupLead ? agent.id : pt.agent.id, data.groupLead ? pt.agent.id : agent.id], 'pair');
+        }
         if (events.includes('sip')) {
           data.sipsDone!++; ctx.state.stats.sips++;
           const cup = ctx.prop(data.cupId!); if (cup) cup.sips++;
@@ -274,19 +279,17 @@ export const coffeeRunner: ActivityRunner = {
         if (agent.anim.action) {
           if (!ctx.actionFinished(agent)) return 'running';
           ctx.stopAction(agent);
-          const was = data.acting ?? 'drink'; data.acting = null;
-          if (was === 'talk') return 'running';
+          data.acting = null;
           if (data.sipsDone! >= data.sipsTarget!) { setPhase(ctx, run, 'choose-bin'); return 'running'; }
           // ve dvojici jsou pauzy delší – povídají si
           data.nextSipAt = now + ctx.randRange(agent, num(zone, 'sipPauseMin'), num(zone, 'sipPauseMax')) * (pt ? 1.6 : 1);
           return 'running';
         }
-        if (now >= data.nextSipAt!) { data.acting = 'drink'; ctx.playAction(agent, 'drink', { duration: 2.6, events: [{ time: 1.1, name: 'sip' }] }); return 'running'; }
-        if (pt && now >= (data.nextTalkAt ?? 0) && data.nextSipAt! - now > 2.2 && !pt.agent.anim.action) {
-          // střídají se v mluvení: mluví jen ten, kdo zrovna nic nedělá a druhý neposlouchá… mluví
-          data.acting = 'talk';
-          ctx.playAction(agent, 'talk', { duration: ctx.randRange(agent, 1.4, 2.4), loop: 'once' });
-          data.nextTalkAt = now + ctx.randRange(agent, 2.5, 5);
+        // doušek (D01): ne během vlastní promluvy ani těsně před ní; kelímek drží jen jedna ruka
+        const SIP = 3.0;
+        if (now >= data.nextSipAt! && ctx.social.canSip(agent, SIP) && ctx.social.releaseArm(agent, 1)) {
+          data.acting = 'drink';
+          ctx.playAction(agent, 'drink', { duration: SIP, events: [{ time: SIP * 0.5, name: 'sip' }] });
         }
         return 'running';
       }
@@ -297,14 +300,13 @@ export const coffeeRunner: ActivityRunner = {
           // od stolku se odchází spolu: dopovídat, než druhý dopije
           agent.status = `Čeká, až ${ptb.agent.name} dopije`;
           agent.look = { x: ptb.agent.pos.x, y: ptb.agent.pos.y };
-          if (!agent.anim.action && now >= (data.nextTalkAt ?? 0) && !ptb.agent.anim.action) {
-            ctx.playAction(agent, 'talk', { duration: ctx.randRange(agent, 1.4, 2.2), loop: 'once' }); data.nextTalkAt = now + ctx.randRange(agent, 3, 5);
-          }
+          // rozhovor běží dál (sociální vrstva), jen se už nepije
           if (agent.anim.action && ctx.actionFinished(agent)) ctx.stopAction(agent);
           return 'running';
         }
         if (agent.anim.action) ctx.stopAction(agent);
         agent.look = null;
+        if (ptb) ctx.social.end(agent);
         const reachable = role(ctx, zone, 'bin').flatMap((id) => ctx.points(id, 'drop')).filter((p) => ctx.canReach(agent, p));
         if (!reachable.length) {
           // Žádný dosažitelný koš: kelímek se viditelně odloží vedle postavy (nikdy nezmizí).

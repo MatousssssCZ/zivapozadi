@@ -113,8 +113,16 @@ describe('chůze ve scéně (náměstí, 24 návštěvníků, 4 prodavači, 2 dv
     let exits = 0, entries = 0, greets = 0, together = 0, atTable = 0;
     const wasHidden = new Map(sim.state.agents.map((a) => [a.id, !!a.hidden]));
     const tableTalk = new Set<string>();
+    let speakT = 0, bothSpeak = 0, convT = 0, nanPose = 0;
     for (let i = 0; i < 60 * 300; i++) {
       sim.step();
+      for (const c of sim.state.social?.convs ?? []) {
+        if (c.kind !== 'pair') continue;
+        convT++;
+        const n = c.members.filter((m) => sim.state.agents.find((a) => a.id === m)?.anim.speaking).length;
+        if (n >= 1) speakT++; if (n >= 2) bothSpeak++;
+      }
+      for (const a of sim.state.agents) for (const g of a.anim.gestures ?? []) if (!Number.isFinite(g.t) || !Number.isFinite(g.dur)) nanPose++;
       for (const a of sim.state.agents) {
         const h = !!a.hidden;
         if (h && !wasHidden.get(a.id)) exits++;
@@ -134,6 +142,16 @@ describe('chůze ve scéně (náměstí, 24 návštěvníků, 4 prodavači, 2 dv
     expect(together).toBeGreaterThanOrEqual(3);
     expect(atTable).toBeGreaterThanOrEqual(2);
     expect(tableTalk.size).toBeGreaterThanOrEqual(4);
+    // sociální vrstva: rozhovory s řečí, gesty a reakcemi; pití nikdy během vlastní řeči
+    const st = sim.state.social!.stats;
+    console.log(`rozhovory: řeč ${(100 * speakT / Math.max(1, convT)).toFixed(0)} % času dvojic (oba ${(100 * bothSpeak / Math.max(1, convT)).toFixed(1)} %), tahů ${st.turns}, kývnutí ${st.nods}, gesta ${JSON.stringify(st.gestures)}`);
+    expect(st.sipDuringSpeech).toBe(0);
+    expect(nanPose).toBe(0);
+    expect(st.turns).toBeGreaterThan(30);
+    expect(st.nods).toBeGreaterThan(5);
+    expect((st.gestures.beat ?? 0) + (st.gestures.open ?? 0) + (st.gestures.cupBeat ?? 0)).toBeGreaterThan(5);
+    expect(speakT / convT).toBeGreaterThan(0.6);
+    expect(bothSpeak / convT).toBeLessThan(0.03);
     // každý vydaný kelímek je v ruce, padá nebo je v koši (nikdy nezmizí)
     expect(sim.state.stats.cupsServed).toBeGreaterThan(5);
     for (const p of sim.state.props) expect(['held', 'falling', 'inBin', 'counter', 'ground']).toContain(p.place.kind);

@@ -1,8 +1,9 @@
 import type { Vec2 } from '../math/vec';
 import type { RngState } from '../math/rng';
 import type { AnimState } from '../anim/animator';
+import type { AgentSocial, SocialWorld } from '../social/social';
 
-export const SIM_STATE_VERSION = 3;
+export const SIM_STATE_VERSION = 4;
 export const SIM_DT = 1 / 60;
 export const STEPS_PER_SECOND = 60;
 
@@ -43,6 +44,8 @@ export interface VisitState {
   /** Kdo z dvojice přátel vede (jde na kávu, ostatní ho následují). */
   lead?: boolean;
   since?: number;
+  /** Už zamával příteli na dálku. */
+  waved?: boolean;
 }
 
 export interface AgentState {
@@ -101,6 +104,8 @@ export interface AgentState {
   visit?: VisitState | null;
   /** Po společné činnosti se postava znovu připojí k vůdci dvojice. */
   rejoin?: { leaderId: string; side: number; permanent: boolean } | null;
+  /** Sociální vrstva: profil, cooldowny, odložené reakce (src/core/social). */
+  social?: AgentSocial;
 }
 
 export type PropKind = 'cup';
@@ -137,6 +142,8 @@ export interface SimState {
   lids?: Record<string, { from: number; to: number; t0: number; t1: number }>;
   /** Stopy ve sněhu (svět v metrech; nejstarší se uvolní po naplnění zásobníku). */
   footprints?: Footprint[];
+  /** Rozhovory a statistika sociální vrstvy. */
+  social?: SocialWorld;
 }
 
 /** Otisk boty ve sněhu: střed podrážky (X, Z v metrech), směr boty, velikost, čas vzniku. */

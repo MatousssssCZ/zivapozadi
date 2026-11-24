@@ -12,6 +12,7 @@ import { meanPelvisHeight, sampleGait, strideLegLen, gaitEvents } from './gaitPr
 import { footAt, restFeet, type FootGeom } from './gaitKinematics';
 import { heelRelOf, type AnimState } from './animator';
 import type { Direction } from './manifest';
+import { evalAll } from '../social/clips';
 
 /** Pohledy postavy. Datový model počítá se všemi pěti; dostupnost určují podklady. */
 export type ViewId = 'front' | 'side' | 'front3q' | 'back3q' | 'back';
@@ -139,6 +140,22 @@ export function ik(root: Vec2, target: Vec2, l1: number, l2: number, bendSign: n
   return { root, joint, end: { x: tx, y: ty } };
 }
 
+/**
+ * IK s plynulým parametrem ohybu b ∈ [−1, 1]: ±1 jsou obě rovinná řešení, mezi nimi se loket
+ * otáčí přes hloubku (nadloktí drží délku, předloktí se v obraze zkrátí – vrací k2).
+ */
+export function ikBlend(root: Vec2, target: Vec2, l1: number, l2: number, b: number): Limb {
+  const full = ik(root, target, l1, l2, 1);
+  const t = full.end;
+  const d = Math.hypot(t.x - root.x, t.y - root.y);
+  const a = Math.atan2(t.y - root.y, t.x - root.x);
+  const cosA = clamp((l1 * l1 + d * d - l2 * l2) / (2 * l1 * Math.max(d, 1e-6)), -1, 1);
+  const ang = a + b * Math.acos(cosA);
+  const joint = { x: root.x + Math.cos(ang) * l1, y: root.y + Math.sin(ang) * l1 };
+  const k2 = Math.hypot(t.x - joint.x, t.y - joint.y) / l2;
+  return { root, joint, end: t, k1: 1, k2 };
+}
+
 /** Plynulý přechod hodnoty mezi náhodnými cíli (deterministicky z času a seedu) – přenesení váhy. */
 function weightShift(t: number, period: number, seed: number): number {
   const k = Math.floor(t / period);
@@ -177,6 +194,8 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
   const legLen = B.thigh + B.shin;
   const restHipY = -(B.ankleHeight + legLen * 0.99);
   const tIdle = a.idleTime * motion.idleTempo + motion.phase * 10;
+  // sociální vrstva (gesta, kývnutí, chlad) – cíle rukou, náklony hlavy/trupu, posun pánve
+  const soc = evalAll(a.gestures);
 
   // --- nohy: kontaktně řízená chůze podle tabulek (gaitProfile.ts, gaitKinematics.ts)
   // u = vpřed od pánve, h = výška nad zemí; pevné jsou kontaktní body, kolena dopočítá IK.
@@ -226,7 +245,8 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
   const obl = sampleGait('pelvisObliquityDeg', q0, w) * DEG * b * (front ? 1 : 0.3);
   const halfHip = 0.08 * L;
   const shiftIdle = weightShift(tIdle, I.shiftPeriod, seed) * I.shiftAmp * (1 - b) * (front ? 1 : 0.3);
-  const hip = { x: -ns * lateral * 0.7 + shiftIdle + gfx * centerShift, y: -pelvisH + gfy * centerShift };
+  const gScale = (B.upperArm + B.forearm) / 45; // tabulky gest jsou pro paži 24 + 21 j.
+  const hip = { x: -ns * lateral * 0.7 + shiftIdle + gfx * centerShift + (soc ? soc.pelvisX * gScale * (1 - b) : 0), y: -pelvisH + gfy * centerShift };
   const hipRoots = [0, 1].map((i) => {
     const sgn = i === 0 ? 1 : -1; // referenční (pravá) = noha 0
     const fwd = sgn * halfHip * Math.sin(yaw) * (front ? 1 : 0.6);
@@ -358,11 +378,17 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
   const breathe = (0.5 + 0.5 * Math.sin((tIdle / 3.6) * Math.PI * 2)) * I.breathe;
   const fsg = Math.sign(fx || 1);
   const trunkPitch = (sampleGait('trunkPitchDeg', q0, w) + (motion.lean - 1)) * DEG * b;
-  const torsoAngle = -Math.PI / 2 + trunkPitch * fsg - shiftIdle * 0.004;
+  const torsoAngle = -Math.PI / 2 + trunkPitch * fsg - shiftIdle * 0.004 - (soc ? soc.trunkDeg * DEG : 0);
   const neck = { x: hip.x + Math.cos(torsoAngle) * B.torso, y: hip.y + Math.sin(torsoAngle) * B.torso - breathe };
   const headTiltIdle = I.headAmp * (Math.sin(tIdle * 0.71 + motion.phase * 6.2) + 0.5 * Math.sin(tIdle * 1.37 + motion.phase * 3.1));
   const headPitch = sampleGait('headPitchDeg', q0, w) * DEG * b;
   let headTilt = headTiltIdle * (1 - b) + (headPitch - trunkPitch) * fsg; // odečíst orientaci rodiče
+  if (soc) headTilt += -soc.headDeg * DEG + soc.trunkDeg * DEG * 0.5; // hlava částečně kompenzuje trup
+  if (a.speaking) {
+    // mluvčí: drobný neperiodický pohyb hlavy (žádná ústa – jen náznak, do ±1,2°)
+    const ts = a.idleTime;
+    headTilt += (0.6 * Math.sin(ts * 3.1 + motion.phase * 5) + 0.4 * Math.sin(ts * 4.7 + 1.3) + 0.3 * Math.sin(ts * 1.9)) * 0.9 * DEG;
+  }
   const head = { x: neck.x + v.headOffsetX, y: neck.y - B.neck };
   const shoulder = { x: neck.x + v.shoulderOffsetX, y: neck.y + B.shoulderDrop };
 
@@ -422,8 +448,9 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
         const mouth = { x: head.x + (view === 'back3q' ? 16 : view === 'side' ? 14 : 13) * fx, y: head.y + (view === 'back3q' ? 15 : 17) };
         const arc = Math.sin(Math.PI * raise) * 5; // ruka jde obloukem kousek před tělem
         frontTarget = { x: holdPos.x + (mouth.x - holdPos.x) * raise + arc * fx, y: holdPos.y + (mouth.y - holdPos.y) * raise - tip * 1.5 };
-        headTilt += -(0.05 * raise + 0.14 * tip) * fsg;
-        cupTilt = -(0.3 * raise + 0.8 * tip);
+        // zadání D01: hlava jen 1–2° (náznak), kelímek u úst nakloněný ~15° (max. 25°)
+        headTilt += -(0.012 * raise + 0.02 * tip) * fsg;
+        cupTilt = -(0.1 * raise + 0.17 * tip);
         // paže míří k obličeji dopředu (od/ke kameře) – perspektivně se zkrátí, místo aby trčel loket
         armShorten = (view === 'back3q' ? 0.42 : 0.12) * raise;
         break;
@@ -455,7 +482,32 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
   const bend = 1;
   const ka = 1 - armShorten;
   const frontArm = (): Limb => { const l = ik(frontRoot, frontTarget!, B.upperArm * ka, B.forearm * ka, bend); return ka < 1 ? { ...l, k1: ka, k2: ka } : l; };
+  // sociální gesta: cíl zápěstí ve vlastních souřadnicích paže (x ven od těla, y nahoru vůči ramenům)
+  // se prolne se základní pózou (klid, chůze, držení kelímku nebo akce) podle obálky klipu
+  if (soc && (soc.arms[0] || soc.arms[1])) {
+    const roots = [backRoot, frontRoot];
+    for (let i = 0; i < 2; i++) {
+      const g = soc.arms[i];
+      if (!g || g.w <= 0) continue;
+      const dirX = v.shoulderSpread ? sideX(i) : fx;
+      const base = i === 0 ? (backTarget ?? armBackFK.end) : (frontTarget ?? armFrontFK.end);
+      const tgt = g.rel ? { x: base.x + dirX * g.p.x * gScale, y: base.y - g.p.y * gScale } : { x: roots[i].x + dirX * (g.p.x - 8.7) * gScale, y: shoulder.y - g.p.y * gScale };
+      const t2 = { x: base.x + (tgt.x - base.x) * g.w, y: base.y + (tgt.y - base.y) * g.w };
+      if (i === 0) backTarget = t2; else frontTarget = t2;
+    }
+  }
   const arms = [backTarget ? ik(backRoot, backTarget, B.upperArm, B.forearm, bend) : armBackFK, frontTarget ? frontArm() : armFrontFK] as [Limb, Limb];
+  // gesto: loket míří dolů (ne „kuřecí křídlo“). Přechod mezi oběma větvemi IK je plynulý –
+  // loket se otáčí přes hloubku, takže předloktí se v obraze perspektivně zkrátí (k2 < 1).
+  // Paže na levé straně obrazu má při gestu ven loket ve výchozí větvi nahoře; s obálkou gesta
+  // plynule přejde do druhé větve (loket dolů) – závisí jen na straně paže a váze, ne na
+  // okamžitém cíli, takže se loket nepřeklápí uprostřed pohybu.
+  if (soc && v.shoulderSpread) for (let i = 0; i < 2; i++) {
+    const g = soc.arms[i];
+    if (!g || g.w <= 0 || g.rel || g.keep || (i === 1 && armShorten > 0) || sideX(i) * bend > 0) continue;
+    const l = arms[i];
+    arms[i] = ikBlend(l.root, l.end, B.upperArm, B.forearm, bend * (1 - 2 * g.w));
+  }
   return { view, mirror, root: { x: 0, y: 0 }, hip, neck, shoulder, head, headTilt, torsoAngle, legs, arms, feet: [footAng[0], footAng[1]], handR: arms[1].end, heelPts, cupTilt, snowSink: [sink[0], sink[1]] };
 }
 

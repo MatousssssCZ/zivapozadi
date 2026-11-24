@@ -21,7 +21,7 @@ export const shopDefinition: ActivityDefinition = {
   preconditions: ['Stánek je dosažitelný a má volné obslužné místo nebo místo ve frontě.'],
   phases: [
     { id: 'to-queue', label: 'Cesta do fronty' }, { id: 'queue', label: 'Čekání ve frontě' },
-    { id: 'to-service', label: 'Cesta k pultu' }, { id: 'order', label: 'Výběr a placení', animation: 'talk' },
+    { id: 'to-service', label: 'Cesta k pultu' }, { id: 'order', label: 'Výběr a placení (rozhovor s prodavačem)' },
     { id: 'receive', label: 'Převzetí zboží', animation: 'receive' },
   ],
   outcome: 'Postava má nakoupeno a pokračuje v cestě.',
@@ -111,7 +111,7 @@ export const shopRunner: ActivityRunner = {
         if (moving) return 'running';
         ctx.res.dequeue(data.queueName!, agent.id);
         data.orderEnd = now + ctx.randRange(agent, num(zone, 'orderMin'), num(zone, 'orderMax'));
-        ctx.playAction(agent, 'talk', { duration: 1.4, loop: 'loop' });
+        ctx.social.converse([agent.id, `v:${data.standId}`], 'order');
         setPhase(ctx, run, 'order');
         return 'running';
       }
@@ -127,6 +127,7 @@ export const shopRunner: ActivityRunner = {
         agent.status = 'Přebírá nákup';
         if (!ctx.actionFinished(agent)) return 'running';
         ctx.stopAction(agent);
+        ctx.social.thanks(agent);
         ctx.res.release(data.serviceKey!, agent.id);
         ctx.log('info', `${agent.name} nakoupil(a) (${ctx.object(data.standId!)?.name}).`, agent.id);
         return 'done';

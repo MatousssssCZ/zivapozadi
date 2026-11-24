@@ -4,6 +4,7 @@ import { clamp, smoothstep } from '../math/vec';
 import { LEG_PHYS_M, speedBlend, strideLegLen } from './gaitProfile';
 import { restFeet, startPhase, heelAtContact, footAt, type FootGeom } from './gaitKinematics';
 import { gaitEvents } from './gaitProfile';
+import type { GestureInst } from '../social/clips';
 
 /** Poloha opěrných pat vůči pánvi ze světových kotev (null = noha bez kotvy). */
 export function heelRelOf(a: AnimState): [number | null, number | null] {
@@ -33,6 +34,10 @@ export interface AnimState {
   anchors?: [number | null, number | null];
   /** Tytéž kotvy pat ve scéně (px) + klíč kotvy dráhy, ke které patří (opora pak neklouže ani v zatáčce či při změně hloubky). */
   anchorsXY?: [{ x: number; y: number; key: number; h?: number } | null, { x: number; y: number; key: number; h?: number } | null];
+  /** Běžící sociální klipy (gesta, kývnutí, chlad) – řídí je src/core/social. */
+  gestures?: GestureInst[];
+  /** Postava právě „mluví“ (vizuální promluva bez zvuku). */
+  speaking?: boolean;
 }
 
 /** Údaje o postavě potřebné pro chůzi (délka nohy, geometrie boty, individuální délka kroku). */

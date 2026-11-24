@@ -51,6 +51,21 @@ export interface SimContext {
   animateLid(objectId: string, to: number, duration: number): void;
   /** Rozhraní pro řízení postavy (nezávislé na jejím vzhledu). */
   character: CharacterControl;
+  /** Sociální vrstva: rozhovory, gesta, pití mimo vlastní řeč. */
+  social: SocialControl;
+}
+
+export interface SocialControl {
+  /** Zahájí (nebo ponechá běžící) rozhovor; `v:<id>` je virtuální účastník (prodavač ve stánku). */
+  converse(members: string[], kind: 'pair' | 'order'): void;
+  /** Ukončí rozhovor, kterého se postava účastní. */
+  end(agent: AgentState): void;
+  /** Smí se postava teď napít (není to během její řeči ani těsně před ní)? */
+  canSip(agent: AgentState, duration: number): boolean;
+  /** Uvolní paži (0 vzdálená, 1 blízká/kelímková) z drženého gesta; true = je volná. */
+  releaseArm(agent: AgentState, arm: 0 | 1): boolean;
+  /** Poděkování po převzetí zboží. */
+  thanks(agent: AgentState): void;
 }
 
 /** Ovládání postavy z činností a plánovače. Vzhled nerozhoduje o chování. */

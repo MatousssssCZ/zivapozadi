@@ -201,8 +201,18 @@ function drawSeller(ctx: Ctx, project: ProjectFile, sim: Simulation, o: SceneObj
   const seed = hashNoise(o.id.length * 31 + o.x, 7) * 10;
   const dir = cust ? (cust.pos.x < pos.x ? 'SW' : 'SE') : seed > 5 ? 'SE' : 'SW';
   const anim = { dir, walkPhase: 0, walkBlend: 0, idleTime: t + seed, action: null as AgentState['anim']['action'] } as AgentState['anim'];
-  if (cust?.activity?.phase === 'order') anim.action = { requested: 'talk', clip: 'talk', time: (t + seed) % 1.4, duration: 1.4, loop: 'loop', events: [], finished: false };
-  else if (cust?.activity?.phase === 'receive') anim.action = { requested: 'receive', clip: 'receive', time: Math.min(1.1, t - cust.activity.phaseStart), duration: 1.1, loop: 'once', events: [], finished: false };
+  if (cust?.activity?.phase === 'order') {
+    // rozhovor se zákazníkem řídí režisér (prodavač je jeho virtuální účastník): mluví ve svých
+    // tazích a na akcentech frází občas zdůrazní řeč rukou; když mluví zákazník, poslouchá
+    const vid = `v:${o.id}`;
+    const conv = sim.state.social?.convs.find((c) => c.members.includes(vid));
+    const turn = conv?.turns.find((x) => x.speaker === vid && x.start <= t && t < x.end);
+    anim.speaking = !!turn;
+    if (turn) {
+      const ph = turn.phrases.find((p, i) => (turn.id + i) % 2 === 0 && t >= p.accent - 0.62 && t < p.accent - 0.62 + 1.4);
+      if (ph) anim.gestures = [{ fam: 'beat', t: t - (ph.accent - 0.62), dur: 1.4, hand: 0, amp: 0.9, sgn: 1 }];
+    }
+  } else if (cust?.activity?.phase === 'receive') anim.action = { requested: 'receive', clip: 'receive', time: Math.min(1.1, t - cust.activity.phaseStart), duration: 1.1, loop: 'once', events: [], finished: false };
   const agent = { id: 'seller:' + o.id, name: sl.name ?? 'Prodavač', pos, facing: dir === 'SE' ? 0.6 : Math.PI - 0.6, anim, holding: null } as unknown as AgentState;
   const cv = characterVisual(agent, m, { baseScale: 1, appearance: sl.appearance }, project.scene);
   if (!cv.rig || !m.rigLibrary) return;

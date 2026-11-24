@@ -283,8 +283,10 @@ za 3 min, teď 0).
 
 ### Pití
 
-Kelímek se zvedne obloukem k ústům (0–30 % klipu), nakloní se okrajem k ústům a hlava se mírně
-zakloní (doušek ve 42 %), pak se kelímek narovná a pomalu klesne. Paže se při zvedání perspektivně
+Kelímek se zvedne obloukem k ústům (0–30 % klipu), u úst se nakloní o ~15° (zadání D01: 12–20°,
+max. 25°), hlava jen naznačí 1–2° (doušek v polovině klipu, klip 3 s), pak se kelímek narovná a
+pomalu klesne. Postava se nikdy nenapije během své promluvy ani 0,45 s před ní; držení kelímku
+oběma rukama se před douškem nejdřív plynule ukončí. Paže se při zvedání perspektivně
 zkrátí (zezadu výrazně – ruka jde k obličeji od kamery, bez trčícího lokte); zezadu je ruka s
 kelímkem za hlavou.
 
@@ -306,6 +308,49 @@ Mimo scénu čeká návštěvník 6–30 s, pak přijde znovu. Stálé dvojice (
 také spolu. Plánovaná událost pro návštěvníka mimo scénu ho přivede vstupem. Bez vstupů v trase
 chodí návštěvník mezi vzdálenými body. Ověření: `tests/scene-walk.test.ts` (300 s náměstí: desítky
 příchodů a odchodů, pozdravy, káva ve dvou, stolky, povídání; kelímky nikdy nezmizí).
+
+### Sociální interakce (zadání `docs/zdroje/zadani-socialni-interakce-2D.md`)
+
+Kód: `src/core/social/` – `rng.ts` (Mulberry32, FNV-1a streamy per postava/rozhovor, Tri, ořezaný
+lognormál, exponenciální čekání), `clips.ts` (knihovna gest), `social.ts` (plánovač gest
+jednotlivce a režisér rozhovoru). Vše je čistá data ve stavu simulace (checkpoint, verze stavu 4).
+
+* **Gesta** (A.4–A.8): úder (beat, občas druhý slabší), ukázání na stánek/strom (paží na straně
+  cíle), vymezení velikosti, otevření paže (jedna/obě), mírné pokrčení, zdůraznění kelímkem (malý
+  posun z držení), kývnutí posluchače (i dvojité), náklon zaujetí, pozdravné kývnutí, poděkování,
+  zamávání na dálku, společné pobavení, tření palčáků, úprava šály, dotyk čepice, schoulení,
+  vyhlédnutí ve frontě, kelímek oběma rukama. Klíče jsou v souřadnicích vůči ramenům (tabulka
+  zadání), přechody kvintikou z aktuální pózy a zpět (bez skoku), délka se losuje jednou
+  Tri(min, default, max)/tempo. Kde by klip porušil rychlost kloubů, je příprava/návrat delší (C.8).
+* **Kostra**: gesto se prolne se základní pózou (klid, chůze, držení, akce); hlava a trup se jen
+  naklánějí v rovině obrazu (součet ≤ 8° / 4°), pánev se posune jen ve stoji. Loket paže, která by
+  při gestu do strany trčela nahoru, plynule přejde do druhé větve (otočí se přes hloubku –
+  předloktí se perspektivně zkrátí).
+* **Plánovač jednotlivce**: prostředky (paže, hlava, trup, pánev) nikdy dvakrát; nutná akce (pití,
+  převzetí, koš) má přednost; cooldowny rodin, antirepetice výrazných gest 8 s, nejvýš jedno
+  výrazné gesto naráz; kelímková ruka jen na gesta s kelímkem. Zimní akce λ = 0,3 + 1,4c /min
+  (c = 0,35 ± 0,15) jen ve stoji (při mluvení ×0,2), 20 s mezi nimi, max. 3 za minutu.
+  Profil jedince: gestureRate, gestureAmplitude, responsiveness, tempo, turnWeight (Tri dle D.1).
+* **Režisér rozhovoru** (C.3, C.4): vizuální promluvy 1,2–9 s (lognormál, medián 3,8 s) z 1–4
+  frází s akcentem; mezery 80 % krátké, 15 % delší, 5 % krátký překryv; další tah se rezervuje
+  0,8 s před koncem; férový výběr (kdo čekal 5×, má přednost); kdo právě pije, slovo nepřevezme
+  (mluvčí pokračuje kratším blokem nebo nastane pauza). Gesto mluvčího na akcent p = 0,45·rate
+  (max. 2 na promluvu < 6 s), posluchači kývnou na hranici fráze p = 0,30·responsiveness s
+  reakční prodlevou 0,12–0,35 s. Mluvčí má drobný neperiodický pohyb hlavy.
+* **Ve scéně**: přátelé se pozdraví kývnutím (druhý odpoví se zpožděním), na 2,5–5 m si zamávají
+  (p 0,65), povídají si při setkání, cestou, ve frontě i u stolku; objednávka je krátký rozhovor
+  zákazník–prodavač (prodavač ve stánku mluví ve svých tazích a gestikuluje), po převzetí
+  poděkování. Ve frontě, která stojí > 5 s, lidé občas vyhlédnou, jak postupuje.
+* **Nezařazeno** (chybí malované podklady nebo je to v zadání volitelné): podání ruky (H03), objetí
+  (H04 vypnuto), dech do dlaní, přešlápnutí, ruce v kapsách, telefon/peněženka, odhlédnutí,
+  loučení zamáváním při odchodu.
+* **Ověření**: `tests/social.test.ts` – statistika mezer a délek promluv (S01–S05), dyáda 20 min
+  (jeden mluvčí 90–98 %, dva < 2 %, nikdo 2–10 %), antirepetice a cooldowny, rozpočet gest
+  (mluvčí ≤ 55 %, posluchač ≤ 20 %), férové střídání, determinismus, pití mimo vlastní řeč,
+  klipy bez NaN a bez skoků (zápěstí ≤ 3 j./tick, loket ≤ 3,5 j./tick, hlava < 70 °/s);
+  `tests/scene-walk.test.ts` – v náměstí za 300 s rozhovory, kývání a gesta, žádné pití během řeči.
+
+![Gesta (šikmo zepředu a zezadu)](img/socialni-gesta.png)
 
 ### Klouby (koleno, loket)
 
