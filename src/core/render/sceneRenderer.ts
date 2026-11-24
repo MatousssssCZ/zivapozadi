@@ -47,9 +47,9 @@ function drawObject(ctx: Ctx, o: SceneObject, a: AssetEntry | undefined, img: Im
   } else ctx.drawImage(img as CanvasImageSource, r.x, r.y, r.w, r.h);
 }
 
-export function drawCup(ctx: Ctx, x: number, y: number, s: number, sips = 0) {
-  // Papírový kelímek s víčkem; (x,y) = spodek kelímku.
-  ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
+export function drawCup(ctx: Ctx, x: number, y: number, s: number, sips = 0, tilt = 0) {
+  // Papírový kelímek s víčkem; (x,y) = spodek kelímku. Naklonění kolem úchopu (6 j. nad spodkem).
+  ctx.save(); ctx.translate(x, y - 6 * s); ctx.rotate(tilt); ctx.translate(0, 6 * s); ctx.scale(s, s);
   ctx.fillStyle = '#fbf6ee';
   ctx.beginPath(); ctx.moveTo(-4, 0); ctx.lineTo(4, 0); ctx.lineTo(5.2, -11); ctx.lineTo(-5.2, -11); ctx.closePath(); ctx.fill();
   ctx.fillStyle = '#c8553d'; ctx.fillRect(-4.8, -7.5, 9.6, 3.5);
@@ -75,7 +75,7 @@ function drawAgent(ctx: Ctx, project: ProjectFile, sim: Simulation, a: AgentStat
   ctx.scale(cv.mirror ? -cv.scale : cv.scale, cv.scale);
   const held = a.holding ? sim.state.props.find((p) => p.id === a.holding) : undefined;
   if (m.backend === 'skeleton' && cv.rig && m.rigLibrary) {
-    drawRig(ctx, cv.rig, images, m.rigLibraryDir ?? '', m.rigLibrary.bodyTemplates[0]?.farShade ?? 0.8, held ? () => drawCup(ctx, cv.grip.x, cv.grip.y + 6, 1, held.sips) : undefined);
+    drawRig(ctx, cv.rig, images, m.rigLibraryDir ?? '', m.rigLibrary.bodyTemplates[0]?.farShade ?? 0.8, held ? () => drawCup(ctx, cv.grip.x, cv.grip.y + 6, 1, held.sips, cv.pose.cupTilt ?? 0) : undefined);
   } else if (m.backend === 'procedural-test-figure') {
     drawFigure(ctx, cv.pose as Parameters<typeof drawFigure>[1], c.palette, held ? () => drawCup(ctx, cv.pose.handR.x, cv.pose.handR.y + 6, 1, held.sips) : undefined);
   } else {

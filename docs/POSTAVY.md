@@ -160,7 +160,26 @@ za 90 s), za chůze ~600 (dříve ~3 600, zbytek jsou krátká křížení drah)
 * **Chůze do hloubky**: chodidlo dál od kamery je na obrazovce výš. Nohy se proto počítají v
   „plochém“ prostoru (jako z boku) a výsledek se perspektivně zkosí – stehno a lýtko se zkrátí nebo
   prodlouží podél kosti (`Limb.k1/k2`, díly se v rigu protáhnou), místo aby se koleno ohnulo jako
-  při stoupání do schodu.
+  při stoupání do schodu. Posun se rozkládá podle polohy chodidla (ohnuté koleno neklesá k zemi) a
+  zkrácení je nejvýš ±15 % – zbytek vyrovná koleno (žádné „gumové“ nohy).
+
+### Osobní prostor (rozestupy)
+
+Každá postava má **osobní poloměr** 0,55–0,8 šířky postavy (podle id, takže se rozestupy mírně
+liší). Středy dvou postav nejsou nikdy blíž než součet poloměrů: případné překrytí se plynule
+rozestoupí (klidným krokem stranou – posun pohání nohy). Chodci plánují úhyb s pohodlnějším odstupem
+(1,3× součet), protijdoucí se míjejí vpravo, za pomalejším zpomalí. Při **křížení drah** (nejbližší
+přiblížení do 1,6 s) dá přednost ten, kdo je od místa střetu dál, a zpomalí (nikdy nezastaví úplně).
+Postavy stojící na místě činnosti (fronta, obsluha, stolek) se neodstrkují – ostatní je obcházejí.
+Na náměstí klesl počet „průchodů skrz“ (středy blíž než 0,6 šířky) z ~2 070 na ~130 snímko-dvojic
+za 5 min (zbytek jsou zlomky sekundy, než se dvojice přátel rozestoupí).
+
+### Pití
+
+Kelímek se zvedne obloukem k ústům (0–30 % klipu), nakloní se okrajem k ústům a hlava se mírně
+zakloní (doušek ve 42 %), pak se kelímek narovná a pomalu klesne. Paže se při zvedání perspektivně
+zkrátí (zezadu výrazně – ruka jde k obličeji od kamery, bez trčícího lokte); zezadu je ruka s
+kelímkem za hlavou.
 
 ### Návštěvníci (chování `routine: 'visitor'`)
 

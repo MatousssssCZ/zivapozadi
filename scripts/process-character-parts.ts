@@ -410,7 +410,8 @@ async function main() {
     motionRanges: { strideScale: [0.9, 1.1], armSwing: [0.65, 1.35], bob: [0.8, 1.2], sway: [0.75, 1.25], idleTempo: [0.85, 1.15], lean: [0, 3], speed: [0.85, 1.25], armLag: [-2, 4], armLR: [0.85, 1.15] },
     availableViews: ['front3q', 'back3q'],
     viewFallbacks: { side: { use: 'front3q' }, front: { use: 'front3q' }, back: { use: 'back3q' } },
-    drawOrder: { front3q: order3q, back3q: order3q },
+    // zezadu: přední ruka (a kelímek u úst) je před tělem, ale za hlavou – obličej ji zakrývá
+    drawOrder: { front3q: order3q, back3q: ['far.hand', 'far.forearm', 'far.upperArm', 'far.foot', 'far.shin', 'far.thigh', 'near.foot', 'near.shin', 'near.thigh', 'torso', 'near.hand', 'near.forearm', 'near.upperArm', 'held', 'head', 'scarf', 'hat'] },
     farShade: 0.82,
     foot: footGeom,
   };

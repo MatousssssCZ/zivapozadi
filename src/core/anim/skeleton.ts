@@ -122,6 +122,7 @@ export interface SkeletonPose {
   feet: [number, number];
   /** zápěstí přední ruky (úchop se dopočítá z dílu ruky) */ handR: Vec2;
   /** body paty obou bot (lokálně) – kotva při došlapu */ heelPts?: [Vec2, Vec2];
+  /** naklonění drženého kelímku (rad, záporně = okrajem k ústům) */ cupTilt?: number;
 }
 
 export function ik(root: Vec2, target: Vec2, l1: number, l2: number, bendSign: number): Limb {
@@ -252,7 +253,7 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
   // Perspektiva hloubky: krok do hloubky posune chodidlo i svisle (výš = dál). Nohy se proto
   // počítají v „plochém“ prostoru (jako z boku) a výsledek se zkosí – noha se zkrátí/prodlouží
   // perspektivou, místo aby se ohnula v koleni jako na schodech.
-  const shear = Math.abs(gfx) > 0.05 ? Math.max(-1.2, Math.min(1.2, gfy / gfx)) : 0;
+  const shear = Math.abs(gfx) > 0.05 ? Math.max(-0.6, Math.min(0.6, gfy / gfx)) : 0;
   const flat = (p: Vec2, i: number): Vec2 => ({ x: p.x, y: p.y - shear * (p.x - hipRoots[i].x) });
   const unflat = (p: Vec2, i: number): Vec2 => ({ x: p.x, y: p.y + shear * (p.x - hipRoots[i].x) });
   const reachAdjust = (f: { u: number; h: number; theta: number }, i: number) => {
@@ -313,10 +314,21 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
   }
   if (lower > 0) { hip.y += lower; for (const r of hipRoots) r.y += lower; }
   const legs = [0, 1].map((i) => {
-    const l = ik(hipRoots[i], flat(ankles[i], i), T, Sh, -1);
-    if (!shear) return l;
-    const joint = unflat(l.joint, i), end = unflat(l.end, i);
-    return { root: l.root, joint, end, k1: Math.hypot(joint.x - l.root.x, joint.y - l.root.y) / T, k2: Math.hypot(end.x - joint.x, end.y - joint.y) / Sh };
+    if (!shear) return ik(hipRoots[i], ankles[i], T, Sh, -1);
+    // posun z hloubky rozložit podél nohy podle polohy CHODIDLA (ne kolena): ohnuté koleno tak
+    // neklesá k zemi a obě části nohy se zkrátí/prodlouží stejným dílem. Zkrácení nejvýš ±15 %
+    // (jinak „gumové“ nohy) – zbytek vyrovná ohnutí kolena.
+    const sFull = ankles[i].y - flat(ankles[i], i).y, tk = T / (T + Sh);
+    let best: Limb | null = null;
+    for (const f of [1, 0.75, 0.5, 0.25, 0]) {
+      const sA = sFull * f, A = ankles[i];
+      const l = ik(hipRoots[i], { x: A.x, y: A.y - sA }, T, Sh, -1);
+      const joint = { x: l.joint.x, y: l.joint.y + sA * tk }, end = { x: l.end.x, y: l.end.y + sA };
+      const k1 = Math.hypot(joint.x - l.root.x, joint.y - l.root.y) / T, k2 = Math.hypot(end.x - joint.x, end.y - joint.y) / Sh;
+      best = { root: l.root, joint, end, k1, k2 };
+      if (Math.max(k1, k2) <= 1.15 && Math.min(k1, k2) >= 0.85) break;
+    }
+    return best!;
   }) as [Limb, Limb];
   const footAng = feet.map((f) => -f.theta * (Math.abs(fx) > 0.9 ? 1 : 0.75));
   // body paty v lokálních souřadnicích (pro uložení kotvy při došlapu)
@@ -365,6 +377,7 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
   const holdPos = { x: frontRoot.x + 13 * fx + (v.shoulderSpread ? 3 * ns : 0), y: hip.y - 4 };
   let frontTarget: Vec2 | null = holding ? holdPos : null;
 
+  let cupTilt = 0, armShorten = 0;
   const act = a.action;
   if (act && act.clip !== null) {
     const t = act.duration > 0 ? act.time / act.duration : 1;
@@ -383,10 +396,17 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
         break;
       }
       case 'drink': {
-        const mouth = { x: head.x + 9 * fx + (view === 'side' ? 4 : 0), y: head.y + 7 };
-        const k = t < 0.32 ? smoothstep(t / 0.32) : t < 0.62 ? 1 : 1 - smoothstep((t - 0.62) / 0.38);
-        frontTarget = { x: holdPos.x + (mouth.x - holdPos.x) * k, y: holdPos.y + (mouth.y - holdPos.y) * k };
-        headTilt += -0.12 * k;
+        // zvednout obloukem k ústům (0–30 %), naklonit a napít se (doušek ve 42 %), sklopit a pomalu spustit
+        const raise = t < 0.3 ? smoothstep(t / 0.3) : t < 0.64 ? 1 : 1 - smoothstep((t - 0.64) / 0.36);
+        const tip = t < 0.22 ? 0 : t < 0.36 ? smoothstep((t - 0.22) / 0.14) : t < 0.56 ? 1 : t < 0.68 ? 1 - smoothstep((t - 0.56) / 0.12) : 0;
+        // ústa (rukavice drží kelímek pod okrajem; zezadu je kelímek schovaný před obličejem)
+        const mouth = { x: head.x + (view === 'back3q' ? 16 : view === 'side' ? 14 : 13) * fx, y: head.y + (view === 'back3q' ? 15 : 17) };
+        const arc = Math.sin(Math.PI * raise) * 5; // ruka jde obloukem kousek před tělem
+        frontTarget = { x: holdPos.x + (mouth.x - holdPos.x) * raise + arc * fx, y: holdPos.y + (mouth.y - holdPos.y) * raise - tip * 1.5 };
+        headTilt += -(0.05 * raise + 0.14 * tip) * fsg;
+        cupTilt = -(0.3 * raise + 0.8 * tip);
+        // paže míří k obličeji dopředu (od/ke kameře) – perspektivně se zkrátí, místo aby trčel loket
+        armShorten = (view === 'back3q' ? 0.42 : 0.12) * raise;
         break;
       }
       case 'drop': {
@@ -398,8 +418,12 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
       }
     }
   }
-  const arms = [backTarget ? ik(backRoot, backTarget, B.upperArm, B.forearm, 1) : armBackFK, frontTarget ? ik(frontRoot, frontTarget, B.upperArm, B.forearm, 1) : armFrontFK] as [Limb, Limb];
-  return { view, mirror, root: { x: 0, y: 0 }, hip, neck, shoulder, head, headTilt, torsoAngle, legs, arms, feet: [footAng[0], footAng[1]], handR: arms[1].end, heelPts };
+  // loket vždy dolů/ven: zezadu (blízká ruka vpravo) je ohyb opačný
+  const bend = 1;
+  const ka = 1 - armShorten;
+  const frontArm = (): Limb => { const l = ik(frontRoot, frontTarget!, B.upperArm * ka, B.forearm * ka, bend); return ka < 1 ? { ...l, k1: ka, k2: ka } : l; };
+  const arms = [backTarget ? ik(backRoot, backTarget, B.upperArm, B.forearm, bend) : armBackFK, frontTarget ? frontArm() : armFrontFK] as [Limb, Limb];
+  return { view, mirror, root: { x: 0, y: 0 }, hip, neck, shoulder, head, headTilt, torsoAngle, legs, arms, feet: [footAng[0], footAng[1]], handR: arms[1].end, heelPts, cupTilt };
 }
 
 /** Geometrie chůze ze šablony (výchozí bota podle zadání: pata 0,042 L, přednoží 0,113 L). */

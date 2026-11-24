@@ -140,9 +140,9 @@ export function assembleRig(lib: PartLibrary, tpl: BodyTemplateDef, app: Charact
     push(part('thigh'), frame(part('thigh')!, leg.root, ang(leg.root, leg.joint), leg.k1 ?? 1), side);
     push(part('shin'), frame(part('shin')!, leg.joint, ang(leg.joint, leg.end), leg.k2 ?? 1), side);
     const foot = part('foot'); if (foot) push(foot, frame(foot, leg.end, pose.feet[i]), side);
-    const ua = part('upperArm'); if (ua) push(ua, frame(ua, arm.root, ang(arm.root, arm.joint)), side);
+    const ua = part('upperArm'); if (ua) push(ua, frame(ua, arm.root, ang(arm.root, arm.joint), arm.k1 ?? 1), side);
     const fa = part('forearm'); const faAng = ang(arm.joint, arm.end);
-    if (fa) push(fa, frame(fa, arm.joint, faAng), side);
+    if (fa) push(fa, frame(fa, arm.joint, faAng, arm.k2 ?? 1), side);
     const hand = part('hand');
     if (hand) {
       const mh = frame(hand, arm.end, faAng);

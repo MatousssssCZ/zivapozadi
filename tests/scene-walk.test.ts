@@ -73,8 +73,8 @@ describe('chůze ve scéně (náměstí, 12 postav, 2 dvojice)', () => {
     console.log(`dvojice daleko od sebe: ${(100 * far / n).toFixed(1)} % času; překryvy: ${overlap} snímko-dvojic (ve stoje ${overlapStanding})`);
     expect(far / n).toBeLessThan(0.05);
     expect(pairActivities).toBe(0);
-    expect(overlapStanding).toBeLessThan(60); // 1 s ze 90 s pro všech 66 dvojic postav
-    expect(overlap).toBeLessThan(1000); // před úpravou ~3 600 (z toho ~1 900 ve stoje); zbytek = krátká křížení drah
+    expect(overlapStanding).toBeLessThan(30);
+    expect(overlap).toBeLessThan(200); // osobní prostor: dříve ~3 600 snímko-dvojic; zbytek = krátké rozestupování
   });
 
   it('při chůzi se nepoužívá čistě čelní ani zadní pohled', () => {
@@ -109,7 +109,7 @@ describe('chůze ve scéně (náměstí, 12 postav, 2 dvojice)', () => {
     }
     console.log(`strmě (> 45°): ${(100 * steep / total).toFixed(1)} % dráhy, nejdelší strmý úsek ${longest.toFixed(0)} px`);
     expect(steep / total).toBeLessThan(0.03);
-    expect(longest).toBeLessThan(30); // jen obrat mezi dvěma šikmými úseky
+    expect(longest).toBeLessThan(40); // jen obrat mezi dvěma šikmými úseky (zaoblení ~20–35 px)
   });
 
   it('návštěvníci: průchod scénou, setkání přátel, společná káva u stolku, odchod; kelímky nemizí', () => {
