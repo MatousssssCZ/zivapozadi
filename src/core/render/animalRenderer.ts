@@ -20,8 +20,8 @@ interface Rig {
   /** úhel nohou při chůzi (rad) */ swing: number;
 }
 const RIGS: Record<'dog' | 'cat', Rig> = {
-  dog: { shoulder: [0.78, 0.66], hip: [0.25, 0.6], neck: [0.88, 0.2], tail: [0.07, 0.32], headAt: [0.32, 0.86], upper: 0.13, lower: 0.12, head: 0.24, tailLen: 0.24, swing: 0.42 },
-  cat: { shoulder: [0.8, 0.66], hip: [0.22, 0.62], neck: [0.9, 0.24], tail: [0.05, 0.38], headAt: [0.36, 0.9], upper: 0.085, lower: 0.08, head: 0.15, tailLen: 0.3, swing: 0.38 },
+  dog: { shoulder: [0.78, 0.66], hip: [0.25, 0.6], neck: [0.88, 0.2], tail: [0.09, 0.47], headAt: [0.32, 0.86], upper: 0.13, lower: 0.12, head: 0.24, tailLen: 0.24, swing: 0.42 },
+  cat: { shoulder: [0.8, 0.66], hip: [0.22, 0.62], neck: [0.9, 0.24], tail: [0.07, 0.48], headAt: [0.36, 0.9], upper: 0.085, lower: 0.08, head: 0.15, tailLen: 0.3, swing: 0.38 },
 };
 
 /** Vykreslí zvíře s chodidly v (0,0) – volající nastaví posun a měřítko (px na metr). */
@@ -108,26 +108,41 @@ export function drawAnimal(ctx: Ctx, a: AnimalState, img: AnimalImages, pxPerM: 
   ctx.save(); rotAbout(shakeAt(0.09));
   const tail = img(`${pre}tail`);
   if (!tail && img(`${pre}tail_1`)) {
-    // kočičí ocas ze tří článků: oblouk nahoru, pomalé vlnění špičky se zpožděním za trupem
-    const tj = J(R.tail), seg = (R.tailLen * pxPerM) / 3;
-    ctx.save(); ctx.translate(tj.x, tj.y);
-    [1, 2, 3].forEach((k) => {
-      const im = img(`${pre}tail_${k}`); if (!im) return;
-      const ang = (k === 1 ? 0.4 : 0.22) + 0.15 * Math.sin(t * 1.3 - k * 0.7) * (k / 3);
-      ctx.rotate(ang);
-      const h = (seg * im.height) / im.width * 1.15;
-      ctx.drawImage(im, -seg * 1.1, -h / 2, seg * 1.15, h); // článek od kořene (vpravo) dozadu
-      ctx.translate(-seg, 0);
-    });
-    ctx.restore();
+    // kočičí ocas ze tří článků (jedno společné měřítko archu): kořen každého článku je vpravo
+    // (u článků 1–2 dutý konec), koncový článek je malovaný špičkou doprava → zrcadlit.
+    // Řetěz od kořene: oblouk nahoru, pomalé vlnění se zpožděním; kreslí se od špičky ke kořeni,
+    // aby každý bližší článek zakryl dutý konec následujícího.
+    const ims = [1, 2, 3].map((k) => img(`${pre}tail_${k}`));
+    if (ims.every(Boolean)) {
+      const L = [ims[0]!.width * 0.86, ims[1]!.width * 0.86, ims[2]!.width * 0.8];
+      const k = (R.tailLen * pxPerM) / (L[0] + L[1] + L[2]);
+      const tj = J(R.tail);
+      const mats: DOMMatrix[] = [];
+      ctx.save(); ctx.translate(tj.x, tj.y);
+      for (let i = 0; i < 3; i++) {
+        const ang = [0.55, 0.3, 0.25][i] + 0.14 * Math.sin(t * 1.3 - i * 0.7) * ((i + 1) / 3) + (walk > 0.3 ? -0.15 : 0) * (i === 0 ? 1 : 0);
+        ctx.rotate(ang);
+        mats.push(ctx.getTransform());
+        ctx.translate(-L[i] * k, 0);
+      }
+      ctx.restore();
+      for (let i = 2; i >= 0; i--) {
+        const im = ims[i]!, w = im.width * k, h = im.height * k;
+        ctx.save(); ctx.setTransform(mats[i]);
+        if (i < 2) ctx.drawImage(im, -w * 0.97, -h / 2, w, h); // kořen = pravý (dutý) konec
+        else { ctx.scale(-1, 1); ctx.drawImage(im, -w * 0.05, -h * 0.73, w, h); } // zrcadlený konec: kořen vlevo dole
+        ctx.restore();
+      }
+    }
   }
   if (tail) {
+    // psí ocas: kořen je na obrázku vlevo dole, špička nahoře – zrcadlit, aby šel od zádě nahoru dozadu;
+    // kořen leží uvnitř obrysu trupu (trup se kreslí přes něj)
     const tj = J(R.tail), tl = R.tailLen * pxPerM;
-    const wag = (sp === 'dog' ? 0.22 * Math.sin(t * (walk > 0.3 || sh > 0 ? 9 : 4)) * (1 + sh) : 0.12 * Math.sin(t * 1.6)) ;
-    ctx.save(); ctx.translate(tj.x, tj.y); ctx.rotate(wag);
+    const wag = 0.22 * Math.sin(t * (walk > 0.3 || sh > 0 ? 9 : 4)) * (1 + sh);
+    ctx.save(); ctx.translate(tj.x, tj.y); ctx.rotate(wag - 0.15);
     const w = tl, h = (w * tail.height) / tail.width;
-    // malovaný ocas psa jde zdola zleva nahoru doprava – zrcadlit, aby mířil od těla
-    ctx.scale(-1, 1); ctx.drawImage(tail, -w * 0.08, -h * 0.85, w, h);
+    ctx.scale(-1, 1); ctx.drawImage(tail, -w * 0.14, -h * 0.82, w, h);
     ctx.restore();
   }
   ctx.restore();
