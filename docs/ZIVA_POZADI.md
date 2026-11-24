@@ -14,25 +14,25 @@ Legenda: **hotovo** = logika, vykreslení, testy · **částečně** = funguje s
 |---|---|---|---|
 | A01 | Nákup u stánku | hotovo | prohlížení 3–8 s (25 % odejde bez nákupu), objednávka 5–12 s jako rozhovor s prodavačem, balení 2–5 s, předání tašky jednou událostí `take`, poděkování; taška je procedurálně malovaná (barva podle stánku) |
 | A02 | Dvojice s nápojem | hotovo | existující káva ve dvou + sociální vrstva (rozhovor, pití mimo vlastní řeč, pára z kelímku) |
-| A03 | Rodič a dítě u stromku | blokováno | chybí dětská postava (P1); obyčejné prohlížení stromu funguje (A04) |
+| A03 | Rodič a dítě u stromku | částečně | v Liberci chodí 5 dětí s rodiči (stálá dvojice) a s nimi i k činnostem; samostatná scénka „rodič ukazuje dítěti strom“ zatím není |
 | A04 | Prohlížení | hotovo | činnost `viewing`: volné místo výhledu, 5–18 s, nejvýš jeden přesun pozornosti, cooldown místa 60–180 s |
 | A05 | Setkání známých | hotovo | zamávání na dálku, pozdrav kývnutím, rozhovor, společný odchod (dříve + sociální vrstva) |
-| A06 | Fotografie u stromku | blokováno | chybí telefon (P1) |
-| A07 | Venčení psa | blokováno | chybí pes (P2), viz Z01 |
+| A06 | Fotografie u stromku | hotovo | u výhledu ~35 % lidí vytáhne telefon (skutečná rekvizita), zvedne ho do výšky očí, 7–10 s fotí a uklidí; zezadu je vidět displej, zepředu zadní strana (Liberec, `docs/img/liberec-foceni.png`) |
+| A07 | Venčení psa | hotovo | viz Z01 (Liberec) |
 | A08 | Zahřívání | částečně | tření palčáků, šála, čepice, schoulení, kelímek oběma rukama; přešlápnutí a ruce v kapsách potřebují podklady |
-| A09 | Čekání na doprovod | částečně | čekání u místa setkání, rozhlédnutí po 7–15 s, limit a odchod; telefon chybí |
+| A09 | Čekání na doprovod | částečně | čekání u místa setkání, rozhlédnutí po 7–15 s, limit a odchod; telefon při čekání se zatím nepoužívá (je jen u focení) |
 | A10 | Práce prodejce | hotovo | `VendorState` v simulaci: obsluha, otočení k regálu, předání, srovnání zboží bez zákazníka (20–60 s) |
-| A11 | Odklízení sněhu | blokováno | chybí lopata, odkrytá dlažba a maska uklizeného pásu (P2) |
+| A11 | Odklízení sněhu | hotovo | Liberec: pracovník po 6 pásech (tah 3–6 s, posun 1–2 s) odhrne pruh před pravou lavičkou; odkrývá se malovaná dlažba (plochý decal), sníh jde před lopatou na konkrétní hromadu (roste omezeně); průchod člověka práci pozastaví; při sněžení pruh zapadá, další úklid až když je co odklízet; cooldown 600–1200 s (`docs/img/liberec-odklizeni.png`) |
 | A12 | Odchod s nákupem | hotovo | taška visí v ruce (omezený švih), odchází s majitelem portálem a zmizí s ním |
 
 ## Vzácnější situace (B)
 
 | ID | Situace | Stav | Poznámka |
 |---|---|---|---|
-| B01 | Chytání vloček | blokováno | dětská postava |
-| B02 | Sáňky | blokováno | sáňky, sedící dítě |
-| B03 | Upadlá rukavice | blokováno | samostatná rukavice + póza předklonu/dřepu |
-| B04 | Koulovačka | částečně | session, nabrání, uplácání, zamíření, hod (výhoz jednou), světová balistika, kontrola koridoru, dopad s kousky sněhu, reakce, 4–8 hodů. **Bez dětských postav a dřepu je v běžné scéně zamítnutá s důvodem**; dospělí jen s parametrem zóny `allowAdults` (ukázka) |
+| B01 | Chytání vloček | nezačato | dětská postava už existuje (Liberec); scénka zatím není |
+| B02 | Sáňky | hotovo | Liberec: sáně se sedícím dítětem složené z dodaných dílů (`scripts/compose-sled.py`), rodič je skutečná postava, sáně sledují historii jeho dráhy v odstupu provázku 1,25 m; dráha „vlásenkou“ po levém zasněženém poli (uprostřed dole je odhrnutá dlažba), kontrola celé dráhy na sníh a odstup od překážek; sáně a provázek jsou překážka pro chodce; průchod ~22 s, cooldown 300–600 s (`docs/img/liberec-sanky.png`) |
+| B03 | Upadlá rukavice | hotovo | průchozí občas nese rezervní palčák (oddělená rekvizita); upadne, po 1–2 s si všimne, zastaví, vrátí se, dřepne a zvedne ji (pick v nejnižším bodě), ~7 s; při abortu zůstane ležet a zvedne ji další kolemjdoucí; cooldown scény 300–600 s (`docs/img/liberec-rukavice.png`) |
+| B04 | Koulovačka | hotovo (Liberec) | session, nabrání **v dřepu** (klip `scoop`), uplácání, zamíření, hod, světová balistika, kontrola koridoru, dopad s kousky sněhu, reakce, 4–8 hodů; v Liberci dítě s rodičem na dětském sněhu. Ve starých scénách bez dětí se dál zamítá s důvodem |
 | B05 | Stavba sněhuláka | hotovo | dva návštěvníci, válení tří koulí (růst r³ = r0³ + k·d jen pohybem), zvednutí, zdobení (oči, nos, šála, knoflíky), prohlížení; sněhulák zůstává jako runtime objekt s kolizí; zadání počítá i s dítětem – stavějí dospělí |
 
 ## Prostředí (E)
@@ -45,8 +45,8 @@ Legenda: **hotovo** = logika, vykreslení, testy · **částečně** = funguje s
 | E04 | Pára z kelímku | hotovo – vzniká u kelímku a zůstává ve světě |
 | E05 | Kouř z komínů | hotovo pro ručně umístěné zdroje (editor → Živé prostředí → + Komín); v demu žádný (pozadí nemá označený komín) |
 | E06 | Pohyb dekorací | blokováno – vystřižené závěsy s pivotem |
-| E07 | Dveře a světlo | blokováno – vrstvy dveří a opravený podklad |
-| E08 | Okna | blokováno – masky oken |
+| E07 | Dveře a světlo | hotovo (Liberec) – při průchodu portálem dveří se otevřou (malovaný osvětlený interiér, teplé světlo na schodech) |
+| E08 | Okna | hotovo (Liberec) – 8 oken radnice pomalu zhasíná/rozsvěcí (3–10 min, přechod 1 s, každé jinak); ztmaví se jen teplé sklo |
 | E09 | Vánoční řetězy | částečně – lucerny stánků a lamp mají mikroblikání ±1,5 %; řetězy v pozadí potřebují masku |
 | E10 | Stopy | hotovo (dřívější) |
 | E11 | Odlesky na mokrém povrchu | blokováno – maska wet/slush |
@@ -55,7 +55,19 @@ Legenda: **hotovo** = logika, vykreslení, testy · **částečně** = funguje s
 
 | ID | Stav |
 |---|---|
-| Z01–Z10 | **blokováno** – bez čtyřnohých rigů zadání zakazuje náhrady (lidská kostra, obdélníky). Připraveno: společné sessions s atomickou rezervací účastníků, rezervace ruky (`holding`), runtime objekty, prostředí (vítr, částice) a pool stop. Po dodání podkladů: entita `AnimalState`, vodítko, tlapky, Z01 → Z06/Z07 → Z02/Z05 → Z03/Z04/Z10 → Z09. |
+| Z01 Pes s majitelem | hotovo – vodítko 1,2–1,7 m (nikdy delší), očichávání 3–8 s, majitel počká |
+| Z02 Pes čeká u stánku | hotovo – když majitel stojí (fronta, nákup, povídání), pes se posadí vedle něj; při pohybu vstane |
+| Z03 Pohlazení psa | hotovo – přítel majitele (nebo majitel sám při čekání ve frontě) se skloní/přidřepne, 1–2 tahy ruky; pes přijde na dosah a natočí se; cooldown dvojice 120–240 s |
+| Z04 Dva psi se očichají | hotovo – majitelé zastaví, psi se přiblíží v mezích vodítek, 2–5 s; cooldown scény 180–360 s |
+| Z05 Pes setřese sníh | hotovo – jen při sněžení, 0,8–1,4 s (trup ~7 Hz, hlava napřed, ocas se zpožděním), pár kousků sněhu; cooldown 120–240 s |
+| Z06/Z07 Kočka přejde / pozoruje | hotovo – přijde od okraje, sedí 20–60 s, odejde jiným okrajem; návrat za 180–420 s |
+| Z08 Očista a protažení | hotovo – vsedě občas očista (hlava k hrudi, 3–6 s, cooldown 60–150 s), před odchodem někdy protažení |
+| Z09 Skok na sokl | hotovo – explicitní sokl (Liberec: sedák lavičky 0,44 m): příprava, let po oblouku, sed 10–30 s, seskok; cooldown místa 180–360 s |
+| Z10 Pes a kočka | hotovo (vzácné) – zaregistrují se 1–3 s, majitel pokračuje, kočka pak jde dál; ne při každém přiblížení, cooldown 240–480 s; v 15min běhu dema se nemusí vyskytnout |
+
+Pózy psa a kočky jsou kombinací dodaných dílů (rig: trup, hlava, 4 nohy po dvou článcích, ocas) a
+malovaného sedu; setřesení, protažení a skok jsou natočení těchže dílů (`docs/img/liberec-zvirata-pozy.png`,
+`docs/img/liberec-kocka-skok.png`).
 
 ## Nové ovládání v editoru
 
@@ -75,13 +87,20 @@ Legenda: **hotovo** = logika, vykreslení, testy · **částečně** = funguje s
 
 ## Ověření
 
-`npm test`: 86 testů – mj. `sessions` (atomické rezervace, T03/T04), `market` (jedno předání,
+`npm test`: 91 testů (Liberec: nákupy, nikdo neuvízne, těla se neprotnou, vodítko, sáně – provázek,
+sníh, nikdo jimi neprojde –, focení s telefonem, rukavice, odklízení, Z02/Z03/Z05/Z09, samostatný test
+kočky Z07/Z08) a dříve – mj. `sessions` (atomické rezervace, T03/T04), `market` (jedno předání,
 taška odchází s majitelem, prodavač, prohlížení, checkpoint), `environment` (vítr, hustota, pool),
 `snowman` (fáze, růst, checkpoint uprostřed válení, přerušení), `snowball` (zamítnutí bez dětí,
 4–8 hodů, koule nezůstane viset, checkpoint za letu), `social`, `integration`. Vizuálně
 zkontrolováno: taška, prodavač, pára, stavba sněhuláka (`docs/img/snehulak-stavba.png`), hod.
 
 ## Chybějící podklady (přesná specifikace)
+
+> **Stav 11/2026:** dětská postava, dřep, telefon, rukavice, lopata, dlažba, hromada sněhu, pes, kočka,
+> sáňky se sedícím dítětem, dveře a okna radnice byly dodány v balíčku `grafika/ziva-pozadi` a jsou
+> použité ve scéně `demo/Liberec-zivy-trh.zscena`. Dál chybí jen masky pro E06 (pohyb dekorací),
+> E09 (řetězy v pozadí) a E11 (mokrá místa). Tabulka níže je původní specifikace.
 
 Styl všech: malované jako současná knihovna dílů (`resources/builtin/painted-parts-cg`),
 studené okolní světlo, teplé odlesky, měkké kontury, skutečně průhledné PNG, 2× rozlišení
