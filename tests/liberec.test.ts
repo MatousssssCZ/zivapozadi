@@ -60,6 +60,9 @@ describe('Liberec – živý trh', () => {
     // focení u stromu (A06): telefon je skutečná rekvizita v ruce po celou dobu klipu, pak zmizí
     expect(photoPhone).toBeGreaterThan(300);
     expect(photoNoPhone).toBe(0);
+    // upadlá rukavice (B03): upadne, majitel se pro ni vrátí a zvedne ji (dřep)
+    expect(msgs.filter((m) => m.includes('ztratil(a) rukavici')).length).toBeGreaterThanOrEqual(1);
+    expect(msgs.filter((m) => m.includes('zvedl(a) rukavici')).length).toBe(msgs.filter((m) => m.includes('ztratil(a) rukavici')).length);
     expect(sim.state.props.filter((p) => p.kind === 'phone' && !sim.state.agents.some((a) => a.holding === p.id))).toEqual([]);
   }, 180000);
 });

@@ -24,6 +24,7 @@ import { cameraFor, toWorld, toScreen, worldAngleOfScreen, screenAngleOfWorld, Q
 import { viewForDirection } from '../anim/skeleton';
 import { emit, emitsNow, windIntegral } from './environment';
 import { createAnimals, stepAnimals } from './animals';
+import { maybeCarryMitten, mittenBusy, stepMitten, type MittenHost } from './mitten';
 import { stepSnowman, startSnowman, abortSnowman, finishSession, snowmanZoneFree, type SessionHost } from '../activities/snowman';
 import { releaseArm as socialRelease, tryGesture } from '../social/social';
 import { stepFight, startFight, stepBalls, fightZoneProblem } from '../activities/snowballFight';
@@ -398,8 +399,24 @@ export class Simulation {
     this.stepVendors(t);
     if (this.project.characters.some((c) => c.pet) || this.project.cats?.length) stepAnimals((this.state.animals ??= createAnimals(this.project)), this.state.agents, this.project, t, SIM_DT);
     this.stepEnvironment(t);
+    if (this.state.mitten || this.state.agents.some((a) => a.holdingKind === 'mitten') || this.state.step % 60 === 0) stepMitten(this.mittenHost());
     this.stepProps(t);
     this.state.step++;
+  }
+
+  private mittenCache: MittenHost | null = null;
+  private mittenHost(): MittenHost {
+    const self = this;
+    return (this.mittenCache ??= {
+      get state() { return self.state; }, project: this.project, seed: this.project.seed,
+      time: () => self.time(), isChild: (a) => self.isChild(a), hand: (a) => self.handPosition(a),
+      newPropId: () => `prop${self.state.nextPropId++}`,
+      walkTo: (a, p) => { self.sessionHost().walkPath(a, [p], 'pro rukavici'); a.speedFactor = 0.8; },
+      stopRoute: (a) => { for (const e of a.route?.heldEdges ?? []) self.res.release(edgeKey(e), a.id); a.route = null; a.speedFactor = 1; },
+      scoop: (a) => self.sessionHost().gesture(a, 'scoop', { dur: 1.9 }),
+      resume: (a) => { a.speedFactor = 1; a.look = null; self.leaveScene(a, self.time()); },
+      log: (m, id) => self.log('info', m, id),
+    });
   }
 
   // ---------------------------------------------------------------- společné činnosti
@@ -830,6 +847,7 @@ export class Simulation {
     if (a.hidden && a.pendingActivity) this.enterScene(a, t); // plánovaná činnost: návštěvník přijde
     if (a.pendingActivity && !a.route) { this.tryStartPending(a); if (a.activity) return; }
     if (a.route) { if (!mv.waitingNarrow) a.status = a.pendingActivity ? 'Jde k činnosti' : this.routeStatus(a); return; }
+    if (mittenBusy(this.state, a)) return; // vrací se pro rukavici / zvedá ji
     if (c.routine === 'visitor') { this.stepVisitor(a, c, t); return; }
     // automatické činnosti
     for (const [type, cfg] of Object.entries(c.activities)) {
@@ -1034,6 +1052,7 @@ export class Simulation {
           return;
         }
         this.leaveScene(a, t); // jen projde scénou
+        if (a.visit?.mode === 'leave') maybeCarryMitten(this.mittenHost(), a); // občas nese rezervní palčák (B03)
         return;
       }
       case 'leave': {

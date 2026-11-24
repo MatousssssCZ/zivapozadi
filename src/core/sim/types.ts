@@ -174,6 +174,8 @@ export interface SimState {
   particles?: Particle[];
   /** Cooldowny míst (prohlížení…): klíč → čas, odkdy je místo znovu volné. */
   placeCooldowns?: Record<string, number>;
+  /** Upadlá rukavice (B03): stav jediné události ve scéně. */
+  mitten?: import('./mitten').MittenIncident;
   /** Režisér scény: kdy smí začít další výrazná událost (sněhulák, koulovačka…). */
   director?: { nextSignificant: number };
   /** Trvalé objekty vzniklé během simulace (sněhuláci…) – nejsou součástí projektu. */

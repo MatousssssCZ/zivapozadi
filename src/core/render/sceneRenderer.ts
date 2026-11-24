@@ -124,6 +124,15 @@ function drawProp(ctx: Ctx, p: PropState, x: number, y: number, s: number, tilt 
   else drawCup(ctx, x, y, s, p.sips, tilt);
 }
 
+/** Rukavice ležící na zemi (spodek na bodu dotyku), s = hloubkové měřítko. */
+function drawGroundMitten(ctx: Ctx, x: number, y: number, s: number, rot: number) {
+  const img = sprite('mitten_ground'), W = (0.17 * s) / Q;
+  ctx.save(); ctx.translate(x, y); ctx.rotate(rot);
+  ctx.fillStyle = 'rgba(60,70,100,0.16)'; ctx.beginPath(); ctx.ellipse(0, 0, W * 0.5, W * 0.12, 0, 0, Math.PI * 2); ctx.fill();
+  if (img) { const H = (W * img.height) / img.width * 0.62; ctx.drawImage(img, -W / 2, -H, W, H); } // položená: zploštělá
+  else { ctx.fillStyle = '#e8dcc6'; ctx.fillRect(-W / 2, -W * 0.3, W, W * 0.3); }
+  ctx.restore();
+}
 /** Věc v ruce postavy (souřadnice postavy, 1 jednotka = Q m). */
 function drawHeld(ctx: Ctx, held: PropState, cv: ReturnType<typeof characterVisual>) {
   const g = cv.grip;
@@ -414,7 +423,12 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
         items.push({ key: (objKey.get(pl.objectId) ?? pl.y) + 0.5, tie: 20000, draw: () => drawProp(ctx, p, pl.x, pl.y, s * pop) });
       } else if (p.place.kind === 'ground') {
         const pl = p.place;
-        items.push({ key: pl.y, tie: 20000, draw: () => drawProp(ctx, p, pl.x, pl.y, s) });
+        if (p.kind === 'mitten') {
+          // upadlá rukavice: 0,35 s pád z výšky ruky (zrychleně), malé odskočení, pak leží
+          const k = clamp((opts.time - p.appearedAt) / 0.35, 0, 1), h0 = Number(p.variant ?? 0);
+          const lift = h0 * (1 - k * k) + (k >= 1 ? 0 : 0), rot = (1 - k) * 1.2;
+          items.push({ key: pl.y, tie: 20000, draw: () => drawGroundMitten(ctx, pl.x, pl.y - lift, s, rot) });
+        } else items.push({ key: pl.y, tie: 20000, draw: () => drawProp(ctx, p, pl.x, pl.y, s) });
       } else if (p.place.kind === 'falling') {
         const pl = p.place;
         const k = clamp((opts.time - pl.t0) / Math.max(1e-3, pl.t1 - pl.t0), 0, 1);
