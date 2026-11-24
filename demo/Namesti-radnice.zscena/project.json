@@ -3,8 +3,8 @@
   "formatVersion": 1,
   "meta": {
     "name": "Náměstí s radnicí (test dodané grafiky)",
-    "createdAt": "2026-11-24T13:40:19.147Z",
-    "modifiedAt": "2026-11-24T13:40:19.185Z",
+    "createdAt": "2026-11-24T13:54:47.206Z",
+    "modifiedAt": "2026-11-24T13:54:47.257Z",
     "appVersion": "0.1.0"
   },
   "seed": 1224,
@@ -2158,6 +2158,36 @@
       "objectRoles": {},
       "params": {
         "chance": 0.5
+      }
+    },
+    {
+      "id": "zone_koulovacka",
+      "name": "Koulovačka vpravo vpředu",
+      "activityType": "snowballFight",
+      "activityVersion": 1,
+      "enabled": true,
+      "bounds": [
+        {
+          "x": 1280,
+          "y": 1060
+        },
+        {
+          "x": 1440,
+          "y": 1060
+        },
+        {
+          "x": 1440,
+          "y": 1076
+        },
+        {
+          "x": 1280,
+          "y": 1076
+        }
+      ],
+      "objectRoles": {},
+      "params": {
+        "chance": 0.4,
+        "allowAdults": false
       }
     }
   ],

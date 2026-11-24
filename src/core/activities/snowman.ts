@@ -307,7 +307,7 @@ export function finishSession(h: SessionHost, s: ActivitySession): void {
     if (!a) continue;
     h.releaseWork(a);
     a.look = null;
-    if (a.activity?.type === 'snowman') a.activity = null;
+    if ((a.activity?.data as { sessionId?: string } | undefined)?.sessionId === s.id) a.activity = null;
   }
   endSession(h.state, h.res, s.id);
 }

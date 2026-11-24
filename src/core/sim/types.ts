@@ -48,7 +48,7 @@ export interface VisitState {
   /** Už zamával příteli na dálku. */
   waved?: boolean;
   /** Co spolu přátelé po setkání podniknou (jinak káva). */
-  goal?: 'snowman' | null;
+  goal?: 'snowman' | 'snowball' | null;
   /** Zóna, kde budou stavět. */
   goalZone?: string | null;
 }
@@ -122,7 +122,9 @@ export type PropPlace =
   | { kind: 'held'; agentId: string; /** paže: 1 = blízká (výchozí, kelímek), 0 = vzdálená */ arm?: 0 | 1 }
   | { kind: 'falling'; from: Vec2; to: Vec2; t0: number; t1: number; binId: string }
   | { kind: 'inBin'; objectId: string }
-  | { kind: 'ground'; x: number; y: number };
+  | { kind: 'ground'; x: number; y: number }
+  /** letící koule: světová balistika (m, s) */
+  | { kind: 'flying'; X0: number; Z0: number; H0: number; vX: number; vZ: number; vH: number; t0: number; T: number; targetId: string; sessionId: string };
 
 export interface PropState {
   id: string; kind: PropKind; place: PropPlace; appearedAt: number; sips: number;

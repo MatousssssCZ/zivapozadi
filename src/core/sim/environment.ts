@@ -62,7 +62,7 @@ export function snowDensityFactor(seed: number, t: number, variable = true): num
 
 // ------------------------------------------------------------------ částice páry a kouře
 export interface Particle {
-  kind: 'cupSteam' | 'steam' | 'smoke';
+  kind: 'cupSteam' | 'steam' | 'smoke' | 'snowPuff';
   /** místo vzniku (px scény) a čas */ x: number; y: number; t0: number; life: number;
   /** integrál větru při vzniku */ w0: number;
   /** měřítko hloubky v místě vzniku */ sc: number;
@@ -74,6 +74,11 @@ export const PARTICLE_POOL = 256;
 export function particleAt(p: Particle, t: number, windBase: number, seed: number, gusts: boolean): { x: number; y: number; r: number; a: number } | null {
   const age = t - p.t0;
   if (age < 0 || age > p.life) return null;
+  if (p.kind === 'snowPuff') {
+    // dopad koule: drobné kousky sněhu se rozletí a spadnou
+    const u = age / p.life, ang = hashNoise(p.seed, 3) * Math.PI * 2, sp = (6 + hashNoise(p.seed, 4) * 10) * p.sc;
+    return { x: p.x + Math.cos(ang) * sp * age, y: p.y - Math.abs(Math.sin(ang)) * sp * age + 40 * p.sc * age * age, r: (0.9 + hashNoise(p.seed, 5)) * p.sc, a: 0.85 * (1 - u) };
+  }
   const u = age / p.life;
   const drift = (windIntegral(seed, t, gusts) - p.w0) * windBase * (p.kind === 'smoke' ? 60 : 28) * p.sc;
   const rise = p.kind === 'smoke' ? 16 : p.kind === 'steam' ? 15 : 10;

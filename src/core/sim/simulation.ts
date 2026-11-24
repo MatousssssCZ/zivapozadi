@@ -25,6 +25,7 @@ import { viewForDirection } from '../anim/skeleton';
 import { emit, emitsNow, windIntegral } from './environment';
 import { stepSnowman, startSnowman, abortSnowman, finishSession, snowmanZoneFree, type SessionHost } from '../activities/snowman';
 import { releaseArm as socialRelease, tryGesture } from '../social/social';
+import { stepFight, startFight, stepBalls, fightZoneProblem } from '../activities/snowballFight';
 import { canSip, clearGesturesFor, emptySocialWorld, endConversationOf, ensureSocial, greetPair, releaseArm, startConversation, stepAgentSocial, stepConversations, thanks, waveTo, type SocialEnv, type SocialWorld } from '../social/social';
 
 export interface Diagnostic { level: 'warning' | 'error'; message: string; ref?: string }
@@ -437,25 +438,27 @@ export class Simulation {
     });
   }
   private stepSessions(t: number) {
+    if (this.state.props.some((p) => p.place.kind === 'flying')) stepBalls(this.sessionHost()); // koule vždy doletí
     if (!this.state.sessions?.length) return;
     const h = this.sessionHost();
     for (const s of [...this.state.sessions]) {
-      if (s.type !== 'snowman') continue;
-      const r = stepSnowman(h, s);
+      const r = s.type === 'snowman' ? stepSnowman(h, s) : s.type === 'snowballFight' ? stepFight(h, s) : 'running';
       if (r === 'running') continue;
-      if (r === 'aborted') { this.log('info', 'Stavba sněhuláka se přerušila.'); abortSnowman(h, s); }
-      else { this.log('info', 'Sněhulák je hotový.'); finishSession(h, s); }
+      if (s.type === 'snowman' && r === 'aborted') { this.log('info', 'Stavba sněhuláka se přerušila.'); abortSnowman(h, s); }
+      else { this.log('info', s.type === 'snowman' ? 'Sněhulák je hotový.' : r === 'aborted' ? 'Koulovačka se přerušila.' : 'Koulovačka skončila.'); finishSession(h, s); }
       const d = (this.state.director ??= { nextSignificant: 0 });
       d.nextSignificant = t + randRange(this.state.rng, 90, 180);
     }
   }
   /** Volná zóna pro sněhuláka, pokud režisér zrovna dovolí výraznou událost. */
-  private snowmanZoneAvailable(t: number): string | null {
+  private snowmanZoneAvailable(t: number, rnd = 0): { id: string; goal: 'snowman' | 'snowball' } | null {
     if ((this.state.director?.nextSignificant ?? 0) > t) return null;
-    if (this.state.sessions?.some((s) => s.type === 'snowman')) return null; // nejvýš jedna výrazná událost
+    if (this.state.sessions?.length) return null; // nejvýš jedna výrazná událost
     const h = this.sessionHost();
-    const z = this.project.zones.find((zz) => zz.activityType === 'snowman' && !snowmanZoneFree(h, zz));
-    return z?.id ?? null;
+    const cands = this.project.zones.filter((zz) => (zz.activityType === 'snowman' && !snowmanZoneFree(h, zz)) || (zz.activityType === 'snowballFight' && !fightZoneProblem(h, zz)));
+    if (!cands.length) return null;
+    const z = cands[Math.floor(rnd * cands.length) % cands.length];
+    return { id: z.id, goal: z.activityType === 'snowman' ? 'snowman' : 'snowball' };
   }
 
   // ---------------------------------------------------------------- sociální vrstva
@@ -966,13 +969,13 @@ export class Simulation {
         const zone = this.coffeeZone(a, c);
         const friend = r >= 0.75 ? this.pickFriend(a) : null;
         // setkání přátel: spolu na kávu, nebo (vzácně) postavit sněhuláka
-        const smZone = friend ? this.snowmanZoneAvailable(t) : null;
+        const sm = friend ? this.snowmanZoneAvailable(t, rand(a.rng)) : null, smZone = sm?.id;
         const smChance = smZone ? Number(this.zones.get(smZone)?.params.chance ?? 0.5) : 0;
-        if (friend && smZone && rand(a.rng) < smChance) {
+        if (friend && sm && smZone && rand(a.rng) < smChance) {
           const z = this.zones.get(smZone)!;
           const cx = z.bounds.reduce((q, p) => q + p.x, 0) / z.bounds.length, cy = z.bounds.reduce((q, p) => q + p.y, 0) / z.bounds.length;
           this.startMeeting(a, friend, t, nearestAccessibleNode(this.graph, { x: cx, y: cy }));
-          if (a.visit?.mode === 'meet-go') { a.visit.goal = 'snowman'; a.visit.goalZone = smZone; }
+          if (a.visit?.mode === 'meet-go') { a.visit.goal = sm.goal; a.visit.goalZone = smZone; }
           return;
         }
         if (friend && zone) { this.startMeeting(a, friend, t); return; }
@@ -1044,10 +1047,10 @@ export class Simulation {
         f.look = null; a.look = null;
         f.follow = { leaderId: a.id, side: rand(a.rng) < 0.5 ? 1 : -1 };
         f.visit = { mode: 'with', until: 0, friendId: a.id, since: t };
-        if (v.goal === 'snowman' && v.goalZone) {
+        if (v.goal && v.goalZone) {
           const zz = this.zones.get(v.goalZone);
           f.follow = null;
-          if (zz && startSnowman(this.sessionHost(), zz, a, f)) {
+          if (zz && (v.goal === 'snowman' ? startSnowman(this.sessionHost(), zz, a, f) : startFight(this.sessionHost(), zz, a, f))) {
             a.visit = { mode: 'coffee', until: 0, since: t }; f.visit = { mode: 'coffee', until: 0, since: t };
             (this.state.director ??= { nextSignificant: 0 }).nextSignificant = Infinity; // běží výrazná událost
             return;

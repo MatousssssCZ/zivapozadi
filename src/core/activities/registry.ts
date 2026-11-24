@@ -2,6 +2,7 @@ import type { ActivityRunner, ActivityDefinition } from './types';
 import { coffeeRunner } from './coffee';
 import { shopRunner } from './shop';
 import { snowmanParticipant } from './snowman';
+import { snowballParticipant } from './snowballFight';
 
 const runners = new Map<string, ActivityRunner>();
 
@@ -13,3 +14,4 @@ export function listActivityDefinitions(): ActivityDefinition[] { return [...run
 registerActivity(coffeeRunner);
 registerActivity(shopRunner);
 registerActivity(snowmanParticipant);
+registerActivity(snowballParticipant);

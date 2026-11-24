@@ -3,6 +3,7 @@
  * Neobsahuje editorové značky ani nekontrolovanou náhodu. Používá ji náhled i export.
  */
 import { sessionBalls } from '../activities/snowman';
+import { ballAt } from '../activities/snowballFight';
 import { particleAt, snowDensityFactor, windIntegral } from '../sim/environment';
 import { drawGroundIntegration, drawObjectIntegration, gradedImage, characterLightAt } from './integration';
 import type { ProjectFile, SceneObject, AssetEntry } from '../model/types';
@@ -385,6 +386,11 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
     // sněhuláci (runtime objekty) a rozpracované koule – řazené podle bodu dotyku se zemí
     const cam = cameraFor(sc);
     for (const o of sim.state.runtimeObjects ?? []) items.push({ key: o.y, tie: 15000, draw: () => drawSnowman(ctx, cam, o) });
+    for (const p of sim.state.props) if (p.place.kind === 'flying') {
+      const q = ballAt(p.place, opts.time); if (!q) continue;
+      const g = toScreen(cam, { X: q.X, Z: q.Z });
+      items.push({ key: g.y, tie: 15200, draw: () => drawSnowBall(ctx, cam, q.X, q.Z, Math.max(0.03, q.H), p.radius ?? 0.045, opts.time * 9, 3, false) });
+    }
     sessionBalls(sim.state).forEach((b, i) => { const g = toScreen(cam, { X: b.X, Z: b.Z }); items.push({ key: g.y, tie: 15100 + i, draw: () => drawSnowBall(ctx, cam, b.X, b.Z, b.H, b.r, b.rot, 7 + i, true) }); });
   }
   items.sort((a, b) => a.key - b.key || a.tie - b.tie);
