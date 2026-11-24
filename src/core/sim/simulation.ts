@@ -1,7 +1,7 @@
 import type { ProjectFile, SceneObject, ActivityZone, CharacterInstance } from '../model/types';
 import { buildNavGraph, findPath, nearestAccessibleNode, type NavGraph } from '../nav/navGraph';
 import { interactionPointWorld } from '../scene/geometry';
-import { seedRng, rand, randRange, pickWeighted, hashString } from '../math/rng';
+import { seedRng, rand, randRange, pickWeighted, hashString, hashNoise } from '../math/rng';
 import { canonicalJson, fingerprint } from '../model/hash';
 import { ALL_DIRECTIONS, resolveDirection, resolveClip, type CharacterManifest } from '../anim/manifest';
 import { initialAnimState, playAction, stepAnimator, stopAction } from '../anim/animator';
@@ -22,6 +22,7 @@ import { pointInPolygon } from '../math/geom';
 import { planCrowd, solveCrowd, wantVelocity, comfortRadius, insidePoly, R_BODY, type CrowdItem, type ObstacleW } from './crowd';
 import { cameraFor, toWorld, toScreen, worldAngleOfScreen, screenAngleOfWorld, Q, type World } from '../scene/camera';
 import { viewForDirection } from '../anim/skeleton';
+import { emit, emitsNow, windIntegral } from './environment';
 import { canSip, clearGesturesFor, emptySocialWorld, endConversationOf, ensureSocial, greetPair, releaseArm, startConversation, stepAgentSocial, stepConversations, thanks, waveTo, type SocialEnv, type SocialWorld } from '../social/social';
 
 export interface Diagnostic { level: 'warning' | 'error'; message: string; ref?: string }
@@ -389,6 +390,7 @@ export class Simulation {
     for (const a of this.state.agents) this.stepAgent(a, t);
     this.stepSocial(t);
     this.stepVendors(t);
+    this.stepEnvironment(t);
     this.stepProps(t);
     this.state.step++;
   }
@@ -1124,6 +1126,46 @@ export class Simulation {
       if (cust && v.mode === 'tidy') v.nextTidy = t + randRange(v.rng, 20, 60); // úklid přerušen zákazníkem
       if (mode !== v.mode) { v.mode = mode; v.since = t; }
       v.customerId = cust?.id ?? null;
+    }
+  }
+
+  /** Pára z kelímků a stánků, kouř z komínů (E03–E05) – jen když je prostředí zapnuté. */
+  private stepEnvironment(t: number) {
+    const env = this.project.scene.environment;
+    if (!env) return;
+    const pool = (this.state.particles ??= []);
+    // dožilé částice pryč (pool je seřazený podle vzniku; životnosti jsou krátké)
+    while (pool.length && t - pool[0].t0 > 9) pool.shift();
+    const seed = this.project.seed, w0 = windIntegral(seed, t, env.gusts);
+    const sc = (y: number) => depthScaleAt(this.project.scene.depth, y);
+    let n = this.state.step * 131;
+    if (env.cupSteam) for (const p of this.state.props) {
+      if (p.kind !== 'cup' || p.place.kind !== 'held' || t - p.appearedAt > 150) continue;
+      const id = hashString(p.id);
+      if (!emitsNow(id, 2.5, t, SIM_DT)) continue;
+      const a = this.state.agents.find((x) => x.id === (p.place as { agentId: string }).agentId);
+      if (!a || a.hidden) continue;
+      const h = this.handPosition(a), s = sc(a.pos.y);
+      emit(pool, { kind: 'cupSteam', x: h.x, y: h.y - 9 * s, t0: t, life: 0.8 + ((id + n++) % 100) / 100, w0, sc: s, seed: id + this.state.step });
+    }
+    if (env.stallSteam) for (const o of this.project.objects) {
+      const a = this.project.assets.find((x) => x.id === o.assetId);
+      if (!a?.shape?.steam || !o.visible) continue;
+      a.shape.steam.forEach((st, i) => {
+        const id = hashString(o.id) + i * 7;
+        if (!emitsNow(id, 4, t, SIM_DT)) return;
+        const w = (a.width ?? 100) * (a.pixelScale ?? 1) * o.scale, hh = (a.height ?? 100) * (a.pixelScale ?? 1) * o.scale;
+        const an = o.anchor ?? a.anchor ?? { x: 0.5, y: 1 };
+        const u = o.flipX ? 1 - st.u : st.u;
+        const x = o.x - (o.flipX ? 1 - an.x : an.x) * w + u * w, y = o.y - an.y * hh + st.v * hh;
+        emit(pool, { kind: 'steam', x, y, t0: t, life: 1.5 + hashNoise(id, this.state.step) * 2, w0, sc: sc(o.y), seed: id * 31 + this.state.step });
+      });
+    }
+    for (const src of env.sources) {
+      const id = hashString(src.id);
+      if (!emitsNow(id, src.rate, t, SIM_DT)) continue;
+      const s = sc(Math.max(src.y, this.project.scene.depth.yFar));
+      emit(pool, { kind: src.kind === 'smoke' ? 'smoke' : 'steam', x: src.x, y: src.y, t0: t, life: src.kind === 'smoke' ? 4 + hashNoise(id, this.state.step) * 4 : 1.5 + hashNoise(id, this.state.step) * 2, w0, sc: s, seed: id * 17 + this.state.step });
     }
   }
 

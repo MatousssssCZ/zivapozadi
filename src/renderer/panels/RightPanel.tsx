@@ -320,6 +320,28 @@ function SceneProps({ p }: { p: ProjectFile }) {
         <Row label="Hustota"><NumField value={sc.snowfall.density} min={0} max={3} step={0.1} onCommit={(v) => upd('Sněžení', (d) => { d.scene.snowfall.density = v; })} /></Row>
         <Row label="Vítr"><NumField value={sc.snowfall.wind} min={-2} max={2} step={0.05} onCommit={(v) => upd('Sněžení', (d) => { d.scene.snowfall.wind = v; })} /></Row>
       </Section>
+      <Section title="Živé prostředí">
+        <Check label="Zapnuto" value={!!sc.environment} onChange={(v) => upd('Živé prostředí', (d) => { d.scene.environment = v ? { variableSnow: true, gusts: true, cupSteam: true, stallSteam: true, sources: [] } : undefined; })} />
+        {sc.environment && <>
+          <Check label="Proměnlivá hustota sněžení (0,7–1,15×)" value={sc.environment.variableSnow} onChange={(v) => upd('Prostředí', (d) => { d.scene.environment!.variableSnow = v; })} />
+          <Check label="Poryvy větru (sníh, pára i kouř)" value={sc.environment.gusts} onChange={(v) => upd('Prostředí', (d) => { d.scene.environment!.gusts = v; })} />
+          <Check label="Pára z kelímků" value={sc.environment.cupSteam} onChange={(v) => upd('Prostředí', (d) => { d.scene.environment!.cupSteam = v; })} />
+          <Check label="Pára ze stánků (zdroje v tvaru obrázku)" value={sc.environment.stallSteam} onChange={(v) => upd('Prostředí', (d) => { d.scene.environment!.stallSteam = v; })} />
+          <div className="muted small">Zdroje kouře / páry (komíny, hrnce) – poloha ve scéně, četnost za sekundu:</div>
+          {sc.environment.sources.map((q, i) => (
+            <Row key={q.id} label={q.kind === 'smoke' ? 'Kouř' : 'Pára'}>
+              <NumField value={q.x} onCommit={(v) => upd('Zdroj kouře', (d) => { d.scene.environment!.sources[i].x = v; })} />
+              <NumField value={q.y} onCommit={(v) => upd('Zdroj kouře', (d) => { d.scene.environment!.sources[i].y = v; })} />
+              <NumField value={q.rate} min={0.2} max={10} step={0.2} onCommit={(v) => upd('Zdroj kouře', (d) => { d.scene.environment!.sources[i].rate = v; })} />
+              <button className="icon" onClick={() => upd('Smazání zdroje', (d) => { d.scene.environment!.sources.splice(i, 1); })}>✕</button>
+            </Row>
+          ))}
+          <div className="actions">
+            <button onClick={() => upd('Přidání komína', (d) => { d.scene.environment!.sources.push({ id: newId('src'), kind: 'smoke', x: d.scene.width / 2, y: 200, rate: 2 }); })}>+ Komín (kouř)</button>
+            <button onClick={() => upd('Přidání páry', (d) => { d.scene.environment!.sources.push({ id: newId('src'), kind: 'steam', x: d.scene.width / 2, y: 800, rate: 4 }); })}>+ Pára</button>
+          </div>
+        </>}
+      </Section>
     </>
   );
 }

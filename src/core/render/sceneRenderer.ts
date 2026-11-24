@@ -2,6 +2,7 @@
  * Vykreslení scény v logických souřadnicích. Čistá funkce: projekt + stav simulace → obraz.
  * Neobsahuje editorové značky ani nekontrolovanou náhodu. Používá ji náhled i export.
  */
+import { particleAt, snowDensityFactor, windIntegral } from '../sim/environment';
 import { drawGroundIntegration, drawObjectIntegration, gradedImage, characterLightAt } from './integration';
 import type { ProjectFile, SceneObject, AssetEntry } from '../model/types';
 import type { Simulation } from '../sim/simulation';
@@ -380,9 +381,25 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
   }
   items.sort((a, b) => a.key - b.key || a.tie - b.tie);
   for (const it of items) it.draw();
+  if (sim && sc.environment && sim.state.particles?.length) drawParticles(ctx, project, sim.state.particles, opts.time);
 
   for (const { o } of fixed('foreground')) drawObject(ctx, o, assets.get(o.assetId), images.get(o.assetId));
   if (sc.snowfall.enabled) drawSnowfall(ctx, project, opts.time);
+}
+
+/** Pára a kouř: měkké průsvitné obláčky (malovaný dojem, bez ostrých okrajů). */
+function drawParticles(ctx: Ctx, project: ProjectFile, ps: NonNullable<Simulation['state']['particles']>, t: number) {
+  const env = project.scene.environment!;
+  ctx.save();
+  for (const p of ps) {
+    const q = particleAt(p, t, project.scene.snowfall.wind, project.seed, env.gusts);
+    if (!q || q.a < 0.004) continue;
+    const col = p.kind === 'smoke' ? '214,216,228' : '248,248,252';
+    const g = ctx.createRadialGradient(q.x, q.y, 0, q.x, q.y, q.r);
+    g.addColorStop(0, `rgba(${col},${q.a.toFixed(3)})`); g.addColorStop(0.6, `rgba(${col},${(q.a * 0.45).toFixed(3)})`); g.addColorStop(1, `rgba(${col},0)`);
+    ctx.fillStyle = g; ctx.fillRect(q.x - q.r, q.y - q.r, 2 * q.r, 2 * q.r);
+  }
+  ctx.restore();
 }
 
 function propY(p: PropState): number {
@@ -392,10 +409,16 @@ function propY(p: PropState): number {
 /** Deterministické sněžení: poloha vločky je čistá funkce (seed, index, čas). */
 export function drawSnowfall(ctx: Ctx, project: ProjectFile, t: number) {
   const { width: W, height: H } = project.scene;
-  const n = Math.round(project.scene.snowfall.density * 420);
+  const env = project.scene.environment;
+  const df = snowDensityFactor(project.seed, t, !!env?.variableSnow);
+  // stabilní ID vloček: při změně hustoty se jednotlivé vločky jen plynule zjeví / zmizí
+  const n = Math.round(project.scene.snowfall.density * 420 * (env?.variableSnow ? 1.15 : 1));
   const wind = project.scene.snowfall.wind;
+  const WI = windIntegral(project.seed, t, !!env?.gusts); // integrál – poryv nezpůsobí skok
   const seed = project.seed;
   for (let i = 0; i < n; i++) {
+    const vis = env?.variableSnow ? Math.max(0, Math.min(1, ((df / 1.15) - hashNoise(seed, i, 9)) / 0.04 + 0.5)) : 1;
+    if (vis <= 0) continue;
     const depth = hashNoise(seed, i, 1); // 0 = daleko, 1 = blízko
     const size = 1.2 + depth * 3.2;
     const speed = 22 + depth * 55;
@@ -403,9 +426,9 @@ export function drawSnowfall(ctx: Ctx, project: ProjectFile, t: number) {
     const x0 = hashNoise(seed, i, 3) * W;
     const sway = 6 + hashNoise(seed, i, 4) * 14, freq = 0.3 + hashNoise(seed, i, 5) * 0.6, ph = hashNoise(seed, i, 6) * 6.283;
     const y = ((y0 + t * speed) % (H + 40)) - 20;
-    let x = x0 + Math.sin(t * freq + ph) * sway + wind * speed * t;
+    let x = x0 + Math.sin(t * freq + ph) * sway + wind * speed * WI;
     x = ((x % (W + 20)) + W + 20) % (W + 20) - 10;
-    ctx.fillStyle = `rgba(255,255,255,${0.45 + depth * 0.45})`;
+    ctx.fillStyle = `rgba(255,255,255,${((0.45 + depth * 0.45) * vis).toFixed(3)})`;
     ctx.beginPath(); ctx.arc(x, y, size, 0, Math.PI * 2); ctx.fill();
   }
 }

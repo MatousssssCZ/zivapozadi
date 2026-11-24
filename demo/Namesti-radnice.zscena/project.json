@@ -3,8 +3,8 @@
   "formatVersion": 1,
   "meta": {
     "name": "Náměstí s radnicí (test dodané grafiky)",
-    "createdAt": "2026-11-24T13:15:15.925Z",
-    "modifiedAt": "2026-11-24T13:15:15.998Z",
+    "createdAt": "2026-11-24T13:31:06.252Z",
+    "modifiedAt": "2026-11-24T13:31:06.289Z",
     "appVersion": "0.1.0"
   },
   "seed": 1224,
@@ -24,6 +24,13 @@
       "enabled": true,
       "density": 0.7,
       "wind": 0.2
+    },
+    "environment": {
+      "variableSnow": true,
+      "gusts": true,
+      "cupSteam": true,
+      "stallSteam": true,
+      "sources": []
     }
   },
   "assets": [
@@ -168,6 +175,12 @@
             "haloSigmaPx": 3.5,
             "characterGain": 0.12,
             "flicker": 0.015
+          }
+        ],
+        "steam": [
+          {
+            "u": 0.235,
+            "v": 0.34
           }
         ]
       }

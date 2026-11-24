@@ -94,6 +94,8 @@ export interface AssetShape {
   /** Hloubka půdorysu (m). */
   depthM: number;
   lights?: ObjectLight[];
+  /** Zdroj páry (horký hrnec / samovar) v obrázku 0..1. */
+  steam?: { u: number; v: number }[];
 }
 /** Zapuštění objektu do malovaného náměstí (zadání `docs/zdroje/zadani-zasazeni-stanku.md`, kap. B). */
 export interface ObjectIntegration {
@@ -253,6 +255,16 @@ export interface DepthSettings {
   yNear: number; scaleNear: number;
 }
 
+/** Zdroj kouře nebo páry umístěný ve scéně (komín, hrnec…). */
+export interface SmokeSource { id: string; kind: 'smoke' | 'steam'; x: number; y: number; rate: number }
+export interface EnvironmentSettings {
+  /** hustota sněžení pozvolna kolísá 0,7–1,15× (přechody 30–90 s) */ variableSnow: boolean;
+  /** jemné poryvy větru 8–20 s, sdílené sněžením, párou a kouřem */ gusts: boolean;
+  /** pára z kelímků s horkým nápojem */ cupSteam: boolean;
+  /** pára ze zdrojů na stáncích (AssetShape.steam) */ stallSteam: boolean;
+  /** kouř a pára z ručně umístěných zdrojů */ sources: SmokeSource[];
+}
+
 export interface SceneSettings {
   width: number;
   height: number;
@@ -261,6 +273,8 @@ export interface SceneSettings {
   depth: DepthSettings;
   /** Atmosférické sněžení (deterministické podle seedu). */
   snowfall: { enabled: boolean; density: number; wind: number };
+  /** Živé prostředí (E01–E05): proměnlivé sněžení, poryvy větru, pára a kouř. Chybí = vypnuto. */
+  environment?: EnvironmentSettings;
   /** Vodorovný zorný úhel kamery (°, výchozí 50) – spolu s nastavením hloubky určuje skutečné metry scény. */
   fovDeg?: number;
   /** Největší sklon chůze po obrazovce od vodorovné (°, výchozí 45; 90 = bez omezení). */

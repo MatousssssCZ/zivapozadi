@@ -2,6 +2,7 @@ import type { Vec2 } from '../math/vec';
 import type { RngState } from '../math/rng';
 import type { AnimState } from '../anim/animator';
 import type { AgentSocial, SocialWorld } from '../social/social';
+import type { Particle } from './environment';
 
 export const SIM_STATE_VERSION = 5;
 export const SIM_DT = 1 / 60;
@@ -156,6 +157,8 @@ export interface SimState {
   nextSessionId?: number;
   /** Prodavači ve stáncích (podle objectId). */
   vendors?: Record<string, VendorState>;
+  /** Pára a kouř (omezený pool, vypuštěné částice zůstávají ve světě). */
+  particles?: Particle[];
   /** Trvalé objekty vzniklé během simulace (sněhuláci…) – nejsou součástí projektu. */
   runtimeObjects?: RuntimeObject[];
 }

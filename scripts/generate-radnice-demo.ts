@@ -36,12 +36,14 @@ export async function generateRadnice(dir: string): Promise<ProjectFile> {
   for (const id of ['builtin_stolecek', 'builtin_kos', 'builtin_kos_vika', 'builtin_postava_cg']) await addBuiltinAsset('resources/builtin', dir, p, id);
   // tvar pro zapuštění do scény: kontaktní šířka těla, hloubka půdorysu, lucerny (zadání stánků B)
   for (const a of Object.values(st)) a.shape = { bodyU0: 0.063, bodyU1: 0.932, depthM: 1.8, lights: [lantern(0.098, 0.468, 1.6), lantern(0.9, 0.456, 1.6)] };
+  st.napoje.shape!.steam = [{ u: 0.235, v: 0.34 }]; // samovar
   lampa.shape = { bodyU0: 0.387, bodyU1: 0.622, depthM: 0.3, lights: [0.206, 0.5, 0.794].map((u, i) => ({ ...lantern(u, i === 1 ? 0.311 : 0.325, 2.65), radiusM: 2.4, groundGain: 0.14, haloOpacity: 0.05 })) };
   strom.shape = { bodyU0: 0.272, bodyU1: 0.647, depthM: 1.2 };
   p.scene.backgroundAssetId = bg.id;
   // Perspektiva: chodník u budov (y≈900) je daleko, spodní okraj blízko.
   p.scene.depth = { enabled: true, yFar: 900, scaleFar: 0.36, yNear: 1080, scaleNear: 1.3 };
   p.scene.snowfall = { enabled: true, density: 0.7, wind: 0.2 };
+  p.scene.environment = { variableSnow: true, gusts: true, cupSteam: true, stallSteam: true, sources: [] };
 
   const rect = (x0: number, y0: number, x1: number, y1: number): Vec2[] => [{ x: x0, y: y0 }, { x: x1, y: y0 }, { x: x1, y: y1 }, { x: x0, y: y1 }];
   const stallFootprint = rect(-205, -40, 205, 8);
