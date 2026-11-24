@@ -489,7 +489,7 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
     for (let i = 0; i < 2; i++) {
       const g = soc.arms[i];
       if (!g || g.w <= 0) continue;
-      const dirX = v.shoulderSpread ? sideX(i) : fx;
+      const dirX = g.fwd ? fx : v.shoulderSpread ? sideX(i) : fx; // práce: dopředu ve směru pohledu
       const base = i === 0 ? (backTarget ?? armBackFK.end) : (frontTarget ?? armFrontFK.end);
       const tgt = g.rel ? { x: base.x + dirX * g.p.x * gScale, y: base.y - g.p.y * gScale } : { x: roots[i].x + dirX * (g.p.x - 8.7) * gScale, y: shoulder.y - g.p.y * gScale };
       const t2 = { x: base.x + (tgt.x - base.x) * g.w, y: base.y + (tgt.y - base.y) * g.w };

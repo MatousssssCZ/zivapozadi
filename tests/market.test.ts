@@ -4,6 +4,7 @@ import { tmpDir } from './helpers';
 import { loadProject, type LoadedProject } from '../src/node/projectIO';
 import { generateRadnice } from '../scripts/generate-radnice-demo';
 import { Simulation } from '../src/core/sim/simulation';
+import { canonicalJson } from '../src/core/model/hash';
 
 /** Balíček „živá pozadí“ – A01 nákup s taškou, A10 prodavač, A12 odchod s nákupem (T05, T19, T20). */
 let lp: LoadedProject;
@@ -47,6 +48,6 @@ describe('trh: nákup s taškou a prodavač', () => {
     const snap = JSON.parse(JSON.stringify(sim.state));
     const b = Simulation.restore(lp.project, lp.manifests, snap);
     for (let i = 0; i < 300; i++) { sim.step(); b.step(); }
-    expect(JSON.stringify(b.state)).toBe(JSON.stringify(sim.state));
+    expect(canonicalJson(b.state)).toBe(canonicalJson(sim.state));
   }, 120000);
 });

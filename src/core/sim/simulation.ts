@@ -23,6 +23,8 @@ import { planCrowd, solveCrowd, wantVelocity, comfortRadius, insidePoly, R_BODY,
 import { cameraFor, toWorld, toScreen, worldAngleOfScreen, screenAngleOfWorld, Q, type World } from '../scene/camera';
 import { viewForDirection } from '../anim/skeleton';
 import { emit, emitsNow, windIntegral } from './environment';
+import { stepSnowman, startSnowman, abortSnowman, finishSession, snowmanZoneFree, type SessionHost } from '../activities/snowman';
+import { releaseArm as socialRelease, tryGesture } from '../social/social';
 import { canSip, clearGesturesFor, emptySocialWorld, endConversationOf, ensureSocial, greetPair, releaseArm, startConversation, stepAgentSocial, stepConversations, thanks, waveTo, type SocialEnv, type SocialWorld } from '../social/social';
 
 export interface Diagnostic { level: 'warning' | 'error'; message: string; ref?: string }
@@ -387,12 +389,73 @@ export class Simulation {
     // 1) pohyb davu ve světových metrech (trasy, dvojice, předvídavé míjení, pevné rozestupy),
     // 2) animace a rozhodování
     this.stepCrowdMotion();
+    this.stepSessions(t);
     for (const a of this.state.agents) this.stepAgent(a, t);
     this.stepSocial(t);
     this.stepVendors(t);
     this.stepEnvironment(t);
     this.stepProps(t);
     this.state.step++;
+  }
+
+  // ---------------------------------------------------------------- společné činnosti
+  private hostCache: SessionHost | null = null;
+  sessionHost(): SessionHost {
+    const self = this;
+    return (this.hostCache ??= {
+      get state() { return self.state; }, get res() { return self.res; }, get project() { return self.project; },
+      time: () => self.time(),
+      agent: (id) => self.state.agents.find((a) => a.id === id),
+      goTo(a, p, purpose) {
+        const entry = nearestAccessibleNode(self.graph, p);
+        if (!entry) return false;
+        const key = `free:${Math.round(p.x)},${Math.round(p.y)}`;
+        const wps = self.buildRoute(a, entry, { x: p.x, y: p.y, key });
+        if (!wps) return false;
+        a.speedFactor = 1;
+        self.startRoute(a, wps, purpose, key, entry);
+        return true;
+      },
+      walkPath(a, pts, purpose) {
+        for (const e of a.route?.heldEdges ?? []) self.res.release(edgeKey(e), a.id);
+        a.route = { wps: pts.map((p) => ({ x: p.x, y: p.y, nodeId: null, edgeId: null })), idx: 0, heldEdges: [], purpose, dest: null };
+        a.arrived = false; a.speedFactor = 0.3; // tlačení koule: pomalu
+      },
+      moving: (a) => a.route !== null,
+      gesture(a, fam, o = {}) {
+        const ok = tryGesture(a, self.socialWorld(), self.time(), { fam, hand: o.hand ?? 1, sgn: o.sgn ?? 1, amp: 1, dir: o.dirY !== undefined ? { x: 1, y: o.dirY } : undefined });
+        if (ok && o.dur) { const g = a.anim.gestures![a.anim.gestures!.length - 1]; g.dur = o.dur; }
+        return ok;
+      },
+      releaseWork(a) {
+        a.speedFactor = 1;
+        for (const g of a.anim.gestures ?? []) if (g.fam === 'push' || g.fam === 'lift') g.t = Math.max(g.t, g.dur - 0.5);
+        socialRelease(a, 0); socialRelease(a, 1);
+      },
+      log: (m, id) => self.log('info', m, id),
+      isSnow: (p) => self.project.areas.some((ar) => ar.kind === 'snow' && ar.polygon.length >= 3 && pointInPolygon(p, ar.polygon)),
+    });
+  }
+  private stepSessions(t: number) {
+    if (!this.state.sessions?.length) return;
+    const h = this.sessionHost();
+    for (const s of [...this.state.sessions]) {
+      if (s.type !== 'snowman') continue;
+      const r = stepSnowman(h, s);
+      if (r === 'running') continue;
+      if (r === 'aborted') { this.log('info', 'Stavba sněhuláka se přerušila.'); abortSnowman(h, s); }
+      else { this.log('info', 'Sněhulák je hotový.'); finishSession(h, s); }
+      const d = (this.state.director ??= { nextSignificant: 0 });
+      d.nextSignificant = t + randRange(this.state.rng, 90, 180);
+    }
+  }
+  /** Volná zóna pro sněhuláka, pokud režisér zrovna dovolí výraznou událost. */
+  private snowmanZoneAvailable(t: number): string | null {
+    if ((this.state.director?.nextSignificant ?? 0) > t) return null;
+    if (this.state.sessions?.some((s) => s.type === 'snowman')) return null; // nejvýš jedna výrazná událost
+    const h = this.sessionHost();
+    const z = this.project.zones.find((zz) => zz.activityType === 'snowman' && !snowmanZoneFree(h, zz));
+    return z?.id ?? null;
   }
 
   // ---------------------------------------------------------------- sociální vrstva
@@ -505,7 +568,11 @@ export class Simulation {
   private obstaclesW: ObstacleW[] | null = null;
   private worldObstacles(): ObstacleW[] {
     if (!this.obstaclesW) { const c = this.cam(); this.obstaclesW = this.graph.obstacles.map((o) => ({ poly: o.polygon.map((p) => toWorld(c, p)) })); }
-    return this.obstaclesW;
+    const ro = this.state.runtimeObjects;
+    if (!ro?.length) return this.obstaclesW;
+    // sněhuláci: kolizní stopa (osmiúhelník kolem spodní koule)
+    const c = this.cam();
+    return [...this.obstaclesW, ...ro.map((o) => { const P = toWorld(c, o), r = o.radii[0] + 0.05; return { poly: Array.from({ length: 8 }, (_, i) => ({ X: P.X + r * Math.cos((i * Math.PI) / 4), Z: P.Z + r * Math.sin((i * Math.PI) / 4) })) }; })];
   }
 
   /** Rychlost chůze postavy v m/s (dvojice jde tempem pomalejšího). */
@@ -898,6 +965,16 @@ export class Simulation {
         const r = rand(a.rng);
         const zone = this.coffeeZone(a, c);
         const friend = r >= 0.75 ? this.pickFriend(a) : null;
+        // setkání přátel: spolu na kávu, nebo (vzácně) postavit sněhuláka
+        const smZone = friend ? this.snowmanZoneAvailable(t) : null;
+        const smChance = smZone ? Number(this.zones.get(smZone)?.params.chance ?? 0.5) : 0;
+        if (friend && smZone && rand(a.rng) < smChance) {
+          const z = this.zones.get(smZone)!;
+          const cx = z.bounds.reduce((q, p) => q + p.x, 0) / z.bounds.length, cy = z.bounds.reduce((q, p) => q + p.y, 0) / z.bounds.length;
+          this.startMeeting(a, friend, t, nearestAccessibleNode(this.graph, { x: cx, y: cy }));
+          if (a.visit?.mode === 'meet-go') { a.visit.goal = 'snowman'; a.visit.goalZone = smZone; }
+          return;
+        }
         if (friend && zone) { this.startMeeting(a, friend, t); return; }
         // nákup u stánku (hračky, perník, pletené zboží)
         const shop = r >= 0.18 && r < 0.58 && !this.state.agents.some((x) => x.follow?.leaderId === a.id) ? this.zoneFor(a, c, 'shop') : null;
@@ -967,6 +1044,16 @@ export class Simulation {
         f.look = null; a.look = null;
         f.follow = { leaderId: a.id, side: rand(a.rng) < 0.5 ? 1 : -1 };
         f.visit = { mode: 'with', until: 0, friendId: a.id, since: t };
+        if (v.goal === 'snowman' && v.goalZone) {
+          const zz = this.zones.get(v.goalZone);
+          f.follow = null;
+          if (zz && startSnowman(this.sessionHost(), zz, a, f)) {
+            a.visit = { mode: 'coffee', until: 0, since: t }; f.visit = { mode: 'coffee', until: 0, since: t };
+            (this.state.director ??= { nextSignificant: 0 }).nextSignificant = Infinity; // běží výrazná událost
+            return;
+          }
+          f.follow = { leaderId: a.id, side: rand(a.rng) < 0.5 ? 1 : -1 };
+        }
         const zone = this.coffeeZone(a, c);
         if (zone) { a.pendingActivity = { type: 'coffee', zoneId: zone.id, source: 'auto', sourceId: null }; a.visit = { mode: 'coffee', until: 0, friendId: f.id, since: t }; }
         else this.leaveScene(a, t);
@@ -1001,14 +1088,14 @@ export class Simulation {
     return cands.length ? cands[Math.floor(rand(a.rng) * cands.length)] : null;
   }
 
-  private startMeeting(a: AgentState, f: AgentState, t: number) {
+  private startMeeting(a: AgentState, f: AgentState, t: number, at: string | null = null) {
     const here = this.anchorOf(a);
     const nodes = this.project.nav.nodes.filter((n) => !n.portal && this.reachable(here, n.id) && n.id !== here);
     if (!nodes.length) { this.leaveScene(a, t); return; }
-    // místo setkání: raději zastávka, jinak libovolný bod uprostřed scény
+    // místo setkání: zadané (u zóny činnosti), raději zastávka, jinak libovolný bod uprostřed scény
     const stops = nodes.filter((n) => n.stop);
     const pool = stops.length && rand(a.rng) < 0.6 ? stops : nodes;
-    const m = pool[Math.floor(rand(a.rng) * pool.length)];
+    const m = (at && nodes.find((n) => n.id === at)) || pool[Math.floor(rand(a.rng) * pool.length)];
     this.enterScene(f, t, a.loc.kind === 'node' ? a.loc.nodeId : null);
     if (f.hidden) { this.leaveScene(a, t); return; } // přítel teď nemůže vstoupit (u vstupu je plno)
     if (!this.reachable(this.anchorOf(f), m.id)) { this.goOffstage(f, t); this.leaveScene(a, t); return; }

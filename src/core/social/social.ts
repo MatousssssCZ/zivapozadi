@@ -113,7 +113,7 @@ export function usedRes(a: SocialAgent): Set<Res> {
 }
 const isStanding = (a: SocialAgent) => !a.hidden && a.anim.walkBlend < 0.05 && a.speed < 0.5;
 /** Rodiny, které se smějí hrát i v chůzi (C.2: dvojice při chůzi) – jen hlava. */
-const WALK_OK: Family[] = ['nod', 'greetNod', 'thanks', 'waveFar', 'tilt'];
+const WALK_OK: Family[] = ['nod', 'greetNod', 'thanks', 'waveFar', 'tilt', 'push'];
 
 /**
  * Pokusí se spustit klip. Kontroluje prostředky, cooldown rodiny, antirepetici výrazných gest

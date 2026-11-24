@@ -24,7 +24,9 @@ export const WRIST = {
 export type Family =
   | 'beat' | 'point' | 'size' | 'open' | 'shrug' | 'cupBeat'
   | 'nod' | 'tilt' | 'greetNod' | 'thanks' | 'waveFar' | 'amusement'
-  | 'rubHands' | 'adjustScarf' | 'adjustCap' | 'hunch' | 'queuePeek' | 'warmCup';
+  | 'rubHands' | 'adjustScarf' | 'adjustCap' | 'hunch' | 'queuePeek' | 'warmCup'
+  /** práce (sněhulák): tlačení koule, zvednutí, zdobení – souřadnice x DOPŘEDU ve směru pohledu */
+  | 'push' | 'lift' | 'decorate';
 
 /** Spuštěný klip u postavy (čistá data – součást stavu simulace). */
 export interface GestureInst {
@@ -55,6 +57,8 @@ export function resourcesOf(g: Pick<GestureInst, 'fam' | 'hand' | 'both'>): Res[
     case 'nod': case 'tilt': case 'greetNod': case 'thanks': return ['head'];
     case 'amusement': return ['torso', 'head'];
     case 'queuePeek': return ['pelvis', 'torso', 'head'];
+    case 'push': case 'lift': return ['arm0', 'arm1', 'torso'];
+    case 'decorate': return [h];
   }
 }
 
@@ -79,7 +83,7 @@ const sc = (p: Vec2, amp: number, base: Vec2 = WRIST.READY): Vec2 => ({ x: base.
 const env = (u: number, a: number, b: number, c: number, d: number) => (u < a ? 0 : u < b ? S((u - a) / (b - a)) : u < c ? 1 : u < d ? 1 - S((u - c) / (d - c)) : 0);
 
 /** Cíl zápěstí: váha vůči základní póze (0..1) a bod ve vlastních souřadnicích paže. */
-export type HandTarget = { w: number; p: Vec2; /** p je posun vůči základní póze (ne bod) */ rel?: boolean; /** loket smí být zvednutý (mávání, čepice) */ keep?: boolean } | null;
+export type HandTarget = { w: number; p: Vec2; /** p je posun vůči základní póze (ne bod) */ rel?: boolean; /** loket smí být zvednutý (mávání, čepice) */ keep?: boolean; /** p.x míří dopředu (směr pohledu), ne ven od těla */ fwd?: boolean } | null;
 /** Výsledek vyhodnocení: cíle obou paží, náklony (°), posun pánve (j.). */
 export interface GestureOut {
   arms: [HandTarget, HandTarget];
@@ -189,6 +193,28 @@ export function evalGesture(g: GestureInst): GestureOut {
       out.pelvisX = 1.0 * amp * e * g.sgn; out.trunkDeg = 1.5 * e * g.sgn; out.headDeg = 2 * e * g.sgn;
       break;
     }
+    case 'push': { // tlačení koule: obě ruce vpředu nízko, mírný předklon; drží se do uvolnění
+      const e = Math.min(1, g.t / 0.5), f = Math.min(1, Math.max(0, (g.dur - g.t) / 0.5));
+      const w = e * e * (3 - 2 * e) * (f * f * (3 - 2 * f));
+      const bob = Math.sin(g.t * 3.1) * 0.8;
+      if (w > 0) out.arms = [{ w, p: { x: 15 * amp, y: -33 + bob }, fwd: true, keep: true }, { w, p: { x: 16 * amp, y: -31 - bob }, fwd: true, keep: true }];
+      out.trunkDeg = -2.5 * w * g.sgn;
+      return out;
+    }
+    case 'lift': { // zvednutí koule: z dřepu nízko → k hrudi → položení nahoru
+      const lo = { x: 13, y: -40 }, hi = { x: 14, y: -14 };
+      const tr = track([[0, 'R'], [0.25, lo], [0.6, hi], [0.8, hi], [1, 'R']], u);
+      if (tr.w > 0) out.arms = [{ ...tr, fwd: true, keep: true }, { ...tr, fwd: true, keep: true }];
+      out.trunkDeg = -2 * env(u, 0.1, 0.3, 0.5, 0.7) * g.sgn;
+      return out;
+    }
+    case 'decorate': { // přidání oka/nosu: jedna ruka k hlavě sněhuláka, krátké přitlačení
+      const p = { x: 20 * amp, y: (g.dir?.y ?? -8) }, q = { x: p.x + 1.5, y: p.y };
+      const tr = track([[0, 'R'], [0.35, p], [0.5, q], [0.62, p], [1, 'R']], u);
+      if (tr.w > 0) out.arms[hand] = { ...tr, fwd: true, keep: true };
+      out.headDeg = 1.5 * env(u, 0.3, 0.4, 0.6, 0.8) * g.sgn;
+      return out;
+    }
     case 'warmCup': { // D02 – kelímek oběma rukama u osy trupu (vstup, držení, výstup)
       const cupC = { x: 2, y: -22 }, sup = { x: -3.5, y: -23 };
       const tr = track([[0, 'R'], [0.15, cupC], [0.88, cupC], [1, 'R']], u);
@@ -230,4 +256,5 @@ export const CLIP_T: Record<Family, { T: [number, number, number]; cd: number }>
   thanks: { T: [0.7, 0.9, 1.3], cd: 3 }, waveFar: { T: [2.0, 2.5, 3.2], cd: 45 }, amusement: { T: [1.5, 2.2, 3.2], cd: 35 },
   rubHands: { T: [2.3, 3.0, 4.2], cd: 50 }, adjustScarf: { T: [1.9, 2.5, 3.3], cd: 75 }, adjustCap: { T: [2.1, 2.7, 3.6], cd: 90 },
   hunch: { T: [2.5, 3.2, 4.5], cd: 45 }, queuePeek: { T: [1.6, 2.2, 3.0], cd: 15 }, warmCup: { T: [6, 11, 21], cd: 10 },
+  push: { T: [3, 3, 3], cd: 0 }, lift: { T: [3.2, 4, 5], cd: 0 }, decorate: { T: [2, 2.6, 3.4], cd: 0 },
 };

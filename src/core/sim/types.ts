@@ -47,6 +47,10 @@ export interface VisitState {
   since?: number;
   /** Už zamával příteli na dálku. */
   waved?: boolean;
+  /** Co spolu přátelé po setkání podniknou (jinak káva). */
+  goal?: 'snowman' | null;
+  /** Zóna, kde budou stavět. */
+  goalZone?: string | null;
 }
 
 export interface AgentState {
@@ -159,6 +163,8 @@ export interface SimState {
   vendors?: Record<string, VendorState>;
   /** Pára a kouř (omezený pool, vypuštěné částice zůstávají ve světě). */
   particles?: Particle[];
+  /** Režisér scény: kdy smí začít další výrazná událost (sněhulák, koulovačka…). */
+  director?: { nextSignificant: number };
   /** Trvalé objekty vzniklé během simulace (sněhuláci…) – nejsou součástí projektu. */
   runtimeObjects?: RuntimeObject[];
 }

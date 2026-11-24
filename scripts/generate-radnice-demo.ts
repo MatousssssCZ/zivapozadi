@@ -124,6 +124,10 @@ export async function generateRadnice(dir: string): Promise<ProjectFile> {
     id: 'zone_kava', name: 'Káva u stánku s nápoji', activityType: 'coffee', activityVersion: 1, enabled: true,
     bounds: rect(700, 900, 1700, 1075),
     objectRoles: { stand: ['obj_st_napoje'], seating: ['obj_stolecek', 'obj_stolecek2', 'obj_strom'], bin: ['obj_kos', 'obj_kos2'] }, params: {},
+  }, {
+    // stavba sněhuláka: volný sníh vpředu (koule se válí vodorovně podél okraje)
+    id: 'zone_snehulak', name: 'Sněhulák vpředu', activityType: 'snowman', activityVersion: 1, enabled: true,
+    bounds: rect(600, 1060, 800, 1076), objectRoles: {}, params: { chance: 0.5 },
   }];
   // 24 návštěvníků z generátoru (malované díly z ChatGPT) + 4 prodavači ve stáncích
   const lib = JSON.parse(await fs.readFile('resources/builtin/painted-parts-cg/library.json', 'utf8')) as PartLibrary;

@@ -2,6 +2,7 @@
  * Vykreslení scény v logických souřadnicích. Čistá funkce: projekt + stav simulace → obraz.
  * Neobsahuje editorové značky ani nekontrolovanou náhodu. Používá ji náhled i export.
  */
+import { sessionBalls } from '../activities/snowman';
 import { particleAt, snowDensityFactor, windIntegral } from '../sim/environment';
 import { drawGroundIntegration, drawObjectIntegration, gradedImage, characterLightAt } from './integration';
 import type { ProjectFile, SceneObject, AssetEntry } from '../model/types';
@@ -9,7 +10,8 @@ import type { Simulation } from '../sim/simulation';
 import type { AgentState, PropState } from '../sim/types';
 import { characterVisual } from './characterPose';
 import { drawFigure } from '../anim/testFigure';
-import { cameraFor, toScreen } from '../scene/camera';
+import { cameraFor, toScreen, toWorld } from '../scene/camera';
+import type { SimState } from '../sim/types';
 import { lidOpenness } from '../sim/simulation';
 import { FOOTPRINT_LIFE, FOOTPRINT_FADE } from '../sim/types';
 import { getCanvasFactory, drawRig } from './rigRenderer';
@@ -379,12 +381,83 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
       }
     }
   }
+  if (sim) {
+    // sněhuláci (runtime objekty) a rozpracované koule – řazené podle bodu dotyku se zemí
+    const cam = cameraFor(sc);
+    for (const o of sim.state.runtimeObjects ?? []) items.push({ key: o.y, tie: 15000, draw: () => drawSnowman(ctx, cam, o) });
+    sessionBalls(sim.state).forEach((b, i) => { const g = toScreen(cam, { X: b.X, Z: b.Z }); items.push({ key: g.y, tie: 15100 + i, draw: () => drawSnowBall(ctx, cam, b.X, b.Z, b.H, b.r, b.rot, 7 + i, true) }); });
+  }
   items.sort((a, b) => a.key - b.key || a.tie - b.tie);
   for (const it of items) it.draw();
   if (sim && sc.environment && sim.state.particles?.length) drawParticles(ctx, project, sim.state.particles, opts.time);
 
   for (const { o } of fixed('foreground')) drawObject(ctx, o, assets.get(o.assetId), images.get(o.assetId));
   if (sc.snowfall.enabled) drawSnowfall(ctx, project, opts.time);
+}
+
+/**
+ * Koule sněhu (malovaná): mírně nepravidelný obrys, chladný stín vpravo dole, světlejší horní
+ * plocha, pár stop válení (otáčí se podle dráhy), úzký kontaktní stín na zemi.
+ */
+function drawSnowBall(ctx: Ctx, cam: ReturnType<typeof cameraFor>, X: number, Z: number, H: number, r: number, rot: number, seed: number, shadow: boolean) {
+  const c = toScreen(cam, { X, Z }, H), R = (r * cam.f) / Math.max(1e-3, Z);
+  if (R < 0.4) return;
+  if (shadow) {
+    const g0 = toScreen(cam, { X, Z });
+    ctx.save(); ctx.fillStyle = 'rgba(98,113,150,0.22)';
+    ctx.beginPath(); ctx.ellipse(g0.x + R * 0.1, g0.y, R * 1.05, Math.max(0.8, R * 0.18), 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+  }
+  ctx.save();
+  ctx.beginPath();
+  for (let i = 0; i <= 28; i++) {
+    const a = (i / 28) * Math.PI * 2;
+    const k = 1 + 0.035 * Math.sin(a * 3 + seed) + 0.025 * Math.sin(a * 7 + seed * 1.7);
+    const x = c.x + Math.cos(a) * R * k, y = c.y + Math.sin(a) * R * k;
+    if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y);
+  }
+  ctx.closePath();
+  const g = ctx.createRadialGradient(c.x - R * 0.35, c.y - R * 0.4, R * 0.1, c.x, c.y, R * 1.05);
+  g.addColorStop(0, '#fbfcff'); g.addColorStop(0.55, '#e9edf7'); g.addColorStop(1, '#b9c3dc');
+  ctx.fillStyle = g; ctx.fill();
+  ctx.clip();
+  // stopy válení – krátké oblouky, které se otáčejí s koulí
+  ctx.strokeStyle = 'rgba(150,163,196,0.35)'; ctx.lineWidth = Math.max(0.4, R * 0.06);
+  for (let k = 0; k < 3; k++) {
+    const a = rot + k * 2.1 + seed;
+    ctx.beginPath(); ctx.arc(c.x + Math.cos(a) * R * 0.45, c.y + Math.sin(a) * R * 0.3, R * 0.35, a, a + 1.2); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+/** Sněhulák ze tří koulí (runtime objekt) s ozdobami podle postupu stavby. */
+function drawSnowman(ctx: Ctx, cam: ReturnType<typeof cameraFor>, o: NonNullable<SimState['runtimeObjects']>[number]) {
+  const P = toWorld(cam, { x: o.x, y: o.y });
+  const [r0, r1, r2] = o.radii;
+  const h0 = r0, h1 = 2 * r0 * 0.92 + r1 * 0.92, h2 = 2 * r0 * 0.92 + 2 * r1 * 0.92 + r2 * 0.9;
+  drawSnowBall(ctx, cam, P.X, P.Z, h0, r0, 0.4, o.seed % 97, true);
+  if (r1) drawSnowBall(ctx, cam, P.X, P.Z - 0.01, h1, r1, 1.3, (o.seed % 97) + 3, false);
+  const px = (m: number) => (m * cam.f) / P.Z;
+  const at = (H: number, dx = 0) => { const q = toScreen(cam, { X: P.X, Z: P.Z }, H); return { x: q.x + px(dx), y: q.y }; };
+  if (o.decorations.includes('buttons') && r1) {
+    ctx.fillStyle = '#2b2b33';
+    for (const k of [-0.35, 0.1]) { const q = at(h1 + r1 * k, 0.02); ctx.beginPath(); ctx.arc(q.x, q.y, Math.max(0.5, px(0.018)), 0, Math.PI * 2); ctx.fill(); }
+  }
+  if (r2) {
+    drawSnowBall(ctx, cam, P.X, P.Z - 0.02, h2, r2, 2.1, (o.seed % 97) + 5, false);
+    if (o.decorations.includes('scarf')) {
+      const q = at(h2 - r2 * 0.85), w = px(r2 * 1.15), hh = Math.max(1, px(0.045));
+      ctx.fillStyle = '#a3322f'; ctx.beginPath(); ctx.ellipse(q.x, q.y, w, hh, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#8a2826'; ctx.fillRect(q.x + w * 0.3, q.y, Math.max(1, px(0.05)), px(0.16)); // volný konec
+    }
+    if (o.decorations.includes('eyes')) {
+      ctx.fillStyle = '#26262e';
+      for (const dx of [-0.045, 0.045]) { const q = at(h2 + r2 * 0.25, dx); ctx.beginPath(); ctx.arc(q.x, q.y, Math.max(0.5, px(0.016)), 0, Math.PI * 2); ctx.fill(); }
+    }
+    if (o.decorations.includes('nose')) {
+      const q = at(h2 + r2 * 0.02, 0.0);
+      ctx.fillStyle = '#e0782f'; ctx.beginPath(); ctx.moveTo(q.x, q.y - px(0.014)); ctx.lineTo(q.x + px(0.09), q.y + px(0.006)); ctx.lineTo(q.x, q.y + px(0.014)); ctx.closePath(); ctx.fill();
+    }
+  }
 }
 
 /** Pára a kouř: měkké průsvitné obláčky (malovaný dojem, bez ostrých okrajů). */
