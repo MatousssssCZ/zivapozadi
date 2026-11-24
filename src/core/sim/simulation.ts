@@ -457,6 +457,8 @@ export class Simulation {
       d.nextSignificant = t + randRange(this.state.rng, 90, 180);
     }
   }
+  /** Průchod dveřmi budovy (dveře se otevřou kolem tohoto času). */
+  private passDoor(t: number) { const d = (this.state.doorPasses ??= []); d.push(t); if (d.length > 8) d.shift(); }
   /** Je postava dítě (dětská šablona těla)? */
   isChild(a: AgentState): boolean {
     const c = this.chars.get(a.id);
@@ -898,7 +900,10 @@ export class Simulation {
 
   /** Návštěvník vstoupí do scény vstupem (z místa mimo obraz). */
   private enterScene(a: AgentState, t: number, avoid?: string | null) {
-    const ps = this.portals().filter((p) => p !== avoid);
+    // dveře budovy jen občas (událost s nízkou četností), jinak okraje scény
+    const all = this.portals().filter((p) => p !== avoid);
+    const useDoor = all.some((p) => this.graph.nodes.get(p)?.door) ? rand(a.rng) < 0.12 : false; // bez dveří žádné losování navíc
+    const ps = all.filter((p) => !!this.graph.nodes.get(p)?.door === useDoor).length ? all.filter((p) => !!this.graph.nodes.get(p)?.door === useDoor) : all;
     const pid = ps.length ? ps[Math.floor(rand(a.rng) * ps.length)] : (this.anchorOf(a));
     const n = this.graph.nodes.get(pid)!;
     // volné místo u vstupu (nikdy na jiné postavě); jinak ještě chvíli počkat mimo scénu
@@ -906,6 +911,7 @@ export class Simulation {
     const spot = this.freeSpot(a, [P0, ...[0.7, 1.4, 2.1].flatMap((r) => [{ X: P0.X, Z: P0.Z + r }, { X: P0.X, Z: P0.Z - r }, { X: P0.X - Math.sign(P0.X || 1) * r, Z: P0.Z }])]);
     if (!spot) { a.hidden = true; a.visit = { mode: 'offstage', until: t + 1.5, since: t }; return; }
     a.pos = toScreen(cam, spot); a.loc = { kind: 'node', nodeId: pid }; a.route = null; a.arrived = false;
+    if (n.door) this.passDoor(t);
     a.hidden = false; a.visPrev = undefined; a.off = { x: 0, y: 0 }; a.look = null;
     a.anim.walkBlend = 0; a.anim.settle = null; a.anim.anchors = undefined; a.anim.anchorsXY = undefined;
     a.visit = { mode: 'choose', until: t, since: t };
@@ -922,7 +928,9 @@ export class Simulation {
   /** Vstup/výstup nejdál od daného místa (průchod přes celou scénu). */
   private exitFor(a: AgentState): string | null {
     const here = this.anchorOf(a);
-    const ps = this.portals().filter((p) => p !== here && this.reachable(here, p));
+    const allP = this.portals().filter((p) => p !== here && this.reachable(here, p));
+    const doorOk = allP.some((p) => this.graph.nodes.get(p)?.door) ? rand(a.rng) < 0.12 : true; // do radnice jen občas (bez dveří beze změny)
+    const ps = allP.filter((p) => doorOk || !this.graph.nodes.get(p)?.door).length ? allP.filter((p) => doorOk || !this.graph.nodes.get(p)?.door) : allP;
     if (!ps.length) return null;
     ps.sort((x, y) => dist(this.graph.nodes.get(y)!, a.pos) - dist(this.graph.nodes.get(x)!, a.pos));
     // většinou nejvzdálenější (projde celou scénu), občas jiný
@@ -1029,7 +1037,7 @@ export class Simulation {
       }
       case 'leave': {
         if (a.route) return;
-        if (v.target && this.anchorOf(a) === v.target) { this.goOffstage(a, t); return; }
+        if (v.target && this.anchorOf(a) === v.target) { if (this.graph.nodes.get(v.target)?.door) this.passDoor(t); this.goOffstage(a, t); return; }
         this.leaveScene(a, t);
         return;
       }

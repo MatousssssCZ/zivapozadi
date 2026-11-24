@@ -151,6 +151,8 @@ export interface NavNode {
   id: string; x: number; y: number; name?: string; stop?: StopConfig;
   /** Vstup/výstup ze scény (obvykle mimo obraz): tudy návštěvníci přicházejí a odcházejí. */
   portal?: boolean;
+  /** Portál jsou dveře budovy (otevřou se, když jimi někdo prochází). */
+  door?: boolean;
 }
 
 export interface NavEdge {
@@ -267,6 +269,10 @@ export interface EnvironmentSettings {
   /** pára z kelímků s horkým nápojem */ cupSteam: boolean;
   /** pára ze zdrojů na stáncích (AssetShape.steam) */ stallSteam: boolean;
   /** kouř a pára z ručně umístěných zdrojů */ sources: SmokeSource[];
+  /** okna, která se občas pomalu rozsvítí/zhasnou (obdélníky skla v pozadí, px scény) */
+  windows?: { x: number; y: number; w: number; h: number }[];
+  /** dveře budovy (otvor, px scény) – otevřou se při průchodu portálem `door` */
+  door?: { x: number; y: number; w: number; h: number };
 }
 
 export interface SceneSettings {

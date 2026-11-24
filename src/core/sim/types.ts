@@ -166,6 +166,8 @@ export interface SimState {
   nextSessionId?: number;
   /** Prodavači ve stáncích (podle objectId). */
   vendors?: Record<string, VendorState>;
+  /** Časy průchodů dveřmi budovy (posledních pár – pro otevření dveří). */
+  doorPasses?: number[];
   /** Psi a kočky (samostatné entity). */
   animals?: AnimalState[];
   /** Pára a kouř (omezený pool, vypuštěné částice zůstávají ve světě). */

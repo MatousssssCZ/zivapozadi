@@ -4,6 +4,7 @@
  */
 import { sessionBalls } from '../activities/snowman';
 import { drawAnimal, drawAnimalShadow } from './animalRenderer';
+import { drawFacade } from './facade';
 import { SPECIES } from '../sim/animals';
 import { ballAt } from '../activities/snowballFight';
 import { particleAt, snowDensityFactor, windIntegral } from '../sim/environment';
@@ -354,6 +355,8 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
   const visible = project.objects.map((o, i) => ({ o, i })).filter(({ o }) => o.visible && !removed.has(o.id));
   const fixed = (layer: 'background' | 'foreground') => visible.filter(({ o }) => o.layer === layer).sort((a, b) => a.o.zBias - b.o.zBias || a.i - b.i);
   for (const { o } of fixed('background')) drawObject(ctx, o, assets.get(o.assetId), images.get(o.assetId));
+  // okna a dveře budovy v pozadí (rozsvícení, otevření při průchodu)
+  if (sc.environment && (sc.environment.windows?.length || sc.environment.door)) drawFacade(ctx, project, (sc.backgroundAssetId ? images.get(sc.backgroundAssetId) : null) as never, (images.get('sprite_door_interior') ?? null) as never, sim?.state.doorPasses, opts.time);
   if (sim) drawFootprints(ctx, project, sim, sim.time());
   const worldObjs = visible.filter(({ o }) => o.layer === 'world').map(({ o }) => o);
   drawGroundIntegration(ctx, project, worldObjs, assets, opts.time);

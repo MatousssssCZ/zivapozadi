@@ -38,3 +38,26 @@ describe('živé prostředí', () => {
     expect(particleAt(p, p.t0 + 2, 0.2, 1, true)).toBeNull(); // po životnosti zmizí
   });
 });
+
+import { windowOff, doorOpen } from '../src/core/render/facade';
+describe('okna a dveře (E07, E08)', () => {
+  it('okna: zhasnutí 0/1 s plynulým přechodem, nikdy všechna naráz, deterministické', () => {
+    let maxStep = 0, allOff = false;
+    const prev = Array.from({ length: 8 }, (_, i) => windowOff(5, i, 0));
+    for (let t = 1 / 30; t < 3600; t += 1 / 30) {
+      let n = 0;
+      for (let i = 0; i < 8; i++) { const v = windowOff(5, i, t); maxStep = Math.max(maxStep, Math.abs(v - prev[i])); prev[i] = v; n += v; expect(v).toBeGreaterThanOrEqual(0); expect(v).toBeLessThanOrEqual(1); }
+      if (n > 7.9) allOff = true;
+    }
+    expect(maxStep).toBeLessThan(0.06); // přechod ~1 s, ne skok
+    expect(allOff).toBe(false);
+    expect(windowOff(5, 3, 777)).toBe(windowOff(5, 3, 777));
+  });
+  it('dveře: otevřou se před průchodem a po něm zavřou', () => {
+    expect(doorOpen([10], 8)).toBe(0);
+    expect(doorOpen([10], 10)).toBe(1);
+    expect(doorOpen([10], 10.8)).toBe(1);
+    expect(doorOpen([10], 12.5)).toBe(0);
+    expect(doorOpen([10], 9.6)).toBeGreaterThan(0);
+  });
+});

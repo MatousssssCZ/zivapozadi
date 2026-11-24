@@ -125,7 +125,7 @@ export async function generateLiberec(dir: string): Promise<ProjectFile> {
     p.objects.push(so);
   }
   // malované sprity sněhuláka, koulí a páry (renderer je najde podle id `sprite_*`)
-  for (const n of ['snowman_base', 'snowman_middle', 'snowman_head', 'snowball', 'carrot', 'scarf', 'coal_0', 'coal_1', 'coal_2', 'coal_3', 'coal_4', 'steam_1', 'steam_2', 'steam_3', 'steam_4', 'steam_5', 'steam_6']) {
+  for (const n of ['door_interior', 'snowman_base', 'snowman_middle', 'snowman_head', 'snowball', 'carrot', 'scarf', 'coal_0', 'coal_1', 'coal_2', 'coal_3', 'coal_4', 'steam_1', 'steam_2', 'steam_3', 'steam_4', 'steam_5', 'steam_6']) {
     const a = await importAssetFile(dir, path.join(G, 'sprites_clean', `${n}.png`), 'image');
     a.id = `sprite_${n}`; a.name = `Sprite – ${n}`; a.anchor = { x: 0.5, y: 0.5 }; a.pixelScale = 1;
     p.assets.push(a);
@@ -168,7 +168,16 @@ export async function generateLiberec(dir: string): Promise<ProjectFile> {
   // zastávky: u stromu a u schodů radnice
   const stopAt = (q: [number, number], s: NavNode['stop'], name: string) => { const id = nodeAt(q, name); const n = nodes.find((x) => x.id === id)!; n.stop = s; n.name = name; };
   stopAt([0.5, 0.59], { waitMin: 3, waitMax: 7, look: { mode: 'direction', angle: -Math.PI / 2 }, next: [] }, 'Schody radnice');
+  // dveře radnice: portál nad schody (návštěvníci občas vyjdou/vejdou; dveře se otevřou)
+  const schody = nodes.find((n) => n.name === 'Schody radnice')!;
+  nodes.push({ id: 'n_dvere', x: 958, y: 600, name: 'Dveře radnice', portal: true, door: true });
+  edges.push({ id: `e${edges.length + 1}`, a: schody.id, b: 'n_dvere', oneWay: false, narrow: false });
   p.nav.nodes = nodes; p.nav.edges = edges;
+  // okna radnice (sklo v pozadí, px pozadí × 1,148) a otvor dveří
+  const bgK = SW / 1672, bgKy = SH / 941;
+  const W8: [number, number, number, number][] = [[645, 411, 14, 12], [903, 408, 15, 13], [1013, 411, 13, 12], [674, 451, 14, 12], [983, 451, 13, 12], [717, 490, 15, 17], [904, 490, 13, 17], [1014, 490, 12, 17]];
+  p.scene.environment!.windows = W8.map(([x, y, w, h]) => ({ x: Math.round((x - 4) * bgK), y: Math.round((y - 13) * bgKy), w: Math.round((w + 8) * bgK), h: Math.round((h + 15) * bgKy) })); // celé okno (obě křídla i oblouk)
+  p.scene.environment!.door = { x: Math.round(820 * bgK), y: Math.round(462 * bgKy), w: Math.round(31 * bgK), h: Math.round(58 * bgKy) };
 
   // ------------------------------------------------------------------ sníh (dlažba uprostřed je odhrnutá)
   p.areas = [
