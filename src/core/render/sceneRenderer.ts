@@ -15,6 +15,7 @@ import type { AgentState, PropState } from '../sim/types';
 import { characterVisual, localToScene } from './characterPose';
 import { drawFigure } from '../anim/testFigure';
 import { cameraFor, toScreen, toWorld, Q } from '../scene/camera';
+import { SLED } from '../sim/sled';
 import type { SimState } from '../sim/types';
 import { lidOpenness } from '../sim/simulation';
 import { FOOTPRINT_LIFE, FOOTPRINT_FADE } from '../sim/types';
@@ -124,6 +125,25 @@ function drawProp(ctx: Ctx, p: PropState, x: number, y: number, s: number, tilt 
   else drawCup(ctx, x, y, s, p.sips, tilt);
 }
 
+/** Geometrie složeného spritu sání s dítětem (px spritu, viz scripts/compose-sled.py). */
+const SLED_SPRITE = { frameW: 626, cx: 353, ground: 606, ring: { x: 640, y: 470 }, head: { x: 295, y: 252 }, neck: { x: 295, y: 320 } };
+function drawSled(ctx: Ctx, c: { x: number; y: number }, k: number, sx: number, t: number, speed: number) {
+  const body = sprite('sled_child_body'), head = sprite('sled_child_head');
+  ctx.save(); ctx.translate(c.x, c.y);
+  // kontaktní stín pod skluznicemi
+  ctx.fillStyle = 'rgba(60,70,100,0.18)'; ctx.beginPath(); ctx.ellipse(0, 0, SLED_SPRITE.frameW * k * 0.5 * Math.abs(sx), Math.max(1.5, 14 * k), 0, 0, Math.PI * 2); ctx.fill();
+  ctx.scale(sx * k, k);
+  ctx.translate(-SLED_SPRITE.cx, -SLED_SPRITE.ground);
+  if (body) ctx.drawImage(body, 0, 0);
+  else { ctx.fillStyle = '#8a5a34'; ctx.fillRect(40, 520, 626, 60); }
+  if (head) {
+    // hlava se při jízdě lehce pohupuje (drobné nerovnosti sněhu), v klidu se rozhlíží
+    const bob = Math.sin(t * 7.3) * 0.03 * Math.min(1, speed / 1.5) + Math.sin(t * 0.6) * 0.05;
+    ctx.translate(SLED_SPRITE.neck.x, SLED_SPRITE.neck.y); ctx.rotate(bob);
+    ctx.drawImage(head, SLED_SPRITE.head.x - SLED_SPRITE.neck.x - head.width / 2, SLED_SPRITE.head.y - SLED_SPRITE.neck.y - head.height / 2);
+  }
+  ctx.restore();
+}
 /** Rukavice ležící na zemi (spodek na bodu dotyku), s = hloubkové měřítko. */
 function drawGroundMitten(ctx: Ctx, x: number, y: number, s: number, rot: number) {
   const img = sprite('mitten_ground'), W = (0.17 * s) / Q;
@@ -461,6 +481,28 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
             const mx = (hand.x + collar.x) / 2, my = Math.max(hand.y, collar.y) + Math.max(4, Math.abs(hand.x - collar.x) * 0.18) * Math.min(1, ds);
             ctx.save(); ctx.strokeStyle = 'rgba(70,40,30,0.85)'; ctx.lineWidth = Math.max(0.6, 0.012 * ppm);
             ctx.beginPath(); ctx.moveTo(hand.x, hand.y); ctx.quadraticCurveTo(mx, my, collar.x, collar.y); ctx.stroke(); ctx.restore();
+          } });
+        }
+      }
+    }
+    // sáňky s dítětem (B02) + provázek od ruky rodiče k úchytu
+    const sl = sim.state.sled;
+    if (sl?.phase === 'run' && sl.center) {
+      const par = sim.state.agents.find((x) => x.id === project.sled?.parentId);
+      const c = sl.center, ppm = depthScaleAt(sc.depth, c.y) / Q;
+      const cosA = Math.cos(sl.angle ?? 0), dir = cosA < 0 ? -1 : 1, sx = dir * Math.max(0.4, Math.abs(cosA));
+      const k = (SLED.length * ppm) / SLED_SPRITE.frameW;
+      const ringS = { x: c.x + (SLED_SPRITE.ring.x - SLED_SPRITE.cx) * k * sx, y: c.y + (SLED_SPRITE.ring.y - SLED_SPRITE.ground) * k };
+      items.push({ key: c.y, tie: 12500, draw: () => drawSled(ctx, c, k, sx, opts.time, sl.speed ?? 0) });
+      if (par && !par.hidden) {
+        const oc = sim.characterOf(par.id), om = oc ? sim.manifests[oc.assetId] : undefined;
+        if (oc && om) {
+          const cv = characterVisual(par, om, oc, sc), hand = localToScene(cv, cv.grip);
+          items.push({ key: Math.max(par.pos.y, c.y) + 0.1, tie: 12501, draw: () => {
+            // napnutý provázek s mírným prověšením (víc, když rodič zpomalí)
+            const sag = Math.max(2, Math.hypot(hand.x - ringS.x, hand.y - ringS.y) * 0.06);
+            ctx.save(); ctx.strokeStyle = 'rgba(205,185,150,0.95)'; ctx.lineWidth = Math.max(1, 0.014 * ppm);
+            ctx.beginPath(); ctx.moveTo(hand.x, hand.y); ctx.quadraticCurveTo((hand.x + ringS.x) / 2, Math.max(hand.y, ringS.y) + sag, ringS.x, ringS.y); ctx.stroke(); ctx.restore();
           } });
         }
       }

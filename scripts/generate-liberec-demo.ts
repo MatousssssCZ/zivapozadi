@@ -221,7 +221,7 @@ export async function generateLiberec(dir: string): Promise<ProjectFile> {
   // psi (Z01): dva majitelé bez dětí; kočka (Z06/Z07) si sedá u betléma nebo u lavičky
   for (const id of ['ch_3', 'ch_11']) p.characters.find((c) => c.id === id)!.pet = 'dog';
   p.cats = [{ firstDelay: 25 }];
-  p.catSpots = [{ x: Math.round(0.585 * SW), y: Math.round(0.655 * SH) }, { x: Math.round(0.17 * SW), y: Math.round(0.965 * SH) }, { x: Math.round(0.83 * SW), y: Math.round(0.965 * SH) }];
+  p.catSpots = [{ x: Math.round(0.585 * SW), y: Math.round(0.655 * SH) }, { x: 560, y: 1000 } /* (ne na dráze sání) */, { x: Math.round(0.83 * SW), y: Math.round(0.965 * SH) }];
   for (const n of ['dog_torso', 'dog_torso_back', 'dog_fu_a', 'dog_fu_b', 'dog_fl_a', 'dog_fl_b', 'dog_hu_a', 'dog_hu_b', 'dog_hl_a', 'dog_hl_b', 'dog_head', 'dog_head_back', 'dog_head_down', 'dog_tail', 'dog_sit',
     'cat_torso', 'cat_torso_back', 'cat_fu_a', 'cat_fu_b', 'cat_fl_a', 'cat_fl_b', 'cat_hu_a', 'cat_hu_b', 'cat_hl_a', 'cat_hl_b', 'cat_head', 'cat_head_back', 'cat_sit', 'cat_tail_1', 'cat_tail_2', 'cat_tail_3']) {
     const a = await importAssetFile(dir, path.join(G, 'animals', `${n}.png`), 'image');
@@ -241,6 +241,19 @@ export async function generateLiberec(dir: string): Promise<ProjectFile> {
       companionId: par.id, companionSide: i % 2 ? 1 : -1,
     });
   });
+  // sáňky (B02): rodič táhne dítě „vlásenkou“ po levém zasněženém poli u spodního okraje (uprostřed je
+  // odhrnutá dlažba – tam sáňky nejedou; zpáteční větev vede před lavičkou); začátek i konec mimo obraz
+  const sledParent = generateGroup(lib, 1, 5150).appearances[0];
+  p.characters.push({
+    id: 'ch_sane', name: 'Rodič se sáňkami', assetId: 'builtin_postava_cg', startNodeId: portals[0], baseScale: 1,
+    walkSpeed: 60, palette: testPal, wander: false, appearance: sledParent, routine: 'sled', activities: {},
+  });
+  p.sled = { parentId: 'ch_sane', firstDelay: 35, path: [[-520, 1072], [-160, 1072], [250, 1073], [520, 1070], [680, 1062], [760, 1048], [740, 1032], [640, 1030], [470, 1040], [250, 1047], [-160, 1047], [-560, 1047]].map(([x, y]) => ({ x, y })) };
+  for (const n of ['sled_child_body', 'sled_child_head']) {
+    const a = await importAssetFile(dir, path.join(G, 'sled', `${n}.png`), 'image');
+    a.id = `sprite_${n}`; a.name = `Sprite – ${n}`; a.anchor = { x: 0.5, y: 0.5 }; a.pixelScale = 1;
+    p.assets.push(a);
+  }
   p.export = { ...p.export, durationSec: 60, chunkSec: 20 };
   await saveProject(dir, p);
   return p;

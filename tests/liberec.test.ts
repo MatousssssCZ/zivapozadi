@@ -7,6 +7,7 @@ import { Simulation } from '../src/core/sim/simulation';
 import { R_BODY } from '../src/core/sim/crowd';
 import { cameraFor, toWorld } from '../src/core/scene/camera';
 import { LEASH } from '../src/core/sim/animals';
+import { SLED } from '../src/core/sim/sled';
 
 /** Nové náměstí z balíku grafiky „Živá pozadí – Liberec“ (AKCEPTACE.md body 1–4, 10). */
 let lp: LoadedProject;
@@ -31,7 +32,7 @@ describe('Liberec – živý trh', () => {
   it('5 minut: nákupy, nikdo neuvízne, těla se neprotnou', () => {
     const sim = Simulation.create(lp.project, lp.manifests);
     const cam = cameraFor(lp.project.scene);
-    let minD = Infinity, maxLeash = 0, catSat = false, dogsSeen = 0, photoPhone = 0, photoNoPhone = 0;
+    let minD = Infinity, maxLeash = 0, catSat = false, dogsSeen = 0, photoPhone = 0, photoNoPhone = 0, sledFrames = 0, maxRope = 0, sledOffSnow = 0, sledHit = 1e9;
     for (let i = 0; i < 60 * 300; i++) {
       sim.step();
       for (const an of sim.state.animals ?? []) {
@@ -41,6 +42,14 @@ describe('Liberec – živý trh', () => {
         if (o && !o.hidden) { dogsSeen++; const A = toWorld(cam, an.pos), B = toWorld(cam, o.pos); maxLeash = Math.max(maxLeash, Math.hypot(A.X - B.X, A.Z - B.Z)); }
       }
       for (const a of sim.state.agents) if ((a.anim.gestures ?? []).some((g) => g.fam === 'photo')) { if (sim.state.props.find((p) => p.id === a.holding)?.kind === 'phone') photoPhone++; else photoNoPhone++; }
+      const sl = sim.state.sled;
+      if (sl?.phase === 'run' && sl.center && sl.ring) {
+        sledFrames++;
+        const par = sim.state.agents.find((x) => x.id === 'ch_sane')!, A = toWorld(cam, par.pos), R = toWorld(cam, sl.ring), C = toWorld(cam, sl.center);
+        maxRope = Math.max(maxRope, Math.hypot(A.X - R.X, A.Z - R.Z));
+        if (sl.center.x > 0 && sl.center.x < 1920 && !sim.sessionHost().isSnow(sl.center)) sledOffSnow++;
+        for (const x of sim.state.agents) if (!x.hidden && x.id !== par.id) { const P = toWorld(cam, x.pos); sledHit = Math.min(sledHit, Math.hypot(P.X - C.X, P.Z - C.Z)); }
+      }
       if (i % 10) continue;
       const vis = sim.state.agents.filter((a) => !a.hidden).map((a) => toWorld(cam, a.pos));
       for (let x = 0; x < vis.length; x++) for (let y = x + 1; y < vis.length; y++) minD = Math.min(minD, Math.hypot(vis[x].X - vis[y].X, vis[x].Z - vis[y].Z));
@@ -60,6 +69,11 @@ describe('Liberec – živý trh', () => {
     // focení u stromu (A06): telefon je skutečná rekvizita v ruce po celou dobu klipu, pak zmizí
     expect(photoPhone).toBeGreaterThan(300);
     expect(photoNoPhone).toBe(0);
+    // sáňky (B02): průchod proběhl, provázek nikdy delší než jeho délka, sáně jen na sněhu, nikdo jimi neprošel
+    expect(sledFrames).toBeGreaterThan(600);
+    expect(maxRope).toBeLessThanOrEqual(SLED.rope + 0.01);
+    expect(sledOffSnow).toBe(0);
+    expect(sledHit).toBeGreaterThan(0.45);
     // upadlá rukavice (B03): upadne, majitel se pro ni vrátí a zvedne ji (dřep)
     expect(msgs.filter((m) => m.includes('ztratil(a) rukavici')).length).toBeGreaterThanOrEqual(1);
     expect(msgs.filter((m) => m.includes('zvedl(a) rukavici')).length).toBe(msgs.filter((m) => m.includes('ztratil(a) rukavici')).length);

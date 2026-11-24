@@ -24,6 +24,7 @@ import { cameraFor, toWorld, toScreen, worldAngleOfScreen, screenAngleOfWorld, Q
 import { viewForDirection } from '../anim/skeleton';
 import { emit, emitsNow, windIntegral } from './environment';
 import { createAnimals, stepAnimals } from './animals';
+import { stepSled, sledObstacles, sledPathProblem, type SledHost } from './sled';
 import { maybeCarryMitten, mittenBusy, stepMitten, type MittenHost } from './mitten';
 import { stepSnowman, startSnowman, abortSnowman, finishSession, snowmanZoneFree, type SessionHost } from '../activities/snowman';
 import { releaseArm as socialRelease, tryGesture } from '../social/social';
@@ -108,6 +109,13 @@ export class Simulation {
     for (const b of this.graph.blocked) this.addDiag('warning', `Spojení trasy prochází překážkou „${b.obstacleName}“ a nebude použito.`, b.edgeId);
     for (const n of p.nav.nodes) if ((this.graph.out.get(n.id) ?? []).length === 0 && !p.nav.edges.some((e) => e.b === n.id || e.a === n.id))
       this.addDiag('warning', `Bod trasy „${n.name ?? n.id}“ není připojen k žádné trase.`, n.id);
+    if (p.sled) {
+      const cam = this.cam();
+      const pr = sledPathProblem({ project: p, isSnow: (q) => p.areas.some((ar) => ar.kind === 'snow' && ar.polygon.length >= 3 && pointInPolygon(q, ar.polygon)) },
+        this.graph.obstacles.map((o) => ({ name: o.name, poly: o.polygon.map((q) => toWorld(cam, q)) })));
+      if (!p.characters.some((c) => c.id === p.sled!.parentId && c.routine === 'sled')) { this.sledBlocked = true; this.addDiag('warning', 'Sáňky: chybí postava rodiče (routine „sled“).'); }
+      else if (pr) { this.sledBlocked = true; this.addDiag('warning', pr); }
+    }
     for (const z of p.zones) {
       const r = getActivity(z.activityType);
       if (!r) { this.addDiag('warning', `Zóna „${z.name}“: neznámá činnost „${z.activityType}“ – zóna se nepoužije.`, z.id); continue; }
@@ -399,9 +407,25 @@ export class Simulation {
     this.stepVendors(t);
     if (this.project.characters.some((c) => c.pet) || this.project.cats?.length) stepAnimals((this.state.animals ??= createAnimals(this.project)), this.state.agents, this.project, t, SIM_DT);
     this.stepEnvironment(t);
+    if (this.project.sled && !this.sledBlocked) stepSled(this.sledHost(), (this.state.sled ??= { phase: 'offstage', until: this.project.sled.firstDelay ?? 40, dir: 1, n: 0, hist: [] }));
     if (this.state.mitten || this.state.agents.some((a) => a.holdingKind === 'mitten') || this.state.step % 60 === 0) stepMitten(this.mittenHost());
     this.stepProps(t);
     this.state.step++;
+  }
+
+  private sledBlocked = false;
+  private sledCache: SledHost | null = null;
+  private sledHost(): SledHost {
+    const self = this, id = this.project.sled?.parentId;
+    return (this.sledCache ??= {
+      project: this.project, time: () => self.time(),
+      parent: () => self.state.agents.find((x) => x.id === id),
+      isSnow: (p) => self.sessionHost().isSnow(p),
+      walkPath: (a, pts) => { self.sessionHost().walkPath(a, pts, 'sáňky'); a.speedFactor = 0.85; },
+      hide: (a) => { a.hidden = true; a.route = null; a.speed = 0; a.vel = { X: 0, Z: 0 }; stopAction(a.anim); },
+      show: (a, p) => { a.pos = { ...p }; a.hidden = false; a.visPrev = undefined; a.off = { x: 0, y: 0 }; a.look = null; a.anim.walkBlend = 0; a.anim.settle = null; a.anim.anchors = undefined; a.anim.anchorsXY = undefined; },
+      log: (m, aid) => self.log('info', m, aid),
+    });
   }
 
   private mittenCache: MittenHost | null = null;
@@ -604,10 +628,17 @@ export class Simulation {
   private worldObstacles(): ObstacleW[] {
     if (!this.obstaclesW) { const c = this.cam(); this.obstaclesW = this.graph.obstacles.map((o) => ({ poly: o.polygon.map((p) => toWorld(c, p)) })); }
     const ro = this.state.runtimeObjects;
+    const sl = this.state.sled?.phase === 'run' ? sledObstacles(this.sledHost(), this.state.sled, this.sledHost().parent()?.pos ?? null) : [];
+    if (sl.length) return [...this.obstaclesW, ...sl, ...this.runtimeObstacles()];
     if (!ro?.length) return this.obstaclesW;
     // sněhuláci: kolizní stopa (osmiúhelník kolem spodní koule)
     const c = this.cam();
     return [...this.obstaclesW, ...ro.map((o) => { const P = toWorld(c, o), r = o.radii[0] + 0.05; return { poly: Array.from({ length: 8 }, (_, i) => ({ X: P.X + r * Math.cos((i * Math.PI) / 4), Z: P.Z + r * Math.sin((i * Math.PI) / 4) })) }; })];
+  }
+
+  private runtimeObstacles(): ObstacleW[] {
+    const c = this.cam();
+    return (this.state.runtimeObjects ?? []).map((o) => { const P = toWorld(c, o), r = o.radii[0] + 0.05; return { poly: Array.from({ length: 8 }, (_, i) => ({ X: P.X + r * Math.cos((i * Math.PI) / 4), Z: P.Z + r * Math.sin((i * Math.PI) / 4) })) }; });
   }
 
   /** Rychlost chůze postavy v m/s (dvojice jde tempem pomalejšího). */
@@ -847,6 +878,7 @@ export class Simulation {
     if (a.hidden && a.pendingActivity) this.enterScene(a, t); // plánovaná činnost: návštěvník přijde
     if (a.pendingActivity && !a.route) { this.tryStartPending(a); if (a.activity) return; }
     if (a.route) { if (!mv.waitingNarrow) a.status = a.pendingActivity ? 'Jde k činnosti' : this.routeStatus(a); return; }
+    if (c.routine === 'sled') { a.status = a.hidden ? 'Mimo scénu' : 'Táhne sáňky s dítětem'; return; } // řídí stepSled
     if (mittenBusy(this.state, a)) return; // vrací se pro rukavici / zvedá ji
     if (c.routine === 'visitor') { this.stepVisitor(a, c, t); return; }
     // automatické činnosti

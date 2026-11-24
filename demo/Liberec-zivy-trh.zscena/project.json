@@ -3,8 +3,8 @@
   "formatVersion": 1,
   "meta": {
     "name": "Liberec – živý vánoční trh",
-    "createdAt": "2026-11-24T18:44:18.177Z",
-    "modifiedAt": "2026-11-24T18:44:18.286Z",
+    "createdAt": "2026-11-24T18:54:33.294Z",
+    "modifiedAt": "2026-11-24T18:54:33.412Z",
     "appVersion": "0.1.0"
   },
   "seed": 2611,
@@ -1272,6 +1272,32 @@
       "file": "assets/images/cat-tail-3-82e5d55e.png",
       "width": 161,
       "height": 116,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "sprite_sled_child_body",
+      "kind": "image",
+      "name": "Sprite – sled_child_body",
+      "file": "assets/images/sled-child-body-4e469bbd.png",
+      "width": 760,
+      "height": 620,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "sprite_sled_child_head",
+      "kind": "image",
+      "name": "Sprite – sled_child_head",
+      "file": "assets/images/sled-child-head-2b718683.png",
+      "width": 126,
+      "height": 152,
       "anchor": {
         "x": 0.5,
         "y": 0.5
@@ -6005,6 +6031,64 @@
       "activities": {},
       "companionId": "ch_20",
       "companionSide": -1
+    },
+    {
+      "id": "ch_sane",
+      "name": "Rodič se sáňkami",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n1",
+      "baseScale": 1,
+      "walkSpeed": 60,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": false,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1155698943,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
+        },
+        "colors": {
+          "jacket": "kremova",
+          "hat": "tmave-seda",
+          "scarf": "vinova",
+          "gloves": "tmave-seda",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 0.956,
+          "build": 0.95
+        },
+        "motion": {
+          "strideScale": 1.089,
+          "armSwing": 1.261,
+          "bob": 0.881,
+          "sway": 1.062,
+          "idleTempo": 1.041,
+          "lean": 2.933,
+          "speed": 1.219,
+          "phase": 0.172,
+          "armLag": 0.84,
+          "armLR": 1.012
+        },
+        "locks": []
+      },
+      "routine": "sled",
+      "activities": {}
     }
   ],
   "schedule": [],
@@ -6032,12 +6116,66 @@
       "y": 707
     },
     {
-      "x": 326,
-      "y": 1042
+      "x": 560,
+      "y": 1000
     },
     {
       "x": 1594,
       "y": 1042
     }
-  ]
+  ],
+  "sled": {
+    "parentId": "ch_sane",
+    "firstDelay": 35,
+    "path": [
+      {
+        "x": -520,
+        "y": 1072
+      },
+      {
+        "x": -160,
+        "y": 1072
+      },
+      {
+        "x": 250,
+        "y": 1073
+      },
+      {
+        "x": 520,
+        "y": 1070
+      },
+      {
+        "x": 680,
+        "y": 1062
+      },
+      {
+        "x": 760,
+        "y": 1048
+      },
+      {
+        "x": 740,
+        "y": 1032
+      },
+      {
+        "x": 640,
+        "y": 1030
+      },
+      {
+        "x": 470,
+        "y": 1040
+      },
+      {
+        "x": 250,
+        "y": 1047
+      },
+      {
+        "x": -160,
+        "y": 1047
+      },
+      {
+        "x": -560,
+        "y": 1047
+      }
+    ]
+  }
 }

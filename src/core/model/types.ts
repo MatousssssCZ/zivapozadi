@@ -214,7 +214,7 @@ export interface CharacterInstance {
    * Chování: `wander` = volná procházka po trasách (původní), `visitor` = návštěvník: přijde vstupem,
    * scénou buď jen projde, nebo si dojde na kávu, nebo se potká s přítelem a jdou na kávu spolu; pak odejde.
    */
-  routine?: 'wander' | 'visitor';
+  routine?: 'wander' | 'visitor' | 'sled';
   /** Postava venčí psa (Z01). */
   pet?: 'dog';
 }
@@ -311,4 +311,6 @@ export interface ProjectFile {
   /** Kočky (volitelné) a klidová místa, kde si sedají. */
   cats?: CatConfig[];
   catSpots?: Vec2[];
+  /** Sáňky (B02): dráha po sněhu (body ve scéně, začátek a konec mimo obraz) a postava rodiče (routine 'sled'). */
+  sled?: { path: Vec2[]; parentId: string; firstDelay?: number };
 }
