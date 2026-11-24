@@ -178,7 +178,7 @@ export function stepSnowman(h: SessionHost, s: ActivitySession): 'running' | 'do
         if (h.moving(R)) return 'running';
         // nabrat sníh a uplácat malou kouli
         d.step = 'scoop'; d.until = now + randRange(s.rng, 1.4, 2.2);
-        h.gesture(R, 'lift', { dur: 1.6 });
+        h.gesture(R, 'scoop', { dur: 1.9 });
         return 'running';
       }
       if (d.step === 'scoop') {

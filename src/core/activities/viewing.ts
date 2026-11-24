@@ -23,7 +23,7 @@ export const viewingDefinition: ActivityDefinition = {
   defaultParams: { lookMin: 5, lookMax: 18 },
 };
 
-interface ViewData { key?: string; objectId?: string; until?: number; shiftAt?: number; target?: { x: number; y: number } }
+interface ViewData { key?: string; objectId?: string; until?: number; shiftAt?: number; target?: { x: number; y: number }; photo?: boolean; phoneId?: string; photoAt?: number }
 const d = (r: ActivityRun) => r.data as ViewData;
 const cdKey = (k: string) => `viewcd:${k}`;
 
@@ -57,6 +57,9 @@ export const viewingRunner: ActivityRunner = {
       data.shiftAt = ctx.rand(agent) < 0.6 ? now + ctx.randRange(agent, 3, 7) : 1e12; // (ne Infinity – JSON by ho uložil jako null)
       data.target = o ? { x: o.x, y: o.y - 60 } : undefined;
       if (data.target) agent.look = { ...data.target };
+      // fotografie (A06): u stromu občas vytáhne telefon, zamíří a vyfotí (6–12 s)
+      data.photo = !agent.holding && (zone.params.photoChance === undefined ? 0.35 : Number(zone.params.photoChance)) > ctx.rand(agent);
+      if (data.photo) { data.photoAt = now + ctx.randRange(agent, 0.8, 2); data.until = Math.max(data.until, data.photoAt + 11); }
       run.phase = 'look'; run.phaseStart = now;
       return 'running';
     }
@@ -66,12 +69,30 @@ export const viewingRunner: ActivityRunner = {
       data.target = { x: data.target.x + (ctx.rand(agent) < 0.5 ? -60 : 60), y: data.target.y - 20 };
       agent.look = { ...data.target }; data.shiftAt = 1e12;
     }
+    if (data.photo && data.photoAt !== undefined && now >= data.photoAt && !data.phoneId) {
+      // telefon z kapsy do ruky (skutečná rekvizita), focení obouruč, pak zpět do kapsy
+      // (gesto nejdřív – držená věc by blokovala paži; obsazené ruce → zkusit znovu za chvíli)
+      if (ctx.social.gesture(agent, 'photo', ctx.randRange(agent, 7, 10))) {
+        const ph = ctx.spawnProp('phone', { kind: 'held', agentId: agent.id });
+        agent.holding = ph.id; agent.holdingKind = 'phone'; data.phoneId = ph.id;
+      } else if (now + 1.5 < data.until! - 8) data.photoAt = now + 1.5;
+      else data.photo = false;
+    }
+    if (data.phoneId && !(agent.anim.gestures ?? []).some((g) => g.fam === 'photo')) {
+      ctx.state.props = ctx.state.props.filter((p) => p.id !== data.phoneId);
+      if (agent.holding === data.phoneId) { agent.holding = null; agent.holdingKind = null; }
+      data.phoneId = undefined; data.photo = false; data.until = Math.min(data.until!, now + ctx.randRange(agent, 1, 3));
+    }
     if (now < data.until!) return 'running';
     ctx.res.release(data.key!, agent.id);
     (ctx.state.placeCooldowns ??= {})[cdKey(data.key!)] = now + ctx.randRange(agent, 60, 180);
     agent.look = null;
     return 'done';
   },
-  abort(ctx, agent, run) { const k = d(run).key; if (k) ctx.res.release(k, agent.id); agent.look = null; },
+  abort(ctx, agent, run) {
+    const k = d(run).key; if (k) ctx.res.release(k, agent.id); agent.look = null;
+    const ph = d(run).phoneId; // telefon zpět do kapsy (nezůstane viset ve vzduchu)
+    if (ph) { ctx.state.props = ctx.state.props.filter((p) => p.id !== ph); if (agent.holding === ph) { agent.holding = null; agent.holdingKind = null; } }
+  },
   usesObject(run, objectId) { return d(run).objectId === objectId; },
 };

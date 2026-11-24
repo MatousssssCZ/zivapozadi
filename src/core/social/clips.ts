@@ -26,7 +26,9 @@ export type Family =
   | 'nod' | 'tilt' | 'greetNod' | 'thanks' | 'waveFar' | 'amusement'
   | 'rubHands' | 'adjustScarf' | 'adjustCap' | 'hunch' | 'queuePeek' | 'warmCup'
   /** práce (sněhulák): tlačení koule, zvednutí, zdobení – souřadnice x DOPŘEDU ve směru pohledu */
-  | 'push' | 'lift' | 'decorate' | 'throw';
+  | 'push' | 'lift' | 'decorate' | 'throw'
+  /** dřep s rukama ke sněhu (nabrání sněhu, zvednutí rukavice) a focení telefonem */
+  | 'scoop' | 'photo';
 
 /** Spuštěný klip u postavy (čistá data – součást stavu simulace). */
 export interface GestureInst {
@@ -60,6 +62,8 @@ export function resourcesOf(g: Pick<GestureInst, 'fam' | 'hand' | 'both'>): Res[
     case 'push': case 'lift': return ['arm0', 'arm1', 'torso'];
     case 'decorate': return [h];
     case 'throw': return [h, 'torso'];
+    case 'scoop': return ['arm0', 'arm1', 'torso', 'pelvis'];
+    case 'photo': return ['arm0', 'arm1', 'head'];
   }
 }
 
@@ -89,6 +93,7 @@ export type HandTarget = { w: number; p: Vec2; /** p je posun vůči základní 
 export interface GestureOut {
   arms: [HandTarget, HandTarget];
   headDeg: number; trunkDeg: number; pelvisX: number;
+  /** dřep/předklon 0..1 (pánev dolů, kolena pokrčená, trup vpřed) */ crouch?: number;
 }
 
 export function evalGesture(g: GestureInst): GestureOut {
@@ -216,6 +221,22 @@ export function evalGesture(g: GestureInst): GestureOut {
       out.headDeg = 1.5 * env(u, 0.3, 0.4, 0.6, 0.8) * g.sgn;
       return out;
     }
+    case 'scoop': { // dřep: pánev dolů, trup vpřed, ruce ke sněhu (kontakt v polovině), návrat
+      const e = env(u, 0.02, 0.38, 0.66, 0.98);
+      out.crouch = e;
+      const lo = { x: 17, y: -48 };
+      const tr = track([[0, 'R'], [0.38, lo], [0.5, { x: 15, y: -46 }], [0.66, lo], [1, 'R']], u);
+      if (tr.w > 0) out.arms = [{ ...tr, fwd: true, keep: true }, { w: tr.w, p: { x: tr.p.x + 3, y: tr.p.y + 1 }, fwd: true, keep: true }];
+      out.headDeg = -3 * e * g.sgn;
+      return out;
+    }
+    case 'photo': { // telefon oběma rukama před obličejem: vytáhnout, zvednout, zamířit, spustit
+      const p = { x: 14, y: 9 }; // ve výšce očí, kus před obličejem
+      const tr = track([[0, 'R'], [0.16, { x: 12, y: -20 }], [0.27, { x: 18, y: -6 }], [0.38, p], [0.8, p], [0.89, { x: 18, y: -6 }], [1, 'R']], u); // přes bod před tělem (loket bez skoku)
+      if (tr.w > 0) out.arms = [{ ...tr, fwd: true, keep: true }, { w: tr.w, p: { x: tr.p.x + 1, y: tr.p.y - 1 }, fwd: true, keep: true }];
+      out.headDeg = 2 * env(u, 0.3, 0.4, 0.8, 0.9) * g.sgn;
+      return out;
+    }
     case 'throw': { // hod: nápřah (25 %), zrychlení, výhoz v 55 %, doznění; trup se protočí s hodem
       const tr = track([[0, 'R'], [0.14, { x: -6, y: -20 }], [0.3, { x: -4, y: 13 }], [0.44, { x: 9, y: 23 }], [0.55, { x: 23, y: 13 }], [0.75, { x: 18, y: -12 }], [1, 'R']], u); // oblouk nad ramenem
       if (tr.w > 0) out.arms[hand] = { ...tr, fwd: true, keep: true };
@@ -250,6 +271,7 @@ export function evalAll(gs: GestureInst[] | undefined): GestureOut | null {
     const o = evalGesture(g);
     if (o.arms[0]) out.arms[0] = o.arms[0]; if (o.arms[1]) out.arms[1] = o.arms[1];
     out.headDeg += o.headDeg; out.trunkDeg += o.trunkDeg; out.pelvisX += o.pelvisX;
+    if (o.crouch) out.crouch = Math.max(out.crouch ?? 0, o.crouch);
   }
   // tvrdé limity součtu vrstev (D): hlava ±8°, trup ±4°
   out.headDeg = Math.max(-8, Math.min(8, out.headDeg)); out.trunkDeg = Math.max(-4, Math.min(4, out.trunkDeg));
@@ -264,5 +286,5 @@ export const CLIP_T: Record<Family, { T: [number, number, number]; cd: number }>
   thanks: { T: [0.7, 0.9, 1.3], cd: 3 }, waveFar: { T: [2.0, 2.5, 3.2], cd: 45 }, amusement: { T: [1.5, 2.2, 3.2], cd: 35 },
   rubHands: { T: [2.3, 3.0, 4.2], cd: 50 }, adjustScarf: { T: [1.9, 2.5, 3.3], cd: 75 }, adjustCap: { T: [2.1, 2.7, 3.6], cd: 90 },
   hunch: { T: [2.5, 3.2, 4.5], cd: 45 }, queuePeek: { T: [1.6, 2.2, 3.0], cd: 15 }, warmCup: { T: [6, 11, 21], cd: 10 },
-  push: { T: [3, 3, 3], cd: 0 }, throw: { T: [0.65, 0.8, 0.95], cd: 0 }, lift: { T: [3.2, 4, 5], cd: 0 }, decorate: { T: [2, 2.6, 3.4], cd: 0 },
+  push: { T: [3, 3, 3], cd: 0 }, scoop: { T: [1.6, 2.2, 3.2], cd: 0 }, photo: { T: [6, 8, 12], cd: 60 }, throw: { T: [0.65, 0.8, 0.95], cd: 0 }, lift: { T: [3.2, 4, 5], cd: 0 }, decorate: { T: [2, 2.6, 3.4], cd: 0 },
 };

@@ -124,6 +124,30 @@ function drawProp(ctx: Ctx, p: PropState, x: number, y: number, s: number, tilt 
   else drawCup(ctx, x, y, s, p.sips, tilt);
 }
 
+/** Věc v ruce postavy (souřadnice postavy, 1 jednotka = Q m). */
+function drawHeld(ctx: Ctx, held: PropState, cv: ReturnType<typeof characterVisual>) {
+  const g = cv.grip;
+  if (held.kind === 'bag') return drawBag(ctx, g.x, g.y + 1, 1, held.variant);
+  if (held.kind === 'phone') {
+    // zezadu je vidět displej (focí scénu před sebou), zepředu zadní strana s fotoaparátem
+    const back = /back/.test(cv.view?.used ?? '');
+    const img = sprite(back ? 'phone_front' : 'phone_back');
+    const H = 0.15 / Q;
+    if (img) {
+      const sw = back ? img.width : img.height * (230 / 415); // (zadní sprite má vpravo cizí kus – oříznout)
+      const W = (H * sw) / img.height;
+      ctx.drawImage(img, 0, 0, sw, img.height, g.x - W / 2, g.y - H * 0.75, W, H);
+    } else { ctx.fillStyle = '#4a4650'; ctx.fillRect(g.x - H * 0.25, g.y - H * 0.75, H * 0.5, H); }
+    return;
+  }
+  if (held.kind === 'mitten') {
+    const img = sprite('mitten_held'), H = 0.17 / Q;
+    if (img) { const W = (H * img.width) / img.height; ctx.drawImage(img, g.x - W / 2, g.y - H * 0.2, W, H); }
+    return;
+  }
+  drawCup(ctx, g.x, g.y + 6, 1, held.sips, cv.pose.cupTilt ?? 0);
+}
+
 function drawShadow(ctx: Ctx, x: number, y: number, s: number) {
   ctx.fillStyle = 'rgba(60,70,100,0.18)';
   ctx.beginPath(); ctx.ellipse(x, y, 17 * s, 5 * s, 0, 0, Math.PI * 2); ctx.fill();
@@ -179,8 +203,11 @@ function drawAgentBody(ctx: Ctx, project: ProjectFile, sim: Simulation, a: Agent
   ctx.scale(cv.mirror ? -cv.scale : cv.scale, cv.scale);
   const held = a.holding ? sim.state.props.find((p) => p.id === a.holding) : undefined;
   if (m.backend === 'skeleton' && cv.rig && m.rigLibrary) {
+    const top = held?.kind === 'phone' && /back/.test(cv.view?.used ?? '');
     const snowColor = cv.rig.snowLips ? backgroundColorAt(project, images, cv.x, cv.y + 3 * cv.scale) : undefined;
-    drawRig(ctx, cv.rig, images, m.rigLibraryDir ?? '', m.rigLibrary.bodyTemplates[0]?.farShade ?? 0.8, held ? () => (held.kind === 'bag' ? drawBag(ctx, cv.grip.x, cv.grip.y + 1, 1, held.variant) : drawCup(ctx, cv.grip.x, cv.grip.y + 6, 1, held.sips, cv.pose.cupTilt ?? 0)) : undefined, snowColor);
+    drawRig(ctx, cv.rig, images, m.rigLibraryDir ?? '', m.rigLibrary.bodyTemplates[0]?.farShade ?? 0.8, held && !top ? () => drawHeld(ctx, held, cv) : undefined, snowColor);
+    // telefon při pohledu zezadu: displej před hlavou je vidět přes rameno → kreslit navrch
+    if (held && top) drawHeld(ctx, held, cv);
   } else if (m.backend === 'procedural-test-figure') {
     drawFigure(ctx, cv.pose as Parameters<typeof drawFigure>[1], c.palette, held ? () => drawCup(ctx, cv.pose.handR.x, cv.pose.handR.y + 6, 1, held.sips) : undefined);
   } else {

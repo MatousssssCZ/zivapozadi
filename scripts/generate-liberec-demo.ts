@@ -130,6 +130,12 @@ export async function generateLiberec(dir: string): Promise<ProjectFile> {
     a.id = `sprite_${n}`; a.name = `Sprite – ${n}`; a.anchor = { x: 0.5, y: 0.5 }; a.pixelScale = 1;
     p.assets.push(a);
   }
+  // rekvizity živých situací (telefon, rukavice, lopata, odhrnutý chodník, hromada sněhu)
+  for (const n of ['phone_front', 'phone_back', 'mitten_ground', 'mitten_held', 'shovel', 'shovel_snow', 'snow_pile', 'pavement']) {
+    const a = await importAssetFile(dir, path.join(G, 'sprites', `${n}.png`), 'image');
+    a.id = `sprite_${n}`; a.name = `Sprite – ${n}`; a.anchor = { x: 0.5, y: 0.5 }; a.pixelScale = 1;
+    p.assets.push(a);
+  }
   // koše (nová grafika je neobsahuje): u stolků vlevo a vpravo vpředu
   const binLid = p.assets.find((a) => a.id === 'builtin_kos_vika')!, bin = p.assets.find((a) => a.id === 'builtin_kos')!;
   binLid.shape = { bodyU0: 0.167, bodyU1: 0.824, depthM: 0.45 }; bin.shape = { bodyU0: 0.185, bodyU1: 0.806, depthM: 0.45 };

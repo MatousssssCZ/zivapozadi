@@ -246,7 +246,9 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
   const halfHip = 0.08 * L;
   const shiftIdle = weightShift(tIdle, I.shiftPeriod, seed) * I.shiftAmp * (1 - b) * (front ? 1 : 0.3);
   const gScale = (B.upperArm + B.forearm) / 45; // tabulky gest jsou pro paži 24 + 21 j.
-  const hip = { x: -ns * lateral * 0.7 + shiftIdle + gfx * centerShift + (soc ? soc.pelvisX * gScale * (1 - b) : 0), y: -pelvisH + gfy * centerShift };
+  // dřep (sociální vrstva): pánev dolů o až 30 % délky nohy – kolena se pokrčí (chodidla stojí)
+  const crouch = soc?.crouch ? soc.crouch * (1 - b) : 0;
+  const hip = { x: -ns * lateral * 0.7 + shiftIdle + gfx * centerShift + (soc ? soc.pelvisX * gScale * (1 - b) : 0) - gfx * crouch * 0.07 * L, y: -pelvisH + gfy * centerShift + crouch * 0.3 * L };
   const hipRoots = [0, 1].map((i) => {
     const sgn = i === 0 ? 1 : -1; // referenční (pravá) = noha 0
     const fwd = sgn * halfHip * Math.sin(yaw) * (front ? 1 : 0.6);
@@ -378,12 +380,12 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
   const breathe = (0.5 + 0.5 * Math.sin((tIdle / 3.6) * Math.PI * 2)) * I.breathe;
   const fsg = Math.sign(fx || 1);
   const trunkPitch = (sampleGait('trunkPitchDeg', q0, w) + (motion.lean - 1)) * DEG * b;
-  const torsoAngle = -Math.PI / 2 + trunkPitch * fsg - shiftIdle * 0.004 - (soc ? soc.trunkDeg * DEG : 0);
+  const torsoAngle = -Math.PI / 2 + trunkPitch * fsg - shiftIdle * 0.004 - (soc ? soc.trunkDeg * DEG : 0) + crouch * 0.42 * fsg; // dřep: trup vpřed
   const neck = { x: hip.x + Math.cos(torsoAngle) * B.torso, y: hip.y + Math.sin(torsoAngle) * B.torso - breathe };
   const headTiltIdle = I.headAmp * (Math.sin(tIdle * 0.71 + motion.phase * 6.2) + 0.5 * Math.sin(tIdle * 1.37 + motion.phase * 3.1));
   const headPitch = sampleGait('headPitchDeg', q0, w) * DEG * b;
   let headTilt = headTiltIdle * (1 - b) + (headPitch - trunkPitch) * fsg; // odečíst orientaci rodiče
-  if (soc) headTilt += -soc.headDeg * DEG + soc.trunkDeg * DEG * 0.5; // hlava částečně kompenzuje trup
+  if (soc) headTilt += -soc.headDeg * DEG + soc.trunkDeg * DEG * 0.5 - crouch * 0.25 * fsg; // hlava částečně kompenzuje trup (i předklon)
   if (a.speaking) {
     // mluvčí: drobný neperiodický pohyb hlavy (žádná ústa – jen náznak, do ±1,2°)
     const ts = a.idleTime;

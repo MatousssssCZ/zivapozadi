@@ -31,7 +31,7 @@ describe('Liberec – živý trh', () => {
   it('5 minut: nákupy, nikdo neuvízne, těla se neprotnou', () => {
     const sim = Simulation.create(lp.project, lp.manifests);
     const cam = cameraFor(lp.project.scene);
-    let minD = Infinity, maxLeash = 0, catSat = false, dogsSeen = 0;
+    let minD = Infinity, maxLeash = 0, catSat = false, dogsSeen = 0, photoPhone = 0, photoNoPhone = 0;
     for (let i = 0; i < 60 * 300; i++) {
       sim.step();
       for (const an of sim.state.animals ?? []) {
@@ -40,6 +40,7 @@ describe('Liberec – živý trh', () => {
         const o = an.ownerId ? sim.state.agents.find((x) => x.id === an.ownerId) : undefined;
         if (o && !o.hidden) { dogsSeen++; const A = toWorld(cam, an.pos), B = toWorld(cam, o.pos); maxLeash = Math.max(maxLeash, Math.hypot(A.X - B.X, A.Z - B.Z)); }
       }
+      for (const a of sim.state.agents) if ((a.anim.gestures ?? []).some((g) => g.fam === 'photo')) { if (sim.state.props.find((p) => p.id === a.holding)?.kind === 'phone') photoPhone++; else photoNoPhone++; }
       if (i % 10) continue;
       const vis = sim.state.agents.filter((a) => !a.hidden).map((a) => toWorld(cam, a.pos));
       for (let x = 0; x < vis.length; x++) for (let y = x + 1; y < vis.length; y++) minD = Math.min(minD, Math.hypot(vis[x].X - vis[y].X, vis[x].Z - vis[y].Z));
@@ -56,5 +57,9 @@ describe('Liberec – živý trh', () => {
     expect(dogsSeen).toBeGreaterThan(100);
     expect(maxLeash).toBeLessThanOrEqual(LEASH.max + 0.01);
     expect(catSat).toBe(true);
+    // focení u stromu (A06): telefon je skutečná rekvizita v ruce po celou dobu klipu, pak zmizí
+    expect(photoPhone).toBeGreaterThan(300);
+    expect(photoNoPhone).toBe(0);
+    expect(sim.state.props.filter((p) => p.kind === 'phone' && !sim.state.agents.some((a) => a.holding === p.id))).toEqual([]);
   }, 180000);
 });

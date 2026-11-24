@@ -101,7 +101,7 @@ export function stepFight(h: SessionHost, s: ActivitySession): 'running' | 'done
       // střídání není přísně ABAB
       if (d.done > 0 && rand(s.rng) < 0.7) d.thrower = 1 - d.thrower;
       setSessionPhase(s, 'scoop', now); d.until = now + randRange(s.rng, 1.2, 1.8);
-      h.gesture(P[d.thrower]!, 'lift', { dur: d.until - now }); // náhrada dřepu: ruce ke sněhu
+      h.gesture(P[d.thrower]!, 'scoop', { dur: d.until - now }); // dřep, ruce ke sněhu
       return 'running';
     case 'scoop':
       face();

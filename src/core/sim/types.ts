@@ -119,7 +119,7 @@ export interface AgentState {
 }
 
 /** Druhy rekvizit (balíček „živá pozadí“, 02 §4). */
-export type PropKind = 'cup' | 'bag' | 'snowball' | 'snowmanPart';
+export type PropKind = 'cup' | 'bag' | 'snowball' | 'snowmanPart' | 'phone' | 'mitten';
 export type PropPlace =
   | { kind: 'counter'; objectId: string; x: number; y: number }
   | { kind: 'held'; agentId: string; /** paže: 1 = blízká (výchozí, kelímek), 0 = vzdálená */ arm?: 0 | 1 }

@@ -313,6 +313,7 @@ export class Simulation {
         canSip: (a, dur) => canSip(self.socialWorld(), a.id, self.time(), dur),
         releaseArm: (a, arm) => releaseArm(a, arm),
         thanks: (a) => thanks(a, self.time()),
+        gesture: (a, fam, dur) => self.sessionHost().gesture(a, fam, { dur, hand: 1 }),
       },
     };
   }

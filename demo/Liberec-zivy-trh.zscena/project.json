@@ -3,8 +3,8 @@
   "formatVersion": 1,
   "meta": {
     "name": "Liberec – živý vánoční trh",
-    "createdAt": "2026-11-24T18:20:34.830Z",
-    "modifiedAt": "2026-11-24T18:20:34.954Z",
+    "createdAt": "2026-11-24T18:31:55.621Z",
+    "modifiedAt": "2026-11-24T18:31:55.735Z",
     "appVersion": "0.1.0"
   },
   "seed": 2611,
@@ -765,6 +765,110 @@
       "file": "assets/images/steam-6-18b9975d.png",
       "width": 307,
       "height": 421,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "sprite_phone_front",
+      "kind": "image",
+      "name": "Sprite – phone_front",
+      "file": "assets/images/phone-front-a917d314.png",
+      "width": 230,
+      "height": 415,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "sprite_phone_back",
+      "kind": "image",
+      "name": "Sprite – phone_back",
+      "file": "assets/images/phone-back-dd4fac4c.png",
+      "width": 356,
+      "height": 415,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "sprite_mitten_ground",
+      "kind": "image",
+      "name": "Sprite – mitten_ground",
+      "file": "assets/images/mitten-ground-5d13058c.png",
+      "width": 333,
+      "height": 347,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "sprite_mitten_held",
+      "kind": "image",
+      "name": "Sprite – mitten_held",
+      "file": "assets/images/mitten-held-302022aa.png",
+      "width": 242,
+      "height": 470,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "sprite_shovel",
+      "kind": "image",
+      "name": "Sprite – shovel",
+      "file": "assets/images/shovel-21cfbc7a.png",
+      "width": 857,
+      "height": 394,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "sprite_shovel_snow",
+      "kind": "image",
+      "name": "Sprite – shovel_snow",
+      "file": "assets/images/shovel-snow-c8b0dc4c.png",
+      "width": 312,
+      "height": 189,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "sprite_snow_pile",
+      "kind": "image",
+      "name": "Sprite – snow_pile",
+      "file": "assets/images/snow-pile-b25e59a0.png",
+      "width": 1153,
+      "height": 214,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "sprite_pavement",
+      "kind": "image",
+      "name": "Sprite – pavement",
+      "file": "assets/images/pavement-0b42da51.png",
+      "width": 1473,
+      "height": 226,
       "anchor": {
         "x": 0.5,
         "y": 0.5
