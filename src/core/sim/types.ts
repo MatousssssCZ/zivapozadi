@@ -174,6 +174,8 @@ export interface SimState {
   particles?: Particle[];
   /** Cooldowny míst (prohlížení…): klíč → čas, odkdy je místo znovu volné. */
   placeCooldowns?: Record<string, number>;
+  /** Režisér setkání zvířat (Z04 pes–pes, Z10 pes–kočka): cooldowny scény. */
+  animalDir?: { nextDogs: number; nextDogCat: number };
   /** Odklízení sněhu (A11). */
   clearing?: import('./clearing').ClearingState;
   /** Sáňky (B02): stav průchodu. */

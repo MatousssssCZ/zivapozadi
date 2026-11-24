@@ -406,7 +406,11 @@ export class Simulation {
     for (const a of this.state.agents) this.stepAgent(a, t);
     this.stepSocial(t);
     this.stepVendors(t);
-    if (this.project.characters.some((c) => c.pet) || this.project.cats?.length) stepAnimals((this.state.animals ??= createAnimals(this.project)), this.state.agents, this.project, t, SIM_DT);
+    if (this.project.characters.some((c) => c.pet) || this.project.cats?.length) stepAnimals((this.state.animals ??= createAnimals(this.project)), this.state.agents, this.project, t, SIM_DT, {
+      snowing: this.project.scene.snowfall.enabled,
+      dir: (this.state.animalDir ??= { nextDogs: 60, nextDogCat: 40 }),
+      puff: (x, y, n, t0, seed) => { const sc = depthScaleAt(this.project.scene.depth, y); for (let i = 0; i < n; i++) emit((this.state.particles ??= []), { kind: 'snowPuff', x: x + (i - n / 2) * 4 * sc, y, t0, life: 0.35 + ((i * 37) % 30) / 100, w0: 0, sc, seed: seed + i * 13 }); },
+    });
     this.stepEnvironment(t);
     if (this.project.sled && !this.sledBlocked) stepSled(this.sledHost(), (this.state.sled ??= { phase: 'offstage', until: this.project.sled.firstDelay ?? 40, dir: 1, n: 0, hist: [] }));
     if (this.project.clearing && this.project.characters.some((c) => c.id === this.project.clearing!.workerId)) stepClearing(this.clearingHost(), (this.state.clearing ??= { phase: 'offstage', until: this.project.clearing.firstDelay ?? 90, n: 0, band: 0, progress: 0, pile: 0, doneAt: null }));

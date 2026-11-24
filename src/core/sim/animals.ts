@@ -20,7 +20,17 @@ export interface AnimalState {
   ownerId?: string | null;
   pos: Vec2; facing: number; speed: number;
   /** uražená dráha (m) – fáze kroku */ dist: number;
-  mode: 'follow' | 'sniff' | 'offstage' | 'walk' | 'sit' | 'leave';
+  mode: 'follow' | 'sniff' | 'offstage' | 'walk' | 'sit' | 'leave'
+    /** Z05 setřesení sněhu, Z04 očichání s druhým psem, Z10 zaregistrování psa/kočky */
+    | 'shake' | 'meet' | 'notice'
+    /** Z08 očista a protažení kočky */
+    | 'groom' | 'stretch';
+  /** začátek aktuálního režimu (pro animaci) */ since?: number;
+  /** jak dlouho majitel stojí (s) – Z02 */ stillT?: number;
+  /** příští možné setřesení / očista (cooldown zvířete) */ nextShake?: number;
+  /** partner setkání (Z04/Z10) */ partnerId?: string | null;
+  /** po sedu se kočka může protáhnout (Z08) */ stretchDone?: boolean;
+  /** režim, do kterého se kočka vrátí po zaregistrování psa (Z10) */ resume?: 'walk' | 'leave';
   until: number;
   /** příští zastavení na očichání (s chůze) */ walkLeft: number;
   /** strana u majitele (−1 vlevo, +1 vpravo) */ side: number;
@@ -50,14 +60,66 @@ export function createAnimals(project: ProjectFile): AnimalState[] {
   return out;
 }
 
+let byId = new Map<string, AnimalState>();
+
+/** Prostředí pro zvířata: sněží-li (Z05), pool částic, scénický režisér setkání (Z04/Z10). */
+export interface AnimalEnv {
+  snowing: boolean;
+  puff(x: number, y: number, n: number, t: number, seed: number): void;
+  dir: { nextDogs: number; nextDogCat: number };
+}
+
 /** Jeden krok všech zvířat. */
-export function stepAnimals(animals: AnimalState[], agents: AgentState[], project: ProjectFile, t: number, dt: number): void {
+export function stepAnimals(animals: AnimalState[], agents: AgentState[], project: ProjectFile, t: number, dt: number, env?: AnimalEnv): void {
   const cam = cameraFor(project.scene);
+  byId = new Map(animals.map((x) => [x.id, x]));
   for (const a of animals) {
-    if (a.species === 'dog') stepDog(a, agents, cam, t, dt);
+    const before = a.mode;
+    if (a.species === 'dog') stepDog(a, agents, cam, t, dt, env);
     else stepCat(a, project, cam, t, dt);
-    a.headDown += ((a.mode === 'sniff' ? 1 : 0) - a.headDown) * Math.min(1, dt * 4);
-    a.sit += ((a.mode === 'sit' ? 1 : 0) - a.sit) * Math.min(1, dt * 2.5);
+    if (a.mode !== before) a.since = t;
+    a.headDown += ((a.mode === 'sniff' || (a.mode === 'meet' && a.speed < 0.1) ? 1 : 0) - a.headDown) * Math.min(1, dt * 4);
+    const sitting = a.mode === 'sit' || a.mode === 'groom';
+    a.sit += ((sitting ? 1 : 0) - a.sit) * Math.min(1, dt * 2.5);
+  }
+  if (env) meetings(animals, agents, cam, t, env);
+}
+
+/** Z04 (dva psi se krátce očichají) a Z10 (pes a kočka se zaregistrují) – vzácné, s cooldownem scény. */
+function meetings(animals: AnimalState[], agents: AgentState[], cam: ReturnType<typeof cameraFor>, t: number, env: AnimalEnv) {
+  const W = (x: AnimalState) => toWorld(cam, x.pos);
+  const dogs = animals.filter((x) => x.species === 'dog' && !x.hidden && x.mode === 'follow');
+  const owner = (d: AnimalState) => agents.find((x) => x.id === d.ownerId);
+  if (t >= env.dir.nextDogs) {
+    for (let i = 0; i < dogs.length; i++) for (let j = i + 1; j < dogs.length; j++) {
+      const A = dogs[i], B = dogs[j], oa = owner(A), ob = owner(B);
+      if (!oa || !ob || oa.activity || ob.activity) continue;
+      const PA = W(A), PB = W(B);
+      if (Math.hypot(PA.X - PB.X, PA.Z - PB.Z) > 2.4) continue;
+      // oba majitelé zastaví, psi se přiblíží (v mezích vodítek), krátce se očichají
+      const until = t + randRange(A.rng, 2, 5) + 1.2;
+      for (const [d, o] of [[A, B], [B, A]] as const) { d.mode = 'meet'; d.partnerId = o.id; d.until = until; }
+      oa.speedFactor = 0; ob.speedFactor = 0;
+      env.dir.nextDogs = t + randRange(A.rng, 180, 360);
+      return;
+    }
+  }
+  if (t >= env.dir.nextDogCat) {
+    for (const c of animals) {
+      if (c.species !== 'cat' || c.hidden || (c.mode !== 'walk' && c.mode !== 'sit' && c.mode !== 'leave')) continue;
+      const PC = W(c);
+      for (const d of dogs) {
+        const PD = W(d);
+        if (Math.hypot(PC.X - PD.X, PC.Z - PD.Z) > 2.6) continue;
+        env.dir.nextDogCat = t + randRange(c.rng, 240, 480);
+        if (rand(c.rng) < 0.35) return; // není povinné při každém přiblížení
+        // zaregistrují se: krátce se zastaví a natočí k sobě; majitel se psem pokračuje
+        d.mode = 'notice'; d.partnerId = c.id; d.until = t + randRange(d.rng, 1, 2.2);
+        c.look = { ...d.pos };
+        if (c.mode !== 'sit') { c.resume = c.mode as 'walk' | 'leave'; c.mode = 'notice'; c.until = t + randRange(c.rng, 1.5, 3); }
+        return;
+      }
+    }
   }
 }
 
@@ -75,7 +137,7 @@ function moveToward(a: AnimalState, cam: ReturnType<typeof cameraFor>, P: World,
   return N;
 }
 
-function stepDog(a: AnimalState, agents: AgentState[], cam: ReturnType<typeof cameraFor>, t: number, dt: number) {
+function stepDog(a: AnimalState, agents: AgentState[], cam: ReturnType<typeof cameraFor>, t: number, dt: number, env?: AnimalEnv) {
   const o = agents.find((x) => x.id === a.ownerId);
   if (!o || o.hidden) {
     // majitel mimo scénu: pes je s ním (zmizí u portálu spolu s ním)
@@ -92,6 +154,30 @@ function stepDog(a: AnimalState, agents: AgentState[], cam: ReturnType<typeof ca
   }
   const P = toWorld(cam, a.pos);
   const ov = o.vel ?? { X: 0, Z: 0 }, os = Math.hypot(ov.X, ov.Z);
+  if (a.mode === 'shake') {
+    // Z05: setřese sníh (krátká posloupnost hlava → trup → ocas; animuje renderer)
+    a.speed = Math.max(0, a.speed - 4 * dt);
+    if (t >= a.until) a.mode = 'follow';
+    return;
+  }
+  if (a.mode === 'meet' || a.mode === 'notice') {
+    const other = a.partnerId ? (byId.get(a.partnerId) ?? null) : null;
+    if (a.mode === 'meet') o.speedFactor = 0;
+    if (other && !other.hidden) {
+      const Q = toWorld(cam, other.pos), P0 = toWorld(cam, a.pos), d = Math.hypot(Q.X - P0.X, Q.Z - P0.Z) || 1;
+      if (a.mode === 'meet' && d > 0.55) {
+        // přiblížit se k druhému psovi (nos k nosu), ale jen v mezích vodítka
+        const T = { X: Q.X - ((Q.X - P0.X) / d) * 0.5, Z: Q.Z - ((Q.Z - P0.Z) / d) * 0.5 };
+        let N = moveToward(a, cam, P0, T, 0.6, dt);
+        const dd = Math.hypot(N.X - O.X, N.Z - O.Z);
+        if (dd > LEASH.max) N = { X: O.X + ((N.X - O.X) * LEASH.max) / dd, Z: O.Z + ((N.Z - O.Z) * LEASH.max) / dd };
+        a.pos = toScreen(cam, N);
+      } else a.speed = Math.max(0, a.speed - 3 * dt);
+      if (a.speed < 0.1) a.facing = screenAngleOfWorld(cam, a.pos, Math.atan2(Q.Z - P0.Z, Q.X - P0.X));
+    }
+    if (t >= a.until || !other || other.hidden) { a.mode = 'follow'; a.partnerId = null; o.speedFactor = 1; a.walkLeft = randRange(a.rng, 20, 50); }
+    if (a.mode === 'notice') { /* majitel jde dál – vodítko psa za chvíli dotáhne */ } else return;
+  }
   if (a.mode === 'sniff') {
     a.speed = Math.max(0, a.speed - 3 * dt);
     // majitel počká, až pes doočichá (vodítko nesmí přesáhnout délku)
@@ -110,6 +196,21 @@ function stepDog(a: AnimalState, agents: AgentState[], cam: ReturnType<typeof ca
   const Nc = dd > LEASH.max ? { X: O.X + ((N.X - O.X) * LEASH.max) / dd, Z: O.Z + ((N.Z - O.Z) * LEASH.max) / dd } : N;
   a.pos = toScreen(cam, Nc);
   if (os < 0.15 && a.speed < 0.1) a.facing = screenAngleOfWorld(cam, a.pos, Math.atan2(O.Z - Nc.Z, O.X - Nc.X)); // v klidu k majiteli
+  // Z02: majitel stojí (nakupuje, čeká ve frontě, povídá si) → pes se po chvíli posadí vedle něj;
+  // Z05: předtím se po pobytu ve sněžení občas setřese
+  if (a.mode === 'notice') return;
+  a.stillT = os < 0.12 && a.speed < 0.12 ? (a.stillT ?? 0) + dt : 0;
+  if (a.mode === 'sit' && os > 0.2) a.mode = 'follow';
+  if (a.mode === 'follow' && (a.stillT ?? 0) > 2.2) {
+    if (env?.snowing && t >= (a.nextShake ?? 30) && rand(a.rng) < 0.5) {
+      a.mode = 'shake'; a.until = t + randRange(a.rng, 0.8, 1.4); a.nextShake = t + randRange(a.rng, 120, 240);
+      const top = toScreen(cam, toWorld(cam, a.pos), SPECIES.dog.shoulder * 0.9);
+      env.puff(a.pos.x, top.y, 6, t, Math.floor(t * 100));
+      return;
+    }
+    a.nextShake = Math.max(a.nextShake ?? 0, t + 20); // (nesetřásat se při každém zastavení)
+    a.mode = 'sit';
+  }
   // zastavení na očichání po 20–50 s chůze (jen když majitel jde po trase, ne při činnosti)
   if (os > 0.3 && !o.activity) {
     a.walkLeft -= dt;
@@ -127,14 +228,41 @@ function stepCat(a: AnimalState, project: ProjectFile, cam: ReturnType<typeof ca
     const left = rand(a.rng) < 0.5, W = project.scene.width;
     const enter = { x: left ? -40 : W + 40, y: spot.y + randRange(a.rng, -20, 40) };
     const exit = { x: left ? W + 40 : -40, y: spot.y + randRange(a.rng, -20, 60) };
-    a.pos = enter; a.path = [{ x: spot.x, y: spot.y }, exit]; a.hidden = false; a.mode = 'walk'; a.speed = 0;
+    a.pos = enter; a.path = [{ x: spot.x, y: spot.y }, exit]; a.hidden = false; a.mode = 'walk'; a.speed = 0; a.stretchDone = false;
     return;
   }
   const P = toWorld(cam, a.pos);
+  if (a.mode === 'notice') {
+    // Z10: zastaví se a dívá na psa, pak pokračuje svou cestou
+    a.speed = Math.max(0, a.speed - 2.5 * dt);
+    if (a.look) { const L = toWorld(cam, a.look); a.facing = screenAngleOfWorld(cam, a.pos, Math.atan2(L.Z - P.Z, L.X - P.X)); }
+    if (t >= a.until) { a.mode = a.resume ?? 'walk'; a.look = null; }
+    return;
+  }
+  if (a.mode === 'groom') {
+    // Z08: očista vsedě (hlava k hrudi/tlapce, drobné pohyby), pak dál sedí
+    a.speed = 0;
+    if (t >= (a.since ?? t) + (a.walkLeft || 4)) a.mode = 'sit';
+    return;
+  }
+  if (a.mode === 'stretch') {
+    // Z08: protažení vestoje (přední tlapky dopředu, záď nahoře) 2–3 s, pak odchod
+    a.speed = 0;
+    if (t >= a.until) a.mode = 'leave';
+    return;
+  }
   if (a.mode === 'sit') {
     a.speed = 0;
-    // občas otočí hlavou k dění (pomalu, ne neustálé vrtění)
-    if (t >= a.until) { a.mode = 'leave'; return; }
+    // občas se očistí (ne při každém sedu; cooldown kočky 60–150 s)
+    if (t >= (a.nextShake ?? 0) && t < a.until - 8 && t - (a.since ?? t) > 5) {
+      a.nextShake = t + randRange(a.rng, 60, 150);
+      if (rand(a.rng) < 0.6) { a.mode = 'groom'; a.walkLeft = randRange(a.rng, 3, 6); return; }
+    }
+    if (t >= a.until) {
+      // vstane; občas se před odchodem protáhne
+      if (!a.stretchDone && rand(a.rng) < 0.45) { a.stretchDone = true; a.mode = 'stretch'; a.until = t + randRange(a.rng, 2, 3); return; }
+      a.mode = 'leave'; return;
+    }
     return;
   }
   const target = a.path?.[0];
