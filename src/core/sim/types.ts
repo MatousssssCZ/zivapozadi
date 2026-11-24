@@ -2,7 +2,7 @@ import type { Vec2 } from '../math/vec';
 import type { RngState } from '../math/rng';
 import type { AnimState } from '../anim/animator';
 
-export const SIM_STATE_VERSION = 2;
+export const SIM_STATE_VERSION = 3;
 export const SIM_DT = 1 / 60;
 export const STEPS_PER_SECOND = 60;
 
@@ -133,4 +133,12 @@ export interface SimState {
   binCounts: Record<string, number>;
   log: LogEntry[];
   stats: { cupsServed: number; cupsDisposed: number; sips: number };
+  /** Stopy ve sněhu (svět v metrech; nejstarší se uvolní po naplnění zásobníku). */
+  footprints?: Footprint[];
 }
+
+/** Otisk boty ve sněhu: střed podrážky (X, Z v metrech), směr boty, velikost, čas vzniku. */
+export interface Footprint { X: number; Z: number; yaw: number; size: number; side: number; t0: number; seed: number }
+export const FOOTPRINT_LIFE = 180; // s
+export const FOOTPRINT_FADE = 30; // s – slábnutí na konci
+export const FOOTPRINT_POOL = 16384;

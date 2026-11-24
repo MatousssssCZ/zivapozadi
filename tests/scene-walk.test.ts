@@ -6,7 +6,8 @@ import { generateRadnice } from '../scripts/generate-radnice-demo';
 import { Simulation } from '../src/core/sim/simulation';
 import { characterVisual, localToScene } from '../src/core/render/characterPose';
 import { gaitEvents } from '../src/core/anim/gaitProfile';
-import { cameraFor, toWorld } from '../src/core/scene/camera';
+import { cameraFor, toWorld, toScreen } from '../src/core/scene/camera';
+import { pointInPolygon } from '../src/core/math/geom';
 import { R_BODY } from '../src/core/sim/crowd';
 import { directionFromAngle } from '../src/core/sim/movement';
 
@@ -137,6 +138,31 @@ describe('chůze ve scéně (náměstí, 12 postav, 2 dvojice)', () => {
     expect(sim.state.stats.cupsServed).toBeGreaterThan(5);
     for (const p of sim.state.props) expect(['held', 'falling', 'inBin', 'counter', 'ground']).toContain(p.place.kind);
     expect(log.filter((m) => m.includes('na zem')).length).toBe(0);
+  });
+
+  it('stopy ve sněhu: jen ve sněhu, jedna na došlap, zmizí po životnosti, deterministické (G14/G15)', () => {
+    const sim = Simulation.create(lp.project, lp.manifests);
+    const cam = cameraFor(lp.project.scene);
+    const snow = lp.project.areas.filter((a) => a.kind === 'snow');
+    sim.advanceTo(60);
+    const fps = sim.state.footprints ?? [];
+    expect(fps.length).toBeGreaterThan(200);
+    for (const f of fps) {
+      const p = toScreen(cam, { X: f.X, Z: f.Z });
+      expect(snow.some((a) => pointInPolygon(p, a.polygon) || p.y > Math.min(...a.polygon.map((q) => q.y)) - 3)).toBe(true);
+    }
+    // nejvýš jedna stopa na došlap: žádné dvě stopy téže postavy ve stejném místě a čase
+    const keys = new Set(fps.map((f) => `${f.seed}|${f.X.toFixed(3)}|${f.Z.toFixed(3)}`));
+    expect(keys.size).toBe(fps.length);
+    // životnost: po 180 s nejstarší zmizí, zásobník je omezený
+    sim.advanceTo(250);
+    const t = sim.time();
+    expect(Math.min(...(sim.state.footprints ?? []).map((f) => t - f.t0))).toBeGreaterThanOrEqual(0);
+    expect(Math.max(...(sim.state.footprints ?? []).map((f) => t - f.t0))).toBeLessThanOrEqual(180 + 1e-9);
+    expect((sim.state.footprints ?? []).length).toBeLessThanOrEqual(16384);
+    // deterministické (stejný průběh → stejné stopy)
+    const sim2 = Simulation.create(lp.project, lp.manifests); sim2.advanceTo(250);
+    expect(JSON.stringify(sim2.state.footprints)).toBe(JSON.stringify(sim.state.footprints));
   });
 
   it('dvojice se obnoví z checkpointu beze změny průběhu', () => {

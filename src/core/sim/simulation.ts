@@ -14,6 +14,7 @@ import { directionFromAngle, edgeKey } from './movement';
 import type { SimContext, ResolvedPoint, CharacterControl } from './context';
 import { ALL_VIEWS } from '../anim/skeleton';
 import { gaitEvents } from '../anim/gaitProfile';
+import { FOOTPRINT_LIFE, FOOTPRINT_POOL } from './types';
 import { SIM_DT, SIM_STATE_VERSION, type AgentState, type SimState, type Waypoint, type PropState, type LogEntry } from './types';
 import { dist, approachAngle, wrapAngle, type Vec2 } from '../math/vec';
 import { limitSlope } from '../nav/slope';
@@ -321,11 +322,25 @@ export class Simulation {
       if (xy[i]?.key === an[i]) continue;
       xy[i] = null;
       const hn = heelsNow?.[i];
-      if (hn) { xy[i] = { x: hn.x, y: hn.y, key: an[i]!, h: a.groundHeading ?? a.facing }; continue; }
-      const cv = characterVisual(a, m, c, this.project.scene);
-      const hp = cv.pose.heelPts?.[i];
-      if (hp) { const p = localToScene(cv, hp); xy[i] = { x: p.x, y: p.y, key: an[i]!, h: a.groundHeading ?? a.facing }; }
+      if (hn) xy[i] = { x: hn.x, y: hn.y, key: an[i]!, h: a.groundHeading ?? a.facing };
+      else {
+        const cv = characterVisual(a, m, c, this.project.scene);
+        const hp = cv.pose.heelPts?.[i];
+        if (hp) { const p = localToScene(cv, hp); xy[i] = { x: p.x, y: p.y, key: an[i]!, h: a.groundHeading ?? a.facing }; }
+      }
+      if (xy[i]) this.addFootprint(a, c, xy[i]!, i);
     }
+  }
+
+  /** Nový došlap ve sněhu → jedna stopa (pata je kotva; střed podrážky půl boty vpřed). */
+  private addFootprint(a: AgentState, c: CharacterInstance, heel: { x: number; y: number; h?: number }, side: number) {
+    if (!(a.snowDepth && a.snowDepth > 0) || a.hidden) return;
+    const cam = this.cam(), H = toWorld(cam, heel), yaw = heel.h ?? 0, size = c.baseScale;
+    const half = 0.151 * size * 0.5;
+    const fp = { X: H.X + Math.cos(yaw) * half, Z: H.Z + Math.sin(yaw) * half, yaw, size, side, t0: this.time(), seed: (hashString(a.id) + this.state.step * 7 + side) >>> 0 };
+    const list = (this.state.footprints ??= []);
+    list.push(fp);
+    if (list.length > FOOTPRINT_POOL) list.splice(0, list.length - FOOTPRINT_POOL); // deterministicky nejstarší
   }
 
   handPosition(a: AgentState) {
@@ -958,6 +973,8 @@ export class Simulation {
   }
 
   private stepProps(t: number) {
+    const fps = this.state.footprints;
+    if (fps && fps.length && t - fps[0].t0 > FOOTPRINT_LIFE) { let k = 0; while (k < fps.length && t - fps[k].t0 > FOOTPRINT_LIFE) k++; fps.splice(0, k); }
     const keep: PropState[] = [];
     for (const p of this.state.props) {
       if (p.place.kind === 'falling' && t >= p.place.t1) {

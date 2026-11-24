@@ -7,6 +7,8 @@ import type { Simulation } from '../sim/simulation';
 import type { AgentState, PropState } from '../sim/types';
 import { characterVisual } from './characterPose';
 import { drawFigure } from '../anim/testFigure';
+import { cameraFor, toScreen } from '../scene/camera';
+import { FOOTPRINT_LIFE, FOOTPRINT_FADE } from '../sim/types';
 import { getCanvasFactory, drawRig } from './rigRenderer';
 import { depthScaleAt } from '../scene/geometry';
 import { hashNoise } from '../math/rng';
@@ -113,6 +115,50 @@ function drawAgent(ctx: Ctx, project: ProjectFile, sim: Simulation, a: AgentStat
   void cupScaleFallback;
 }
 
+/** Obrys podrážky (metry; u = podél boty od středu, v = napříč): pata užší, přednoží širší. */
+const SOLE: { u: number; v: number }[] = (() => {
+  const L = 0.151 / 2, out: { u: number; v: number }[] = [];
+  const width = (u: number) => { const t = (u / L + 1) / 2; return t < 0.35 ? 0.052 + (0.044 - 0.052) * (t / 0.35) : t < 0.55 ? 0.044 : 0.044 + (0.072 - 0.044) * Math.min(1, (t - 0.55) / 0.3); };
+  for (let k = 0; k < 18; k++) { const a = (k / 18) * Math.PI * 2, u = L * Math.cos(a); out.push({ u, v: (width(u) / 2) * Math.sin(a) }); }
+  return out;
+})();
+
+/**
+ * Stopy ve sněhu: otisky na zemi promítnuté kamerou (do hloubky se zkrátí), jen v oblastech sněhu,
+ * pod všemi objekty a postavami. Na konci životnosti plynule slábnou.
+ */
+function drawFootprints(ctx: Ctx, project: ProjectFile, sim: Simulation, time: number) {
+  const fps = sim.state.footprints;
+  const snow = project.areas.filter((a) => a.kind === 'snow' && a.polygon.length >= 3);
+  if (!fps?.length || !snow.length) return;
+  const cam = cameraFor(project.scene);
+  ctx.save();
+  ctx.beginPath();
+  for (const a of snow) { a.polygon.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y))); ctx.closePath(); }
+  ctx.clip();
+  for (const f of fps) {
+    const age = time - f.t0;
+    if (age < 0) continue;
+    const fade = Math.min(1, age / 0.15) * Math.min(1, Math.max(0, (FOOTPRINT_LIFE - age) / FOOTPRINT_FADE));
+    if (fade <= 0) continue;
+    const c = Math.cos(f.yaw), sn = Math.sin(f.yaw), j = ((f.seed % 97) / 97 - 0.5) * 0.06; // drobná odchylka tvaru
+    const pts = SOLE.map((q) => toScreen(cam, { X: f.X + (q.u * c - q.v * (1 + j) * sn) * f.size, Z: f.Z + (q.u * sn + q.v * (1 + j) * c) * f.size }));
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    for (const p of pts) { minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x); minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y); }
+    if (maxX < 0 || minX > project.scene.width || maxY < 0 || minY > project.scene.height) continue;
+    if (Math.max(maxX - minX, maxY - minY) < 0.35) continue; // daleko: neviditelné
+    // čitelnost: otisk aspoň ~1,2 px vysoký (jen vykreslení, ne fyzická stopa – zadání D4)
+    const hgt = maxY - minY;
+    if (hgt < 1.2) { const cy = (minY + maxY) / 2, k = 1.2 / Math.max(1e-3, hgt); for (const p of pts) p.y = cy + (p.y - cy) * k; minY = cy - 0.6; maxY = cy + 0.6; }
+    const path = (dy: number) => { ctx.beginPath(); pts.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y + dy) : ctx.moveTo(p.x, p.y + dy))); ctx.closePath(); };
+    // vyhrnutý světlý okraj (o kousek výš), pak studená prohlubeň
+    const rim = Math.max(0.35, (maxY - minY) * 0.18);
+    ctx.fillStyle = `rgba(255,255,255,${(0.13 * fade).toFixed(3)})`; path(-rim); ctx.fill();
+    ctx.fillStyle = `rgba(46,62,104,${(0.2 * fade).toFixed(3)})`; path(0); ctx.fill();
+  }
+  ctx.restore();
+}
+
 /** Vykreslí scénu do kontextu, jehož transformace mapuje logické souřadnice scény na výstup. */
 export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null, images: AssetImages, opts: DrawOptions) {
   const sc = project.scene;
@@ -126,6 +172,7 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
   const visible = project.objects.map((o, i) => ({ o, i })).filter(({ o }) => o.visible && !removed.has(o.id));
   const fixed = (layer: 'background' | 'foreground') => visible.filter(({ o }) => o.layer === layer).sort((a, b) => a.o.zBias - b.o.zBias || a.i - b.i);
   for (const { o } of fixed('background')) drawObject(ctx, o, assets.get(o.assetId), images.get(o.assetId));
+  if (sim) drawFootprints(ctx, project, sim, sim.time());
 
   // Světová vrstva: řazení podle bodu kontaktu se zemí (+ ruční úprava pořadí).
   type Item = { key: number; tie: number; draw: () => void };

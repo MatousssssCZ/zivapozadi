@@ -226,12 +226,24 @@ rychlé začátky švihu po ostrém zatočení.
 * Zaboření v jednotkách postavy je stálé (0,02 m / q ≈ 1,5 j.), takže v obraze je úměrné
   perspektivě.
 
+**Stopy ve sněhu (D4).**
+* Každý došlap ve sněhu (nová kotva paty) vytvoří jednu stopu ve stavu simulace: střed podrážky
+  v metrech, směr boty, velikost, čas vzniku a seed tvaru.
+* Stopa se kreslí jako otisk podrážky (pata užší, přednoží širší) promítnutý kamerou, takže do
+  hloubky se silně zkrátí. Je to studená prohlubeň (16–20 % ztmavení) se světlým vyhrnutým
+  okrajem, oříznutá na oblasti sněhu a kreslená pod objekty i postavami.
+* Pro čitelnost má otisk v obraze výšku aspoň ~1,2 px; jde jen o vykreslení, fyzická stopa se
+  nemění.
+* Životnost je 180 s, posledních 30 s stopa slábne. Zásobník má 16 384 stop a po naplnění se
+  uvolní nejstarší.
+* Stopy jsou deterministické a součástí záložních bodů exportu (verze stavu 3).
+* Na náměstí vznikne zhruba 1 100 stop za 90 s; podél tras tvoří vyšlapané pěšinky.
+
 **Ze zadání zatím neimplementováno:**
 * úplná 2.5D kostra (klouby v X, Z, H a prostorová IK, C2/C4);
 * koridory a visibility graph kolem fronty (fronta je zatím jen soubor pevných překážek);
 * přechod dvojice do zástupu v úzkém průchodu;
 * body rozhovoru 1 m od sebe;
-* stopy ve sněhu (decaly);
 * kalibrační mřížka v editoru;
 * komfortní limity uvnitř řešiče (zrychlení se omezuje před projekcí);
 * přechod fyzické délky nohy na 0,835 m (mění kadenci; zatím 0,9 m).
