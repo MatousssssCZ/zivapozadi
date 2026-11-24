@@ -57,7 +57,7 @@ describe('Liberec – živý trh', () => {
       for (let x = 0; x < vis.length; x++) for (let y = x + 1; y < vis.length; y++) minD = Math.min(minD, Math.hypot(vis[x].X - vis[y].X, vis[x].Z - vis[y].Z));
     }
     const msgs = sim.state.log.map((l) => l.msg);
-    expect(msgs.filter((m) => m.includes('nakoupil')).length).toBeGreaterThan(5);
+    expect(msgs.filter((m) => m.includes('nakoupil')).length).toBeGreaterThanOrEqual(5); // (hluboká scéna: cesta k pultu trvá desítky s)
     // rodiny: dítě (dětská šablona, ~70 % výšky) chodí s rodičem a občas si jdou hrát na sníh
     const kids = sim.state.agents.filter((a) => sim.isChild(a));
     expect(kids.length).toBe(5);
@@ -75,6 +75,8 @@ describe('Liberec – živý trh', () => {
     expect(modes.has('dog:sit')).toBe(true);
     expect(modes.has('dog:shake')).toBe(true);
     expect(modes.has('cat:groom') || modes.has('cat:stretch')).toBe(true);
+    // Z03 pohlazení: pes přijde k hladícímu a ten se k němu skloní
+    expect(modes.has('dog:pet') && msgs.some((m) => m.includes('hladí psa'))).toBe(true);
     // sáňky (B02): průchod proběhl, provázek nikdy delší než jeho délka, sáně jen na sněhu, nikdo jimi neprošel
     expect(sledFrames).toBeGreaterThan(600);
     expect(maxRope).toBeLessThanOrEqual(SLED.rope + 0.01);

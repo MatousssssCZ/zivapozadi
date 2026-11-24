@@ -23,12 +23,15 @@ export interface AnimalState {
   mode: 'follow' | 'sniff' | 'offstage' | 'walk' | 'sit' | 'leave'
     /** Z05 setřesení sněhu, Z04 očichání s druhým psem, Z10 zaregistrování psa/kočky */
     | 'shake' | 'meet' | 'notice'
+    /** Z03 pohlazení */
+    | 'pet'
     /** Z08 očista a protažení kočky */
     | 'groom' | 'stretch';
   /** začátek aktuálního režimu (pro animaci) */ since?: number;
   /** jak dlouho majitel stojí (s) – Z02 */ stillT?: number;
   /** příští možné setřesení / očista (cooldown zvířete) */ nextShake?: number;
-  /** partner setkání (Z04/Z10) */ partnerId?: string | null;
+  /** partner setkání (Z04/Z10) / hladící člověk (Z03) */ partnerId?: string | null;
+  /** příští možné pohlazení (cooldown dvojice 120–240 s) */ nextPet?: number;
   /** po sedu se kočka může protáhnout (Z08) */ stretchDone?: boolean;
   /** režim, do kterého se kočka vrátí po zaregistrování psa (Z10) */ resume?: 'walk' | 'leave';
   until: number;
@@ -67,6 +70,11 @@ export interface AnimalEnv {
   snowing: boolean;
   puff(x: number, y: number, n: number, t: number, seed: number): void;
   dir: { nextDogs: number; nextDogCat: number };
+  /** Z03: známý člověk poblíž (přítel majitele, jinak sám majitel), který může psa pohladit */
+  petter?(owner: AgentState, dog: AnimalState): AgentState | null;
+  /** spustí klip pohlazení; false = ruka/trup obsazené */
+  startPet?(person: AgentState, dur: number, dogPos: Vec2): boolean;
+  endPet?(person: AgentState): void;
 }
 
 /** Jeden krok všech zvířat. */
@@ -178,6 +186,23 @@ function stepDog(a: AnimalState, agents: AgentState[], cam: ReturnType<typeof ca
     if (t >= a.until || !other || other.hidden) { a.mode = 'follow'; a.partnerId = null; o.speedFactor = 1; a.walkLeft = randRange(a.rng, 20, 50); }
     if (a.mode === 'notice') { /* majitel jde dál – vodítko psa za chvíli dotáhne */ } else return;
   }
+  if (a.mode === 'pet') {
+    // Z03: pes přijde na dosah ruky hladícího (kus před ním) a natočí se k němu
+    const p = agents.find((x) => x.id === a.partnerId);
+    if (!p || p.hidden || os > 0.2 || t >= a.until) {
+      if (p) env?.endPet?.(p);
+      a.mode = 'follow'; a.partnerId = null; a.stillT = 0;
+    } else {
+      const Pp = toWorld(cam, p.pos), hd = p.groundHeading ?? 0, P0 = toWorld(cam, a.pos);
+      const T = { X: Pp.X + Math.cos(hd) * 0.42, Z: Pp.Z + Math.sin(hd) * 0.42 };
+      let N = moveToward(a, cam, P0, T, 0.5, dt);
+      const dd = Math.hypot(N.X - O.X, N.Z - O.Z);
+      if (dd > LEASH.max) N = { X: O.X + ((N.X - O.X) * LEASH.max) / dd, Z: O.Z + ((N.Z - O.Z) * LEASH.max) / dd };
+      a.pos = toScreen(cam, N);
+      if (a.speed < 0.1) a.facing = screenAngleOfWorld(cam, a.pos, Math.atan2(Pp.Z - N.Z, Pp.X - N.X));
+      return;
+    }
+  }
   if (a.mode === 'sniff') {
     a.speed = Math.max(0, a.speed - 3 * dt);
     // majitel počká, až pes doočichá (vodítko nesmí přesáhnout délku)
@@ -210,6 +235,20 @@ function stepDog(a: AnimalState, agents: AgentState[], cam: ReturnType<typeof ca
     }
     a.nextShake = Math.max(a.nextShake ?? 0, t + 20); // (nesetřásat se při každém zastavení)
     a.mode = 'sit';
+  }
+  // Z03: sedícího psa občas pohladí známý člověk (cooldown dvojice 120–240 s)
+  if (a.mode === 'sit' && env?.petter && (a.stillT ?? 0) > 4 && t >= (a.nextPet ?? 45)) {
+    const p = env.petter(o, a);
+    const dur = randRange(a.rng, 4, 8);
+    if (p) {
+      const Pp = toWorld(cam, p.pos), hd = p.groundHeading ?? 0, T = { X: Pp.X + Math.cos(hd) * 0.42, Z: Pp.Z + Math.sin(hd) * 0.42 };
+      // jen když je místo před ním na dosah vodítka
+      if (Math.hypot(T.X - O.X, T.Z - O.Z) < LEASH.max - 0.05 && env.startPet!(p, dur, a.pos)) {
+        a.mode = 'pet'; a.partnerId = p.id; a.until = t + dur; a.nextPet = t + randRange(a.rng, 120, 240);
+        return;
+      }
+    }
+    a.nextPet = t + 15;
   }
   // zastavení na očichání po 20–50 s chůze (jen když majitel jde po trase, ne při činnosti)
   if (os > 0.3 && !o.activity) {

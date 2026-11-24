@@ -30,7 +30,9 @@ export type Family =
   /** dřep s rukama ke sněhu (nabrání sněhu, zvednutí rukavice) a focení telefonem */
   | 'scoop' | 'photo'
   /** odhrnování sněhu lopatou: obě ruce na násadě, tahy vpřed a zpět */
-  | 'shovel';
+  | 'shovel'
+  /** pohlazení psa: mírný předklon/přidřep, blízká ruka dolů k psovi, 1–2 tahy */
+  | 'pet';
 
 /** Spuštěný klip u postavy (čistá data – součást stavu simulace). */
 export interface GestureInst {
@@ -67,6 +69,7 @@ export function resourcesOf(g: Pick<GestureInst, 'fam' | 'hand' | 'both'>): Res[
     case 'scoop': return ['arm0', 'arm1', 'torso', 'pelvis'];
     case 'photo': return ['arm0', 'arm1', 'head'];
     case 'shovel': return ['arm0', 'arm1', 'torso'];
+    case 'pet': return ['arm1', 'torso', 'pelvis', 'head'];
   }
 }
 
@@ -249,6 +252,17 @@ export function evalGesture(g: GestureInst): GestureOut {
       out.headDeg = -2 * w * g.sgn;
       return out;
     }
+    case 'pet': { // Z03: náklon a přidřep (0–25 %), ruka dolů k psovi, 1–2 pomalé tahy po srsti, návrat
+      const e = env(u, 0.02, 0.25, 0.78, 0.98);
+      out.crouch = 0.45 * e;
+      const lo = { x: 15, y: -44 };
+      const tr = track([[0, 'R'], [0.18, { x: 14, y: -30 }], [0.3, lo], [0.75, lo], [0.88, { x: 13, y: -28 }], [1, 'R']], u);
+      const stroke = u > 0.32 && u < 0.73 ? Math.sin(((u - 0.32) / 0.41) * Math.PI * 2 * 1.5) : 0; // tahy po srsti
+      if (tr.w > 0) out.arms[1] = { w: tr.w, p: { x: tr.p.x + 2.5 * stroke * e, y: tr.p.y + 0.8 * Math.abs(stroke) * e }, fwd: true, keep: true };
+      out.trunkDeg = -3.5 * e * g.sgn;
+      out.headDeg = -6 * e * g.sgn;
+      return out;
+    }
     case 'throw': { // hod: nápřah (25 %), zrychlení, výhoz v 55 %, doznění; trup se protočí s hodem
       const tr = track([[0, 'R'], [0.14, { x: -6, y: -20 }], [0.3, { x: -4, y: 13 }], [0.44, { x: 9, y: 23 }], [0.55, { x: 23, y: 13 }], [0.75, { x: 18, y: -12 }], [1, 'R']], u); // oblouk nad ramenem
       if (tr.w > 0) out.arms[hand] = { ...tr, fwd: true, keep: true };
@@ -298,5 +312,5 @@ export const CLIP_T: Record<Family, { T: [number, number, number]; cd: number }>
   thanks: { T: [0.7, 0.9, 1.3], cd: 3 }, waveFar: { T: [2.0, 2.5, 3.2], cd: 45 }, amusement: { T: [1.5, 2.2, 3.2], cd: 35 },
   rubHands: { T: [2.3, 3.0, 4.2], cd: 50 }, adjustScarf: { T: [1.9, 2.5, 3.3], cd: 75 }, adjustCap: { T: [2.1, 2.7, 3.6], cd: 90 },
   hunch: { T: [2.5, 3.2, 4.5], cd: 45 }, queuePeek: { T: [1.6, 2.2, 3.0], cd: 15 }, warmCup: { T: [6, 11, 21], cd: 10 },
-  push: { T: [3, 3, 3], cd: 0 }, scoop: { T: [1.6, 2.2, 3.2], cd: 0 }, photo: { T: [6, 8, 12], cd: 60 }, shovel: { T: [3, 4.5, 6], cd: 0 }, throw: { T: [0.65, 0.8, 0.95], cd: 0 }, lift: { T: [3.2, 4, 5], cd: 0 }, decorate: { T: [2, 2.6, 3.4], cd: 0 },
+  push: { T: [3, 3, 3], cd: 0 }, scoop: { T: [1.6, 2.2, 3.2], cd: 0 }, photo: { T: [6, 8, 12], cd: 60 }, shovel: { T: [3, 4.5, 6], cd: 0 }, pet: { T: [4, 5.5, 8], cd: 0 }, throw: { T: [0.65, 0.8, 0.95], cd: 0 }, lift: { T: [3.2, 4, 5], cd: 0 }, decorate: { T: [2, 2.6, 3.4], cd: 0 },
 };

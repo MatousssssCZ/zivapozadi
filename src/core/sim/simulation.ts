@@ -409,6 +409,18 @@ export class Simulation {
     if (this.project.characters.some((c) => c.pet) || this.project.cats?.length) stepAnimals((this.state.animals ??= createAnimals(this.project)), this.state.agents, this.project, t, SIM_DT, {
       snowing: this.project.scene.snowfall.enabled,
       dir: (this.state.animalDir ??= { nextDogs: 60, nextDogCat: 40 }),
+      petter: (o, d) => {
+        // přítel majitele (setkání, dvojice) stojící do 2 m od psa; jinak majitel sám
+        const cam = this.cam(), D = toWorld(cam, d.pos);
+        const near = (x: AgentState) => { const P = toWorld(cam, x.pos); return Math.hypot(P.X - D.X, P.Z - D.Z) < 2; };
+        const free = (x: AgentState) => !x.hidden && !x.route && x.speed < 0.1 && !x.holding && !(x.anim.gestures ?? []).length && near(x) && !this.isChild(x);
+        const friend = this.state.agents.find((x) => x.id !== o.id && (x.visit?.friendId === o.id || o.visit?.friendId === x.id || x.follow?.leaderId === o.id || o.follow?.leaderId === x.id) && free(x));
+        // majitel sám: když jen čeká (fronta, příprava zboží), ne když platí nebo přebírá
+        const waiting = !o.activity || (o.activity.type === 'shop' && (o.activity.phase === 'queue' || o.activity.phase === 'prepare'));
+        return friend ?? (free(o) && waiting ? o : null);
+      },
+      startPet: (p, dur, dogPos) => { if (!this.sessionHost().gesture(p, 'pet', { dur })) return false; p.look = { ...dogPos }; this.log('info', `${p.name} hladí psa.`, p.id); return true; },
+      endPet: (p) => { for (const g of p.anim.gestures ?? []) if (g.fam === 'pet') g.t = Math.max(g.t, g.dur * 0.88); if (p.look && !('angle' in p.look)) p.look = null; },
       puff: (x, y, n, t0, seed) => { const sc = depthScaleAt(this.project.scene.depth, y); for (let i = 0; i < n; i++) emit((this.state.particles ??= []), { kind: 'snowPuff', x: x + (i - n / 2) * 4 * sc, y, t0, life: 0.35 + ((i * 37) % 30) / 100, w0: 0, sc, seed: seed + i * 13 }); },
     });
     this.stepEnvironment(t);
