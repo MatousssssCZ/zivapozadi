@@ -20,6 +20,7 @@ export interface SledState {
   /** historie pozic rodiče (svět, m), nejnovější na konci */ hist: World[];
   /** úchyt provázku a střed sání (obraz) + směr jízdy v obraze (rad) */
   ring?: Vec2; center?: Vec2; angle?: number; speed?: number;
+  /** směr jízdy ve světě (rad, atan2(Z, X)) – pro výběr pohledu sání */ wang?: number;
 }
 
 export interface SledHost {
@@ -101,17 +102,24 @@ export function stepSled(h: SledHost, st: SledState): void {
     tot += Math.hypot(st.hist[i].X - st.hist[i - 1].X, st.hist[i].Z - st.hist[i - 1].Z);
     if (tot > SLED.rope + SLED.length + 0.6) { st.hist.splice(0, i - 1); break; }
   }
-  const r = along([...st.hist, P], SLED.rope), c = along([...st.hist, P], SLED.rope + SLED.length / 2);
-  const ring = toScreen(cam, r.P), center = toScreen(cam, c.P);
-  const ahead = toScreen(cam, { X: c.P.X + c.T.X * 0.2, Z: c.P.Z + c.T.Z * 0.2 });
+  // poloha sání: po stopě rodiče; natočení: příď se stáčí po provázku k rodiči (tažený předmět),
+  // plynule (nejvýš ~2,5 rad/s), takže v obratu se provázek nepřetahuje přes sáně
+  const c = along([...st.hist, P], SLED.rope + SLED.length / 2);
+  const want = Math.atan2(P.Z - c.P.Z, P.X - c.P.X);
+  const cur = st.wang ?? Math.atan2(c.T.Z, c.T.X);
+  let dA = want - cur; while (dA > Math.PI) dA -= 2 * Math.PI; while (dA < -Math.PI) dA += 2 * Math.PI;
+  const hw = cur + Math.max(-2.5 / 60, Math.min(2.5 / 60, dA));
+  const front = { X: c.P.X + Math.cos(hw) * SLED.length / 2, Z: c.P.Z + Math.sin(hw) * SLED.length / 2 };
+  const ring = toScreen(cam, front), center = toScreen(cam, c.P);
+  const ahead = toScreen(cam, { X: c.P.X + Math.cos(hw) * 0.2, Z: c.P.Z + Math.sin(hw) * 0.2 });
   st.speed = st.center ? Math.hypot(center.x - st.center.x, center.y - st.center.y) : 0;
-  st.ring = ring; st.center = center; st.angle = Math.atan2(ahead.y - center.y, ahead.x - center.x);
+  st.ring = ring; st.center = center; st.angle = Math.atan2(ahead.y - center.y, ahead.x - center.x); st.wang = hw;
   if (!a.route) {
     // rodič došel na konec dráhy (mimo obraz) → konec průchodu, cooldown 300–600 s
     h.hide(a);
     st.phase = 'offstage'; st.n++; st.dir = st.dir > 0 ? -1 : 1;
     st.until = t + 300 + 300 * hashNoise(h.project.seed, 9300, st.n);
-    st.hist = []; st.ring = st.center = undefined;
+    st.hist = []; st.ring = st.center = undefined; st.wang = undefined;
   }
 }
 

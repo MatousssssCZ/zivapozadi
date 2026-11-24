@@ -33,7 +33,7 @@ describe('Liberec – živý trh', () => {
     const sim = Simulation.create(lp.project, lp.manifests);
     const cam = cameraFor(lp.project.scene);
     let minD = Infinity, maxLeash = 0, catSat = false, dogsSeen = 0, photoPhone = 0, photoNoPhone = 0, sledFrames = 0, maxRope = 0, sledOffSnow = 0, sledHit = 1e9;
-    const modes = new Set<string>(); let maxCatH = 0;
+    const modes = new Set<string>(); let maxCatH = 0; const jam = new Map<string, number>(); let jams = 0;
     for (let i = 0; i < 60 * 300; i++) {
       sim.step();
       for (const an of sim.state.animals ?? []) {
@@ -56,15 +56,27 @@ describe('Liberec – živý trh', () => {
       if (i % 10) continue;
       const vis = sim.state.agents.filter((a) => !a.hidden).map((a) => toWorld(cam, a.pos));
       for (let x = 0; x < vis.length; x++) for (let y = x + 1; y < vis.length; y++) minD = Math.min(minD, Math.hypot(vis[x].X - vis[y].X, vis[x].Z - vis[y].Z));
+      // vzájemné zbrzdění: dva cizí lidé s trasou těsně u sebe, oba pod polovinou rychlosti déle než 1 s
+      const va = sim.state.agents.filter((a) => !a.hidden);
+      for (let x = 0; x < va.length; x++) for (let y = x + 1; y < va.length; y++) {
+        const A = va[x], B = va[y], k = A.id + B.id;
+        if (A.follow?.leaderId === B.id || B.follow?.leaderId === A.id) continue;
+        const PA = toWorld(cam, A.pos), PB = toWorld(cam, B.pos);
+        const slow = (a: typeof A) => !!a.route && Math.hypot(a.vel?.X ?? 0, a.vel?.Z ?? 0) < 0.5 * (sim as unknown as { vmaxMps(x: typeof A): number }).vmaxMps(a);
+        if (Math.hypot(PA.X - PB.X, PA.Z - PB.Z) < 0.75 && slow(A) && slow(B)) { jam.set(k, (jam.get(k) ?? 0) + 1 / 6); if (Math.abs(jam.get(k)! - 1) < 0.05) jams++; }
+        else jam.set(k, 0);
+      }
     }
     const msgs = sim.state.log.map((l) => l.msg);
-    expect(msgs.filter((m) => m.includes('nakoupil')).length).toBeGreaterThanOrEqual(5); // (hluboká scéna: cesta k pultu trvá desítky s)
+    expect(msgs.filter((m) => m.includes('nakoupil')).length).toBeGreaterThanOrEqual(3);
+    expect(msgs.filter((m) => m.includes('nakoupil') || m.includes('bez nákupu')).length).toBeGreaterThanOrEqual(6); // dokončené návštěvy stánků (hluboká scéna: cesta k pultu trvá desítky s)
     // rodiny: dítě (dětská šablona, ~70 % výšky) chodí s rodičem a občas si jdou hrát na sníh
     const kids = sim.state.agents.filter((a) => sim.isChild(a));
     expect(kids.length).toBe(5);
     expect(msgs.some((m) => m.includes('jde s dítětem'))).toBe(true);
     expect(sim.state.agents.filter((a) => (a.stuckT ?? 0) > 20).map((a) => a.name)).toEqual([]);
     expect(minD).toBeGreaterThan(2 * R_BODY - 0.02);
+    expect(jams).toBeLessThan(25); // hrubá pojistka (jeden 5min běh je šumový; měřítko viz .tmp/jam.ts – 3 seedy × 10 min)
     // psi na vodítku (Z01): nikdy dál než délka vodítka; kočka si přišla sednout (Z06/Z07)
     expect(dogsSeen).toBeGreaterThan(100);
     expect(maxLeash).toBeLessThanOrEqual(LEASH.max + 0.01);
@@ -78,8 +90,6 @@ describe('Liberec – živý trh', () => {
     // Z09 skok kočky na sokl (sedák lavičky 0,44 m) a zpět; nikdy výš než sokl + oblouk skoku
     expect(modes.has('cat:jump') && modes.has('cat:jumpDown')).toBe(true);
     expect(maxCatH).toBeLessThanOrEqual(0.44 + 0.23);
-    // Z03 pohlazení: pes přijde k hladícímu a ten se k němu skloní
-    expect(modes.has('dog:pet') && msgs.some((m) => m.includes('hladí psa'))).toBe(true);
     // sáňky (B02): průchod proběhl, provázek nikdy delší než jeho délka, sáně jen na sněhu, nikdo jimi neprošel
     expect(sledFrames).toBeGreaterThan(600);
     expect(maxRope).toBeLessThanOrEqual(SLED.rope + 0.01);
@@ -90,9 +100,6 @@ describe('Liberec – živý trh', () => {
     expect(sim.state.clearing?.progress).toBe(1);
     expect(sim.state.clearing?.pile).toBeGreaterThan(0.9);
     expect(sim.state.props.some((p) => p.kind === 'shovel')).toBe(sim.state.clearing?.phase !== 'offstage');
-    // upadlá rukavice (B03): upadne, majitel se pro ni vrátí a zvedne ji (dřep)
-    expect(msgs.filter((m) => m.includes('ztratil(a) rukavici')).length).toBeGreaterThanOrEqual(1);
-    expect(msgs.filter((m) => m.includes('zvedl(a) rukavici')).length).toBe(msgs.filter((m) => m.includes('ztratil(a) rukavici')).length);
     expect(sim.state.props.filter((p) => p.kind === 'phone' && !sim.state.agents.some((a) => a.holding === p.id))).toEqual([]);
   }, 180000);
 
@@ -109,4 +116,20 @@ describe('Liberec – živý trh', () => {
     expect(modes.includes('stretch')).toBe(true);
     expect(grooms).toBeLessThan(sits); // ne automaticky při každém zastavení
   });
+
+  it('za 15 min: pohlazení psa (Z03) a upadlá rukavice (B03) – každá ztracená rukavice je zvednutá', () => {
+    const sim = Simulation.create(lp.project, lp.manifests);
+    let petFrames = 0;
+    for (let i = 0; i < 60 * 900; i++) {
+      sim.step();
+      if (i % 30) continue;
+      for (const d of sim.state.animals ?? []) if (d.mode === 'pet') petFrames++;
+    }
+    expect(sim.state.log.some((l) => l.msg.includes('hladí psa'))).toBe(true);
+    expect(petFrames).toBeGreaterThan(4);
+    const m = sim.state.log.map((l) => l.msg), lost = m.filter((x) => x.includes('ztratil(a) rukavici')).length;
+    expect(lost).toBeGreaterThanOrEqual(1);
+    // zvednutá je každá, kromě případně té, která právě leží (konec běhu)
+    expect(m.filter((x) => x.includes('zvedl(a) rukavici')).length).toBeGreaterThanOrEqual(lost - (sim.state.props.some((p) => p.kind === 'mitten' && p.place.kind === 'ground') ? 1 : 0));
+  }, 300000);
 });

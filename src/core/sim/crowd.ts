@@ -31,6 +31,8 @@ export interface CrowdItem {
   choice?: { ang: number; k: number } | null; // volba plánovače vůči preferovanému směru
   /** Směr, kam je postava natočená (jednotkový) – nikdy se nepohne proti němu (žádná chůze pozpátku). */
   head?: World | null;
+  /** Jak dlouho (s) je postava s trasou zbrzděná pod třetinu rychlosti – řešení zácpy. */
+  blocked?: number;
 }
 export interface ObstacleW { poly: World[] }
 /** Ohraničující kruh překážky (počítá se jednou, uloží se mimo JSON stav) – rychlý předvýběr blízkých překážek. */
@@ -96,6 +98,7 @@ export function planCrowd(items: CrowdItem[], obstacles: ObstacleW[]): void {
       const first = aMe < aO - 0.25 || (Math.abs(aMe - aO) <= 0.25 && me.id < o.id);
       if (first) ignore.add(o.id);
     }
+    const H = HORIZON;
     let best = { ang: 0, k: 1 }, bestC = Infinity, bestSafe = false;
     // jen překážky v dosahu 1,5 s chůze, a jen ty, ve kterých postava nestojí
     const nearOb = nearObstacles(obstacles, me.p, sp * 1.5 * 1.3 + 0.3).filter((ob) => !insidePoly(me.p, ob.poly));
@@ -110,11 +113,15 @@ export function planCrowd(items: CrowdItem[], obstacles: ObstacleW[]): void {
         if (o === me || ignore.has(o.id)) continue;
         const r = sub(o.p, me.p), w = sub(o.v, v);
         if (len(r) > 9) continue;
-        const { d, t } = closest(r, w, HORIZON);
-        if (d < me.r + o.r + 0.02 && t < HORIZON) safe = false; // budoucí střet těl
+        const { d, t } = closest(r, w, H);
+        // budoucí střet těl
+        const d0 = len(r);
+        if (d < me.r + o.r + 0.02 && t < H) safe = false;
         if (me.partnerOf === o.id || o.partnerOf === me.id) continue;
         const Rc = me.rc + o.rc;
         if (d < Rc) C += (4 * (1 - d / Rc) ** 2) / (1 + t);
+        // cizí člověk těsně vedle: preferovat rozestoupení / předejití (vzdálenost za 0,8 s)
+        if (d0 < Rc) { const r1 = { X: r.X + w.X * 0.8, Z: r.Z + w.Z * 0.8 }, d1 = Math.min(Rc, len(r1)); C += 3 * (1 - d1 / Rc) ** 2; }
         // protijdoucí: míjet vpravo (druhý má zůstat po naší levici)
         if (len(o.v) > 0.2 && dot(o.v, dir) < -0.5 * len(o.v) && t > 0 && d < Rc * 1.6) {
           const rel = { X: r.X + w.X * t, Z: r.Z + w.Z * t };

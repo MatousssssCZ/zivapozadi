@@ -727,18 +727,37 @@ export class Simulation {
       }
       else if (a.route) { const ri = this.routeIntent(a, P, vmax); pref = ri.pref; mv.waitingNarrow = ri.waitingNarrow; }
       else fixed = true;
+      // zdvořilé uhnutí (zácpa): krátký úkrok stranou, druhý projde
+      if ((a.yieldT ?? 0) > 0 && a.yieldDir && !fixed) { pref = { X: a.yieldDir.X * Math.min(vmax, 0.55), Z: a.yieldDir.Z * Math.min(vmax, 0.55) }; a.yieldT = Math.max(0, (a.yieldT ?? 0) - dt); }
       const partner = a.follow?.leaderId ?? this.state.agents.find((x) => x.follow?.leaderId === a.id)?.id ?? null;
       const hd = a.groundHeading;
-      items.push({ id: a.id, p: P, v: a.vel ?? { X: 0, Z: 0 }, pref, vmax, fixed, r: R_BODY, rc: comfortRadius(a.id), partnerOf: partner, choice: a.crowdChoice ?? null, head: hd === undefined ? null : { X: Math.cos(hd), Z: Math.sin(hd) } });
+      items.push({ id: a.id, p: P, v: a.vel ?? { X: 0, Z: 0 }, pref, vmax, fixed, r: R_BODY, rc: comfortRadius(a.id), partnerOf: partner, choice: a.crowdChoice ?? null, blocked: a.blockedT ?? 0, head: hd === undefined ? null : { X: Math.cos(hd), Z: Math.sin(hd) } });
       ags.push(a); mvs.push(mv);
     }
     const obstacles = this.worldObstacles();
     if (this.state.step % 4 === 0) planCrowd(items, obstacles);
     const want = items.map((it) => wantVelocity(it, dt));
     const { v } = solveCrowd(items, want, obstacles, dt);
+    // zácpa dvou: kdo čeká kratší dobu (shoda: vyšší id), udělá úkrok stranou mimo dráhu druhého
+    for (let i = 0; i < items.length; i++) for (let j = i + 1; j < items.length; j++) {
+      const A = ags[i], B = ags[j];
+      if ((A.blockedT ?? 0) < 1 || (B.blockedT ?? 0) < 1 || A.follow || B.follow || items[i].partnerOf === B.id) continue;
+      const r = { X: items[j].p.X - items[i].p.X, Z: items[j].p.Z - items[i].p.Z }, d = Math.hypot(r.X, r.Z);
+      if (d > 0.85 || d < 1e-6) continue;
+      const aWins = (A.blockedT ?? 0) > (B.blockedT ?? 0) + 0.2 || (Math.abs((A.blockedT ?? 0) - (B.blockedT ?? 0)) <= 0.2 && A.id < B.id);
+      const [L, W, iL, iW] = aWins ? [B, A, j, i] : [A, B, i, j];
+      const n = { X: (items[iL].p.X - items[iW].p.X) / d, Z: (items[iL].p.Z - items[iW].p.Z) / d };
+      const wp = items[iW].pref, perp1 = { X: -n.Z, Z: n.X };
+      const side = perp1.X * wp.X + perp1.Z * wp.Z > 0 ? -1 : 1; // mimo směr, kam chce vítěz
+      L.yieldDir = { X: perp1.X * side * 0.85 + n.X * 0.5, Z: perp1.Z * side * 0.85 + n.Z * 0.5 };
+      const l = Math.hypot(L.yieldDir.X, L.yieldDir.Z); L.yieldDir = { X: L.yieldDir.X / l, Z: L.yieldDir.Z / l };
+      L.yieldT = 1.1; L.blockedT = 0; W.blockedT = Math.max(W.blockedT ?? 0, 1.3);
+    }
     for (let i = 0; i < items.length; i++) {
       const a = ags[i], it = items[i];
       a.crowdChoice = it.choice ?? null;
+      { const vs = Math.hypot(v[i].X, v[i].Z), ps = Math.hypot(it.pref.X, it.pref.Z);
+        a.blockedT = !it.fixed && !!a.route && !(a.yieldT ?? 0) && ((ps > 0.15 && vs < 0.33 * ps) || vs < 0.08) ? (a.blockedT ?? 0) + dt : 0; }
       a.vel = v[i];
       const P = { X: it.p.X + v[i].X * dt, Z: it.p.Z + v[i].Z * dt };
       if (!it.fixed) a.pos = toScreen(cam, P);
@@ -1230,8 +1249,11 @@ export class Simulation {
     const nodes = this.project.nav.nodes.filter((n) => !n.portal && this.reachable(here, n.id) && n.id !== here);
     if (!nodes.length) { this.leaveScene(a, t); return; }
     // místo setkání: zadané (u zóny činnosti), raději zastávka, jinak libovolný bod uprostřed scény
-    const stops = nodes.filter((n) => n.stop);
-    const pool = stops.length && rand(a.rng) < 0.6 ? stops : nodes;
+    // ne na rozcestí (uzel s více než dvěma spoji): stojící dvojice by tam blokovala průchod
+    const deg = (id: string) => this.project.nav.edges.filter((e) => e.a === id || e.b === id).length;
+    const calm = nodes.filter((n) => deg(n.id) <= 2);
+    const stops = (calm.length ? calm : nodes).filter((n) => n.stop);
+    const pool = stops.length && rand(a.rng) < 0.6 ? stops : calm.length ? calm : nodes;
     const m = (at && nodes.find((n) => n.id === at)) || pool[Math.floor(rand(a.rng) * pool.length)];
     this.enterScene(f, t, a.loc.kind === 'node' ? a.loc.nodeId : null);
     if (f.hidden) { this.leaveScene(a, t); return; } // přítel teď nemůže vstoupit (u vstupu je plno)

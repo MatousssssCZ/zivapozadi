@@ -167,7 +167,7 @@ describe('klipy gest – invarianty (E.2)', () => {
     }
   });
   it('hlava ±8°, trup ±4° v součtu vrstev', () => {
-    for (const fam of fams) for (let u = 0; u <= 1; u += 0.02) {
+    for (const fam of fams.filter((f) => f !== 'shovel')) for (let u = 0; u <= 1; u += 0.02) { // (lopata: pracovní předklon)
       const o = evalGesture({ fam, t: u * CLIP_T[fam].T[2], dur: CLIP_T[fam].T[2], amp: 1.15, sgn: 1, hand: 0 });
       expect(Math.abs(o.headDeg)).toBeLessThanOrEqual(8); expect(Math.abs(o.trunkDeg)).toBeLessThanOrEqual(4);
     }

@@ -121,6 +121,8 @@ export interface SkeletonPose {
   arms: [Limb, Limb]; // [zadní, přední (drží předměty)]
   /** natočení chodidel (rad) – jen při přenosu nohy */
   feet: [number, number];
+  /** zkrácení/prodloužení boty podél chodidla (3D promítnutí; 1 = malovaný pohled) */
+  feetK?: [number, number];
   /** zápěstí přední ruky (úchop se dopočítá z dílu ruky) */ handR: Vec2;
   /** body paty obou bot (lokálně) – kotva při došlapu */ heelPts?: [Vec2, Vec2];
   /** naklonění drženého kelímku (rad, záporně = okrajem k ústům) */ cupTilt?: number;
@@ -138,6 +140,33 @@ export function ik(root: Vec2, target: Vec2, l1: number, l2: number, bendSign: n
   const ang = a + bendSign * Math.acos(cosA);
   const joint = { x: root.x + Math.cos(ang) * l1, y: root.y + Math.sin(ang) * l1 };
   return { root, joint, end: { x: tx, y: ty } };
+}
+
+/**
+ * Noha ve 3D: koleno se řeší v rovině nohy (u = vodorovně vpřed ve směru chůze, v = svisle dolů)
+ * ve skutečných délkách kostí a teprve pak se promítne stejně jako chodidlo (u → g·u v obraze).
+ * Při šikmé chůzi (ke kameře / od ní) se tak ohyb kolena zkrátí do hloubky – koleno nevyskakuje
+ * do strany. Kyčel i kotník zůstávají přesně; zbytek (boční posun) se rozloží podél nohy.
+ */
+export function legIK3D(H: Vec2, A: Vec2, u: number, g: Vec2, l1: number, l2: number): Limb {
+  const d = { x: A.x - H.x, y: A.y - H.y };
+  const v = d.y - g.y * u; // svislá složka (dolů)
+  let D = Math.hypot(u, v);
+  const maxD = l1 + l2 - 0.01;
+  const k = D > maxD ? maxD / D : 1;
+  const uu = u * k, vv = v * k; D = Math.min(D, maxD);
+  const ang = Math.atan2(vv, uu) - Math.acos(clamp((l1 * l1 + D * D - l2 * l2) / (2 * l1 * Math.max(D, 1e-6)), -1, 1)); // koleno vpřed
+  const ku = Math.cos(ang) * l1, kv = Math.sin(ang) * l1;
+  // promítnutí; zbytek (boční složka a případné zkrácení) rozložit úměrně podél nohy
+  const t = l1 / (l1 + l2);
+  const proj = (pu: number, pv: number) => ({ x: g.x * pu, y: pv + g.y * pu });
+  // (přes plnou délku: kotník se zkrátí po noze jako u rovinného IK, nenatahuje se kost)
+  const p0 = proj(u, v), res = { x: d.x - p0.x, y: d.y - p0.y };
+  const pA = proj(uu, vv), pK = proj(ku, kv);
+  const joint = { x: H.x + pK.x + res.x * t, y: H.y + pK.y + res.y * t };
+  const end = { x: H.x + pA.x + res.x, y: H.y + pA.y + res.y };
+  const k1 = Math.hypot(joint.x - H.x, joint.y - H.y) / l1, k2 = Math.hypot(end.x - joint.x, end.y - joint.y) / l2;
+  return { root: H, joint, end, k1, k2 };
 }
 
 /**
@@ -344,6 +373,8 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
   });
   const ankles: Vec2[] = feet.map((f, i) => { const p = ankleXY(f, i); return { x: p.x + swingShift[i].x + settleShift[i].x, y: p.y + swingShift[i].y + settleShift[i].y + sink[i] }; });
   if (sinkMax > 0) { const avg = (sink[0] + sink[1]) / 2; hip.y += avg; for (const r of hipRoots) r.y += avg; }
+  // dopředná složka nohy (jednotky, vodorovně ve směru chůze) – pro 3D řešení kolena
+  const legU = (i: number) => { const g = gOf(i), dx = ankles[i].x - hipRoots[i].x; return Math.abs(g.x) > 0.45 ? dx / g.x : feet[i].u; };
   let lower = 0;
   for (let i = 0; i < 2; i++) {
     const inContact = a.settle || b < 1 || gaitFeet[i].contact !== 'swing';
@@ -352,10 +383,13 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
     const fa = flat(ankles[i], i);
     const dx = fa.x - hipRoots[i].x, dy = fa.y - hipRoots[i].y; // dy > 0: kotník pod kyčlí
     if (dx * dx + dy * dy > maxD * maxD) lower = Math.max(lower, w8 * (dy - Math.sqrt(Math.max(0, maxD * maxD - dx * dx))));
+    // skutečná (3D) délka nohy: vodorovná složka u se v šikmém pohledu v obraze zkracuje
+    const u = legU(i), vv = dy - gOf(i).y * u;
+    if (u * u + vv * vv > maxD * maxD) lower = Math.max(lower, w8 * (vv - Math.sqrt(Math.max(0, maxD * maxD - u * u))));
   }
   if (lower > 0) { hip.y += lower; for (const r of hipRoots) r.y += lower; }
   const legs = [0, 1].map((i) => {
-    if (!shear) return ik(hipRoots[i], ankles[i], T, Sh, -1);
+    if (!shear) return legIK3D(hipRoots[i], ankles[i], legU(i), gOf(i), T, Sh);
     // posun z hloubky rozložit podél nohy podle polohy CHODIDLA (ne kolena): ohnuté koleno tak
     // neklesá k zemi a obě části nohy se zkrátí/prodlouží stejným dílem. Zkrácení nejvýš ±15 %
     // (jinak „gumové“ nohy) – zbytek vyrovná ohnutí kolena.
@@ -371,7 +405,15 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
     }
     return best!;
   }) as [Limb, Limb];
-  const footAng = feet.map((f) => -f.theta * (Math.abs(fx) > 0.9 ? 1 : 0.75));
+  // bota ve 3D: natočení chodidla v rovině nohy (θ) promítnuté jako země (g); vůči malovanému
+  // pohledu (nativní směr vpřed) se boty natočí a zkrátí/prodlouží podél chodidla – při chůzi
+  // ke kameře se bota zkrátí, místo aby se jen točila v rovině obrazu
+  const g0 = { x: fx, y: fy * 0.35 }, phi0 = Math.atan2(g0.y, g0.x), n0 = Math.hypot(g0.x, g0.y) || 1;
+  const footProj = feet.map((f, i) => {
+    const g = gOf(i), vx = g.x * Math.cos(f.theta), vy = g.y * Math.cos(f.theta) - Math.sin(f.theta);
+    return { ang: Math.atan2(vy, vx) - phi0, k: clamp(Math.hypot(vx, vy) / n0, 0.85, 1.12) }; // (víc zkrátit nejde – holínka by odkryla konec nohavice)
+  });
+  const footAng = footProj.map((p) => p.ang);
   // body paty v lokálních souřadnicích (pro uložení kotvy při došlapu)
   const heelPts = ankles.map((A, i) => { const g = gOf(i), th = feet[i].theta, hu = -geom.heel * Math.cos(th) + geom.AH * Math.sin(th), hh = -geom.heel * Math.sin(th) - geom.AH * Math.cos(th); return { x: A.x + g.x * hu, y: A.y - hh + g.y * hu }; }) as [Vec2, Vec2];
   void qs;
@@ -510,7 +552,7 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
     const l = arms[i];
     arms[i] = ikBlend(l.root, l.end, B.upperArm, B.forearm, bend * (1 - 2 * g.w));
   }
-  return { view, mirror, root: { x: 0, y: 0 }, hip, neck, shoulder, head, headTilt, torsoAngle, legs, arms, feet: [footAng[0], footAng[1]], handR: arms[1].end, heelPts, cupTilt, snowSink: [sink[0], sink[1]] };
+  return { view, mirror, root: { x: 0, y: 0 }, hip, neck, shoulder, head, headTilt, torsoAngle, legs, arms, feet: [footAng[0], footAng[1]], feetK: [footProj[0].k, footProj[1].k], handR: arms[1].end, heelPts, cupTilt, snowSink: [sink[0], sink[1]] };
 }
 
 /** Geometrie chůze ze šablony (výchozí bota podle zadání: pata 0,042 L, přednoží 0,113 L). */

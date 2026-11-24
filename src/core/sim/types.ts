@@ -100,6 +100,10 @@ export interface AgentState {
   vel?: { X: number; Z: number };
   /** Volba předvídavého plánovače (úhel a násobek rychlosti vůči trase). */
   crowdChoice?: { ang: number; k: number } | null;
+  /** jak dlouho je postava s trasou zbrzděná (s) – řešení zácpy v davu */
+  blockedT?: number;
+  /** zdvořilé uhnutí v zácpě: zbývající čas (s) a směr úkroku (svět) */
+  yieldT?: number; yieldDir?: { X: number; Z: number };
   /** Otáčení na místě před vykročením (světový úhel). */
   turnTo?: number | null;
   /** Hloubka sněhu pod postavou (m; 0 = mimo sníh) – zaboření bot. */

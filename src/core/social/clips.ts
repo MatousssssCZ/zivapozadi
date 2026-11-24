@@ -243,13 +243,15 @@ export function evalGesture(g: GestureInst): GestureOut {
       out.headDeg = 2 * env(u, 0.3, 0.4, 0.8, 0.9) * g.sgn;
       return out;
     }
-    case 'shovel': { // lopata: horní ruka u boku na držadle, dolní vpředu na násadě; tahy ~1,3 s
+    case 'shovel': { // lopata: zadní ruka na D-držadle u boku, přední níž vpředu na násadě; přidřep a
+      // předklon, tahy ~1,3 s (obě ruce i list vpřed a zpět po zemi)
       const e = Math.min(1, g.t / 0.6), f = Math.min(1, Math.max(0, (g.dur - g.t) / 0.6));
       const w = e * e * (3 - 2 * e) * (f * f * (3 - 2 * f));
       const st = 0.5 - 0.5 * Math.cos((g.t * 2 * Math.PI) / 1.3); // 0 = zpět, 1 = vpřed (tah)
-      if (w > 0) out.arms = [{ w, p: { x: 6 + 5 * st, y: -24 + st }, fwd: true, keep: true }, { w, p: { x: 15 + 6 * st, y: -36 + 2 * st }, fwd: true, keep: true }];
-      out.trunkDeg = -(2 + 1.6 * st) * w * g.sgn;
-      out.headDeg = -2 * w * g.sgn;
+      if (w > 0) out.arms = [{ w, p: { x: 3 + 5 * st, y: -22 + 0.5 * st }, fwd: true, keep: true }, { w, p: { x: 16 + 6 * st, y: -42 + st }, fwd: true, keep: true }];
+      out.crouch = 0.18 * w;
+      out.trunkDeg = -(11 + 4 * st) * w * g.sgn; // pracovní předklon (mimo limit společenských gest)
+      out.headDeg = 5 * w * g.sgn; // hlava kompenzuje – dívá se dopředu na pruh
       return out;
     }
     case 'pet': { // Z03: náklon a přidřep (0–25 %), ruka dolů k psovi, 1–2 pomalé tahy po srsti, návrat
@@ -300,7 +302,9 @@ export function evalAll(gs: GestureInst[] | undefined): GestureOut | null {
     if (o.crouch) out.crouch = Math.max(out.crouch ?? 0, o.crouch);
   }
   // tvrdé limity součtu vrstev (D): hlava ±8°, trup ±4°
-  out.headDeg = Math.max(-8, Math.min(8, out.headDeg)); out.trunkDeg = Math.max(-4, Math.min(4, out.trunkDeg));
+  // (pracovní klip lopaty smí trup předklonit víc – skutečná práce, ne společenské gesto)
+  const tl = gs.some((g) => g.fam === 'shovel') ? 16 : 4;
+  out.headDeg = Math.max(-8, Math.min(8, out.headDeg)); out.trunkDeg = Math.max(-tl, Math.min(tl, out.trunkDeg));
   return out;
 }
 

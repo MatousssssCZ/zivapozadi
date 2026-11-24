@@ -143,7 +143,7 @@ export async function generateLiberec(dir: string): Promise<ProjectFile> {
     id, name, assetId: a.id, x, y, scale: s, layer: 'world', zBias: 0, flipX: false, visible: true, locked: false,
     footprint: a.defaultFootprint ? structuredClone(a.defaultFootprint) : undefined, interaction: a.defaultInteraction ? structuredClone(a.defaultInteraction) : undefined, integration: integ(false, false),
   });
-  p.objects.push(B('obj_kos', 'Koš s víkem', binLid, 520, 830, sc(830 / SH) * 0.62), B('obj_kos2', 'Koš (bez víka)', bin, 1395, 905, sc(905 / SH) * 0.62));
+  p.objects.push(B('obj_kos', 'Koš s víkem', binLid, 520, 830, sc(830 / SH) * 0.62), B('obj_kos2', 'Koš (bez víka)', bin, 1610, 900, sc(900 / SH) * 0.62) /* u pravé trasy, ne v dětské zóně */);
 
   // ------------------------------------------------------------------ trasy (vodicí polyliny → síť; shodné body se sloučí)
   const nodes: NavNode[] = [], edges: NavEdge[] = [];
@@ -158,7 +158,8 @@ export async function generateLiberec(dir: string): Promise<ProjectFile> {
   // úpravy vodicích tras po zkoušce v rendereru: vstup zleva vede před nápojovým stánkem,
   // zadní trasa nezačíná uvnitř stánku s perníčky
   const fix: Record<string, [number, number][]> = {
-    left_entry: [[-0.05, 0.885], [0.26, 0.84], [0.36, 0.77], [0.46, 0.77]],
+    // (vede pod frontou stánku s nápoji a nad lavičkou – ne přes obslužné místo a frontu)
+    left_entry: [[-0.05, 0.885], [0.151, 0.88], [0.25, 0.889], [0.333, 0.875], [0.396, 0.824], [0.46, 0.77]],
     rear: [[0.4, 0.62], [0.5, 0.59], [0.55, 0.62]],
   };
   for (const pa of cfg.paths) {
@@ -262,7 +263,7 @@ export async function generateLiberec(dir: string): Promise<ProjectFile> {
     id: 'ch_lopata', name: 'Pracovník údržby', assetId: 'builtin_postava_cg', startNodeId: portals[0], baseScale: 1,
     walkSpeed: 55, palette: testPal, wander: false, appearance: worker, routine: 'shovel', activities: {},
   });
-  p.clearing = { workerId: 'ch_lopata', strip: { x0: 1545, x1: 1835, y: 1052, h: 30 }, pile: { x: 1880, y: 1056 }, enter: { x: 2080, y: 1072 }, approach: [{ x: 1700, y: 1074 }], standBack: 70, bands: 6, firstDelay: 70 };
+  p.clearing = { workerId: 'ch_lopata', strip: { x0: 1545, x1: 1835, y: 1052, h: 30 }, pile: { x: 1880, y: 1056 }, enter: { x: 2080, y: 1072 }, approach: [{ x: 1700, y: 1074 }], standBack: 126, bands: 6, firstDelay: 70 };
   p.export = { ...p.export, durationSec: 60, chunkSec: 20 };
   await saveProject(dir, p);
   return p;

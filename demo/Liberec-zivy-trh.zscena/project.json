@@ -3,8 +3,8 @@
   "formatVersion": 1,
   "meta": {
     "name": "Liberec – živý vánoční trh",
-    "createdAt": "2026-11-24T19:25:19.487Z",
-    "modifiedAt": "2026-11-24T19:25:19.596Z",
+    "createdAt": "2026-11-24T20:39:33.661Z",
+    "modifiedAt": "2026-11-24T20:39:33.776Z",
     "appVersion": "0.1.0"
   },
   "seed": 2611,
@@ -3539,9 +3539,9 @@
       "id": "obj_kos2",
       "name": "Koš (bez víka)",
       "assetId": "builtin_kos",
-      "x": 1395,
-      "y": 905,
-      "scale": 0.9912720647773278,
+      "x": 1610,
+      "y": 900,
+      "scale": 0.9768388663967611,
       "layer": "world",
       "zBias": 0,
       "flipX": false,
@@ -3685,73 +3685,85 @@
       },
       {
         "id": "n7",
-        "x": 499,
-        "y": 907,
+        "x": 290,
+        "y": 950,
         "name": "left_entry 2"
       },
       {
         "id": "n8",
-        "x": 691,
-        "y": 832,
+        "x": 480,
+        "y": 960,
         "name": "left_entry 3"
       },
       {
         "id": "n9",
+        "x": 639,
+        "y": 945,
+        "name": "left_entry 4"
+      },
+      {
+        "id": "n10",
+        "x": 760,
+        "y": 890,
+        "name": "left_entry 5"
+      },
+      {
+        "id": "n11",
         "x": 2016,
         "y": 918,
         "name": "right_entry 1",
         "portal": true
       },
       {
-        "id": "n10",
+        "id": "n12",
         "x": 1517,
         "y": 918,
         "name": "right_entry 2"
       },
       {
-        "id": "n11",
+        "id": "n13",
         "x": 1421,
         "y": 842,
         "name": "right_entry 3"
       },
       {
-        "id": "n12",
+        "id": "n14",
         "x": 1344,
         "y": 767,
         "name": "right_entry 4"
       },
       {
-        "id": "n13",
+        "id": "n15",
         "x": 1037,
         "y": 745,
         "name": "right_entry 5"
       },
       {
-        "id": "n14",
+        "id": "n16",
         "x": 653,
         "y": 821,
         "name": "crossing 1"
       },
       {
-        "id": "n15",
+        "id": "n17",
         "x": 1056,
         "y": 821,
         "name": "crossing 3"
       },
       {
-        "id": "n16",
+        "id": "n18",
         "x": 1306,
         "y": 788,
         "name": "crossing 4"
       },
       {
-        "id": "n17",
+        "id": "n19",
         "x": 768,
         "y": 670,
         "name": "rear 1"
       },
       {
-        "id": "n18",
+        "id": "n20",
         "x": 1056,
         "y": 670,
         "name": "rear 3"
@@ -3811,7 +3823,7 @@
       {
         "id": "e7",
         "a": "n8",
-        "b": "n3",
+        "b": "n9",
         "oneWay": false,
         "narrow": false
       },
@@ -3825,7 +3837,7 @@
       {
         "id": "e9",
         "a": "n10",
-        "b": "n11",
+        "b": "n3",
         "oneWay": false,
         "narrow": false
       },
@@ -3846,54 +3858,68 @@
       {
         "id": "e12",
         "a": "n13",
-        "b": "n4",
+        "b": "n14",
         "oneWay": false,
         "narrow": false
       },
       {
         "id": "e13",
         "a": "n14",
-        "b": "n3",
-        "oneWay": false,
-        "narrow": false
-      },
-      {
-        "id": "e14",
-        "a": "n3",
         "b": "n15",
         "oneWay": false,
         "narrow": false
       },
       {
-        "id": "e15",
+        "id": "e14",
         "a": "n15",
-        "b": "n16",
+        "b": "n4",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e15",
+        "a": "n16",
+        "b": "n3",
         "oneWay": false,
         "narrow": false
       },
       {
         "id": "e16",
-        "a": "n16",
-        "b": "n11",
+        "a": "n3",
+        "b": "n17",
         "oneWay": false,
         "narrow": false
       },
       {
         "id": "e17",
         "a": "n17",
-        "b": "n5",
-        "oneWay": false,
-        "narrow": false
-      },
-      {
-        "id": "e18",
-        "a": "n5",
         "b": "n18",
         "oneWay": false,
         "narrow": false
       },
       {
+        "id": "e18",
+        "a": "n18",
+        "b": "n13",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
         "id": "e19",
+        "a": "n19",
+        "b": "n5",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e20",
+        "a": "n5",
+        "b": "n20",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e21",
         "a": "n5",
         "b": "n_dvere",
         "oneWay": false,
@@ -4216,7 +4242,7 @@
       "id": "ch_2",
       "name": "Bohdan",
       "assetId": "builtin_postava_cg",
-      "startNodeId": "n11",
+      "startNodeId": "n10",
       "baseScale": 1,
       "walkSpeed": 71.6,
       "palette": {
@@ -4415,7 +4441,7 @@
       "id": "ch_5",
       "name": "Eliška",
       "assetId": "builtin_postava_cg",
-      "startNodeId": "n17",
+      "startNodeId": "n15",
       "baseScale": 1,
       "walkSpeed": 60.5,
       "palette": {
@@ -4481,7 +4507,7 @@
       "id": "ch_6",
       "name": "Filip",
       "assetId": "builtin_postava_cg",
-      "startNodeId": "n8",
+      "startNodeId": "n3",
       "baseScale": 1,
       "walkSpeed": 62.5,
       "palette": {
@@ -4547,7 +4573,7 @@
       "id": "ch_7",
       "name": "Gabriela",
       "assetId": "builtin_postava_cg",
-      "startNodeId": "n9",
+      "startNodeId": "n11",
       "baseScale": 1,
       "walkSpeed": 64.9,
       "palette": {
@@ -4613,7 +4639,7 @@
       "id": "ch_8",
       "name": "Hynek",
       "assetId": "builtin_postava_cg",
-      "startNodeId": "n7",
+      "startNodeId": "n19",
       "baseScale": 1,
       "walkSpeed": 66.5,
       "palette": {
@@ -4679,7 +4705,7 @@
       "id": "ch_9",
       "name": "Irena",
       "assetId": "builtin_postava_cg",
-      "startNodeId": "n15",
+      "startNodeId": "n8",
       "baseScale": 1,
       "walkSpeed": 56.9,
       "palette": {
@@ -4811,7 +4837,7 @@
       "id": "ch_11",
       "name": "Klára",
       "assetId": "builtin_postava_cg",
-      "startNodeId": "n14",
+      "startNodeId": "n4",
       "baseScale": 1,
       "walkSpeed": 68.6,
       "palette": {
@@ -4878,7 +4904,7 @@
       "id": "ch_12",
       "name": "Libor",
       "assetId": "builtin_postava_cg",
-      "startNodeId": "n4",
+      "startNodeId": "n13",
       "baseScale": 1,
       "walkSpeed": 68.3,
       "palette": {
@@ -5010,7 +5036,7 @@
       "id": "ch_14",
       "name": "Norbert",
       "assetId": "builtin_postava_cg",
-      "startNodeId": "n3",
+      "startNodeId": "n9",
       "baseScale": 1,
       "walkSpeed": 52.7,
       "palette": {
@@ -5076,7 +5102,7 @@
       "id": "ch_15",
       "name": "Olga",
       "assetId": "builtin_postava_cg",
-      "startNodeId": "n12",
+      "startNodeId": "n17",
       "baseScale": 1,
       "walkSpeed": 53,
       "palette": {
@@ -5208,7 +5234,7 @@
       "id": "ch_17",
       "name": "Renata",
       "assetId": "builtin_postava_cg",
-      "startNodeId": "n11",
+      "startNodeId": "n14",
       "baseScale": 1,
       "walkSpeed": 70.4,
       "palette": {
@@ -5274,7 +5300,7 @@
       "id": "ch_18",
       "name": "Stanislav",
       "assetId": "builtin_postava_cg",
-      "startNodeId": "n18",
+      "startNodeId": "n2",
       "baseScale": 1,
       "walkSpeed": 70.1,
       "palette": {
@@ -5340,7 +5366,7 @@
       "id": "ch_19",
       "name": "Tereza",
       "assetId": "builtin_postava_cg",
-      "startNodeId": "n9",
+      "startNodeId": "n11",
       "baseScale": 1,
       "walkSpeed": 61.1,
       "palette": {
@@ -5406,7 +5432,7 @@
       "id": "ch_20",
       "name": "Vít",
       "assetId": "builtin_postava_cg",
-      "startNodeId": "n17",
+      "startNodeId": "n18",
       "baseScale": 1,
       "walkSpeed": 70.9,
       "palette": {
@@ -5472,7 +5498,7 @@
       "id": "ch_21",
       "name": "Wanda",
       "assetId": "builtin_postava_cg",
-      "startNodeId": "n8",
+      "startNodeId": "n7",
       "baseScale": 1,
       "walkSpeed": 64.7,
       "palette": {
@@ -5604,7 +5630,7 @@
       "id": "ch_23",
       "name": "Žofie",
       "assetId": "builtin_postava_cg",
-      "startNodeId": "n7",
+      "startNodeId": "n3",
       "baseScale": 1,
       "walkSpeed": 60.5,
       "palette": {
@@ -5670,7 +5696,7 @@
       "id": "ch_24",
       "name": "Matěj",
       "assetId": "builtin_postava_cg",
-      "startNodeId": "n15",
+      "startNodeId": "n12",
       "baseScale": 1,
       "walkSpeed": 52.3,
       "palette": {
@@ -5736,7 +5762,7 @@
       "id": "kid_1",
       "name": "Adámek",
       "assetId": "builtin_postava_dite",
-      "startNodeId": "n11",
+      "startNodeId": "n10",
       "baseScale": 1,
       "walkSpeed": 71.6,
       "palette": {
@@ -5796,7 +5822,7 @@
       "id": "kid_2",
       "name": "Bětka",
       "assetId": "builtin_postava_dite",
-      "startNodeId": "n17",
+      "startNodeId": "n15",
       "baseScale": 1,
       "walkSpeed": 60.5,
       "palette": {
@@ -5856,7 +5882,7 @@
       "id": "kid_3",
       "name": "Kubík",
       "assetId": "builtin_postava_dite",
-      "startNodeId": "n15",
+      "startNodeId": "n8",
       "baseScale": 1,
       "walkSpeed": 56.9,
       "palette": {
@@ -5916,7 +5942,7 @@
       "id": "kid_4",
       "name": "Majda",
       "assetId": "builtin_postava_dite",
-      "startNodeId": "n3",
+      "startNodeId": "n9",
       "baseScale": 1,
       "walkSpeed": 52.7,
       "palette": {
@@ -5976,7 +6002,7 @@
       "id": "kid_5",
       "name": "Toník",
       "assetId": "builtin_postava_dite",
-      "startNodeId": "n17",
+      "startNodeId": "n18",
       "baseScale": 1,
       "walkSpeed": 70.9,
       "palette": {
@@ -6272,7 +6298,7 @@
         "y": 1074
       }
     ],
-    "standBack": 70,
+    "standBack": 126,
     "bands": 6,
     "firstDelay": 70
   }

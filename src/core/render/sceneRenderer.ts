@@ -146,10 +146,21 @@ function drawSled(ctx: Ctx, c: { x: number; y: number }, k: number, sx: number, 
   ctx.restore();
 }
 /** Odklizený pruh: malovaná dlažba v odkryté části, před lopatou valoun shrnutého sněhu. */
-function drawClearedStrip(ctx: Ctx, project: ProjectFile, st: SimState['clearing'], t: number) {
+function drawClearedStrip(ctx: Ctx, project: ProjectFile, litSim: Simulation, t: number) {
+  const st = litSim.state.clearing;
   const cfg = project.clearing!, v = clearedVisible(st, project, t);
   if (!st || v <= 0.002) return;
-  const s = cfg.strip, img = sprite('pavement'), xr = s.x0 + (s.x1 - s.x0) * st.progress;
+  const s = cfg.strip, img = sprite('pavement');
+  let xr = s.x0 + (s.x1 - s.x0) * st.progress;
+  // během tahu: odkrytá dlažba končí přesně u listu lopaty (pruh se odkrývá tam, kudy list projel)
+  let bladeX: number | null = null;
+  if (st.phase === 'work') {
+    const wk = litSim.state.agents.find((a) => a.id === cfg.workerId), c = wk ? litSim.characterOf(wk.id) : undefined, m = c ? litSim.manifests[c.assetId] : undefined;
+    if (wk && c && m && !wk.hidden && wk.holdingKind === 'shovel') {
+      const cv = characterVisual(wk, m, c, project.scene), sg = shovelGeom(cv, wk);
+      if (sg.w > 0.5) { bladeX = localToScene(cv, sg.blade).x; const band = (s.x1 - s.x0) / (cfg.bands ?? 6), b0 = s.x0 + band * st.band; xr = Math.max(b0, Math.min(b0 + band, bladeX)); }
+    }
+  }
   const fade = st.progress > 0 ? v / st.progress : 0;
   ctx.save(); ctx.globalAlpha = Math.min(1, fade * 1.1);
   const lead = 30 * Math.min(1, st.progress * 6); // levý zasněžený okraj decalu se odkryje postupně
@@ -162,8 +173,16 @@ function drawClearedStrip(ctx: Ctx, project: ProjectFile, st: SimState['clearing
   if (pile && st.phase !== 'offstage' && st.phase !== 'leave' && st.progress > 0 && st.progress < 1) {
     const ppm = depthScaleAt(project.scene.depth, s.y) / Q, band = 1 / (cfg.bands ?? 6);
     const frac = (st.progress % band) / band, W = (0.28 + 0.12 * frac) * ppm, H = (W * pile.height) / pile.width;
-    ctx.drawImage(pile, xr - W * 0.3, s.y + s.h * 0.15 - H, W, H);
+    ctx.drawImage(pile, xr - W * 0.15, s.y + s.h * 0.15 - H, W, H); // valoun na čele odkrytého pruhu (u listu)
   }
+}
+/** Sáně z dodaného pohledu (plátno 1600×1200, linie země y = 1100, délka sání v bočním pohledu ~1,1 m). */
+function drawSledView(ctx: Ctx, c: { x: number; y: number }, ppm: number, body: CanvasImageSource & { width: number; height: number }, head: (CanvasImageSource & { width: number; height: number }) | null, t: number, speed: number) {
+  const k = (SLED.length * ppm) / (body.width * 0.62); // (sáně zabírají ~62 % šířky plátna v bočním pohledu)
+  ctx.save(); ctx.translate(c.x, c.y); ctx.scale(k, k); ctx.translate(-body.width / 2, -body.height * (1100 / 1200));
+  ctx.drawImage(body, 0, 0);
+  if (head) { const bob = Math.sin(t * 7.3) * 2 * Math.min(1, speed / 1.5); ctx.drawImage(head, 0, bob); }
+  ctx.restore();
 }
 /** Rukavice ležící na zemi (spodek na bodu dotyku), s = hloubkové měřítko. */
 function drawGroundMitten(ctx: Ctx, x: number, y: number, s: number, rot: number) {
@@ -174,6 +193,33 @@ function drawGroundMitten(ctx: Ctx, x: number, y: number, s: number, rot: number
   else { ctx.fillStyle = '#e8dcc6'; ctx.fillRect(-W / 2, -W * 0.3, W, W * 0.3); }
   ctx.restore();
 }
+/**
+ * Geometrie lopaty v lokálních souřadnicích postavy. Osa násady spritu: D-držadlo G → objímka listu
+ * (AX); spodní hrana listu C. Při tahu drží zadní (horní) ruka D-držadlo, osa vede přední rukou a list
+ * dosedá na zem (měřítko z dosednutí v mezích délky 1,3 m). Mimo tah ji nese blízká ruka za násadu
+ * (30 % od držadla), list šikmo na zemi vpředu. Přechod plynule podle váhy klipu. Vrací i bod listu na zemi.
+ */
+const SHOVEL = { G: { x: 50, y: 55 }, AX: { x: 525, y: 185 }, C: { x: 650, y: 385 } };
+function shovelGeom(cv: ReturnType<typeof characterVisual>, agent?: AgentState) {
+  const { G, AX, C } = SHOVEL;
+  const axAng = Math.atan2(AX.y, AX.x), nominal = (1.3 / Q) / Math.hypot(C.x - G.x, C.y - G.y);
+  const g = agent?.anim.gestures?.find((x) => x.fam === 'shovel');
+  const w = g ? (() => { const e = Math.min(1, g.t / 0.6), f = Math.min(1, Math.max(0, (g.dur - g.t) / 0.6)); return e * e * (3 - 2 * e) * (f * f * (3 - 2 * f)); })() : 0;
+  const A0 = cv.pose.arms[0].end, A1 = cv.pose.arms[1].end;
+  const hi = A0.y < A1.y ? A0 : A1, lo = A0.y < A1.y ? A1 : A0;
+  let ang = Math.atan2(lo.y - hi.y, lo.x - hi.x) - axAng;
+  if (!(lo.x > hi.x && lo.y > hi.y)) ang = 0.9 - axAng;
+  const rotP = (p: { x: number; y: number }, a: number, k: number) => ({ x: (p.x * Math.cos(a) - p.y * Math.sin(a)) * k, y: (p.x * Math.sin(a) + p.y * Math.cos(a)) * k });
+  const ry = rotP({ x: C.x - G.x, y: C.y - G.y }, ang, 1).y;
+  const kW = Math.min(1.15 * nominal, Math.max(0.7 * nominal, ry > 1e-3 ? -hi.y / ry : nominal));
+  const gr = cv.grip, kC = nominal, angC = Math.atan2(-gr.y, 0.5 * (1.3 / Q)) - Math.atan2(C.y - G.y, C.x - G.x);
+  const hC = rotP({ x: AX.x * 0.3, y: AX.y * 0.3 }, angC, kC), originC = { x: gr.x - hC.x, y: gr.y - hC.y };
+  const a = angC + (ang - angC) * w, k = kC + (kW - kC) * w;
+  const org = { x: originC.x + (hi.x - originC.x) * w, y: originC.y + (hi.y - originC.y) * w };
+  const bl = rotP({ x: C.x - G.x, y: C.y - G.y }, a, k);
+  return { org, ang: a, k, w, blade: { x: org.x + bl.x, y: org.y + bl.y } };
+}
+
 /** Věc v ruce postavy (souřadnice postavy, 1 jednotka = Q m). */
 function drawHeld(ctx: Ctx, held: PropState, cv: ReturnType<typeof characterVisual>, agent?: AgentState) {
   const g = cv.grip;
@@ -191,33 +237,11 @@ function drawHeld(ctx: Ctx, held: PropState, cv: ReturnType<typeof characterVisu
     return;
   }
   if (held.kind === 'shovel') {
-    // násada prochází oběma rukama a pokračuje k zemi (list lopaty na sněhu před postavou)
-    // při tahu: horní ruka (zadní, u boku) drží D-držadlo, dolní vpředu na násadě → list na zemi vpředu;
-    // jinak nese lopatu v blízké ruce šikmo k zemi před sebou (plynulý přechod podle váhy klipu)
-    const L = 1.15 / Q;
-    const g = agent?.anim.gestures?.find((x) => x.fam === 'shovel');
-    const w = g ? (() => { const e = Math.min(1, g.t / 0.6), f = Math.min(1, Math.max(0, (g.dur - g.t) / 0.6)); return e * e * (3 - 2 * e) * (f * f * (3 - 2 * f)); })() : 0;
-    const hi = cv.pose.arms[0].end, lo = cv.pose.arms[1].end;
-    let ux = lo.x - hi.x, uy = lo.y - hi.y; const n0 = Math.hypot(ux, uy) || 1; ux /= n0; uy /= n0;
-    if (uy < 0.25 || ux < 0) { ux = 0.55; uy = 0.83; }
-    const topW = { x: hi.x - ux * 4, y: hi.y - uy * 4 };
-    const kW = Math.min(L, Math.max(L * 0.6, -topW.y / uy));
-    const bladeW = { x: topW.x + ux * kW, y: topW.y + uy * kW };
-    const gr = cv.grip, bladeC = { x: gr.x + 0.55 * L, y: 0 }, dC = Math.hypot(bladeC.x - gr.x, bladeC.y - gr.y) || 1;
-    const topC = { x: gr.x - ((bladeC.x - gr.x) / dC) * (L - dC) * 0.9, y: gr.y - ((bladeC.y - gr.y) / dC) * (L - dC) * 0.9 };
-    const mix = (p: { x: number; y: number }, q: { x: number; y: number }) => ({ x: p.x + (q.x - p.x) * w, y: p.y + (q.y - p.y) * w });
-    const top = mix(topC, topW), blade = mix(bladeC, bladeW);
-    const img = sprite('shovel');
+    const img = sprite('shovel'), sg = shovelGeom(cv, agent);
     if (img) {
-      // kotvy spritu: D-držadlo (45,65) a spodní hrana listu (735,345)
-      const sx0 = 45, sy0 = 65, sx1 = 735, sy1 = 345, sl = Math.hypot(sx1 - sx0, sy1 - sy0);
-      const sc = Math.hypot(blade.x - top.x, blade.y - top.y) / sl;
-      const ang = Math.atan2(blade.y - top.y, blade.x - top.x) - Math.atan2(sy1 - sy0, sx1 - sx0);
-      ctx.save(); ctx.translate(top.x, top.y); ctx.rotate(ang); ctx.scale(sc, sc);
-      ctx.drawImage(img, -sx0, -sy0);
+      ctx.save(); ctx.translate(sg.org.x, sg.org.y); ctx.rotate(sg.ang); ctx.scale(sg.k, sg.k);
+      ctx.drawImage(img, -SHOVEL.G.x, -SHOVEL.G.y);
       ctx.restore();
-    } else {
-      ctx.save(); ctx.strokeStyle = '#7a5434'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(top.x, top.y); ctx.lineTo(blade.x, blade.y); ctx.stroke(); ctx.restore();
     }
     return;
   }
@@ -465,7 +489,7 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
   for (const { o } of fixed('background')) drawObject(ctx, o, assets.get(o.assetId), images.get(o.assetId));
   // okna a dveře budovy v pozadí (rozsvícení, otevření při průchodu)
   // odklizený pruh (A11): plochý decal dlažby pod chodci; odkrývá se zleva podle postupu, při sněžení zapadá
-  if (sim && project.clearing) drawClearedStrip(ctx, project, sim.state.clearing, opts.time);
+  if (sim && project.clearing) drawClearedStrip(ctx, project, sim, opts.time);
   if (sc.environment && (sc.environment.windows?.length || sc.environment.door)) drawFacade(ctx, project, (sc.backgroundAssetId ? images.get(sc.backgroundAssetId) : null) as never, (images.get('sprite_door_interior') ?? null) as never, sim?.state.doorPasses, opts.time);
   if (sim) drawFootprints(ctx, project, sim, sim.time());
   const worldObjs = visible.filter(({ o }) => o.layer === 'world').map(({ o }) => o);
@@ -563,7 +587,21 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
       const cosA = Math.cos(sl.angle ?? 0), dir = cosA < 0 ? -1 : 1, sx = dir * Math.max(0.4, Math.abs(cosA));
       const k = (SLED.length * ppm) / SLED_SPRITE.frameW;
       const ringS = { x: c.x + (SLED_SPRITE.ring.x - SLED_SPRITE.cx) * k * sx, y: c.y + (SLED_SPRITE.ring.y - SLED_SPRITE.ground) * k };
-      items.push({ key: c.y, tie: 12500, draw: () => drawSled(ctx, c, k, sx, opts.time, sl.speed ?? 0) });
+      items.push({ key: c.y, tie: 12500, draw: () => {
+        // pohledy z 8 směrů (sprite_sled_view_<úhel>_body/_head), mezi sousedními plynulé prolnutí;
+        // bez nich boční pohled: zkrácení podle směru a v obratu prolnutí zrcadlených verzí (žádný přeskok)
+        const deg = ((-(sl.wang ?? 0) * 180) / Math.PI + 720) % 360;
+        const lo = Math.floor(deg / 45) * 45, hi = (lo + 45) % 360, f = (deg - lo) / 45;
+        const vb = (d: number) => sprite(`sled_view_${d}_body`), vh = (d: number) => sprite(`sled_view_${d}_head`);
+        if (vb(lo) && vb(hi)) {
+          for (const [d, a] of [[lo, 1 - f], [hi, f]] as const) if (a > 0.01) { ctx.save(); ctx.globalAlpha = a; drawSledView(ctx, c, ppm, vb(d)!, vh(d), opts.time, sl.speed ?? 0); ctx.restore(); }
+          return;
+        }
+        const ac = Math.abs(cosA);
+        if (ac > 0.35) { drawSled(ctx, c, k, sx, opts.time, sl.speed ?? 0); return; }
+        const fr = 0.5 + 0.5 * (cosA / 0.35); // −0,35 → 0 (vlevo), +0,35 → 1 (vpravo)
+        for (const [s2, a] of [[1, fr], [-1, 1 - fr]] as const) if (a > 0.01) { ctx.save(); ctx.globalAlpha = a; drawSled(ctx, c, k, s2 * 0.4, opts.time, sl.speed ?? 0); ctx.restore(); }
+      } });
       if (par && !par.hidden) {
         const oc = sim.characterOf(par.id), om = oc ? sim.manifests[oc.assetId] : undefined;
         if (oc && om) {
