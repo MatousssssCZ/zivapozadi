@@ -1059,7 +1059,8 @@ export class Simulation {
         f.look = null; a.look = null;
         f.follow = { leaderId: a.id, side: rand(a.rng) < 0.5 ? 1 : -1 };
         f.visit = { mode: 'with', until: 0, friendId: a.id, since: t };
-        if (v.goal && v.goalZone) {
+        // výrazná událost jen jedna naráz: když mezitím začala jiná, jdou místo toho na kávu
+        if (v.goal && v.goalZone && !this.state.sessions?.length && (this.state.director?.nextSignificant ?? 0) <= t) {
           const zz = this.zones.get(v.goalZone);
           f.follow = null;
           if (zz && (v.goal === 'snowman' ? startSnowman(this.sessionHost(), zz, a, f) : startFight(this.sessionHost(), zz, a, f))) {

@@ -16,7 +16,11 @@ import { defaultIntegration, lantern } from '../src/core/render/integration';
 
 const G = 'grafika/zpracovane';
 
-export async function generateRadnice(dir: string): Promise<ProjectFile> {
+/**
+ * `showcase`: samostatná ukázka balíčku „živá pozadí“ (vlastní kopie assetů): výrazné události
+ * častěji, koulovačka s dospělými jako vývojářská náhrada (dětské postavy zatím nejsou).
+ */
+export async function generateRadnice(dir: string, opts: { showcase?: boolean } = {}): Promise<ProjectFile> {
   await fs.rm(dir, { recursive: true, force: true });
   await createProjectDir(dir);
   const p = createEmptyProject('Náměstí s radnicí (test dodané grafiky)', 1224);
@@ -162,11 +166,19 @@ export async function generateRadnice(dir: string): Promise<ProjectFile> {
   }
   p.schedule = [{ id: 'ev_cyril', name: 'Cyril jde na kávu', time: 20, activityType: 'coffee', characterId: 'ch_3', zoneId: 'zone_kava', onUnavailable: 'wait', waitLimit: 40 }];
   p.export = { ...p.export, durationSec: 60, chunkSec: 20 };
+  if (opts.showcase) {
+    p.meta.name = 'Živý trh (ukázka balíčku „živá pozadí“)';
+    for (const z of p.zones) {
+      if (z.activityType === 'snowman') z.params.chance = 0.9;
+      if (z.activityType === 'snowballFight') { z.params.chance = 0.9; z.params.allowAdults = true; z.name += ' (dospělí – vývojářská náhrada)'; }
+    }
+    p.export = { ...p.export, durationSec: 300, chunkSec: 30 };
+  }
   await saveProject(dir, p);
   return p;
 }
 
 if (process.argv[1]?.includes('generate-radnice-demo')) {
   const dir = path.resolve(process.argv[2] ?? 'demo/Namesti-radnice.zscena');
-  generateRadnice(dir).then(() => console.log('Demo vytvořeno:', dir));
+  generateRadnice(dir, { showcase: process.argv.includes('--showcase') }).then(() => console.log('Demo vytvořeno:', dir));
 }

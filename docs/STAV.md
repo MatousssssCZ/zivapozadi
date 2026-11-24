@@ -44,7 +44,7 @@
 
 ## Výsledky ověření (prostředí: Linux x64, 4 jádra, 15 GB RAM, bez GPU, Node 22, Electron 45.2.3)
 
-### Automatické testy – `npm test` (Vitest): 74 testů, všechny prošly (vč. tests/gait.test.ts, tests/scene-walk.test.ts, tests/social.test.ts a tests/integration.test.ts)
+### Automatické testy – `npm test` (Vitest): 86 testů, všechny prošly (vč. gait, scene-walk, social, integration, market, snowman, snowball, sessions, environment); stav balíčku „živá pozadí“ v docs/ZIVA_POZADI.md
 
 * **Determinismus:** stejný hash stavu ve 90 s při náhledu 0,5×/1×/2×/4×/8× s nepravidelnými snímky;
   stejný seed ⇒ stejný průběh, jiný seed ⇒ jiný.
