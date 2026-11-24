@@ -3,8 +3,8 @@
   "formatVersion": 1,
   "meta": {
     "name": "Liberec – živý vánoční trh",
-    "createdAt": "2026-11-24T17:40:50.135Z",
-    "modifiedAt": "2026-11-24T17:40:50.214Z",
+    "createdAt": "2026-11-24T17:53:15.580Z",
+    "modifiedAt": "2026-11-24T17:53:15.657Z",
     "appVersion": "0.1.0"
   },
   "seed": 2611,
@@ -195,6 +195,13 @@
       "name": "Malovaná postava – díly z ChatGPT",
       "file": "assets/characters/malovana-postava-cg.json",
       "includeDir": "painted-parts-cg"
+    },
+    {
+      "id": "builtin_postava_dite",
+      "kind": "character",
+      "name": "Malované dítě – díly z ChatGPT",
+      "file": "assets/characters/malovana-postava-dite.json",
+      "includeDir": "painted-parts-child"
     },
     {
       "id": "asset_image_tree_331ccb9a",
@@ -3102,6 +3109,29 @@
           "y": 1080
         }
       ]
+    },
+    {
+      "id": "area_snih_deti",
+      "name": "Dětský sníh",
+      "kind": "snow",
+      "polygon": [
+        {
+          "x": 996,
+          "y": 828
+        },
+        {
+          "x": 1404,
+          "y": 828
+        },
+        {
+          "x": 1481,
+          "y": 975
+        },
+        {
+          "x": 1015,
+          "y": 1008
+        }
+      ]
     }
   ],
   "zones": [
@@ -4861,6 +4891,306 @@
           "intervalMax": 160
         }
       }
+    },
+    {
+      "id": "kid_1",
+      "name": "Adámek",
+      "assetId": "builtin_postava_dite",
+      "startNodeId": "n11",
+      "baseScale": 1,
+      "walkSpeed": 71.6,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-dite-v1",
+        "seed": 1047177770,
+        "bodyTemplate": "child-cg",
+        "variants": {
+          "jacket": "jacket_coat_child",
+          "hat": "hat_beanie_child",
+          "scarf": "scarf_long_child",
+          "trousers": "trousers_child",
+          "boots": "boots_child",
+          "gloves": "gloves_child",
+          "head": "head_child"
+        },
+        "colors": {
+          "jacket": "hneda",
+          "hat": "olivova",
+          "scarf": "petrolejova",
+          "gloves": "olivova",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 1.043,
+          "build": 0.955
+        },
+        "motion": {
+          "strideScale": 1.076,
+          "armSwing": 0.802,
+          "bob": 0.914,
+          "sway": 0.893,
+          "idleTempo": 0.911,
+          "lean": 1.832,
+          "speed": 1.132,
+          "phase": 0.587,
+          "armLag": -0.491,
+          "armLR": 0.891
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {},
+      "companionId": "ch_2",
+      "companionSide": -1
+    },
+    {
+      "id": "kid_2",
+      "name": "Bětka",
+      "assetId": "builtin_postava_dite",
+      "startNodeId": "n17",
+      "baseScale": 1,
+      "walkSpeed": 60.5,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-dite-v1",
+        "seed": 1842129344,
+        "bodyTemplate": "child-cg",
+        "variants": {
+          "jacket": "jacket_coat_child",
+          "hat": "hat_beanie_child",
+          "scarf": "scarf_long_child",
+          "trousers": "trousers_child",
+          "boots": "boots_child",
+          "gloves": "gloves_child",
+          "head": "head_child"
+        },
+        "colors": {
+          "jacket": "tmave-seda",
+          "hat": "kremova",
+          "scarf": "okrova",
+          "gloves": "okrova",
+          "trousers": "olivova",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 1.024,
+          "build": 1.002
+        },
+        "motion": {
+          "strideScale": 0.954,
+          "armSwing": 1.335,
+          "bob": 1.136,
+          "sway": 1.227,
+          "idleTempo": 0.978,
+          "lean": 2.942,
+          "speed": 1.164,
+          "phase": 0.531,
+          "armLag": 0.592,
+          "armLR": 1.145
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {},
+      "companionId": "ch_5",
+      "companionSide": 1
+    },
+    {
+      "id": "kid_3",
+      "name": "Kubík",
+      "assetId": "builtin_postava_dite",
+      "startNodeId": "n15",
+      "baseScale": 1,
+      "walkSpeed": 56.9,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-dite-v1",
+        "seed": 583088180,
+        "bodyTemplate": "child-cg",
+        "variants": {
+          "jacket": "jacket_coat_child",
+          "hat": "hat_beanie_child",
+          "scarf": "scarf_long_child",
+          "trousers": "trousers_child",
+          "boots": "boots_child",
+          "gloves": "gloves_child",
+          "head": "head_child"
+        },
+        "colors": {
+          "jacket": "olivova",
+          "hat": "okrova",
+          "scarf": "petrolejova",
+          "gloves": "okrova",
+          "trousers": "tmave-seda",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 0.978,
+          "build": 1.006
+        },
+        "motion": {
+          "strideScale": 1.097,
+          "armSwing": 0.676,
+          "bob": 0.96,
+          "sway": 0.843,
+          "idleTempo": 0.892,
+          "lean": 1.955,
+          "speed": 1.184,
+          "phase": 0.49,
+          "armLag": 2.984,
+          "armLR": 0.893
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {},
+      "companionId": "ch_9",
+      "companionSide": -1
+    },
+    {
+      "id": "kid_4",
+      "name": "Majda",
+      "assetId": "builtin_postava_dite",
+      "startNodeId": "n3",
+      "baseScale": 1,
+      "walkSpeed": 52.7,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-dite-v1",
+        "seed": 1198541694,
+        "bodyTemplate": "child-cg",
+        "variants": {
+          "jacket": "jacket_coat_child",
+          "hat": "hat_beanie_child",
+          "scarf": "scarf_long_child",
+          "trousers": "trousers_child",
+          "boots": "boots_child",
+          "gloves": "gloves_child",
+          "head": "head_child"
+        },
+        "colors": {
+          "jacket": "tmave-seda",
+          "hat": "vinova",
+          "scarf": "kremova",
+          "gloves": "vinova",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 0.974,
+          "build": 0.985
+        },
+        "motion": {
+          "strideScale": 1.047,
+          "armSwing": 0.672,
+          "bob": 1.151,
+          "sway": 1.206,
+          "idleTempo": 0.915,
+          "lean": 1.423,
+          "speed": 1.204,
+          "phase": 0.211,
+          "armLag": 1.339,
+          "armLR": 0.965
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {},
+      "companionId": "ch_14",
+      "companionSide": 1
+    },
+    {
+      "id": "kid_5",
+      "name": "Toník",
+      "assetId": "builtin_postava_dite",
+      "startNodeId": "n17",
+      "baseScale": 1,
+      "walkSpeed": 70.9,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-dite-v1",
+        "seed": 542232282,
+        "bodyTemplate": "child-cg",
+        "variants": {
+          "jacket": "jacket_coat_child",
+          "hat": "hat_beanie_child",
+          "scarf": "scarf_long_child",
+          "trousers": "trousers_child",
+          "boots": "boots_child",
+          "gloves": "gloves_child",
+          "head": "head_child"
+        },
+        "colors": {
+          "jacket": "kremova",
+          "hat": "petrolejova",
+          "scarf": "vinova",
+          "gloves": "vinova",
+          "trousers": "olivova",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 0.961,
+          "build": 1.029
+        },
+        "motion": {
+          "strideScale": 0.935,
+          "armSwing": 0.897,
+          "bob": 1.004,
+          "sway": 0.968,
+          "idleTempo": 1.126,
+          "lean": 1.93,
+          "speed": 0.87,
+          "phase": 0.783,
+          "armLag": 2.167,
+          "armLR": 1.137
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {},
+      "companionId": "ch_20",
+      "companionSide": -1
     }
   ],
   "schedule": [],

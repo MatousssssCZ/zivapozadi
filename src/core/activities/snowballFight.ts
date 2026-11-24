@@ -14,7 +14,7 @@
 import type { ActivityDefinition, ActivityRunner } from './types';
 import type { ActivitySession, AgentState } from '../sim/types';
 import type { ActivityZone } from '../model/types';
-import type { SessionHost } from './snowman';
+import { gatherTime, type SessionHost } from './snowman';
 import { createSession, setSessionPhase } from '../sim/sessions';
 import { cameraFor, toScreen, toWorld, type World } from '../scene/camera';
 import { rand, randRange } from '../math/rng';
@@ -44,7 +44,7 @@ export const snowballParticipant: ActivityRunner = {
   definition: snowballDefinition,
   canStart: () => ({ ok: false, reason: 'Koulovačku zakládá režisér scény pro dvojici.', retryAfter: 600 }),
   start: () => null,
-  step(ctx, _a, run) { const s = ctx.state.sessions?.find((x) => x.id === (run.data as { sessionId?: string }).sessionId); if (!s) return 'done'; run.phase = s.phase; return 'running'; },
+  step(ctx, agent, run) { const s = ctx.state.sessions?.find((x) => x.id === (run.data as { sessionId?: string }).sessionId); if (!s) return 'done'; run.phase = s.phase; agent.status = `Koulovačka – ${snowballDefinition.phases.find((p) => p.id === s.phase)?.label ?? s.phase}`; return 'running'; },
   abort() { /* řeší simulace */ },
   usesObject: () => false,
 };
@@ -53,9 +53,10 @@ interface FightData { spots: [Vec2, Vec2]; roles: [string, string]; throws: numb
 const D = (s: ActivitySession) => s.data as unknown as FightData;
 
 /** Proč nelze hrát (null = lze). */
-export function fightZoneProblem(h: Pick<SessionHost, 'state' | 'isSnow'>, zone: ActivityZone): string | null {
+/** `withChild`: hraje aspoň jedno dítě (pak není potřeba vývojářské povolení dospělých). */
+export function fightZoneProblem(h: Pick<SessionHost, 'state' | 'isSnow'>, zone: ActivityZone, withChild = false): string | null {
   if (!zone.enabled || zone.activityType !== 'snowballFight' || zone.bounds.length < 3) return 'Zóna je vypnutá nebo nemá vymezený prostor.';
-  if (!zone.params.allowAdults) return 'Chybí dětské postavy s pózou dřepu (podklady) – koulovačka je vypnutá.';
+  if (!zone.params.allowAdults && !withChild) return 'Koulovačka je pro děti – dva dospělí jen s parametrem allowAdults.';
   const c = centre(zone);
   if (!h.isSnow(c)) return 'V zóně není sníh.';
   if (h.state.sessions?.some((s) => s.zoneId === zone.id)) return 'V zóně se už hraje.';
@@ -63,14 +64,14 @@ export function fightZoneProblem(h: Pick<SessionHost, 'state' | 'isSnow'>, zone:
 }
 const centre = (z: ActivityZone): Vec2 => ({ x: z.bounds.reduce((s, p) => s + p.x, 0) / z.bounds.length, y: z.bounds.reduce((s, p) => s + p.y, 0) / z.bounds.length });
 
-export function startFight(h: SessionHost, zone: ActivityZone, a: AgentState, b: AgentState): ActivitySession | null {
-  if (fightZoneProblem(h, zone) || a.holding || b.holding) return null;
+export function startFight(h: SessionHost, zone: ActivityZone, a: AgentState, b: AgentState, withChild = false): ActivitySession | null {
+  if (fightZoneProblem(h, zone, withChild) || a.holding || b.holding) return null;
   const cam = cameraFor(h.project.scene), C = toWorld(cam, centre(zone)), now = h.time();
   const gap = 1.3 + rand(a.rng) * 0.6; // odstup 2,6–3,8 m
   const spots: [Vec2, Vec2] = [toScreen(cam, { X: C.X - gap, Z: C.Z }), toScreen(cam, { X: C.X + gap, Z: C.Z + 0.3 })];
   const s = createSession(h.state, h.res, {
     type: 'snowballFight', zoneId: zone.id, participantIds: [a.id, b.id], roles: { [a.id]: 'player', [b.id]: 'player' },
-    keys: [`zone:${zone.id}`], now, deadline: now + 45 + Math.max(Math.hypot(a.pos.x - spots[0].x, a.pos.y - spots[0].y), Math.hypot(b.pos.x - spots[1].x, b.pos.y - spots[1].y)) / 40,
+    keys: [`zone:${zone.id}`], now, deadline: now + 45 + gatherTime(h, [a, b], spots[0]),
     seed: h.project.seed, phase: 'gather', data: { spots, roles: [a.id, b.id], throws: 4 + Math.floor(rand(a.rng) * 5), done: 0, thrower: 0, until: 0, blockedSince: null, ballId: null } as unknown as Record<string, unknown>,
   });
   if (!s) return null;

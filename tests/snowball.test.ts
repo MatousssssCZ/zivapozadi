@@ -28,9 +28,10 @@ function setup(allowAdults: boolean) {
 }
 
 describe('koulovačka', () => {
-  it('bez dětských podkladů je start zamítnut s konkrétním důvodem', () => {
+  it('dva dospělí bez povolení: start zamítnut s konkrétním důvodem', () => {
     const { sim, zone, a, b } = setup(false);
-    expect(fightZoneProblem(sim.sessionHost(), zone)).toMatch(/dětské postavy/);
+    expect(fightZoneProblem(sim.sessionHost(), zone)).toMatch(/pro děti/);
+    expect(fightZoneProblem(sim.sessionHost(), zone, true)).toBeNull(); // s dítětem lze
     expect(startFight(sim.sessionHost(), zone, a, b)).toBeNull();
     expect(sim.state.sessions ?? []).toEqual([]);
   });

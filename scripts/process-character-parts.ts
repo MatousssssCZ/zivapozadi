@@ -16,16 +16,23 @@ import type { PartLibrary, PartDef, VariantDef, PartSlot, BodyTemplateDef, Group
 import { testFigureManifest, type CharacterManifest } from '../src/core/anim/manifest';
 
 // Archy dílů: šikmo zepředu (schválená reference v2) a šikmo zezadu (stejný styl a měřítko).
-const OUT = path.resolve('resources/builtin/painted-parts-cg');
+/** Dospělý (výchozí) nebo dítě (`--child`, arch z balíku grafika/ziva-pozadi). */
+const CHILD = process.argv.includes('--child');
+const OUT = path.resolve(CHILD ? 'resources/builtin/painted-parts-child' : 'resources/builtin/painted-parts-cg');
 const P = 4; // px na jednotku ve výstupu
 type SheetView = 'front3q' | 'back3q';
 const ALL_PAL = ['petrolejova', 'vinova', 'okrova', 'olivova', 'kremova', 'hneda', 'tmave-seda'];
 type V = { x: number; y: number };
 
 // Šablona dospělého podle schválené reference v2 (~7 hlav): délky kostí v jednotkách (postava 130).
-const BONES = { thigh: 32, shin: 30, ankleHeight: 3, torso: 43, neck: 13, shoulderDrop: 4, upperArm: 24, forearm: 21 };
+const BONES = CHILD
+  // dítě ~7 let (1,2 m ≈ 89 j.): kratší končetiny a trup, relativně větší hlava
+  ? { thigh: 20, shin: 18.5, ankleHeight: 2.5, torso: 27, neck: 8.5, shoulderDrop: 3, upperArm: 15, forearm: 13 }
+  : { thigh: 32, shin: 30, ankleHeight: 3, torso: 43, neck: 13, shoulderDrop: 4, upperArm: 24, forearm: 21 };
+/** Rozměry dílů v jednotkách: výška hlavy (temeno–brada), palčák, bota, šířka šály, kabát pod pánví. */
+const DIM = CHILD ? { head: 15.5, hand: 7.5, foot: 7.4, scarf: 15, coatTail: 9 } : { head: 18, hand: 11, foot: 9.8, scarf: 21, coatTail: 18 };
 
-interface Cut { name: string; slot: PartSlot; box: [number, number, number, number]; view?: SheetView }
+interface Cut { name: string; slot: PartSlot; box: [number, number, number, number]; view?: SheetView; /** zrcadlit (díl nakreslený obráceně) */ flip?: boolean }
 const CUTS_BACK: Cut[] = [
   { name: 'hlava', slot: 'head', box: [70, 118, 267, 384] },
   { name: 'kabat-trup', slot: 'torso', box: [347, 50, 582, 471] },
@@ -38,7 +45,19 @@ const CUTS_BACK: Cut[] = [
   { name: 'kulich', slot: 'hat', box: [901, 583, 1139, 846] },
   { name: 'sala', slot: 'scarf', box: [1200, 601, 1443, 750] },
 ];
-const SHEETS: { src: string; view: SheetView; cuts: () => Cut[] }[] = [
+/** Výřezy dítěte z atlasu balíku (x, y, w, h → box). */
+const childCuts = (side: 'front' | 'back'): Cut[] => {
+  const R: Record<string, [number, number, number, number]> = side === 'front'
+    ? { head: [12, 150, 206, 248], hat: [215, 101, 202, 211], scarf: [420, 147, 188, 283], torso: [21, 432, 234, 360], upper_arm: [255, 506, 99, 236], forearm: [372, 513, 94, 230], mitten: [490, 536, 129, 178], thigh: [29, 845, 130, 288], shin: [177, 853, 105, 280], boot: [296, 937, 194, 196] }
+    : { head: [642, 129, 205, 266], hat: [842, 101, 200, 219], scarf: [1047, 146, 192, 281], torso: [637, 431, 245, 365], upper_arm: [882, 507, 96, 235], forearm: [999, 514, 120, 230], mitten: [1117, 536, 118, 179], thigh: [659, 845, 129, 287], shin: [807, 854, 103, 278], boot: [923, 939, 194, 194] };
+  const slot: Record<string, [PartSlot, string]> = { head: ['head', 'hlava'], hat: ['hat', 'kulich'], scarf: ['scarf', 'sala'], torso: ['torso', 'kabat-trup'], upper_arm: ['upperArm', 'kabat-nadlokti'], forearm: ['forearm', 'kabat-predlokti'], mitten: ['hand', 'palcak'], thigh: ['thigh', 'kalhoty-stehno'], shin: ['shin', 'kalhoty-lytko'], boot: ['foot', 'bota'] };
+  // bota zezadu je v archu nakreslená špičkou doleva (chůze šikmo zezadu jde doprava) – zrcadlit
+  return Object.entries(R).map(([k, [x, y, w, h]]) => ({ name: slot[k][1], slot: slot[k][0], box: [x, y, x + w, y + h], flip: side === 'back' && k === 'boot' }));
+};
+const SHEETS: { src: string; view: SheetView; cuts: () => Cut[] }[] = CHILD ? [
+  { src: 'grafika/ziva-pozadi/assets/child_parts.png', view: 'front3q', cuts: () => childCuts('front') },
+  { src: 'grafika/ziva-pozadi/assets/child_parts.png', view: 'back3q', cuts: () => childCuts('back') },
+] : [
   { src: 'grafika/zdroje/postava-dily-3q-zepredu-v1.webp', view: 'front3q', cuts: () => CUTS },
   { src: 'grafika/zdroje/postava-dily-3q-zezadu-v1.webp', view: 'back3q', cuts: () => CUTS_BACK },
 ];
@@ -61,7 +80,9 @@ function extract(sheet: Canvas, cut: Cut, margin = 8): Part {
   const [x0, y0, x1, y1] = cut.box;
   const w = x1 - x0 + 1 + margin * 2, h = y1 - y0 + 1 + margin * 2;
   const c = createCanvas(w, h); const ctx = c.getContext('2d');
+  if (cut.flip) { ctx.translate(w, 0); ctx.scale(-1, 1); }
   ctx.drawImage(sheet, x0, y0, x1 - x0 + 1, y1 - y0 + 1, margin, margin, x1 - x0 + 1, y1 - y0 + 1);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
   const id = ctx.getImageData(0, 0, w, h);
   // vyčištění: šum pozadí pryč, téměř plné pixely plné
   for (let i = 3; i < id.data.length; i += 4) id.data[i] = id.data[i] < 28 ? 0 : id.data[i] > 235 ? 255 : id.data[i];
@@ -119,7 +140,7 @@ const avgOver = (f: (y: number) => number, a: number, b: number) => { let s = 0,
 interface Measure { k: number; kx?: number; pivot: V; anchors: Record<string, V>; boneDir: number; info: string }
 
 /** Cílové šířky končetin podle reference v2 (jednotky) – sjednocení tloušťky navazujících dílů. */
-const WIDTH: Partial<Record<PartSlot, number>> = { upperArm: 8.6, forearm: 7.9, thigh: 10.2, shin: 9.4 };
+const WIDTH: Partial<Record<PartSlot, number>> = CHILD ? { upperArm: 6.6, forearm: 6.0, thigh: 8.0, shin: 7.2 } : { upperArm: 8.6, forearm: 7.9, thigh: 10.2, shin: 9.4 };
 
 function measure(p: Part, ctx: { headWidthU?: number; neckWidthU?: number; frontHeadWidthU?: number; frontSoleU?: number }): Measure {
   const r = rows(p); const H = r.bottom - r.top;
@@ -153,12 +174,12 @@ function measure(p: Part, ctx: { headWidthU?: number; neckWidthU?: number; front
       return { k, kx: (WIDTH.shin! * P) / wAvg(0.3, 0.7), pivot, anchors: { end }, boneDir: Math.PI / 2, info: `šířka ${(wAvg(0.3, 0.7) * k / P).toFixed(1)} j.` };
     }
     case 'hand': {
-      const k = (11 * P) / H;
+      const k = (DIM.hand * P) / H;
       const pivot = { x: t10(0, 0.08), y: r.top + (2 * P) / k };
       return { k, pivot, anchors: { grip: { x: t10(0.05, 0.15), y: r.top + H * 0.58 } }, boneDir: Math.PI / 2, info: '' };
     }
     case 'foot': {
-      let k = (9.8 * P) / H;
+      let k = (DIM.foot * P) / H;
       const shaft = t10(0.05, 0.3);
       // skutečná podrážka: pata = nejzadnější bod spodních řádků, přednoží = 85 % délky ke špičce
       let sl = p.w, sr = 0; for (let y = Math.round(r.bottom - H * 0.12); y <= r.bottom; y++) { if (r.L[y] >= 0) { sl = Math.min(sl, r.L[y]); sr = Math.max(sr, r.R[y]); } }
@@ -171,7 +192,7 @@ function measure(p: Part, ctx: { headWidthU?: number; neckWidthU?: number; front
     }
     case 'torso': {
       const neckY = r.top + H * 0.07;
-      const pelvisY = neckY + (r.bottom - neckY) * (BONES.torso / (BONES.torso + 18));
+      const pelvisY = neckY + (r.bottom - neckY) * (BONES.torso / (BONES.torso + DIM.coatTail));
       const k = (BONES.torso * P) / (pelvisY - neckY);
       const neckX = t10(0, 0.06);
       const pivot = { x: r.cx(Math.round(pelvisY)), y: pelvisY };
@@ -182,10 +203,10 @@ function measure(p: Part, ctx: { headWidthU?: number; neckWidthU?: number; front
       // brada = místo, kde se od spodu (krk) náhle rozšíří obrys
       const neckW = avgOver(r.width, r.bottom - H * 0.08, r.bottom - 2);
       let chin = r.bottom; for (let y = r.bottom - 2; y > r.top; y--) if (r.width(y) > neckW * 1.35) { chin = y; break; }
-      let k = (18 * P) / (chin - r.top);
+      let k = (DIM.head * P) / (chin - r.top);
       let wide = r.top; for (let y = r.top; y < chin; y++) if (r.width(y) > r.width(wide)) wide = y;
       // zezadu není brada vidět: měřítko podle šířky hlavy z pohledu zepředu, „brada“ = 18 j. pod temenem
-      if (p.cut.view === 'back3q' && ctx.frontHeadWidthU) { k = (ctx.frontHeadWidthU * P) / r.width(wide); chin = Math.min(r.bottom - 2, r.top + (18 * P) / k); }
+      if (p.cut.view === 'back3q' && ctx.frontHeadWidthU) { k = (ctx.frontHeadWidthU * P) / r.width(wide); chin = Math.min(r.bottom - 2, r.top + (DIM.head * P) / k); }
       ctx.headWidthU = (r.width(wide) * k) / P; ctx.neckWidthU = (neckW * k) / P;
       if (p.cut.view !== 'back3q') ctx.frontHeadWidthU = ctx.headWidthU;
       const pivot = { x: avgOver(r.cx, r.bottom - H * 0.08, r.bottom - 2), y: r.bottom - (1.5 * P) / k };
@@ -201,11 +222,11 @@ function measure(p: Part, ctx: { headWidthU?: number; neckWidthU?: number; front
     case 'scarf': {
       if (!p.hole) {
         // zezadu: smyčka bez otvoru – krk prochází asi ve 40 % výšky smyčky
-        const k = (21 * P) / p.w;
+        const k = (DIM.scarf * P) / p.w;
         return { k, pivot: { x: avgOver(r.cx, r.top, r.top + H * 0.5), y: r.top + H * 0.4 }, anchors: {}, boneDir: -Math.PI / 2, info: `smyčka zezadu, šířka ${(p.w * k / P).toFixed(1)} j.` };
       }
       const hole = p.hole!;
-      const k = (21 * P) / p.w; // šířka šály podle reference (krk prosvítá otvorem)
+      const k = (DIM.scarf * P) / p.w; // šířka šály podle reference (krk prosvítá otvorem)
       return { k, pivot: { x: hole.x, y: hole.y }, anchors: {}, boneDir: -Math.PI / 2, info: `otvor ${(hole.w * k / P).toFixed(1)} j., šířka ${(p.w * k / P).toFixed(1)} j.` };
     }
   }
@@ -241,7 +262,8 @@ function makeMask(c: Canvas, slot: PartSlot): { mask: Canvas | null; brighten: n
     // šedá látka má nízkou sytost (chroma); krémové prvky (bambule, proužky) a pleť ji mají vyšší
     const chroma = mx - mn;
     const dark = l < 0.36 && !(slot === 'scarf' && chroma < 12); // knoflíky, podrážky, otvory
-    if (chroma < 24 && !dark) { md.data[i] = md.data[i + 1] = md.data[i + 2] = 255; md.data[i + 3] = d[i + 3]; sumL += l; n++; }
+    // dětský arch je krémový (teplejší) – látka má vyšší chroma než šedý arch dospělého
+    if (chroma < (CHILD ? 46 : 24) && !dark) { md.data[i] = md.data[i + 1] = md.data[i + 2] = 255; md.data[i + 3] = d[i + 3]; sumL += l; n++; }
   }
   mctx.putImageData(md, 0, 0);
   // Podklad pro násobení barvou: střední jas ~0,84 a poloviční kontrast (jinak světlé tahy po obarvení
@@ -344,7 +366,8 @@ async function main() {
   const order: PartSlot[] = ['head', 'torso', 'upperArm', 'forearm', 'hand', 'thigh', 'shin', 'foot', 'hat', 'scarf'];
   const measured = new Map<string, { part: PartDef; meas: Measure }>();
   const groupOf: Record<PartSlot, GroupId> = { head: 'head', torso: 'jacket', upperArm: 'jacket', forearm: 'jacket', hand: 'gloves', thigh: 'trousers', shin: 'trousers', foot: 'boots', hat: 'hat', scarf: 'scarf' };
-  const variantOf: Record<GroupId, string> = { head: 'head_cg', jacket: 'jacket_coat_cg', gloves: 'gloves_cg', trousers: 'trousers_cg', boots: 'boots_cg', hat: 'hat_beanie_cg', scarf: 'scarf_long_cg' };
+  const SUF = CHILD ? '_child' : '_cg', BODY = CHILD ? 'child-cg' : 'adult-cg';
+  const variantOf: Record<GroupId, string> = { head: 'head' + SUF, jacket: 'jacket_coat' + SUF, gloves: 'gloves' + SUF, trousers: 'trousers' + SUF, boots: 'boots' + SUF, hat: 'hat_beanie' + SUF, scarf: 'scarf_long' + SUF };
   const palOf: Record<GroupId, string[]> = { head: [], jacket: ALL_PAL, gloves: ALL_PAL, trousers: ['tmave-seda', 'hneda', 'olivova'], boots: ['hneda', 'tmave-seda'], hat: ALL_PAL, scarf: ALL_PAL };
   const report: string[] = [];
   const artFixes: { ref: string; issue: string }[] = [];
@@ -375,7 +398,7 @@ async function main() {
       id: `${variantOf[g]}.${slot}.${VIEW}`, slot, variantId: variantOf[g], view: VIEW, texture: file, mask: mask ? file.replace('.png', '.maska.png') : undefined,
       sourceSize: { w: sc.width, h: sc.height }, trim, pivot: tp(meas.pivot),
       anchors: Object.fromEntries(Object.entries(meas.anchors).map(([k, v]) => [k, tp(v)])),
-      boneDir: meas.boneDir, layerOrder: 0, compatibleBodyTypes: ['adult-cg'], compatibilityTags: [], paletteOptions: mask ? palOf[g] : [],
+      boneDir: meas.boneDir, layerOrder: 0, compatibleBodyTypes: [BODY], compatibilityTags: [], paletteOptions: mask ? palOf[g] : [],
       mirrorSafe: true, provisional: false,
     };
     measured.set(`${VIEW}|${slot}`, { part, meas });
@@ -399,14 +422,15 @@ async function main() {
   // zepředu: kelímek pod palčákem (ruka ho obepíná), zbytek blízké paže přes něj
   const order3q = ['far.hand', 'far.forearm', 'far.upperArm', 'far.foot', 'far.shin', 'far.thigh', 'near.foot', 'near.shin', 'near.thigh', 'torso', 'head', 'hat', 'scarf', 'held', 'near.hand', 'near.forearm', 'near.upperArm'];
   const tpl: BodyTemplateDef = {
-    id: 'adult-cg', label: 'Dospělý (reference v2)', height: 130, bones: BONES,
+    id: BODY, label: CHILD ? 'Dítě (~7 let, balík Liberec)' : 'Dospělý (reference v2)', height: CHILD ? 89 : 130, bones: BONES,
     views: {
       front3q: { forward: { x: 0.72, y: 0.3 }, hipSpread, shoulderSpread, headOffsetX: 0, shoulderOffsetX, nearSide: -1 },
       // šikmo zezadu: postava jde doprava a od kamery, blízký (pravý) bok je vpravo
       back3q: { forward: { x: 0.72, y: -0.3 }, hipSpread: gb.hipSpread, shoulderSpread: gb.shoulderSpread, headOffsetX: 0, shoulderOffsetX: gb.shoulderOffsetX, nearSide: 1 },
     },
-    gait: { strideLength: 100, stanceFraction: 0.58, stepLift: 6.5, armSwing: 0.36, maxDip: 2.2, sway: 1.1, lean: 0.035 },
-    idle: { breathe: 0.5, headAmp: 0.02, shiftAmp: 1.4, shiftPeriod: 7.5 },
+    // dítě: krok úměrný délce nohy (38,5 / 62 dospělého)
+    gait: CHILD ? { strideLength: 62, stanceFraction: 0.58, stepLift: 4, armSwing: 0.4, maxDip: 1.4, sway: 0.7, lean: 0.03 } : { strideLength: 100, stanceFraction: 0.58, stepLift: 6.5, armSwing: 0.36, maxDip: 2.2, sway: 1.1, lean: 0.035 },
+    idle: CHILD ? { breathe: 0.35, headAmp: 0.025, shiftAmp: 0.9, shiftPeriod: 5.5 } : { breathe: 0.5, headAmp: 0.02, shiftAmp: 1.4, shiftPeriod: 7.5 },
     proportions: { height: [0.95, 1.05], build: [0.95, 1.05] },
     motionRanges: { strideScale: [0.9, 1.1], armSwing: [0.65, 1.35], bob: [0.8, 1.2], sway: [0.75, 1.25], idleTempo: [0.85, 1.15], lean: [0, 3], speed: [0.85, 1.25], armLag: [-2, 4], armLR: [0.85, 1.15] },
     availableViews: ['front3q', 'back3q'],
@@ -416,9 +440,9 @@ async function main() {
     farShade: 0.82,
     foot: footGeom,
   };
-  const V = (id: string, group: GroupId, label: string, extra: Partial<VariantDef> = {}): VariantDef => ({ id, group, label, compatibleBodyTypes: ['adult-cg'], tags: [], excludesTags: [], requiresAnchors: [], paletteOptions: palOf[group], provisional: false, ...extra });
+  const V = (id: string, group: GroupId, label: string, extra: Partial<VariantDef> = {}): VariantDef => ({ id, group, label, compatibleBodyTypes: [BODY], tags: [], excludesTags: [], requiresAnchors: [], paletteOptions: palOf[group], provisional: false, ...extra });
   const lib: PartLibrary = {
-    format: 'zive-obrazy-dily', formatVersion: 1, id: 'malovane-cg-v1', label: 'Malované díly (ChatGPT, šikmo zepředu a zezadu)', provisional: false, pxPerUnit: P,
+    format: 'zive-obrazy-dily', formatVersion: 1, id: CHILD ? 'malovane-dite-v1' : 'malovane-cg-v1', label: CHILD ? 'Malované díly – dítě (ChatGPT, balík Liberec)' : 'Malované díly (ChatGPT, šikmo zepředu a zezadu)', provisional: false, pxPerUnit: P,
     palettes: [
       { id: 'petrolejova', label: 'Petrolejová', color: '#2f6b70' }, { id: 'vinova', label: 'Vínová', color: '#7a2e3b' },
       { id: 'okrova', label: 'Okrová', color: '#c08a2e' }, { id: 'olivova', label: 'Olivová', color: '#6b7340' },
@@ -436,9 +460,9 @@ async function main() {
       { id: 'head', label: 'Hlava', slots: ['head'], colorRule: 'fixedOptions', userSelectable: false },
     ],
     variants: [
-      V('jacket_coat_cg', 'jacket', 'Dlouhý kabát'), V('hat_beanie_cg', 'hat', 'Kulich s bambulí', { requiresAnchors: [{ slot: 'head', anchor: 'hat' }] }),
-      V('scarf_long_cg', 'scarf', 'Pletená šála', { requiresAnchors: [{ slot: 'torso', anchor: 'scarf' }] }),
-      V('trousers_cg', 'trousers', 'Kalhoty'), V('boots_cg', 'boots', 'Zimní boty'), V('gloves_cg', 'gloves', 'Palčáky'), V('head_cg', 'head', 'Hlava (dospělý)'),
+      V(variantOf.jacket, 'jacket', CHILD ? 'Dětský kabátek' : 'Dlouhý kabát'), V(variantOf.hat, 'hat', 'Kulich s bambulí', { requiresAnchors: [{ slot: 'head', anchor: 'hat' }] }),
+      V(variantOf.scarf, 'scarf', 'Pletená šála', { requiresAnchors: [{ slot: 'torso', anchor: 'scarf' }] }),
+      V(variantOf.trousers, 'trousers', 'Kalhoty'), V(variantOf.boots, 'boots', 'Zimní boty'), V(variantOf.gloves, 'gloves', 'Palčáky'), V(variantOf.head, 'head', CHILD ? 'Hlava (dítě)' : 'Hlava (dospělý)'),
     ],
     parts: [...measured.values()].map((m) => m.part),
     artIssues: [
@@ -456,12 +480,14 @@ async function main() {
     ...base, id: 'painted-cg', name: 'Malovaná postava (ChatGPT díly)', provisional: false, backend: 'skeleton',
     clips: { ...base.clips, walk: { ...base.clips.walk, strideLength: tpl.gait.strideLength } },
     directions: ['SE', 'NE'], directionFallbacks: { E: { use: 'SE', mirror: false }, S: { use: 'SE', mirror: false }, N: { use: 'NE', mirror: false }, W: { use: 'SE', mirror: true }, SW: { use: 'SE', mirror: true }, NW: { use: 'NE', mirror: true } },
-    attachPoints: {}, rig: { library: 'painted-parts-cg/library.json', bodyTemplate: 'adult-cg' },
+    attachPoints: {}, rig: { library: CHILD ? 'painted-parts-child/library.json' : 'painted-parts-cg/library.json', bodyTemplate: BODY },
   };
-  await fs.writeFile(path.resolve('resources/builtin/malovana-postava-cg.json'), JSON.stringify(manifest, null, 2));
+  await fs.writeFile(path.resolve(CHILD ? 'resources/builtin/malovana-postava-dite.json' : 'resources/builtin/malovana-postava-cg.json'), JSON.stringify(manifest, null, 2));
   const bj = JSON.parse(await fs.readFile('resources/builtin/builtin.json', 'utf8'));
-  bj.assets = bj.assets.filter((x: { id: string }) => x.id !== 'builtin_postava_cg');
-  bj.assets.push({ id: 'builtin_postava_cg', kind: 'character', name: 'Malovaná postava – díly z ChatGPT', file: 'malovana-postava-cg.json', includeDir: 'painted-parts-cg' });
+  const AID = CHILD ? 'builtin_postava_dite' : 'builtin_postava_cg';
+  bj.assets = bj.assets.filter((x: { id: string }) => x.id !== AID);
+  if (CHILD) bj.assets.push({ id: AID, kind: 'character', name: 'Malované dítě – díly z ChatGPT', file: 'malovana-postava-dite.json', includeDir: 'painted-parts-child' });
+  else bj.assets.push({ id: 'builtin_postava_cg', kind: 'character', name: 'Malovaná postava – díly z ChatGPT', file: 'malovana-postava-cg.json', includeDir: 'painted-parts-cg' });
   await fs.writeFile('resources/builtin/builtin.json', JSON.stringify(bj, null, 2));
   console.log(report.join('\n'));
   console.log(`šablona: ramena ±${shoulderSpread} (posun ${shoulderOffsetX}), kyčle ±${hipSpread}`);

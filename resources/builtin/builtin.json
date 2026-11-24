@@ -400,6 +400,13 @@
       "provisional": true
     },
     {
+      "id": "builtin_postava_dite",
+      "kind": "character",
+      "name": "Malované dítě – díly z ChatGPT",
+      "file": "malovana-postava-dite.json",
+      "includeDir": "painted-parts-child"
+    },
+    {
       "id": "builtin_postava_cg",
       "kind": "character",
       "name": "Malovaná postava – díly z ChatGPT",

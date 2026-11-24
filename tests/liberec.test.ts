@@ -21,7 +21,7 @@ describe('Liberec – živý trh', () => {
     expect(p.objects.filter((o) => o.seller).length).toBe(6);
     expect(p.objects.filter((o) => o.name === 'Lampa').length).toBe(4);
     const sim = Simulation.create(p, lp.manifests);
-    expect(sim.diagnostics.filter((d) => d.level !== 'info')).toEqual([]);
+    expect(sim.diagnostics).toEqual([]);
     // perspektiva konceptu: dospělý u y 0,90 má 0,23 výšky obrazu
     const d = p.scene.depth, s = d.scaleFar + ((972 - d.yFar) * (d.scaleNear - d.scaleFar)) / (d.yNear - d.yFar);
     expect(Math.abs((s * 130) / 1080 - 0.23)).toBeLessThan(0.005);
@@ -39,6 +39,10 @@ describe('Liberec – živý trh', () => {
     }
     const msgs = sim.state.log.map((l) => l.msg);
     expect(msgs.filter((m) => m.includes('nakoupil')).length).toBeGreaterThan(5);
+    // rodiny: dítě (dětská šablona, ~70 % výšky) chodí s rodičem a občas si jdou hrát na sníh
+    const kids = sim.state.agents.filter((a) => sim.isChild(a));
+    expect(kids.length).toBe(5);
+    expect(msgs.some((m) => m.includes('jde s dítětem'))).toBe(true);
     expect(sim.state.agents.filter((a) => (a.stuckT ?? 0) > 20).map((a) => a.name)).toEqual([]);
     expect(minD).toBeGreaterThan(2 * R_BODY - 0.02);
   }, 180000);

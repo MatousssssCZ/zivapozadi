@@ -59,7 +59,7 @@ export async function generateLiberec(dir: string): Promise<ProjectFile> {
   p.scene.depth = { enabled: true, yFar: 640, scaleFar: Math.round(sc(640 / SH) * 1000) / 1000, yNear: 1080, scaleNear: Math.round(sc(1) * 1000) / 1000 };
   p.scene.snowfall = { enabled: true, density: 0.55, wind: 0.15 };
   p.scene.environment = { variableSnow: true, gusts: true, cupSteam: true, stallSteam: true, sources: [] };
-  for (const id of ['builtin_kos', 'builtin_kos_vika', 'builtin_postava_cg']) await addBuiltinAsset('resources/builtin', dir, p, id);
+  for (const id of ['builtin_kos', 'builtin_kos_vika', 'builtin_postava_cg', 'builtin_postava_dite']) await addBuiltinAsset('resources/builtin', dir, p, id);
 
   const rect = (x0: number, y0: number, x1: number, y1: number): Vec2[] => [{ x: x0, y: y0 }, { x: x1, y: y0 }, { x: x1, y: y1 }, { x: x0, y: y1 }];
   const px = (q: [number, number]): Vec2 => ({ x: Math.round(q[0] * SW), y: Math.round(q[1] * SH) });
@@ -168,6 +168,8 @@ export async function generateLiberec(dir: string): Promise<ProjectFile> {
   p.areas = [
     { id: 'area_snih_l', name: 'Sníh vlevo', kind: 'snow', polygon: [{ x: 0, y: 600 }, { x: 880, y: 612 }, { x: 800, y: 1080 }, { x: 0, y: 1080 }] },
     { id: 'area_snih_p', name: 'Sníh vpravo', kind: 'snow', polygon: [{ x: 1040, y: 612 }, { x: 1920, y: 600 }, { x: 1920, y: 1080 }, { x: 1560, y: 1080 }] },
+    // dětský sníh (v konceptu sněhová plocha vpravo od středu, kde děti staví sněhuláka)
+    { id: 'area_snih_deti', name: 'Dětský sníh', kind: 'snow', polygon: cfg.zones.find((z) => z.id === 'snow_play')!.polygon.map((q, i) => { const P = px(q); return { x: P.x + (i === 0 || i === 3 ? -60 : 60), y: P.y + (i < 2 ? -25 : 25) }; }) },
   ];
 
   // ------------------------------------------------------------------ zóny
@@ -195,6 +197,19 @@ export async function generateLiberec(dir: string): Promise<ProjectFile> {
     walkSpeed: Math.round(60 * app.motion.speed * 10) / 10, palette: testPal, wander: true, appearance: app, routine: 'visitor',
     activities: { coffee: { enabled: true, firstDelayMin: 4 + i * 6, firstDelayMax: 10 + i * 6, intervalMin: 70, intervalMax: 160 } },
   }));
+  // rodiny: 5 dětí chodí po boku rodiče (stálá dvojice – dítě následuje)
+  const childLib = JSON.parse(await fs.readFile('resources/builtin/painted-parts-child/library.json', 'utf8')) as PartLibrary;
+  const kids = generateGroup(childLib, 5, 777).appearances;
+  const kidNames = ['Adámek', 'Bětka', 'Kubík', 'Majda', 'Toník'];
+  const parents = ['ch_2', 'ch_5', 'ch_9', 'ch_14', 'ch_20'];
+  kids.forEach((app, i) => {
+    const par = p.characters.find((c) => c.id === parents[i])!;
+    p.characters.push({
+      id: `kid_${i + 1}`, name: kidNames[i], assetId: 'builtin_postava_dite', startNodeId: par.startNodeId, baseScale: 1,
+      walkSpeed: par.walkSpeed, palette: testPal, wander: true, appearance: app, routine: 'visitor', activities: {},
+      companionId: par.id, companionSide: i % 2 ? 1 : -1,
+    });
+  });
   p.export = { ...p.export, durationSec: 60, chunkSec: 20 };
   await saveProject(dir, p);
   return p;

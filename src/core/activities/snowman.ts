@@ -53,6 +53,7 @@ export const snowmanParticipant: ActivityRunner = {
     const s = ctx.state.sessions?.find((x) => x.id === (run.data as { sessionId?: string }).sessionId);
     if (!s) return 'done';
     run.phase = s.phase;
+    agent.status = snowmanDefinition.phases.find((p) => s.phase.startsWith(p.id))?.label ?? 'Staví sněhuláka';
     return 'running';
   },
   abort() { /* session ukončí simulace (abortSnowman) */ },
@@ -79,7 +80,11 @@ interface SnowmanData {
   ball?: Ball | null; path?: Vec2[]; until?: number; step?: string; decor?: number;
   liftFrom?: World; liftT0?: number; liftDur?: number;
 }
-const dist2 = (p: Vec2, q: Vec2) => Math.hypot(p.x - q.x, p.y - q.y);
+/** Čas cesty na místo (s): skutečná vzdálenost ve světě (v hlubokém náměstí je pixel vzadu mnoho metrů), 0,5 m/s s rezervou na objížďky a šikmé trasy. */
+export function gatherTime(h: Pick<SessionHost, 'project'>, who: AgentState[], to: Vec2): number {
+  const c = cameraFor(h.project.scene), T = toWorld(c, to);
+  return Math.max(...who.map((a) => { const P = toWorld(c, a.pos); return Math.hypot(P.X - T.X, P.Z - T.Z) / 0.5; }));
+}
 const D = (s: ActivitySession) => s.data as unknown as SnowmanData;
 
 /** Střed zóny a test, zda je zóna použitelná (sníh, žádný sněhulák, nikdo v ní nestaví). */
@@ -105,7 +110,7 @@ export function startSnowman(host: SessionHost, zone: ActivityZone, a: AgentStat
   const s = createSession(host.state, host.res, {
     type: 'snowman', zoneId: zone.id, participantIds: [a.id, b.id], roles: { [a.id]: 'lead', [b.id]: 'helper' },
     // sejití: 45 s + čas cesty toho vzdálenějšího (oba už jsou u zóny – setkání bylo u ní)
-    keys: [`zone:${zone.id}`], now, deadline: now + 45 + Math.max(dist2(a.pos, spot), dist2(b.pos, spot)) / 40, seed: host.project.seed, phase: 'gather',
+    keys: [`zone:${zone.id}`], now, deadline: now + 45 + gatherTime(host, [a, b], spot), seed: host.project.seed, phase: 'gather',
     data: { spot, objId: `snowman_${zone.id}`, roles: [a.id, b.id] } as unknown as Record<string, unknown>,
   });
   if (!s) return null;

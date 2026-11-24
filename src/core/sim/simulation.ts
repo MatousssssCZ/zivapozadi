@@ -446,9 +446,19 @@ export class Simulation {
       if (r === 'running') continue;
       if (s.type === 'snowman' && r === 'aborted') { this.log('info', 'Stavba sněhuláka se přerušila.'); abortSnowman(h, s); }
       else { this.log('info', s.type === 'snowman' ? 'Sněhulák je hotový.' : r === 'aborted' ? 'Koulovačka se přerušila.' : 'Koulovačka skončila.'); finishSession(h, s); }
+      // dítě (stálá dvojice) se po hře znovu připojí k rodiči
+      for (const id of s.participantIds) {
+        const ch = this.chars.get(id), x = this.state.agents.find((q) => q.id === id);
+        if (ch?.companionId && x && !x.follow) x.rejoin = { leaderId: ch.companionId, side: ch.companionSide === -1 ? -1 : 1, permanent: true };
+      }
       const d = (this.state.director ??= { nextSignificant: 0 });
       d.nextSignificant = t + randRange(this.state.rng, 90, 180);
     }
+  }
+  /** Je postava dítě (dětská šablona těla)? */
+  isChild(a: AgentState): boolean {
+    const c = this.chars.get(a.id);
+    return !!c && (this.manifests[c.assetId]?.rig?.bodyTemplate ?? '').startsWith('child');
   }
   /** Volná zóna pro sněhuláka, pokud režisér zrovna dovolí výraznou událost. */
   private snowmanZoneAvailable(t: number, rnd = 0): { id: string; goal: 'snowman' | 'snowball' } | null {
@@ -967,6 +977,18 @@ export class Simulation {
         if (t < v.until) { a.status = 'Stojí'; return; }
         const r = rand(a.rng);
         const zone = this.coffeeZone(a, c);
+        // rodina s dítětem: občas si jdou na dětský sníh postavit sněhuláka nebo se koulovat
+        const kid = this.state.agents.find((x) => x.follow?.leaderId === a.id && !x.hidden && this.isChild(x));
+        if (kid && !a.holding && (this.state.director?.nextSignificant ?? 0) <= t && !this.state.sessions?.length && rand(a.rng) < 0.55) {
+          const h = this.sessionHost();
+          const zs = this.project.zones.filter((z) => (z.activityType === 'snowman' && !snowmanZoneFree(h, z)) || (z.activityType === 'snowballFight' && !fightZoneProblem(h, z, true)));
+          const z = zs.length ? zs[Math.floor(rand(a.rng) * zs.length)] : null;
+          if (z && (z.activityType === 'snowman' ? startSnowman(h, z, a, kid) : startFight(h, z, kid, a, true))) {
+            a.visit = { mode: 'coffee', until: 0, since: t };
+            this.log('info', `${a.name} jde s dítětem (${kid.name}) ${z.activityType === 'snowman' ? 'stavět sněhuláka' : 'koulovat'}.`, a.id);
+            return;
+          }
+        }
         const friend = r >= 0.75 ? this.pickFriend(a) : null;
         // setkání přátel: spolu na kávu, nebo (vzácně) postavit sněhuláka
         const sm = friend ? this.snowmanZoneAvailable(t, rand(a.rng)) : null, smZone = sm?.id;

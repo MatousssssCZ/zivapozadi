@@ -1,0 +1,1323 @@
+{
+ "format": "zive-obrazy-dily",
+ "formatVersion": 1,
+ "id": "malovane-dite-v1",
+ "label": "Malované díly – dítě (ChatGPT, balík Liberec)",
+ "provisional": false,
+ "pxPerUnit": 4,
+ "palettes": [
+  {
+   "id": "petrolejova",
+   "label": "Petrolejová",
+   "color": "#2f6b70"
+  },
+  {
+   "id": "vinova",
+   "label": "Vínová",
+   "color": "#7a2e3b"
+  },
+  {
+   "id": "okrova",
+   "label": "Okrová",
+   "color": "#c08a2e"
+  },
+  {
+   "id": "olivova",
+   "label": "Olivová",
+   "color": "#6b7340"
+  },
+  {
+   "id": "kremova",
+   "label": "Krémová",
+   "color": "#e3d7bd"
+  },
+  {
+   "id": "hneda",
+   "label": "Hnědá",
+   "color": "#6b4a35"
+  },
+  {
+   "id": "tmave-seda",
+   "label": "Tmavě šedá",
+   "color": "#45484e"
+  }
+ ],
+ "bodyTemplates": [
+  {
+   "id": "child-cg",
+   "label": "Dítě (~7 let, balík Liberec)",
+   "height": 89,
+   "bones": {
+    "thigh": 20,
+    "shin": 18.5,
+    "ankleHeight": 2.5,
+    "torso": 27,
+    "neck": 8.5,
+    "shoulderDrop": 3,
+    "upperArm": 15,
+    "forearm": 13
+   },
+   "views": {
+    "front3q": {
+     "forward": {
+      "x": 0.72,
+      "y": 0.3
+     },
+     "hipSpread": 4.85,
+     "shoulderSpread": 5.83,
+     "headOffsetX": 0,
+     "shoulderOffsetX": 0.34,
+     "nearSide": -1
+    },
+    "back3q": {
+     "forward": {
+      "x": 0.72,
+      "y": -0.3
+     },
+     "hipSpread": 4.69,
+     "shoulderSpread": 5.65,
+     "headOffsetX": 0,
+     "shoulderOffsetX": 0.05,
+     "nearSide": 1
+    }
+   },
+   "gait": {
+    "strideLength": 62,
+    "stanceFraction": 0.58,
+    "stepLift": 4,
+    "armSwing": 0.4,
+    "maxDip": 1.4,
+    "sway": 0.7,
+    "lean": 0.03
+   },
+   "idle": {
+    "breathe": 0.35,
+    "headAmp": 0.025,
+    "shiftAmp": 0.9,
+    "shiftPeriod": 5.5
+   },
+   "proportions": {
+    "height": [
+     0.95,
+     1.05
+    ],
+    "build": [
+     0.95,
+     1.05
+    ]
+   },
+   "motionRanges": {
+    "strideScale": [
+     0.9,
+     1.1
+    ],
+    "armSwing": [
+     0.65,
+     1.35
+    ],
+    "bob": [
+     0.8,
+     1.2
+    ],
+    "sway": [
+     0.75,
+     1.25
+    ],
+    "idleTempo": [
+     0.85,
+     1.15
+    ],
+    "lean": [
+     0,
+     3
+    ],
+    "speed": [
+     0.85,
+     1.25
+    ],
+    "armLag": [
+     -2,
+     4
+    ],
+    "armLR": [
+     0.85,
+     1.15
+    ]
+   },
+   "availableViews": [
+    "front3q",
+    "back3q"
+   ],
+   "viewFallbacks": {
+    "side": {
+     "use": "front3q"
+    },
+    "front": {
+     "use": "front3q"
+    },
+    "back": {
+     "use": "back3q"
+    }
+   },
+   "drawOrder": {
+    "front3q": [
+     "far.hand",
+     "far.forearm",
+     "far.upperArm",
+     "far.foot",
+     "far.shin",
+     "far.thigh",
+     "near.foot",
+     "near.shin",
+     "near.thigh",
+     "torso",
+     "head",
+     "hat",
+     "scarf",
+     "held",
+     "near.hand",
+     "near.forearm",
+     "near.upperArm"
+    ],
+    "back3q": [
+     "far.hand",
+     "far.forearm",
+     "far.upperArm",
+     "far.foot",
+     "far.shin",
+     "far.thigh",
+     "near.foot",
+     "near.shin",
+     "near.thigh",
+     "held",
+     "torso",
+     "near.hand",
+     "near.forearm",
+     "near.upperArm",
+     "head",
+     "scarf",
+     "hat"
+    ]
+   },
+   "farShade": 0.82,
+   "foot": {
+    "heel": 2.44,
+    "toe": 5.2
+   }
+  }
+ ],
+ "groups": [
+  {
+   "id": "jacket",
+   "label": "Bunda",
+   "slots": [
+    "torso",
+    "upperArm",
+    "forearm"
+   ],
+   "colorRule": "free",
+   "userSelectable": true
+  },
+  {
+   "id": "hat",
+   "label": "Pokrývka hlavy",
+   "slots": [
+    "hat"
+   ],
+   "colorRule": "contrast",
+   "userSelectable": true
+  },
+  {
+   "id": "scarf",
+   "label": "Šála",
+   "slots": [
+    "scarf"
+   ],
+   "colorRule": "contrast",
+   "userSelectable": true
+  },
+  {
+   "id": "trousers",
+   "label": "Kalhoty",
+   "slots": [
+    "thigh",
+    "shin"
+   ],
+   "colorRule": "fixedOptions",
+   "userSelectable": false
+  },
+  {
+   "id": "boots",
+   "label": "Boty",
+   "slots": [
+    "foot"
+   ],
+   "colorRule": "fixedOptions",
+   "userSelectable": false
+  },
+  {
+   "id": "gloves",
+   "label": "Rukavice",
+   "slots": [
+    "hand"
+   ],
+   "colorRule": "matchAccessory",
+   "userSelectable": false
+  },
+  {
+   "id": "head",
+   "label": "Hlava",
+   "slots": [
+    "head"
+   ],
+   "colorRule": "fixedOptions",
+   "userSelectable": false
+  }
+ ],
+ "variants": [
+  {
+   "id": "jacket_coat_child",
+   "group": "jacket",
+   "label": "Dětský kabátek",
+   "compatibleBodyTypes": [
+    "child-cg"
+   ],
+   "tags": [],
+   "excludesTags": [],
+   "requiresAnchors": [],
+   "paletteOptions": [
+    "petrolejova",
+    "vinova",
+    "okrova",
+    "olivova",
+    "kremova",
+    "hneda",
+    "tmave-seda"
+   ],
+   "provisional": false
+  },
+  {
+   "id": "hat_beanie_child",
+   "group": "hat",
+   "label": "Kulich s bambulí",
+   "compatibleBodyTypes": [
+    "child-cg"
+   ],
+   "tags": [],
+   "excludesTags": [],
+   "requiresAnchors": [
+    {
+     "slot": "head",
+     "anchor": "hat"
+    }
+   ],
+   "paletteOptions": [
+    "petrolejova",
+    "vinova",
+    "okrova",
+    "olivova",
+    "kremova",
+    "hneda",
+    "tmave-seda"
+   ],
+   "provisional": false
+  },
+  {
+   "id": "scarf_long_child",
+   "group": "scarf",
+   "label": "Pletená šála",
+   "compatibleBodyTypes": [
+    "child-cg"
+   ],
+   "tags": [],
+   "excludesTags": [],
+   "requiresAnchors": [
+    {
+     "slot": "torso",
+     "anchor": "scarf"
+    }
+   ],
+   "paletteOptions": [
+    "petrolejova",
+    "vinova",
+    "okrova",
+    "olivova",
+    "kremova",
+    "hneda",
+    "tmave-seda"
+   ],
+   "provisional": false
+  },
+  {
+   "id": "trousers_child",
+   "group": "trousers",
+   "label": "Kalhoty",
+   "compatibleBodyTypes": [
+    "child-cg"
+   ],
+   "tags": [],
+   "excludesTags": [],
+   "requiresAnchors": [],
+   "paletteOptions": [
+    "tmave-seda",
+    "hneda",
+    "olivova"
+   ],
+   "provisional": false
+  },
+  {
+   "id": "boots_child",
+   "group": "boots",
+   "label": "Zimní boty",
+   "compatibleBodyTypes": [
+    "child-cg"
+   ],
+   "tags": [],
+   "excludesTags": [],
+   "requiresAnchors": [],
+   "paletteOptions": [
+    "hneda",
+    "tmave-seda"
+   ],
+   "provisional": false
+  },
+  {
+   "id": "gloves_child",
+   "group": "gloves",
+   "label": "Palčáky",
+   "compatibleBodyTypes": [
+    "child-cg"
+   ],
+   "tags": [],
+   "excludesTags": [],
+   "requiresAnchors": [],
+   "paletteOptions": [
+    "petrolejova",
+    "vinova",
+    "okrova",
+    "olivova",
+    "kremova",
+    "hneda",
+    "tmave-seda"
+   ],
+   "provisional": false
+  },
+  {
+   "id": "head_child",
+   "group": "head",
+   "label": "Hlava (dítě)",
+   "compatibleBodyTypes": [
+    "child-cg"
+   ],
+   "tags": [],
+   "excludesTags": [],
+   "requiresAnchors": [],
+   "paletteOptions": [],
+   "provisional": false
+  }
+ ],
+ "parts": [
+  {
+   "id": "head_child.head.front3q",
+   "slot": "head",
+   "variantId": "head_child",
+   "view": "front3q",
+   "texture": "hlava-front3q.png",
+   "sourceSize": {
+    "w": 78,
+    "h": 91
+   },
+   "trim": {
+    "x": 6,
+    "y": 6,
+    "w": 65,
+    "h": 78
+   },
+   "pivot": {
+    "x": 39.98,
+    "y": 76.12
+   },
+   "anchors": {
+    "hat": {
+     "x": 39.34,
+     "y": 21.05
+    }
+   },
+   "boneDir": -1.5707963267948966,
+   "layerOrder": 0,
+   "compatibleBodyTypes": [
+    "child-cg"
+   ],
+   "compatibilityTags": [],
+   "paletteOptions": [],
+   "mirrorSafe": true,
+   "provisional": false
+  },
+  {
+   "id": "jacket_coat_child.torso.front3q",
+   "slot": "torso",
+   "variantId": "jacket_coat_child",
+   "view": "front3q",
+   "texture": "kabat-trup-front3q.png",
+   "mask": "kabat-trup-front3q.maska.png",
+   "sourceSize": {
+    "w": 118,
+    "h": 173
+   },
+   "trim": {
+    "x": 7,
+    "y": 7,
+    "w": 104,
+    "h": 158
+   },
+   "pivot": {
+    "x": 59.33,
+    "y": 127.65
+   },
+   "anchors": {
+    "neck": {
+     "x": 55.55,
+     "y": 19.65
+    },
+    "scarf": {
+     "x": 55.55,
+     "y": 13.65
+    }
+   },
+   "boneDir": -1.5707963267948966,
+   "layerOrder": 0,
+   "compatibleBodyTypes": [
+    "child-cg"
+   ],
+   "compatibilityTags": [],
+   "paletteOptions": [
+    "petrolejova",
+    "vinova",
+    "okrova",
+    "olivova",
+    "kremova",
+    "hneda",
+    "tmave-seda"
+   ],
+   "mirrorSafe": true,
+   "provisional": false
+  },
+  {
+   "id": "jacket_coat_child.upperArm.front3q",
+   "slot": "upperArm",
+   "variantId": "jacket_coat_child",
+   "view": "front3q",
+   "texture": "kabat-nadlokti-front3q.png",
+   "mask": "kabat-nadlokti-front3q.maska.png",
+   "sourceSize": {
+    "w": 45,
+    "h": 101
+   },
+   "trim": {
+    "x": 7,
+    "y": 7,
+    "w": 31,
+    "h": 86
+   },
+   "pivot": {
+    "x": 22.45,
+    "y": 18.02
+   },
+   "anchors": {
+    "end": {
+     "x": 23,
+     "y": 78.02
+    }
+   },
+   "boneDir": 1.5707963267948966,
+   "layerOrder": 0,
+   "compatibleBodyTypes": [
+    "child-cg"
+   ],
+   "compatibilityTags": [],
+   "paletteOptions": [
+    "petrolejova",
+    "vinova",
+    "okrova",
+    "olivova",
+    "kremova",
+    "hneda",
+    "tmave-seda"
+   ],
+   "mirrorSafe": true,
+   "provisional": false
+  },
+  {
+   "id": "jacket_coat_child.forearm.front3q",
+   "slot": "forearm",
+   "variantId": "jacket_coat_child",
+   "view": "front3q",
+   "texture": "kabat-predlokti-front3q.png",
+   "mask": "kabat-predlokti-front3q.maska.png",
+   "sourceSize": {
+    "w": 92,
+    "h": 125
+   },
+   "trim": {
+    "x": 30,
+    "y": 24,
+    "w": 31,
+    "h": 71
+   },
+   "pivot": {
+    "x": 45.4,
+    "y": 37.06
+   },
+   "anchors": {
+    "end": {
+     "x": 46.07,
+     "y": 89.06
+    }
+   },
+   "boneDir": 1.5707963267948966,
+   "layerOrder": 0,
+   "compatibleBodyTypes": [
+    "child-cg"
+   ],
+   "compatibilityTags": [],
+   "paletteOptions": [
+    "petrolejova",
+    "vinova",
+    "okrova",
+    "olivova",
+    "kremova",
+    "hneda",
+    "tmave-seda"
+   ],
+   "mirrorSafe": true,
+   "provisional": false
+  },
+  {
+   "id": "gloves_child.hand.front3q",
+   "slot": "hand",
+   "variantId": "gloves_child",
+   "view": "front3q",
+   "texture": "palcak-front3q.png",
+   "mask": "palcak-front3q.maska.png",
+   "sourceSize": {
+    "w": 34,
+    "h": 43
+   },
+   "trim": {
+    "x": 5,
+    "y": 5,
+    "w": 24,
+    "h": 32
+   },
+   "pivot": {
+    "x": 15.23,
+    "y": 13.93
+   },
+   "anchors": {
+    "grip": {
+     "x": 15.28,
+     "y": 23.33
+    }
+   },
+   "boneDir": 1.5707963267948966,
+   "layerOrder": 0,
+   "compatibleBodyTypes": [
+    "child-cg"
+   ],
+   "compatibilityTags": [],
+   "paletteOptions": [
+    "petrolejova",
+    "vinova",
+    "okrova",
+    "olivova",
+    "kremova",
+    "hneda",
+    "tmave-seda"
+   ],
+   "mirrorSafe": true,
+   "provisional": false
+  },
+  {
+   "id": "trousers_child.thigh.front3q",
+   "slot": "thigh",
+   "variantId": "trousers_child",
+   "view": "front3q",
+   "texture": "kalhoty-stehno-front3q.png",
+   "mask": "kalhoty-stehno-front3q.maska.png",
+   "sourceSize": {
+    "w": 52,
+    "h": 126
+   },
+   "trim": {
+    "x": 6,
+    "y": 7,
+    "w": 39,
+    "h": 111
+   },
+   "pivot": {
+    "x": 25.12,
+    "y": 20.23
+   },
+   "anchors": {
+    "end": {
+     "x": 22.26,
+     "y": 100.23
+    }
+   },
+   "boneDir": 1.5707963267948966,
+   "layerOrder": 0,
+   "compatibleBodyTypes": [
+    "child-cg"
+   ],
+   "compatibilityTags": [],
+   "paletteOptions": [
+    "tmave-seda",
+    "hneda",
+    "olivova"
+   ],
+   "mirrorSafe": true,
+   "provisional": false
+  },
+  {
+   "id": "trousers_child.shin.front3q",
+   "slot": "shin",
+   "variantId": "trousers_child",
+   "view": "front3q",
+   "texture": "kalhoty-lytko-front3q.png",
+   "mask": "kalhoty-lytko-front3q.maska.png",
+   "sourceSize": {
+    "w": 98,
+    "h": 131
+   },
+   "trim": {
+    "x": 30,
+    "y": 22,
+    "w": 37,
+    "h": 78
+   },
+   "pivot": {
+    "x": 48.67,
+    "y": 37
+   },
+   "anchors": {
+    "end": {
+     "x": 45.92,
+     "y": 111
+    }
+   },
+   "boneDir": 1.5707963267948966,
+   "layerOrder": 0,
+   "compatibleBodyTypes": [
+    "child-cg"
+   ],
+   "compatibilityTags": [],
+   "paletteOptions": [
+    "tmave-seda",
+    "hneda",
+    "olivova"
+   ],
+   "mirrorSafe": true,
+   "provisional": false
+  },
+  {
+   "id": "boots_child.foot.front3q",
+   "slot": "foot",
+   "variantId": "boots_child",
+   "view": "front3q",
+   "texture": "bota-front3q.png",
+   "mask": "bota-front3q.maska.png",
+   "sourceSize": {
+    "w": 48,
+    "h": 48
+   },
+   "trim": {
+    "x": 5,
+    "y": 11,
+    "w": 37,
+    "h": 31
+   },
+   "pivot": {
+    "x": 15.82,
+    "y": 31.23
+   },
+   "anchors": {
+    "heel": {
+     "x": 6.05,
+     "y": 41.23
+    },
+    "toe": {
+     "x": 36.63,
+     "y": 41.23
+    }
+   },
+   "boneDir": 0,
+   "layerOrder": 0,
+   "compatibleBodyTypes": [
+    "child-cg"
+   ],
+   "compatibilityTags": [],
+   "paletteOptions": [
+    "hneda",
+    "tmave-seda"
+   ],
+   "mirrorSafe": true,
+   "provisional": false
+  },
+  {
+   "id": "hat_beanie_child.hat.front3q",
+   "slot": "hat",
+   "variantId": "hat_beanie_child",
+   "view": "front3q",
+   "texture": "kulich-front3q.png",
+   "mask": "kulich-front3q.maska.png",
+   "sourceSize": {
+    "w": 88,
+    "h": 91
+   },
+   "trim": {
+    "x": 8,
+    "y": 7,
+    "w": 72,
+    "h": 75
+   },
+   "pivot": {
+    "x": 45.77,
+    "y": 51.73
+   },
+   "anchors": {},
+   "boneDir": -1.5707963267948966,
+   "layerOrder": 0,
+   "compatibleBodyTypes": [
+    "child-cg"
+   ],
+   "compatibilityTags": [],
+   "paletteOptions": [
+    "petrolejova",
+    "vinova",
+    "okrova",
+    "olivova",
+    "kremova",
+    "hneda",
+    "tmave-seda"
+   ],
+   "mirrorSafe": true,
+   "provisional": false
+  },
+  {
+   "id": "scarf_long_child.scarf.front3q",
+   "slot": "scarf",
+   "variantId": "scarf_long_child",
+   "view": "front3q",
+   "texture": "sala-front3q.png",
+   "mask": "sala-front3q.maska.png",
+   "sourceSize": {
+    "w": 68,
+    "h": 96
+   },
+   "trim": {
+    "x": 5,
+    "y": 6,
+    "w": 56,
+    "h": 83
+   },
+   "pivot": {
+    "x": 32.98,
+    "y": 19.67
+   },
+   "anchors": {},
+   "boneDir": -1.5707963267948966,
+   "layerOrder": 0,
+   "compatibleBodyTypes": [
+    "child-cg"
+   ],
+   "compatibilityTags": [],
+   "paletteOptions": [
+    "petrolejova",
+    "vinova",
+    "okrova",
+    "olivova",
+    "kremova",
+    "hneda",
+    "tmave-seda"
+   ],
+   "mirrorSafe": true,
+   "provisional": false
+  },
+  {
+   "id": "head_child.head.back3q",
+   "slot": "head",
+   "variantId": "head_child",
+   "view": "back3q",
+   "texture": "hlava-back3q.png",
+   "sourceSize": {
+    "w": 79,
+    "h": 98
+   },
+   "trim": {
+    "x": 6,
+    "y": 14,
+    "w": 64,
+    "h": 77
+   },
+   "pivot": {
+    "x": 41.03,
+    "y": 83.47
+   },
+   "anchors": {
+    "hat": {
+     "x": 37.87,
+     "y": 28.72
+    }
+   },
+   "boneDir": -1.5707963267948966,
+   "layerOrder": 0,
+   "compatibleBodyTypes": [
+    "child-cg"
+   ],
+   "compatibilityTags": [],
+   "paletteOptions": [],
+   "mirrorSafe": true,
+   "provisional": false
+  },
+  {
+   "id": "jacket_coat_child.torso.back3q",
+   "slot": "torso",
+   "variantId": "jacket_coat_child",
+   "view": "back3q",
+   "texture": "kabat-trup-back3q.png",
+   "mask": "kabat-trup-back3q.maska.png",
+   "sourceSize": {
+    "w": 122,
+    "h": 174
+   },
+   "trim": {
+    "x": 8,
+    "y": 8,
+    "w": 98,
+    "h": 157
+   },
+   "pivot": {
+    "x": 56.48,
+    "y": 127.61
+   },
+   "anchors": {
+    "neck": {
+     "x": 57.13,
+     "y": 19.61
+    },
+    "scarf": {
+     "x": 57.13,
+     "y": 13.61
+    }
+   },
+   "boneDir": -1.5707963267948966,
+   "layerOrder": 0,
+   "compatibleBodyTypes": [
+    "child-cg"
+   ],
+   "compatibilityTags": [],
+   "paletteOptions": [
+    "petrolejova",
+    "vinova",
+    "okrova",
+    "olivova",
+    "kremova",
+    "hneda",
+    "tmave-seda"
+   ],
+   "mirrorSafe": true,
+   "provisional": false
+  },
+  {
+   "id": "jacket_coat_child.upperArm.back3q",
+   "slot": "upperArm",
+   "variantId": "jacket_coat_child",
+   "view": "back3q",
+   "texture": "kabat-nadlokti-back3q.png",
+   "mask": "kabat-nadlokti-back3q.maska.png",
+   "sourceSize": {
+    "w": 44,
+    "h": 101
+   },
+   "trim": {
+    "x": 6,
+    "y": 7,
+    "w": 30,
+    "h": 86
+   },
+   "pivot": {
+    "x": 18.4,
+    "y": 18.02
+   },
+   "anchors": {
+    "end": {
+     "x": 22.28,
+     "y": 78.02
+    }
+   },
+   "boneDir": 1.5707963267948966,
+   "layerOrder": 0,
+   "compatibleBodyTypes": [
+    "child-cg"
+   ],
+   "compatibilityTags": [],
+   "paletteOptions": [
+    "petrolejova",
+    "vinova",
+    "okrova",
+    "olivova",
+    "kremova",
+    "hneda",
+    "tmave-seda"
+   ],
+   "mirrorSafe": true,
+   "provisional": false
+  },
+  {
+   "id": "jacket_coat_child.forearm.back3q",
+   "slot": "forearm",
+   "variantId": "jacket_coat_child",
+   "view": "back3q",
+   "texture": "kabat-predlokti-back3q.png",
+   "mask": "kabat-predlokti-back3q.maska.png",
+   "sourceSize": {
+    "w": 91,
+    "h": 125
+   },
+   "trim": {
+    "x": 30,
+    "y": 27,
+    "w": 31,
+    "h": 68
+   },
+   "pivot": {
+    "x": 41.74,
+    "y": 37.06
+   },
+   "anchors": {
+    "end": {
+     "x": 42.32,
+     "y": 89.06
+    }
+   },
+   "boneDir": 1.5707963267948966,
+   "layerOrder": 0,
+   "compatibleBodyTypes": [
+    "child-cg"
+   ],
+   "compatibilityTags": [],
+   "paletteOptions": [
+    "petrolejova",
+    "vinova",
+    "okrova",
+    "olivova",
+    "kremova",
+    "hneda",
+    "tmave-seda"
+   ],
+   "mirrorSafe": true,
+   "provisional": false
+  },
+  {
+   "id": "gloves_child.hand.back3q",
+   "slot": "hand",
+   "variantId": "gloves_child",
+   "view": "back3q",
+   "texture": "palcak-back3q.png",
+   "mask": "palcak-back3q.maska.png",
+   "sourceSize": {
+    "w": 32,
+    "h": 43
+   },
+   "trim": {
+    "x": 4,
+    "y": 5,
+    "w": 23,
+    "h": 32
+   },
+   "pivot": {
+    "x": 15.53,
+    "y": 14.11
+   },
+   "anchors": {
+    "grip": {
+     "x": 15.54,
+     "y": 23.51
+    }
+   },
+   "boneDir": 1.5707963267948966,
+   "layerOrder": 0,
+   "compatibleBodyTypes": [
+    "child-cg"
+   ],
+   "compatibilityTags": [],
+   "paletteOptions": [
+    "petrolejova",
+    "vinova",
+    "okrova",
+    "olivova",
+    "kremova",
+    "hneda",
+    "tmave-seda"
+   ],
+   "mirrorSafe": true,
+   "provisional": false
+  },
+  {
+   "id": "trousers_child.thigh.back3q",
+   "slot": "thigh",
+   "variantId": "trousers_child",
+   "view": "back3q",
+   "texture": "kalhoty-stehno-back3q.png",
+   "mask": "kalhoty-stehno-back3q.maska.png",
+   "sourceSize": {
+    "w": 52,
+    "h": 126
+   },
+   "trim": {
+    "x": 6,
+    "y": 7,
+    "w": 39,
+    "h": 110
+   },
+   "pivot": {
+    "x": 24.94,
+    "y": 20.24
+   },
+   "anchors": {
+    "end": {
+     "x": 23.52,
+     "y": 100.24
+    }
+   },
+   "boneDir": 1.5707963267948966,
+   "layerOrder": 0,
+   "compatibleBodyTypes": [
+    "child-cg"
+   ],
+   "compatibilityTags": [],
+   "paletteOptions": [
+    "tmave-seda",
+    "hneda",
+    "olivova"
+   ],
+   "mirrorSafe": true,
+   "provisional": false
+  },
+  {
+   "id": "trousers_child.shin.back3q",
+   "slot": "shin",
+   "variantId": "trousers_child",
+   "view": "back3q",
+   "texture": "kalhoty-lytko-back3q.png",
+   "mask": "kalhoty-lytko-back3q.maska.png",
+   "sourceSize": {
+    "w": 100,
+    "h": 131
+   },
+   "trim": {
+    "x": 30,
+    "y": 21,
+    "w": 37,
+    "h": 80
+   },
+   "pivot": {
+    "x": 48.96,
+    "y": 37.02
+   },
+   "anchors": {
+    "end": {
+     "x": 47.82,
+     "y": 111.02
+    }
+   },
+   "boneDir": 1.5707963267948966,
+   "layerOrder": 0,
+   "compatibleBodyTypes": [
+    "child-cg"
+   ],
+   "compatibilityTags": [],
+   "paletteOptions": [
+    "tmave-seda",
+    "hneda",
+    "olivova"
+   ],
+   "mirrorSafe": true,
+   "provisional": false
+  },
+  {
+   "id": "boots_child.foot.back3q",
+   "slot": "foot",
+   "variantId": "boots_child",
+   "view": "back3q",
+   "texture": "bota-back3q.png",
+   "mask": "bota-back3q.maska.png",
+   "sourceSize": {
+    "w": 44,
+    "h": 44
+   },
+   "trim": {
+    "x": 4,
+    "y": 5,
+    "w": 34,
+    "h": 33
+   },
+   "pivot": {
+    "x": 14.77,
+    "y": 26.85
+   },
+   "anchors": {
+    "heel": {
+     "x": 10.14,
+     "y": 36.85
+    },
+    "toe": {
+     "x": 33.68,
+     "y": 36.85
+    }
+   },
+   "boneDir": 0,
+   "layerOrder": 0,
+   "compatibleBodyTypes": [
+    "child-cg"
+   ],
+   "compatibilityTags": [],
+   "paletteOptions": [
+    "hneda",
+    "tmave-seda"
+   ],
+   "mirrorSafe": true,
+   "provisional": false
+  },
+  {
+   "id": "hat_beanie_child.hat.back3q",
+   "slot": "hat",
+   "variantId": "hat_beanie_child",
+   "view": "back3q",
+   "texture": "kulich-back3q.png",
+   "mask": "kulich-back3q.maska.png",
+   "sourceSize": {
+    "w": 85,
+    "h": 92
+   },
+   "trim": {
+    "x": 6,
+    "y": 7,
+    "w": 71,
+    "h": 78
+   },
+   "pivot": {
+    "x": 43.07,
+    "y": 53.62
+   },
+   "anchors": {},
+   "boneDir": -1.5707963267948966,
+   "layerOrder": 0,
+   "compatibleBodyTypes": [
+    "child-cg"
+   ],
+   "compatibilityTags": [],
+   "paletteOptions": [
+    "petrolejova",
+    "vinova",
+    "okrova",
+    "olivova",
+    "kremova",
+    "hneda",
+    "tmave-seda"
+   ],
+   "mirrorSafe": true,
+   "provisional": false
+  },
+  {
+   "id": "scarf_long_child.scarf.back3q",
+   "slot": "scarf",
+   "variantId": "scarf_long_child",
+   "view": "back3q",
+   "texture": "sala-back3q.png",
+   "mask": "sala-back3q.maska.png",
+   "sourceSize": {
+    "w": 68,
+    "h": 94
+   },
+   "trim": {
+    "x": 6,
+    "y": 6,
+    "w": 56,
+    "h": 82
+   },
+   "pivot": {
+    "x": 33.26,
+    "y": 38.62
+   },
+   "anchors": {},
+   "boneDir": -1.5707963267948966,
+   "layerOrder": 0,
+   "compatibleBodyTypes": [
+    "child-cg"
+   ],
+   "compatibilityTags": [],
+   "paletteOptions": [
+    "petrolejova",
+    "vinova",
+    "okrova",
+    "olivova",
+    "kremova",
+    "hneda",
+    "tmave-seda"
+   ],
+   "mirrorSafe": true,
+   "provisional": false
+  }
+ ],
+ "artIssues": [
+  {
+   "ref": "pohledy",
+   "issue": "Dodány pohledy šikmo zepředu a šikmo zezadu. Bok, zepředu a zezadu chybí – při chůzi se nepoužívají (chůze je vždy šikmá), v klidu explicitní náhrada nejbližším šikmým pohledem."
+  },
+  {
+   "ref": "scarf_long_cg.scarf.back3q",
+   "issue": "Šála zezadu je bez krémových proužků (konce nejsou vidět) – v pořádku, jen pro úplnost."
+  },
+  {
+   "ref": "varianty",
+   "issue": "Jedna bunda, jedna čepice, jedna šála – další varianty (prošívaná bunda, baret, beranice, nákrčník) ještě nejsou namalované."
+  },
+  {
+   "ref": "jacket_coat_cg.torso",
+   "issue": "Průramky a otevřený límec ukazují tmavý vnitřek; zakrývá ho rukáv, krk a šála. Při úpravě raději vyplnit látkou."
+  },
+  {
+   "ref": "zrcadlení",
+   "issue": "Pro chůzi doleva se díly zrcadlí (knoflíky se přesunou na druhou stranu)."
+  },
+  {
+   "ref": "upperArm/front3q",
+   "issue": "Poměr stran neodpovídá referenci – šířka upravena ×0.87 vůči délce. Přemalovat užší a delší (cílová šířka 6.6 j. při délce kosti)."
+  },
+  {
+   "ref": "forearm/front3q",
+   "issue": "Poměr stran neodpovídá referenci – šířka upravena ×1.14 vůči délce. Přemalovat širší a kratší (cílová šířka 6 j. při délce kosti)."
+  },
+  {
+   "ref": "thigh/front3q",
+   "issue": "Poměr stran neodpovídá referenci – šířka upravena ×0.76 vůči délce. Přemalovat užší a delší (cílová šířka 8 j. při délce kosti)."
+  },
+  {
+   "ref": "shin/front3q",
+   "issue": "Poměr stran neodpovídá referenci – šířka upravena ×1.37 vůči délce. Přemalovat širší a kratší (cílová šířka 7.2 j. při délce kosti)."
+  },
+  {
+   "ref": "upperArm/back3q",
+   "issue": "Poměr stran neodpovídá referenci – šířka upravena ×0.85 vůči délce. Přemalovat užší a delší (cílová šířka 6.6 j. při délce kosti)."
+  },
+  {
+   "ref": "thigh/back3q",
+   "issue": "Poměr stran neodpovídá referenci – šířka upravena ×0.77 vůči délce. Přemalovat užší a delší (cílová šířka 8 j. při délce kosti)."
+  },
+  {
+   "ref": "shin/back3q",
+   "issue": "Poměr stran neodpovídá referenci – šířka upravena ×1.43 vůči délce. Přemalovat širší a kratší (cílová šířka 7.2 j. při délce kosti)."
+  }
+ ]
+}
