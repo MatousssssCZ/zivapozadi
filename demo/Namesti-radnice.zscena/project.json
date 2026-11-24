@@ -3,8 +3,8 @@
   "formatVersion": 1,
   "meta": {
     "name": "Náměstí s radnicí (test dodané grafiky)",
-    "createdAt": "2026-11-23T21:21:52.316Z",
-    "modifiedAt": "2026-11-23T21:21:52.361Z",
+    "createdAt": "2026-11-24T10:14:15.243Z",
+    "modifiedAt": "2026-11-24T10:14:15.308Z",
     "appVersion": "0.1.0"
   },
   "seed": 1224,
@@ -213,11 +213,21 @@
             "id": "drop1",
             "kind": "drop",
             "offset": {
-              "x": 0,
-              "y": 34
+              "x": -42,
+              "y": 6
             },
-            "facing": -1.5707963267948966,
-            "label": "Vhození"
+            "facing": 0,
+            "label": "Vhození zleva"
+          },
+          {
+            "id": "drop2",
+            "kind": "drop",
+            "offset": {
+              "x": 42,
+              "y": 6
+            },
+            "facing": 3.141592653589793,
+            "label": "Vhození zprava"
           },
           {
             "id": "opening",
@@ -225,6 +235,72 @@
             "offset": {
               "x": 0,
               "y": -64
+            },
+            "label": "Otvor koše"
+          }
+        ]
+      }
+    },
+    {
+      "id": "builtin_kos_vika",
+      "kind": "image",
+      "name": "Koš s víkem (test)",
+      "file": "assets/images/kos-vika.png",
+      "width": 108,
+      "height": 160,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.95
+      },
+      "pixelScale": 0.5,
+      "provisional": true,
+      "defaultFootprint": [
+        {
+          "x": -18,
+          "y": -8
+        },
+        {
+          "x": 18,
+          "y": -8
+        },
+        {
+          "x": 18,
+          "y": 5
+        },
+        {
+          "x": -18,
+          "y": 5
+        }
+      ],
+      "lid": {
+        "x": 2,
+        "y": 7,
+        "w": 50,
+        "h": 7,
+        "color": "#474c5a",
+        "snow": true,
+        "hinge": "left",
+        "maxAngle": 1.75
+      },
+      "defaultInteraction": {
+        "kind": "bin",
+        "points": [
+          {
+            "id": "drop1",
+            "kind": "drop",
+            "offset": {
+              "x": 42,
+              "y": 6
+            },
+            "facing": 3.141592653589793,
+            "label": "Vhození (strana otvírání víka)"
+          },
+          {
+            "id": "opening",
+            "kind": "counter",
+            "offset": {
+              "x": 0,
+              "y": -60
             },
             "label": "Otvor koše"
           }
@@ -660,8 +736,8 @@
     },
     {
       "id": "obj_kos",
-      "name": "Koš (test)",
-      "assetId": "builtin_kos",
+      "name": "Koš s víkem",
+      "assetId": "builtin_kos_vika",
       "x": 1060,
       "y": 985,
       "scale": 0.8,
@@ -695,11 +771,76 @@
             "id": "drop1",
             "kind": "drop",
             "offset": {
-              "x": 0,
-              "y": 34
+              "x": 42,
+              "y": 6
             },
-            "facing": -1.5707963267948966,
-            "label": "Vhození"
+            "facing": 3.141592653589793,
+            "label": "Vhození (strana otvírání víka)"
+          },
+          {
+            "id": "opening",
+            "kind": "counter",
+            "offset": {
+              "x": 0,
+              "y": -60
+            },
+            "label": "Otvor koše"
+          }
+        ]
+      }
+    },
+    {
+      "id": "obj_kos2",
+      "name": "Koš u stromu (bez víka)",
+      "assetId": "builtin_kos",
+      "x": 1560,
+      "y": 1010,
+      "scale": 0.8,
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "footprint": [
+        {
+          "x": -18,
+          "y": -8
+        },
+        {
+          "x": 18,
+          "y": -8
+        },
+        {
+          "x": 18,
+          "y": 5
+        },
+        {
+          "x": -18,
+          "y": 5
+        }
+      ],
+      "interaction": {
+        "kind": "bin",
+        "points": [
+          {
+            "id": "drop1",
+            "kind": "drop",
+            "offset": {
+              "x": -42,
+              "y": 6
+            },
+            "facing": 0,
+            "label": "Vhození zleva"
+          },
+          {
+            "id": "drop2",
+            "kind": "drop",
+            "offset": {
+              "x": 42,
+              "y": 6
+            },
+            "facing": 3.141592653589793,
+            "label": "Vhození zprava"
           },
           {
             "id": "opening",
@@ -1037,7 +1178,8 @@
           "obj_strom"
         ],
         "bin": [
-          "obj_kos"
+          "obj_kos",
+          "obj_kos2"
         ]
       },
       "params": {}

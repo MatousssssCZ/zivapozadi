@@ -133,6 +133,8 @@ export interface SimState {
   binCounts: Record<string, number>;
   log: LogEntry[];
   stats: { cupsServed: number; cupsDisposed: number; sips: number };
+  /** Víka košů: plynulé otevírání/zavírání (úhel 0 = zavřeno, 1 = plně otevřeno). */
+  lids?: Record<string, { from: number; to: number; t0: number; t1: number }>;
   /** Stopy ve sněhu (svět v metrech; nejstarší se uvolní po naplnění zásobníku). */
   footprints?: Footprint[];
 }

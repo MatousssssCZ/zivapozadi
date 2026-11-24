@@ -3,7 +3,7 @@ import path from 'node:path';
 import { tmpDir } from './helpers';
 import { loadProject, type LoadedProject } from '../src/node/projectIO';
 import { generateRadnice } from '../scripts/generate-radnice-demo';
-import { Simulation } from '../src/core/sim/simulation';
+import { Simulation, lidOpenness } from '../src/core/sim/simulation';
 import { characterVisual, localToScene } from '../src/core/render/characterPose';
 import { gaitEvents } from '../src/core/anim/gaitProfile';
 import { cameraFor, toWorld, toScreen } from '../src/core/scene/camera';
@@ -163,6 +163,29 @@ describe('chůze ve scéně (náměstí, 12 postav, 2 dvojice)', () => {
     // deterministické (stejný průběh → stejné stopy)
     const sim2 = Simulation.create(lp.project, lp.manifests); sim2.advanceTo(250);
     expect(JSON.stringify(sim2.state.footprints)).toBe(JSON.stringify(sim.state.footprints));
+  });
+
+  it('koše: s víkem jen ze strany otvírání (víko se otevře a zavře), otevřený z obou stran', () => {
+    const sim = Simulation.create(lp.project, lp.manifests);
+    const lidBin = lp.project.objects.find((o) => o.id === 'obj_kos')!, openBin = lp.project.objects.find((o) => o.id === 'obj_kos2')!;
+    let lidUses = 0, wrongSide = 0, maxOpen = 0; const openSides = new Set<string>();
+    const seen = new Set<string>();
+    for (let i = 0; i < 60 * 300; i++) {
+      sim.step();
+      maxOpen = Math.max(maxOpen, lidOpenness(sim.state, 'obj_kos', sim.time()));
+      for (const a of sim.state.agents) {
+        if (a.activity?.phase !== 'drop') continue;
+        const bin = (a.activity.data as { binId?: string }).binId, key = a.id + '@' + a.activity.phaseStart;
+        if (seen.has(key)) continue; seen.add(key);
+        if (bin === 'obj_kos') { lidUses++; if (a.pos.x < lidBin.x) wrongSide++; expect(a.anim.action?.clip).toBe('lidDrop'); }
+        if (bin === 'obj_kos2') { openSides.add(a.pos.x < openBin.x ? 'L' : 'P'); expect(a.anim.action?.clip).toBe('drop'); }
+      }
+    }
+    console.log(`koš s víkem: ${lidUses}× (špatná strana ${wrongSide}), max. otevření ${maxOpen.toFixed(2)}; otevřený koš ze stran: ${[...openSides].join(', ')}`);
+    expect(lidUses).toBeGreaterThan(0);
+    expect(wrongSide).toBe(0);
+    expect(maxOpen).toBeGreaterThan(0.99);
+    expect(lidOpenness(sim.state, 'obj_kos', sim.time() + 5)).toBe(0);
   });
 
   it('dvojice se obnoví z checkpointu beze změny průběhu', () => {

@@ -2,7 +2,7 @@
   "format": "zimni-scena-postava",
   "formatVersion": 1,
   "id": "painted-cg",
-  "name": "Malovaná postava (ChatGPT díly)",
+  "name": "Malovan\u00e1 postava (ChatGPT d\u00edly)",
   "provisional": false,
   "backend": "skeleton",
   "height": 130,
@@ -87,6 +87,24 @@
     "look": {
       "duration": 2,
       "loop": "once"
+    },
+    "lidDrop": {
+      "duration": 3.0,
+      "loop": "once",
+      "events": [
+        {
+          "time": 0.95,
+          "name": "lidOpen"
+        },
+        {
+          "time": 1.75,
+          "name": "release"
+        },
+        {
+          "time": 2.25,
+          "name": "lidClose"
+        }
+      ]
     }
   },
   "clipFallbacks": {

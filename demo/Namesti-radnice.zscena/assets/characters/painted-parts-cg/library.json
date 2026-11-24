@@ -190,13 +190,13 @@
      "near.shin",
      "near.thigh",
      "torso",
-     "head",
-     "hat",
-     "scarf",
      "near.hand",
      "near.forearm",
      "near.upperArm",
-     "held"
+     "held",
+     "head",
+     "scarf",
+     "hat"
     ]
    },
    "farShade": 0.82,

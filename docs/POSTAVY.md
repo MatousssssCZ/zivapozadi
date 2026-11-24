@@ -221,10 +221,22 @@ rychlé začátky švihu po ostrém zatočení.
 * Oblasti typu „sníh“ (polygon, `snowDepthM`, výchozí 0,02 m) – barva pozadí se nepoužívá.
 * Zatížená bota se během ~0,08 fáze zaboří, pánev se sníží o průměr a švihová bota z
   prohlubně plynule vyjde.
-* Spodek boty zakryje nízká nepravidelná závěj v barvě sněhu odebrané z pozadí těsně pod
-  postavou.
+* Spodek boty po celé délce podrážky (od paty po špičku) zakryje nízká nepravidelná závěj
+  v barvě sněhu odebrané z pozadí těsně pod postavou.
 * Zaboření v jednotkách postavy je stálé (0,02 m / q ≈ 1,5 j.), takže v obraze je úměrné
   perspektivě.
+
+**Koše.**
+* *S víkem* (`builtin_kos_vika`, asset má `lid`: pant vlevo, otevírá se vpravo): místo
+  vhození je jen na straně otvírání. Akce `lidDrop` (3 s):
+  1. druhá ruka sáhne na okraj víka a zvedne ho (víko se v simulaci plynule otevře);
+  2. ruka s kelímkem ho nad otvorem pustí;
+  3. víko se zavře.
+* Víko se kreslí zvlášť a otáčí kolem pantu. Úhel je ve stavu simulace (`lids`); při
+  přerušení činnosti se víko zavře.
+* *Bez víka* (`builtin_kos`): místa vhození jsou zleva i zprava a postava jde k bližšímu
+  volnému.
+* V demu je koš s víkem u stánku a otevřený koš u stromu.
 
 **Stopy ve sněhu (D4).**
 * Každý došlap ve sněhu (nová kotva paty) vytvoří jednu stopu ve stavu simulace: střed podrážky

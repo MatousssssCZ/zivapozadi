@@ -26,6 +26,15 @@ export interface Diagnostic { level: 'warning' | 'error'; message: string; ref?:
 
 const MAX_LOG = 400;
 
+/** Otevřenost víka objektu v čase t (0–1, plynule). */
+export function lidOpenness(state: SimState, objectId: string, t: number): number {
+  const l = state.lids?.[objectId];
+  if (!l) return 0;
+  const k = Math.max(0, Math.min(1, (t - l.t0) / Math.max(1e-6, l.t1 - l.t0)));
+  const e = k * k * (3 - 2 * k);
+  return l.from + (l.to - l.from) * e;
+}
+
 export class Simulation {
   readonly graph: NavGraph;
   readonly res: Reservations;
@@ -262,6 +271,12 @@ export class Simulation {
         return true;
       },
       isMoving: (a) => a.route !== null,
+      hasLid: (id) => { const o = self.objects.get(id); return !!o && !!self.project.assets.find((x) => x.id === o.assetId)?.lid; },
+      animateLid(id, to, duration) {
+        const lids = (self.state.lids ??= {});
+        const now = self.time(), cur = lidOpenness(self.state, id, now);
+        lids[id] = { from: cur, to, t0: now, t1: now + Math.max(0.01, duration) };
+      },
       playAction(a, clip, defaults) {
         const w = playAction(a.anim, self.manifests[self.chars.get(a.id)!.assetId], clip, defaults);
         if (w) self.addDiag('warning', w);

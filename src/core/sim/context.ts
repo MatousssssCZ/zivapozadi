@@ -45,6 +45,10 @@ export interface SimContext {
   rand(agent: AgentState): number;
   randRange(agent: AgentState, lo: number, hi: number): number;
   isRemoved(objectId: string): boolean;
+  /** Má objekt otvírací víko? */
+  hasLid(objectId: string): boolean;
+  /** Plynule otevře (1) / zavře (0) víko objektu během `duration` s. */
+  animateLid(objectId: string, to: number, duration: number): void;
   /** Rozhraní pro řízení postavy (nezávislé na jejím vzhledu). */
   character: CharacterControl;
 }

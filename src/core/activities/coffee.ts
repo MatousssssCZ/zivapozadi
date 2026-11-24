@@ -325,12 +325,17 @@ export const coffeeRunner: ActivityRunner = {
       case 'to-bin': {
         agent.status = 'Jde ke koši';
         if (moving) return 'running';
-        ctx.playAction(agent, 'drop', { duration: 1.0, events: [{ time: 0.55, name: 'release' }] });
+        if (ctx.hasLid(data.binId!)) {
+          // koš s víkem: druhou rukou zvednout víko, vhodit, víko zavřít
+          ctx.playAction(agent, 'lidDrop', { duration: 3.0, events: [{ time: 0.95, name: 'lidOpen' }, { time: 1.75, name: 'release' }, { time: 2.25, name: 'lidClose' }] });
+        } else ctx.playAction(agent, 'drop', { duration: 1.0, events: [{ time: 0.55, name: 'release' }] });
         setPhase(ctx, run, 'drop');
         return 'running';
       }
       case 'drop': {
-        agent.status = 'Vyhazuje kelímek';
+        agent.status = ctx.hasLid(data.binId!) ? 'Otevírá koš a vyhazuje kelímek' : 'Vyhazuje kelímek';
+        if (events.includes('lidOpen')) ctx.animateLid(data.binId!, 1, 0.5);
+        if (events.includes('lidClose')) ctx.animateLid(data.binId!, 0, 0.45);
         const cup = agent.holding ? ctx.prop(agent.holding) : undefined;
         if (cup && (events.includes('release') || ctx.actionFinished(agent))) {
           const bin = ctx.object(data.binId!)!;
@@ -352,6 +357,7 @@ export const coffeeRunner: ActivityRunner = {
   abort(ctx, agent, run, reason) {
     const data = d(run);
     ctx.stopAction(agent);
+    if (data.binId && ctx.hasLid(data.binId)) ctx.animateLid(data.binId, 0, 0.45); // víko nezůstane otevřené
     const cup = data.cupId ? ctx.prop(data.cupId) : undefined;
     if (cup && cup.place.kind === 'held') dropOnGround(ctx, agent, run, reason);
     else if (cup && cup.place.kind === 'counter') {

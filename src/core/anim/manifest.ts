@@ -84,6 +84,7 @@ export function testFigureManifest(): CharacterManifest {
       receive: { duration: 1.1, loop: 'once', events: [{ time: 0.6, name: 'take' }] },
       drink: { duration: 2.6, loop: 'once', events: [{ time: 1.1, name: 'sip' }] },
       drop: { duration: 1.0, loop: 'once', events: [{ time: 0.55, name: 'release' }] },
+      lidDrop: { duration: 3.0, loop: 'once', events: [{ time: 0.95, name: 'lidOpen' }, { time: 1.75, name: 'release' }, { time: 2.25, name: 'lidClose' }] },
       look: { duration: 2.0, loop: 'once' },
     },
     clipFallbacks: { look: 'idle' },

@@ -428,6 +428,20 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
         armShorten = (view === 'back3q' ? 0.42 : 0.12) * raise;
         break;
       }
+      case 'lidDrop': {
+        // druhá ruka: k okraji víka (0–28 %), zvednout víko (32–50 %), držet, zavřít (75–87 %), zpět
+        const lerp = (p: Vec2, q: Vec2, k: number) => ({ x: p.x + (q.x - p.x) * k, y: p.y + (q.y - p.y) * k });
+        const reach = smoothstep(t / 0.28) * (1 - smoothstep((t - 0.87) / 0.13));
+        const lift = t < 0.32 ? 0 : t < 0.5 ? smoothstep((t - 0.32) / 0.18) : t < 0.75 ? 1 : 1 - smoothstep((t - 0.75) / 0.12);
+        const lidEdge = { x: backRoot.x + 26 * fx, y: hip.y - 4 }, lidUp = { x: backRoot.x + 15 * fx, y: shoulder.y - 1 };
+        backTarget = lerp(armBackFK.end, lerp(lidEdge, lidUp, lift), reach);
+        // ruka s kelímkem nad otvor (45–58 %), pustit (58 %), zpět
+        const dk = t < 0.45 ? 0 : t < 0.58 ? smoothstep((t - 0.45) / 0.13) : t < 0.7 ? 1 : 1 - smoothstep((t - 0.7) / 0.15);
+        const restF = holding ? holdPos : swingTarget(frontRoot, 0);
+        frontTarget = lerp(restF, { x: frontRoot.x + 24 * fx, y: hip.y - 10 }, dk);
+        headTilt += 0.06 * reach * fsg; // pohled dolů do koše
+        break;
+      }
       case 'drop': {
         const down = { x: frontRoot.x + 26 * fx, y: hip.y + 8 };
         const k = t < 0.5 ? smoothstep(t / 0.5) : 1 - smoothstep((t - 0.5) / 0.5);

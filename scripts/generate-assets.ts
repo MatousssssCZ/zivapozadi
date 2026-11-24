@@ -193,6 +193,18 @@ async function bin() {
   });
 }
 
+/** Koš s víkem: tělo bez víka (víko kreslí aplikace samostatně, aby se dalo otevírat). */
+export async function binLid() {
+  await save('kos-vika.png', 54, 80, (c) => {
+    c.fillStyle = 'rgba(60,70,110,0.18)'; c.beginPath(); c.ellipse(27, 76, 22, 4, 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = '#5b6170'; c.beginPath(); c.moveTo(5, 15); c.lineTo(49, 15); c.lineTo(45, 76); c.lineTo(9, 76); c.fill();
+    c.fillStyle = 'rgba(255,255,255,0.14)'; for (let k = 0; k < 3; k++) c.fillRect(14 + k * 10, 24, 4, 46);
+    c.fillStyle = '#2b2f38'; roundRect(c, 4, 12, 46, 5, 2); c.fill(); // otvor pod víkem
+    c.fillStyle = '#474c5a'; roundRect(c, 2, 15, 50, 4, 2); c.fill(); // lem
+    c.fillStyle = '#c9a646'; c.fillRect(25, 34, 4, 10); // nálepka
+  });
+}
+
 async function lamp() {
   await save('lampa.png', 60, 300, (c) => {
     glow(c, 30, 40, 60, 'rgba(255,205,120,ALPHA)', 0.55);
@@ -216,7 +228,7 @@ async function snowbank() {
 
 async function main() {
   await fs.mkdir(OUT, { recursive: true });
-  await Promise.all([background(), stand(), table(), tree(), bin(), lamp(), snowbank()]);
+  await Promise.all([background(), stand(), table(), tree(), bin(), binLid(), lamp(), snowbank()]);
   const assets: AssetEntry[] = [
     { id: 'builtin_pozadi', kind: 'image', name: 'Pozadí – zimní náměstí (test)', file: 'pozadi-namesti.png', width: 3840, height: 2160, anchor: { x: 0, y: 0 }, pixelScale: 0.5, provisional: true },
     {
@@ -248,9 +260,21 @@ async function main() {
     {
       id: 'builtin_kos', kind: 'image', name: 'Koš (test)', file: 'kos.png', width: 108, height: 160, anchor: { x: 0.5, y: 0.95 }, pixelScale: 0.5, provisional: true,
       defaultFootprint: [{ x: -18, y: -8 }, { x: 18, y: -8 }, { x: 18, y: 5 }, { x: -18, y: 5 }],
+      // otevřený koš: vhodit lze z obou stran
       defaultInteraction: { kind: 'bin', points: [
-        { id: 'drop1', kind: 'drop', offset: { x: 0, y: 34 }, facing: -Math.PI / 2, label: 'Vhození' },
+        { id: 'drop1', kind: 'drop', offset: { x: -42, y: 6 }, facing: 0, label: 'Vhození zleva' },
+        { id: 'drop2', kind: 'drop', offset: { x: 42, y: 6 }, facing: Math.PI, label: 'Vhození zprava' },
         { id: 'opening', kind: 'counter', offset: { x: 0, y: -64 }, label: 'Otvor koše' },
+      ] },
+    },
+    {
+      id: 'builtin_kos_vika', kind: 'image', name: 'Koš s víkem (test)', file: 'kos-vika.png', width: 108, height: 160, anchor: { x: 0.5, y: 0.95 }, pixelScale: 0.5, provisional: true,
+      defaultFootprint: [{ x: -18, y: -8 }, { x: 18, y: -8 }, { x: 18, y: 5 }, { x: -18, y: 5 }],
+      // víko má pant vlevo, otevírá se vpravo ⇒ jediné místo vhození je vpravo
+      lid: { x: 2, y: 7, w: 50, h: 7, color: '#474c5a', snow: true, hinge: 'left', maxAngle: 1.75 },
+      defaultInteraction: { kind: 'bin', points: [
+        { id: 'drop1', kind: 'drop', offset: { x: 42, y: 6 }, facing: Math.PI, label: 'Vhození (strana otvírání víka)' },
+        { id: 'opening', kind: 'counter', offset: { x: 0, y: -60 }, label: 'Otvor koše' },
       ] },
     },
     { id: 'builtin_lampa', kind: 'image', name: 'Lampa (test)', file: 'lampa.png', width: 120, height: 600, anchor: { x: 0.5, y: 0.985 }, pixelScale: 0.5, provisional: true,

@@ -31,6 +31,11 @@ export interface AssetEntry {
   pixelScale?: number;
   /** Výchozí interakční údaje, které se zkopírují do objektu při vložení. */
   defaultInteraction?: InteractionSpec;
+  /**
+   * Otvírací víko (koš): obdélník v souřadnicích obrázku (logické px před pixelScale), pant vlevo/vpravo,
+   * největší úhel otevření (rad). Kreslí se zvlášť, aby se mohlo otáčet.
+   */
+  lid?: { x: number; y: number; w: number; h: number; color: string; snow?: boolean; hinge: 'left' | 'right'; maxAngle: number };
   /** Výchozí kolizní stopa (vůči kotvě, v logických jednotkách při měřítku 1). */
   defaultFootprint?: Vec2[];
   /** Označení provizorního testovacího assetu. */

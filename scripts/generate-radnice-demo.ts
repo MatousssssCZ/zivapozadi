@@ -32,7 +32,7 @@ export async function generateRadnice(dir: string): Promise<ProjectFile> {
   };
   const lampa = await imp('lampa.png', 'Lampa', { x: 0.5, y: 0.99 });
   const strom = await imp('strom.png', 'Vánoční strom', { x: 0.5, y: 0.985 });
-  for (const id of ['builtin_stolecek', 'builtin_kos', 'builtin_postava_cg']) await addBuiltinAsset('resources/builtin', dir, p, id);
+  for (const id of ['builtin_stolecek', 'builtin_kos', 'builtin_kos_vika', 'builtin_postava_cg']) await addBuiltinAsset('resources/builtin', dir, p, id);
   p.scene.backgroundAssetId = bg.id;
   // Perspektiva: chodník u budov (y≈900) je daleko, spodní okraj blízko.
   p.scene.depth = { enabled: true, yFar: 900, scaleFar: 0.36, yNear: 1080, scaleNear: 1.3 };
@@ -53,7 +53,7 @@ export async function generateRadnice(dir: string): Promise<ProjectFile> {
     footprint: a.defaultFootprint ? structuredClone(a.defaultFootprint) : undefined,
     interaction: a.defaultInteraction ? structuredClone(a.defaultInteraction) : undefined, ...extra,
   });
-  const table = p.assets.find((a) => a.id === 'builtin_stolecek')!, bin = p.assets.find((a) => a.id === 'builtin_kos')!;
+  const table = p.assets.find((a) => a.id === 'builtin_stolecek')!, bin = p.assets.find((a) => a.id === 'builtin_kos')!, binLid = p.assets.find((a) => a.id === 'builtin_kos_vika')!;
   p.objects = [
     O('obj_st_hracky', 'Stánek – hračky', st.hracky, 175, 992, 0.45, { footprint: stallFootprint }),
     O('obj_st_pernik', 'Stánek – perník', st.pernik, 420, 976, 0.43, { footprint: stallFootprint }),
@@ -70,7 +70,8 @@ export async function generateRadnice(dir: string): Promise<ProjectFile> {
     O('obj_lampa2', 'Lampa vpravo', lampa, 1150, 1005, 0.28, { footprint: rect(-22, -10, 22, 8) }),
     O('obj_stolecek', 'Stoleček (test)', table, 880, 995, 0.78),
     O('obj_stolecek2', 'Stoleček u stromu', table, 1290, 1005, 0.78),
-    O('obj_kos', 'Koš (test)', bin, 1060, 985, 0.8),
+    O('obj_kos', 'Koš s víkem', binLid, 1060, 985, 0.8),
+    O('obj_kos2', 'Koš u stromu (bez víka)', bin, 1560, 1010, 0.8),
   ];
   const N = (id: string, x: number, y: number, name: string, stop?: NavNode['stop']): NavNode => ({ id, x, y, name, stop, portal: x < 0 || x > 1920 || undefined });
   p.nav.nodes = [
@@ -99,7 +100,7 @@ export async function generateRadnice(dir: string): Promise<ProjectFile> {
   p.zones = [{
     id: 'zone_kava', name: 'Káva u stánku s nápoji', activityType: 'coffee', activityVersion: 1, enabled: true,
     bounds: rect(700, 900, 1700, 1075),
-    objectRoles: { stand: ['obj_st_napoje'], seating: ['obj_stolecek', 'obj_stolecek2', 'obj_strom'], bin: ['obj_kos'] }, params: {},
+    objectRoles: { stand: ['obj_st_napoje'], seating: ['obj_stolecek', 'obj_stolecek2', 'obj_strom'], bin: ['obj_kos', 'obj_kos2'] }, params: {},
   }];
   // 12 postav z generátoru (malované díly z ChatGPT, pohled šikmo zepředu)
   const lib = JSON.parse(await fs.readFile('resources/builtin/painted-parts-cg/library.json', 'utf8')) as PartLibrary;

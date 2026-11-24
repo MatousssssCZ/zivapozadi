@@ -8,6 +8,7 @@ import type { AgentState, PropState } from '../sim/types';
 import { characterVisual } from './characterPose';
 import { drawFigure } from '../anim/testFigure';
 import { cameraFor, toScreen } from '../scene/camera';
+import { lidOpenness } from '../sim/simulation';
 import { FOOTPRINT_LIFE, FOOTPRINT_FADE } from '../sim/types';
 import { getCanvasFactory, drawRig } from './rigRenderer';
 import { depthScaleAt } from '../scene/geometry';
@@ -33,7 +34,29 @@ export function objectImageRect(o: SceneObject, a: AssetEntry | undefined): { x:
   return { x: o.x - ax * w, y: o.y - an.y * h, w, h };
 }
 
-function drawObject(ctx: Ctx, o: SceneObject, a: AssetEntry | undefined, img: ImageLike | null | undefined) {
+/** Otvírací víko (koš): otáčí se kolem pantu; `open` 0 = zavřeno, 1 = plně otevřeno. */
+function drawLid(ctx: Ctx, o: SceneObject, a: AssetEntry, r: { x: number; y: number; w: number; h: number }, open: number) {
+  const L = a.lid!;
+  const lw = (a.width ?? 1) * (a.pixelScale ?? 1), sx = r.w / lw; // logické px obrázku → scéna
+  const left = L.hinge === 'left';
+  const hx = r.x + (left ? L.x : L.x + L.w) * sx, hy = r.y + (L.y + L.h * 0.6) * sx;
+  ctx.save();
+  if (o.flipX) { ctx.translate(r.x + r.w / 2, 0); ctx.scale(-1, 1); ctx.translate(-(r.x + r.w / 2), 0); }
+  ctx.translate(hx, hy);
+  ctx.rotate((left ? -1 : 1) * L.maxAngle * open);
+  const x0 = left ? 0 : -L.w * sx, w = L.w * sx, h = L.h * sx, y0 = -L.h * 0.6 * sx;
+  // při otevření je vidět tmavší spodní strana víka
+  ctx.fillStyle = open > 0.15 ? '#2f333d' : L.color;
+  rrect(ctx, x0, y0, w, h, h * 0.35); ctx.fill();
+  ctx.strokeStyle = '#2b2f38'; ctx.lineWidth = Math.max(0.6, h * 0.14); rrect(ctx, x0, y0, w, h, h * 0.35); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,0.12)'; ctx.fillRect(x0 + w * 0.08, y0 + h * 0.2, w * 0.84, h * 0.18);
+  if (L.snow && open < 0.5) { ctx.fillStyle = `rgba(243,246,252,${(1 - open * 2).toFixed(3)})`; rrect(ctx, x0 + w * 0.12, y0 - h * 0.35, w * 0.76, h * 0.5, h * 0.25); ctx.fill(); }
+  // úchyt na volném okraji
+  ctx.fillStyle = '#2b2f38'; ctx.fillRect(left ? x0 + w - 3 * sx : x0, y0 + h * 0.25, 3 * sx, h * 0.5);
+  ctx.restore();
+}
+
+function drawObject(ctx: Ctx, o: SceneObject, a: AssetEntry | undefined, img: ImageLike | null | undefined, lidOpen = 0) {
   const r = objectImageRect(o, a);
   if (!img) {
     ctx.save();
@@ -47,6 +70,11 @@ function drawObject(ctx: Ctx, o: SceneObject, a: AssetEntry | undefined, img: Im
     ctx.save(); ctx.translate(r.x + r.w, r.y); ctx.scale(-1, 1);
     ctx.drawImage(img as CanvasImageSource, 0, 0, r.w, r.h); ctx.restore();
   } else ctx.drawImage(img as CanvasImageSource, r.x, r.y, r.w, r.h);
+  if (a?.lid) drawLid(ctx, o, a, r, lidOpen);
+}
+
+function rrect(ctx: Ctx, x: number, y: number, w: number, h: number, r: number) {
+  ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
 }
 
 export function drawCup(ctx: Ctx, x: number, y: number, s: number, sips = 0, tilt = 0) {
@@ -180,7 +208,7 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
   const objKey = new Map<string, number>();
   for (const { o, i } of visible) if (o.layer === 'world') {
     const key = o.y + o.zBias; objKey.set(o.id, key);
-    items.push({ key, tie: i, draw: () => drawObject(ctx, o, assets.get(o.assetId), images.get(o.assetId)) });
+    items.push({ key, tie: i, draw: () => drawObject(ctx, o, assets.get(o.assetId), images.get(o.assetId), sim ? lidOpenness(sim.state, o.id, sim.time()) : 0) });
   }
   if (sim) {
     for (const a of sim.state.agents) if (!a.hidden) items.push({ key: a.pos.y, tie: 10000 + sim.state.agents.indexOf(a), draw: () => drawAgent(ctx, project, sim, a, 1, images) });

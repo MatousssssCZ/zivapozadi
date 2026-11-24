@@ -244,11 +244,21 @@
             "id": "drop1",
             "kind": "drop",
             "offset": {
-              "x": 0,
-              "y": 34
+              "x": -42,
+              "y": 6
             },
-            "facing": -1.5707963267948966,
-            "label": "Vhození"
+            "facing": 0,
+            "label": "Vhození zleva"
+          },
+          {
+            "id": "drop2",
+            "kind": "drop",
+            "offset": {
+              "x": 42,
+              "y": 6
+            },
+            "facing": 3.141592653589793,
+            "label": "Vhození zprava"
           },
           {
             "id": "opening",
@@ -256,6 +266,72 @@
             "offset": {
               "x": 0,
               "y": -64
+            },
+            "label": "Otvor koše"
+          }
+        ]
+      }
+    },
+    {
+      "id": "builtin_kos_vika",
+      "kind": "image",
+      "name": "Koš s víkem (test)",
+      "file": "kos-vika.png",
+      "width": 108,
+      "height": 160,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.95
+      },
+      "pixelScale": 0.5,
+      "provisional": true,
+      "defaultFootprint": [
+        {
+          "x": -18,
+          "y": -8
+        },
+        {
+          "x": 18,
+          "y": -8
+        },
+        {
+          "x": 18,
+          "y": 5
+        },
+        {
+          "x": -18,
+          "y": 5
+        }
+      ],
+      "lid": {
+        "x": 2,
+        "y": 7,
+        "w": 50,
+        "h": 7,
+        "color": "#474c5a",
+        "snow": true,
+        "hinge": "left",
+        "maxAngle": 1.75
+      },
+      "defaultInteraction": {
+        "kind": "bin",
+        "points": [
+          {
+            "id": "drop1",
+            "kind": "drop",
+            "offset": {
+              "x": 42,
+              "y": 6
+            },
+            "facing": 3.141592653589793,
+            "label": "Vhození (strana otvírání víka)"
+          },
+          {
+            "id": "opening",
+            "kind": "counter",
+            "offset": {
+              "x": 0,
+              "y": -60
             },
             "label": "Otvor koše"
           }
