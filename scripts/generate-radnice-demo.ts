@@ -12,6 +12,7 @@ import { addBuiltinAsset } from '../src/node/builtin';
 import type { PartLibrary } from '../src/core/anim/partLibrary';
 import { generateGroup } from '../src/core/anim/appearanceGenerator';
 import { createProjectDir, saveProject, importAssetFile } from '../src/node/projectIO';
+import { defaultIntegration, lantern } from '../src/core/render/integration';
 
 const G = 'grafika/zpracovane';
 
@@ -33,6 +34,10 @@ export async function generateRadnice(dir: string): Promise<ProjectFile> {
   const lampa = await imp('lampa.png', 'Lampa', { x: 0.5, y: 0.99 });
   const strom = await imp('strom.png', 'Vánoční strom', { x: 0.5, y: 0.985 });
   for (const id of ['builtin_stolecek', 'builtin_kos', 'builtin_kos_vika', 'builtin_postava_cg']) await addBuiltinAsset('resources/builtin', dir, p, id);
+  // tvar pro zapuštění do scény: kontaktní šířka těla, hloubka půdorysu, lucerny (zadání stánků B)
+  for (const a of Object.values(st)) a.shape = { bodyU0: 0.063, bodyU1: 0.932, depthM: 1.8, lights: [lantern(0.098, 0.468, 1.6), lantern(0.9, 0.456, 1.6)] };
+  lampa.shape = { bodyU0: 0.387, bodyU1: 0.622, depthM: 0.3, lights: [0.206, 0.5, 0.794].map((u, i) => ({ ...lantern(u, i === 1 ? 0.311 : 0.325, 2.65), radiusM: 2.4, groundGain: 0.14, haloOpacity: 0.05 })) };
+  strom.shape = { bodyU0: 0.272, bodyU1: 0.647, depthM: 1.2 };
   p.scene.backgroundAssetId = bg.id;
   // Perspektiva: chodník u budov (y≈900) je daleko, spodní okraj blízko.
   p.scene.depth = { enabled: true, yFar: 900, scaleFar: 0.36, yNear: 1080, scaleNear: 1.3 };
@@ -58,25 +63,32 @@ export async function generateRadnice(dir: string): Promise<ProjectFile> {
     footprint: a.defaultFootprint ? structuredClone(a.defaultFootprint) : undefined,
     interaction: a.defaultInteraction ? structuredClone(a.defaultInteraction) : undefined, ...extra,
   });
+  // zapuštění: stánky vše (vč. sladění barev a oparu), ostatní kontakt + sníh (+ světlo lampy)
+  const integ = (grade: boolean, lights: boolean): Partial<SceneObject> => {
+    const I = defaultIntegration(); I.grade.enabled = grade; I.lights.enabled = lights; return { integration: I };
+  };
   const table = p.assets.find((a) => a.id === 'builtin_stolecek')!, bin = p.assets.find((a) => a.id === 'builtin_kos')!, binLid = p.assets.find((a) => a.id === 'builtin_kos_vika')!;
+  table.shape = { bodyU0: 0.289, bodyU1: 0.706, depthM: 0.5 };
+  bin.shape = { bodyU0: 0.185, bodyU1: 0.806, depthM: 0.45 };
+  binLid.shape = { bodyU0: 0.167, bodyU1: 0.824, depthM: 0.45 };
   p.objects = [
-    O('obj_st_hracky', 'Stánek – hračky', st.hracky, 175, 992, 0.45, { footprint: stallFootprint, interaction: shopInteraction(1) }),
-    O('obj_st_pernik', 'Stánek – perník', st.pernik, 420, 976, 0.43, { footprint: stallFootprint, interaction: shopInteraction(1) }),
-    O('obj_st_napoje', 'Stánek – nápoje', st.napoje, 1235, 985, 0.44, { footprint: stallFootprint, interaction: coffeeInteraction }),
-    O('obj_st_pletene', 'Stánek – pletené zboží', st.pletene, 1765, 996, 0.46, { footprint: stallFootprint, interaction: shopInteraction(-1) }),
-    O('obj_strom', 'Vánoční strom', strom, 1490, 935, 0.49, {
+    O('obj_st_hracky', 'Stánek – hračky', st.hracky, 175, 992, 0.45, { ...integ(true, true), footprint: stallFootprint, interaction: shopInteraction(1) }),
+    O('obj_st_pernik', 'Stánek – perník', st.pernik, 420, 976, 0.43, { ...integ(true, true), footprint: stallFootprint, interaction: shopInteraction(1) }),
+    O('obj_st_napoje', 'Stánek – nápoje', st.napoje, 1235, 985, 0.44, { ...integ(true, true), footprint: stallFootprint, interaction: coffeeInteraction }),
+    O('obj_st_pletene', 'Stánek – pletené zboží', st.pletene, 1765, 996, 0.46, { ...integ(true, true), footprint: stallFootprint, interaction: shopInteraction(-1) }),
+    O('obj_strom', 'Vánoční strom', strom, 1490, 935, 0.49, { ...integ(false, false),
       footprint: rect(-130, -30, 130, 15),
       interaction: { kind: 'viewpoint', points: [
         { id: 'view1', kind: 'view', offset: { x: -200, y: 95 }, facing: -1.1, label: 'Výhled 1' },
         { id: 'view2', kind: 'view', offset: { x: 210, y: 100 }, facing: -2.0, label: 'Výhled 2' },
       ] },
     }),
-    O('obj_lampa1', 'Lampa vlevo', lampa, 600, 1000, 0.28, { footprint: rect(-22, -10, 22, 8) }),
-    O('obj_lampa2', 'Lampa vpravo', lampa, 1150, 1005, 0.28, { footprint: rect(-22, -10, 22, 8) }),
-    O('obj_stolecek', 'Stoleček (test)', table, 880, 995, 0.78),
-    O('obj_stolecek2', 'Stoleček u stromu', table, 1290, 1005, 0.78),
-    O('obj_kos', 'Koš s víkem', binLid, 1060, 985, 0.8),
-    O('obj_kos2', 'Koš u stromu (bez víka)', bin, 1560, 1010, 0.8),
+    O('obj_lampa1', 'Lampa vlevo', lampa, 600, 1000, 0.28, { ...integ(false, true), footprint: rect(-22, -10, 22, 8) }),
+    O('obj_lampa2', 'Lampa vpravo', lampa, 1150, 1005, 0.28, { ...integ(false, true), footprint: rect(-22, -10, 22, 8) }),
+    O('obj_stolecek', 'Stoleček (test)', table, 880, 995, 0.78, integ(false, false)),
+    O('obj_stolecek2', 'Stoleček u stromu', table, 1290, 1005, 0.78, integ(false, false)),
+    O('obj_kos', 'Koš s víkem', binLid, 1060, 985, 0.8, integ(false, false)),
+    O('obj_kos2', 'Koš u stromu (bez víka)', bin, 1560, 1010, 0.8, integ(false, false)),
   ];
   const N = (id: string, x: number, y: number, name: string, stop?: NavNode['stop']): NavNode => ({ id, x, y, name, stop, portal: x < 0 || x > 1920 || undefined });
   p.nav.nodes = [

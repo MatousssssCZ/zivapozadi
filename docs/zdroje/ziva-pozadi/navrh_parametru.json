@@ -1,0 +1,384 @@
+{
+  "schema": "research-proposal-not-project-schema",
+  "version": 2,
+  "referenceCommit": "b448f2b319e3823668c9a53ea1eac3229f37002d",
+  "note": "Všechny nové hodnoty jsou animační návrh, nikoli empirická měření. Cooldown od konce; příchod mimo duration.",
+  "director": {
+    "decisionEverySteps": 120,
+    "simStepsPerSecond": 60,
+    "maxMajorSessions": 1,
+    "maxSocialSessions": 3,
+    "majorGapSec": [
+      90,
+      180
+    ],
+    "gatherTimeoutSec": 45,
+    "blockedRetrySec": 15
+  },
+  "limits": {
+    "snowmenPerZone": 1,
+    "snowmenTotal": 2,
+    "runtimeProps": 128,
+    "effectParticles": 256
+  },
+  "animation": {
+    "blendSec": [
+      0.18,
+      0.35
+    ],
+    "idlePelvisUnits": [
+      0.5,
+      1.5
+    ],
+    "headTiltMaxDeg": 8,
+    "cupGestureTiltMaxDeg": 10,
+    "microGestureCooldownSec": [
+      25,
+      60
+    ],
+    "sameGestureMinGapSec": 20
+  },
+  "conversation": {
+    "turnSec": [
+      3,
+      7
+    ],
+    "gapSec": [
+      0.2,
+      0.8
+    ],
+    "gesturesPerTurn": [
+      0,
+      2
+    ],
+    "listenerNodProbabilityPerTurn": 0.35,
+    "distanceM": [
+      0.9,
+      1.3
+    ]
+  },
+  "activities": {
+    "A01_shop": {
+      "cooldownSec": [
+        120,
+        300
+      ],
+      "browseSec": [
+        3,
+        8
+      ],
+      "browseOnlyProbability": 0.25,
+      "orderSec": [
+        5,
+        12
+      ],
+      "vendorPrepareSec": [
+        2,
+        5
+      ],
+      "transferSec": [
+        1.4,
+        2
+      ]
+    },
+    "A02_drinkTogether": {
+      "durationSec": [
+        40,
+        100
+      ],
+      "cooldownSec": [
+        180,
+        360
+      ],
+      "sipGapSec": [
+        12,
+        25
+      ]
+    },
+    "A03_familyTree": {
+      "durationSec": [
+        12,
+        30
+      ],
+      "zoneCooldownSec": [
+        120,
+        240
+      ]
+    },
+    "A04_windowBrowse": {
+      "durationSec": [
+        5,
+        18
+      ],
+      "zoneCooldownSec": [
+        60,
+        180
+      ]
+    },
+    "A05_meet": {
+      "durationSec": [
+        15,
+        45
+      ],
+      "pairCooldownSec": [
+        180,
+        420
+      ]
+    },
+    "A06_photo": {
+      "durationSec": [
+        6,
+        12
+      ],
+      "zoneCooldownSec": [
+        180,
+        360
+      ]
+    },
+    "A07_dogWalk": {
+      "sniffSec": [
+        3,
+        8
+      ],
+      "walkBetweenSniffsSec": [
+        20,
+        50
+      ],
+      "leashM": [
+        1.2,
+        1.8
+      ],
+      "entryCooldownSec": [
+        180,
+        420
+      ]
+    },
+    "A08_warmUp": {
+      "durationSec": [
+        1.2,
+        4
+      ],
+      "agentCooldownSec": [
+        25,
+        60
+      ]
+    },
+    "A09_waitFriend": {
+      "waitSec": [
+        15,
+        45
+      ],
+      "timeoutSec": 60,
+      "zoneCooldownSec": [
+        120,
+        300
+      ]
+    },
+    "A10_vendorTidy": {
+      "durationSec": [
+        2,
+        8
+      ],
+      "idleGapSec": [
+        20,
+        60
+      ]
+    },
+    "A11_clearSnow": {
+      "durationSec": [
+        45,
+        90
+      ],
+      "zoneCooldownSec": [
+        600,
+        1200
+      ],
+      "major": true
+    },
+    "A12_carryPurchase": {
+      "trigger": "completed-transfer",
+      "twoCupsSpeedMultiplier": [
+        0.85,
+        0.95
+      ]
+    },
+    "B01_catchFlakes": {
+      "durationSec": [
+        5,
+        10
+      ],
+      "zoneCooldownSec": [
+        240,
+        480
+      ]
+    },
+    "B02_sled": {
+      "durationSec": [
+        15,
+        40
+      ],
+      "entryCooldownSec": [
+        300,
+        600
+      ]
+    },
+    "B03_dropGlove": {
+      "durationSec": [
+        5,
+        9
+      ],
+      "sceneCooldownSec": [
+        300,
+        600
+      ]
+    },
+    "B04_snowballFight": {
+      "durationSec": [
+        30,
+        65
+      ],
+      "zoneCooldownSec": [
+        240,
+        480
+      ],
+      "participants": [
+        2,
+        3
+      ],
+      "throwsPerSession": [
+        4,
+        8
+      ],
+      "flightSec": [
+        0.45,
+        0.8
+      ],
+      "pauseSec": [
+        2,
+        6
+      ],
+      "missAimProbability": 0.45,
+      "blockedAbortSec": 15,
+      "major": true
+    },
+    "B05_snowman": {
+      "approxWorkSec": [
+        90,
+        150
+      ],
+      "zoneCooldownSec": [
+        600,
+        1200
+      ],
+      "participants": 2,
+      "radiiM": [
+        0.3,
+        0.22,
+        0.14
+      ],
+      "major": true,
+      "persistUntilReset": true
+    }
+  },
+  "environment": {
+    "snowDensityMultiplier": [
+      0.7,
+      1.15
+    ],
+    "snowTransitionSec": [
+      30,
+      90
+    ],
+    "gustSec": [
+      8,
+      20
+    ],
+    "cupSteamLifeSec": [
+      0.8,
+      1.8
+    ],
+    "standSteamLifeSec": [
+      1.5,
+      3.5
+    ],
+    "chimneySmokeLifeSec": [
+      4,
+      8
+    ],
+    "decorationAngleDeg": [
+      0.5,
+      2
+    ],
+    "windowStateSec": [
+      180,
+      600
+    ],
+    "stringLightVariationMax": 0.03,
+    "reflectionAlpha": [
+      0.04,
+      0.12
+    ]
+  },
+  "animals": {
+    "maxVisibleDogs": 2,
+    "maxVisibleCats": 1,
+    "dogWalkSpeedMps": [
+      0.7,
+      1.3
+    ],
+    "catWalkSpeedMps": [
+      0.45,
+      0.85
+    ],
+    "leashLengthM": [
+      1.2,
+      1.8
+    ],
+    "leashToleranceM": 0.03,
+    "Z01": "extends A07_dogWalk",
+    "Z02_waitAtStandSec": [
+      8,
+      25
+    ],
+    "Z03_petSec": [
+      4,
+      8
+    ],
+    "Z04_dogGreetingSec": [
+      2,
+      5
+    ],
+    "Z05_shakeSec": [
+      0.8,
+      1.4
+    ],
+    "Z06_catCrossSec": [
+      15,
+      40
+    ],
+    "Z07_catObserveSec": [
+      20,
+      60
+    ],
+    "Z08_groomSec": [
+      3,
+      6
+    ],
+    "Z08_stretchSec": [
+      2,
+      3
+    ],
+    "Z09_perchHeightM": [
+      0.25,
+      0.55
+    ],
+    "Z09_perchWaitSec": [
+      10,
+      30
+    ],
+    "Z10_encounterSec": [
+      1,
+      3
+    ]
+  }
+}

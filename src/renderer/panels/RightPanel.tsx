@@ -6,6 +6,7 @@ import { getActivity, listActivityDefinitions } from '../../core/activities/regi
 import { newId } from '../../core/model/ids';
 import { deleteSelection, duplicateSelection } from '../ops';
 import { formatTime } from './BottomPanel';
+import { defaultIntegration, lantern } from '../../core/render/integration';
 import { AppearanceEditor, CharacterPreview } from './CharacterGenerator';
 
 const deg = (r: number | undefined) => Math.round(((r ?? 0) * 180) / Math.PI);
@@ -46,6 +47,7 @@ function ObjectProps({ o, p }: { o: SceneObject; p: ProjectFile }) {
         <Check label="Kolizní stopa (pevná překážka)" value={!!o.footprint} onChange={(v) => set('Kolize', (x) => { x.footprint = v ? (asset?.defaultFootprint ? structuredClone(asset.defaultFootprint) : [{ x: -30, y: -10 }, { x: 30, y: -10 }, { x: 30, y: 6 }, { x: -30, y: 6 }]) : undefined; })} />
         <Actions />
       </Section>
+      <IntegrationProps o={o} p={p} />
       <Section title="Interakce">
         <Row label="Druh"><Select value={inter?.kind ?? 'none'} options={[{ value: 'none', label: 'Žádná' }, { value: 'stand', label: 'Stánek' }, { value: 'table', label: 'Stoleček' }, { value: 'viewpoint', label: 'Místo s výhledem' }, { value: 'bin', label: 'Koš' }, { value: 'generic', label: 'Obecná' }]}
           onChange={(v) => set('Druh interakce', (x) => { x.interaction = v === 'none' ? undefined : { kind: v as never, points: x.interaction?.points ?? (asset?.defaultInteraction?.kind === v ? structuredClone(asset.defaultInteraction.points) : []) }; })} /></Row>
@@ -67,6 +69,52 @@ function ObjectProps({ o, p }: { o: SceneObject; p: ProjectFile }) {
         {inter && <button onClick={() => set('Přidání bodu', (x) => { x.interaction!.points.push({ id: newId('pt'), kind: 'work', offset: { x: 0, y: 40 }, facing: -Math.PI / 2 }); })}>+ Přidat bod</button>}
       </Section>
     </>
+  );
+}
+
+/** Zapuštění do scény: kontakt se zemí, sněhový lem, světlo luceren, sladění barev (zadání stánků B). */
+function IntegrationProps({ o, p }: { o: SceneObject; p: ProjectFile }) {
+  const asset = p.assets.find((a) => a.id === o.assetId);
+  const I = o.integration;
+  const set = (label: string, fn: (x: NonNullable<SceneObject['integration']>) => void) => upd(label, (d) => { const x = d.objects.find((q) => q.id === o.id)!; if (x.integration) fn(x.integration); });
+  const setShape = (label: string, fn: (s: NonNullable<NonNullable<typeof asset>['shape']>) => void) => upd(label, (d) => {
+    const a = d.assets.find((q) => q.id === o.assetId)!;
+    a.shape ??= { bodyU0: 0.1, bodyU1: 0.9, depthM: 1 };
+    fn(a.shape);
+  });
+  const sh = asset?.shape;
+  return (
+    <Section title="Zapuštění do scény">
+      <Check label="Zapnuto (stín u paty, sníh, světlo, barvy)" value={!!I} onChange={(v) => upd(v ? 'Zapuštění zapnuto' : 'Zapuštění vypnuto', (d) => {
+        const x = d.objects.find((q) => q.id === o.id)!;
+        x.integration = v ? defaultIntegration() : undefined;
+        const a = d.assets.find((q) => q.id === o.assetId);
+        if (v && a && !a.shape) a.shape = { bodyU0: 0.1, bodyU1: 0.9, depthM: 1 };
+      })} />
+      {I && <>
+        <Check label="Kontaktní stín u paty" value={I.contact.enabled} onChange={(v) => set('Kontaktní stín', (x) => { x.contact.enabled = v; })} />
+        {I.contact.enabled && <Row label="Síla stínu" hint="Výchozí 0,22 (0,12–0,35)"><NumField value={I.contact.opacity} min={0} max={0.5} step={0.02} onCommit={(v) => set('Síla stínu', (x) => { x.contact.opacity = v; })} /></Row>}
+        <Check label="Zastínění půdorysu" value={I.ao.enabled} onChange={(v) => set('Zastínění půdorysu', (x) => { x.ao.enabled = v; })} />
+        <Check label="Sněhový lem u paty" value={I.snowLip.enabled} onChange={(v) => set('Sněhový lem', (x) => { x.snowLip.enabled = v; })} />
+        {I.snowLip.enabled && <Row label="Výška sněhu (cm) / pokrytí"><NumField value={Math.round(I.snowLip.heightM * 1000) / 10} min={0} max={8} step={0.5} onCommit={(v) => set('Výška sněhu', (x) => { x.snowLip.heightM = v / 100; })} /><NumField value={I.snowLip.coverage} min={0} max={1} step={0.05} onCommit={(v) => set('Pokrytí sněhem', (x) => { x.snowLip.coverage = v; })} /></Row>}
+        <Check label="Světlo luceren (záře, sníh, postavy)" value={I.lights.enabled} onChange={(v) => set('Světlo luceren', (x) => { x.lights.enabled = v; })} />
+        {I.lights.enabled && <Row label="Síla světla"><NumField value={I.lights.gain} min={0} max={3} step={0.1} onCommit={(v) => set('Síla světla', (x) => { x.lights.gain = v; })} /></Row>}
+        <Check label="Sladění barev a opar" value={I.grade.enabled} onChange={(v) => set('Sladění barev', (x) => { x.grade.enabled = v; })} />
+        {I.grade.enabled && <Row label="Sytost / kontrast" hint="Výchozí 0,88 / 0,95"><NumField value={I.grade.saturation} min={0.5} max={1.2} step={0.02} onCommit={(v) => set('Sytost', (x) => { x.grade.saturation = v; })} /><NumField value={I.grade.contrast} min={0.7} max={1.2} step={0.02} onCommit={(v) => set('Kontrast', (x) => { x.grade.contrast = v; })} /></Row>}
+        <div className="muted small">Tvar obrázku (společný pro všechny objekty s tímto obrázkem):</div>
+        <Row label="Pata od–do (0–1)" hint="Kde se tělo dotýká země – bez přesahu střechy"><NumField value={sh?.bodyU0 ?? 0.1} min={0} max={1} step={0.01} onCommit={(v) => setShape('Pata', (q) => { q.bodyU0 = v; })} /><NumField value={sh?.bodyU1 ?? 0.9} min={0} max={1} step={0.01} onCommit={(v) => setShape('Pata', (q) => { q.bodyU1 = v; })} /></Row>
+        <Row label="Hloubka půdorysu (m)"><NumField value={sh?.depthM ?? 1} min={0.05} max={10} step={0.1} onCommit={(v) => setShape('Hloubka', (q) => { q.depthM = v; })} /></Row>
+        {(sh?.lights ?? []).map((l, i) => (
+          <Row key={i} label={`Lucerna ${i + 1}: X / Y (0–1), výška m`}>
+            <NumField value={l.u} min={0} max={1} step={0.01} onCommit={(v) => setShape('Lucerna', (q) => { q.lights![i].u = v; })} />
+            <NumField value={l.v} min={0} max={1} step={0.01} onCommit={(v) => setShape('Lucerna', (q) => { q.lights![i].v = v; })} />
+            <NumField value={l.heightM} min={0} max={10} step={0.05} onCommit={(v) => setShape('Lucerna', (q) => { q.lights![i].heightM = v; })} />
+            <button className="icon" onClick={() => setShape('Smazání lucerny', (q) => { q.lights!.splice(i, 1); })}>✕</button>
+          </Row>
+        ))}
+        <button onClick={() => setShape('Přidání lucerny', (q) => { (q.lights ??= []).push(lantern(0.5, 0.45)); })}>+ Přidat lucernu</button>
+      </>}
+    </Section>
   );
 }
 

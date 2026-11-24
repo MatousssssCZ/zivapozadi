@@ -3,8 +3,8 @@
   "formatVersion": 1,
   "meta": {
     "name": "Náměstí s radnicí (test dodané grafiky)",
-    "createdAt": "2026-11-24T10:37:48.146Z",
-    "modifiedAt": "2026-11-24T10:37:48.184Z",
+    "createdAt": "2026-11-24T13:15:15.925Z",
+    "modifiedAt": "2026-11-24T13:15:15.998Z",
     "appVersion": "0.1.0"
   },
   "seed": 1224,
@@ -51,7 +51,38 @@
         "x": 0.5,
         "y": 0.985
       },
-      "pixelScale": 1
+      "pixelScale": 1,
+      "shape": {
+        "bodyU0": 0.063,
+        "bodyU1": 0.932,
+        "depthM": 1.8,
+        "lights": [
+          {
+            "u": 0.098,
+            "v": 0.468,
+            "color": "#FFD6A0",
+            "heightM": 1.6,
+            "radiusM": 1.6,
+            "groundGain": 0.12,
+            "haloOpacity": 0.12,
+            "haloSigmaPx": 3.5,
+            "characterGain": 0.12,
+            "flicker": 0.015
+          },
+          {
+            "u": 0.9,
+            "v": 0.456,
+            "color": "#FFD6A0",
+            "heightM": 1.6,
+            "radiusM": 1.6,
+            "groundGain": 0.12,
+            "haloOpacity": 0.12,
+            "haloSigmaPx": 3.5,
+            "characterGain": 0.12,
+            "flicker": 0.015
+          }
+        ]
+      }
     },
     {
       "id": "asset_image_stanek-pernik_d4890ce1",
@@ -64,7 +95,38 @@
         "x": 0.5,
         "y": 0.985
       },
-      "pixelScale": 1
+      "pixelScale": 1,
+      "shape": {
+        "bodyU0": 0.063,
+        "bodyU1": 0.932,
+        "depthM": 1.8,
+        "lights": [
+          {
+            "u": 0.098,
+            "v": 0.468,
+            "color": "#FFD6A0",
+            "heightM": 1.6,
+            "radiusM": 1.6,
+            "groundGain": 0.12,
+            "haloOpacity": 0.12,
+            "haloSigmaPx": 3.5,
+            "characterGain": 0.12,
+            "flicker": 0.015
+          },
+          {
+            "u": 0.9,
+            "v": 0.456,
+            "color": "#FFD6A0",
+            "heightM": 1.6,
+            "radiusM": 1.6,
+            "groundGain": 0.12,
+            "haloOpacity": 0.12,
+            "haloSigmaPx": 3.5,
+            "characterGain": 0.12,
+            "flicker": 0.015
+          }
+        ]
+      }
     },
     {
       "id": "asset_image_stanek-napoje_d631ef60",
@@ -77,7 +139,38 @@
         "x": 0.5,
         "y": 0.985
       },
-      "pixelScale": 1
+      "pixelScale": 1,
+      "shape": {
+        "bodyU0": 0.063,
+        "bodyU1": 0.932,
+        "depthM": 1.8,
+        "lights": [
+          {
+            "u": 0.098,
+            "v": 0.468,
+            "color": "#FFD6A0",
+            "heightM": 1.6,
+            "radiusM": 1.6,
+            "groundGain": 0.12,
+            "haloOpacity": 0.12,
+            "haloSigmaPx": 3.5,
+            "characterGain": 0.12,
+            "flicker": 0.015
+          },
+          {
+            "u": 0.9,
+            "v": 0.456,
+            "color": "#FFD6A0",
+            "heightM": 1.6,
+            "radiusM": 1.6,
+            "groundGain": 0.12,
+            "haloOpacity": 0.12,
+            "haloSigmaPx": 3.5,
+            "characterGain": 0.12,
+            "flicker": 0.015
+          }
+        ]
+      }
     },
     {
       "id": "asset_image_stanek-pletene_030f93b3",
@@ -90,7 +183,38 @@
         "x": 0.5,
         "y": 0.985
       },
-      "pixelScale": 1
+      "pixelScale": 1,
+      "shape": {
+        "bodyU0": 0.063,
+        "bodyU1": 0.932,
+        "depthM": 1.8,
+        "lights": [
+          {
+            "u": 0.098,
+            "v": 0.468,
+            "color": "#FFD6A0",
+            "heightM": 1.6,
+            "radiusM": 1.6,
+            "groundGain": 0.12,
+            "haloOpacity": 0.12,
+            "haloSigmaPx": 3.5,
+            "characterGain": 0.12,
+            "flicker": 0.015
+          },
+          {
+            "u": 0.9,
+            "v": 0.456,
+            "color": "#FFD6A0",
+            "heightM": 1.6,
+            "radiusM": 1.6,
+            "groundGain": 0.12,
+            "haloOpacity": 0.12,
+            "haloSigmaPx": 3.5,
+            "characterGain": 0.12,
+            "flicker": 0.015
+          }
+        ]
+      }
     },
     {
       "id": "asset_image_lampa_6a0533f6",
@@ -103,7 +227,50 @@
         "x": 0.5,
         "y": 0.99
       },
-      "pixelScale": 1
+      "pixelScale": 1,
+      "shape": {
+        "bodyU0": 0.387,
+        "bodyU1": 0.622,
+        "depthM": 0.3,
+        "lights": [
+          {
+            "u": 0.206,
+            "v": 0.325,
+            "color": "#FFD6A0",
+            "heightM": 2.65,
+            "radiusM": 2.4,
+            "groundGain": 0.14,
+            "haloOpacity": 0.05,
+            "haloSigmaPx": 3.5,
+            "characterGain": 0.12,
+            "flicker": 0.015
+          },
+          {
+            "u": 0.5,
+            "v": 0.311,
+            "color": "#FFD6A0",
+            "heightM": 2.65,
+            "radiusM": 2.4,
+            "groundGain": 0.14,
+            "haloOpacity": 0.05,
+            "haloSigmaPx": 3.5,
+            "characterGain": 0.12,
+            "flicker": 0.015
+          },
+          {
+            "u": 0.794,
+            "v": 0.325,
+            "color": "#FFD6A0",
+            "heightM": 2.65,
+            "radiusM": 2.4,
+            "groundGain": 0.14,
+            "haloOpacity": 0.05,
+            "haloSigmaPx": 3.5,
+            "characterGain": 0.12,
+            "flicker": 0.015
+          }
+        ]
+      }
     },
     {
       "id": "asset_image_strom_a5578c9a",
@@ -116,7 +283,12 @@
         "x": 0.5,
         "y": 0.985
       },
-      "pixelScale": 1
+      "pixelScale": 1,
+      "shape": {
+        "bodyU0": 0.272,
+        "bodyU1": 0.647,
+        "depthM": 1.2
+      }
     },
     {
       "id": "builtin_stolecek",
@@ -173,6 +345,11 @@
             "label": "Místo 2"
           }
         ]
+      },
+      "shape": {
+        "bodyU0": 0.289,
+        "bodyU1": 0.706,
+        "depthM": 0.5
       }
     },
     {
@@ -239,6 +416,11 @@
             "label": "Otvor koše"
           }
         ]
+      },
+      "shape": {
+        "bodyU0": 0.185,
+        "bodyU1": 0.806,
+        "depthM": 0.45
       }
     },
     {
@@ -305,6 +487,11 @@
             "label": "Otvor koše"
           }
         ]
+      },
+      "shape": {
+        "bodyU0": 0.167,
+        "bodyU1": 0.824,
+        "depthM": 0.45
       }
     },
     {
@@ -390,6 +577,39 @@
             "label": "Fronta 3"
           }
         ]
+      },
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": true,
+          "saturation": 0.88,
+          "contrast": 0.95,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": true,
+          "gain": 1
+        }
       },
       "seller": {
         "assetId": "builtin_postava_cg",
@@ -520,6 +740,39 @@
             "label": "Fronta 3"
           }
         ]
+      },
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": true,
+          "saturation": 0.88,
+          "contrast": 0.95,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": true,
+          "gain": 1
+        }
       },
       "seller": {
         "assetId": "builtin_postava_cg",
@@ -670,6 +923,39 @@
           }
         ]
       },
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": true,
+          "saturation": 0.88,
+          "contrast": 0.95,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": true,
+          "gain": 1
+        }
+      },
       "seller": {
         "assetId": "builtin_postava_cg",
         "appearance": {
@@ -800,6 +1086,39 @@
           }
         ]
       },
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": true,
+          "saturation": 0.88,
+          "contrast": 0.95,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": true,
+          "gain": 1
+        }
+      },
       "seller": {
         "assetId": "builtin_postava_cg",
         "appearance": {
@@ -909,6 +1228,39 @@
             "label": "Výhled 2"
           }
         ]
+      },
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": false,
+          "saturation": 0.88,
+          "contrast": 0.95,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": false,
+          "gain": 1
+        }
       }
     },
     {
@@ -940,7 +1292,40 @@
           "x": -22,
           "y": 8
         }
-      ]
+      ],
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": false,
+          "saturation": 0.88,
+          "contrast": 0.95,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": true,
+          "gain": 1
+        }
+      }
     },
     {
       "id": "obj_lampa2",
@@ -971,7 +1356,40 @@
           "x": -22,
           "y": 8
         }
-      ]
+      ],
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": false,
+          "saturation": 0.88,
+          "contrast": 0.95,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": true,
+          "gain": 1
+        }
+      }
     },
     {
       "id": "obj_stolecek",
@@ -1027,6 +1445,39 @@
             "label": "Místo 2"
           }
         ]
+      },
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": false,
+          "saturation": 0.88,
+          "contrast": 0.95,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": false,
+          "gain": 1
+        }
       }
     },
     {
@@ -1083,6 +1534,39 @@
             "label": "Místo 2"
           }
         ]
+      },
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": false,
+          "saturation": 0.88,
+          "contrast": 0.95,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": false,
+          "gain": 1
+        }
       }
     },
     {
@@ -1138,6 +1622,39 @@
             "label": "Otvor koše"
           }
         ]
+      },
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": false,
+          "saturation": 0.88,
+          "contrast": 0.95,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": false,
+          "gain": 1
+        }
       }
     },
     {
@@ -1203,6 +1720,39 @@
             "label": "Otvor koše"
           }
         ]
+      },
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": false,
+          "saturation": 0.88,
+          "contrast": 0.95,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": false,
+          "gain": 1
+        }
       }
     }
   ],

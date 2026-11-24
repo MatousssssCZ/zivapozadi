@@ -36,6 +36,8 @@ export interface AssetEntry {
    * největší úhel otevření (rad). Kreslí se zvlášť, aby se mohlo otáčet.
    */
   lid?: { x: number; y: number; w: number; h: number; color: string; snow?: boolean; hinge: 'left' | 'right'; maxAngle: number };
+  /** Tvar pro zapuštění do scény: kontaktní šířka těla (u0..u1 obrázku), hloubka půdorysu, světla. */
+  shape?: AssetShape;
   /** Výchozí kolizní stopa (vůči kotvě, v logických jednotkách při měřítku 1). */
   defaultFootprint?: Vec2[];
   /** Označení provizorního testovacího assetu. */
@@ -76,6 +78,33 @@ export interface StallSeller {
   window: { x0: number; y0: number; x1: number; y1: number };
 }
 
+/** Světelný zdroj objektu (lucerna): poloha v obrázku (0..1), výška nad zemí a účinky. */
+export interface ObjectLight {
+  u: number; v: number;
+  color: string;
+  heightM: number;
+  /** dosah světla na zemi (m) a jeho síla */ radiusM: number; groundGain: number;
+  /** záře kolem jádra (px scény 1080p) */ haloOpacity: number; haloSigmaPx: number;
+  /** teplé světlo na postavách v okolí */ characterGain: number;
+  /** relativní mikroblikání (±) */ flicker: number;
+}
+export interface AssetShape {
+  /** Kontaktní hrana těla s náměstím (zlomek šířky obrázku) – bez přesahu střechy. */
+  bodyU0: number; bodyU1: number;
+  /** Hloubka půdorysu (m). */
+  depthM: number;
+  lights?: ObjectLight[];
+}
+/** Zapuštění objektu do malovaného náměstí (zadání `docs/zdroje/zadani-zasazeni-stanku.md`, kap. B). */
+export interface ObjectIntegration {
+  /** Úzký kontaktní stín podél paty. */ contact: { enabled: boolean; opacity: number; sigmaPx: number; color: string };
+  /** Jemné zastínění půdorysu (rozšířeného o expandM). */ ao: { enabled: boolean; opacity: number; sigmaPx: number; expandM: number };
+  /** Nepravidelný sněhový lem u paty. */ snowLip: { enabled: boolean; heightM: number; coverage: number };
+  /** Sladění barev (lineární RGB) a atmosférický opar. */
+  grade: { enabled: boolean; saturation: number; contrast: number; exposureEV: number; ambientMix: number; ambient: string; hazeBeta: number; hazeColor: string };
+  /** Světlo luceren: záře, světlo na sněhu a na postavách, mikroblikání. */ lights: { enabled: boolean; gain: number };
+}
+
 export interface SceneObject {
   id: string;
   name: string;
@@ -98,6 +127,8 @@ export interface SceneObject {
   /** Kolizní stopa vůči kotvě (logické jednotky při měřítku 1). Slouží jako pevná překážka. */
   footprint?: Vec2[];
   interaction?: InteractionSpec;
+  /** Zapuštění do scény (stín, sníh, světlo, barvy); chybí = vypnuto. */
+  integration?: ObjectIntegration;
 }
 
 export interface StopConfig {

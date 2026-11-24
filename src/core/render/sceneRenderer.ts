@@ -2,6 +2,7 @@
  * Vykreslení scény v logických souřadnicích. Čistá funkce: projekt + stav simulace → obraz.
  * Neobsahuje editorové značky ani nekontrolovanou náhodu. Používá ji náhled i export.
  */
+import { drawGroundIntegration, drawObjectIntegration, gradedImage, characterLightAt } from './integration';
 import type { ProjectFile, SceneObject, AssetEntry } from '../model/types';
 import type { Simulation } from '../sim/simulation';
 import type { AgentState, PropState } from '../sim/types';
@@ -126,6 +127,18 @@ function drawAgent(ctx: Ctx, project: ProjectFile, sim: Simulation, a: AgentStat
   if (!m) return;
   const cv = characterVisual(a, m, c, project.scene);
   drawShadow(ctx, cv.x, cv.y, cv.scale);
+  // teplé světlo luceren na postavě (jen v její alfě, izolovaná ROI – B.5)
+  const lit = litCtx ? characterLightAt(project, litCtx.objects, litCtx.assets, { x: cv.x, y: cv.y }, litCtx.t) : { g: 0, color: '', dx: 0 };
+  if (lit.g > 0.006) {
+    const H = 150 * cv.scale, W = 90 * cv.scale;
+    const rect = { x: cv.x - W / 2, y: cv.y - H, w: W, h: H + 6 * cv.scale };
+    if (drawLitROI(ctx, rect, (c) => drawAgentBody(c, project, sim, a, cv, m, images), (c) => warmOverlay(c, rect, lit.g, lit.color, lit.dx, 0.55))) return;
+  }
+  drawAgentBody(ctx, project, sim, a, cv, m, images);
+  void cupScaleFallback;
+}
+function drawAgentBody(ctx: Ctx, project: ProjectFile, sim: Simulation, a: AgentState, cv: ReturnType<typeof characterVisual>, m: Simulation['manifests'][string], images: AssetImages) {
+  const c = sim.characterOf(a.id)!;
   ctx.save();
   ctx.translate(cv.x, cv.y);
   ctx.scale(cv.mirror ? -cv.scale : cv.scale, cv.scale);
@@ -140,8 +153,47 @@ function drawAgent(ctx: Ctx, project: ProjectFile, sim: Simulation, a: AgentStat
     ctx.fillStyle = 'rgba(120,120,140,0.6)'; ctx.fillRect(-12, -m.height, 24, m.height);
   }
   ctx.restore();
-  void cupScaleFallback;
 }
+
+/** Kontext světel pro aktuální snímek (objekty se zapuštěním a čas). */
+let litCtx: { objects: SceneObject[]; assets: Map<string, AssetEntry>; t: number } | null = null;
+
+/**
+ * Vykreslí obsah do izolované dočasné plochy (ROI v rozlišení výstupu), upraví ho jen v jeho
+ * alfě (`source-atop`) a vloží do scény. Hlavní plátno se nikdy nemaskuje. Vrací false, když
+ * plátna nejsou k dispozici (pak volající kreslí přímo).
+ */
+let roiPool: { c: { width: number; height: number; getContext(k: '2d'): unknown } } | null = null;
+function drawLitROI(ctx: Ctx, rect: { x: number; y: number; w: number; h: number }, draw: (c: Ctx) => void, fx: (c: Ctx) => void): boolean {
+  const f = getCanvasFactory();
+  const tr = (ctx as unknown as { getTransform?: () => { a: number } }).getTransform?.();
+  if (!f || !tr) return false;
+  const k = Math.max(0.25, tr.a);
+  const w = Math.max(1, Math.ceil(rect.w * k)), h = Math.max(1, Math.ceil(rect.h * k));
+  if (!roiPool || roiPool.c.width < w || roiPool.c.height < h) roiPool = { c: f(Math.max(w, roiPool?.c.width ?? 0), Math.max(h, roiPool?.c.height ?? 0)) as never };
+  const c = roiPool.c.getContext('2d') as Ctx;
+  c.setTransform(1, 0, 0, 1, 0, 0);
+  c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
+  c.clearRect(0, 0, w + 1, h + 1);
+  c.imageSmoothingEnabled = true;
+  c.setTransform(k, 0, 0, k, -rect.x * k, -rect.y * k);
+  draw(c);
+  c.save(); c.globalCompositeOperation = 'source-atop'; fx(c); c.restore();
+  c.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.drawImage(roiPool.c as unknown as CanvasImageSource, 0, 0, w, h, rect.x, rect.y, w / k, h / k);
+  return true;
+}
+/** Teplé světlo z boku lucerny, silnější nahoře (hlava, ramena); odvrácená strana zůstává chladná. */
+function warmOverlay(c: Ctx, rect: { x: number; y: number; w: number; h: number }, g: number, color: string, dx: number, topBias: number) {
+  const gx = c.createLinearGradient(dx >= 0 ? rect.x : rect.x + rect.w, 0, dx >= 0 ? rect.x + rect.w : rect.x, 0);
+  const col = hexRgb(color);
+  gx.addColorStop(0, `rgba(${col},0)`); gx.addColorStop(1, `rgba(${col},${(g * 1.4).toFixed(4)})`);
+  c.fillStyle = gx; c.fillRect(rect.x, rect.y, rect.w, rect.h);
+  const gy = c.createLinearGradient(0, rect.y, 0, rect.y + rect.h);
+  gy.addColorStop(0, `rgba(${col},${(g * 0.6).toFixed(4)})`); gy.addColorStop(topBias, `rgba(${col},${(g * 0.25).toFixed(4)})`); gy.addColorStop(1, `rgba(${col},0)`);
+  c.fillStyle = gy; c.fillRect(rect.x, rect.y, rect.w, rect.h);
+}
+function hexRgb(h: string): string { const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i.exec(h); return m ? [1, 2, 3].map((i) => parseInt(m[i], 16)).join(',') : '255,214,160'; }
 
 /** Obrys podrážky (metry; u = podél boty od středu, v = napříč): pata užší, přednoží širší. */
 const SOLE: { u: number; v: number }[] = (() => {
@@ -217,12 +269,24 @@ function drawSeller(ctx: Ctx, project: ProjectFile, sim: Simulation, o: SceneObj
   const cv = characterVisual(agent, m, { baseScale: 1, appearance: sl.appearance }, project.scene);
   if (!cv.rig || !m.rigLibrary) return;
   const a0 = objectLocalToScene(o, { x: sl.window.x0, y: sl.window.y0 }), a1 = objectLocalToScene(o, { x: sl.window.x1, y: sl.window.y1 });
-  ctx.save();
-  ctx.beginPath(); ctx.rect(Math.min(a0.x, a1.x), a0.y, Math.abs(a1.x - a0.x), a1.y - a0.y); ctx.clip();
-  ctx.translate(cv.x, cv.y);
-  ctx.scale(cv.mirror ? -cv.scale : cv.scale, cv.scale);
-  drawRig(ctx as unknown as CanvasRenderingContext2D, cv.rig, images, m.rigLibraryDir ?? '', m.rigLibrary.bodyTemplates[0]?.farShade ?? 0.8);
-  ctx.restore();
+  const win = { x: Math.min(a0.x, a1.x), y: a0.y, w: Math.abs(a1.x - a0.x), h: a1.y - a0.y };
+  const body = (c: Ctx) => {
+    c.save();
+    c.beginPath(); c.rect(win.x, win.y, win.w, win.h); c.clip();
+    c.translate(cv.x, cv.y);
+    c.scale(cv.mirror ? -cv.scale : cv.scale, cv.scale);
+    drawRig(c as unknown as CanvasRenderingContext2D, cv.rig!, images, m.rigLibraryDir ?? '', m.rigLibrary!.bodyTemplates[0]?.farShade ?? 0.8);
+    c.restore();
+  };
+  // prodavač je uvnitř: pod střechou zastíněný (interiorShade 0,10–0,22), od luceren teplé světlo
+  const integ = !!o.integration?.lights.enabled;
+  const fx = (c: Ctx) => {
+    const g = c.createLinearGradient(0, win.y, 0, win.y + win.h);
+    g.addColorStop(0, 'rgba(28,24,46,0.22)'); g.addColorStop(0.55, 'rgba(28,24,46,0.12)'); g.addColorStop(1, 'rgba(28,24,46,0.06)');
+    c.fillStyle = g; c.fillRect(win.x, win.y, win.w, win.h);
+    if (integ) warmOverlay(c, win, 0.13 * (o.integration!.lights.gain), '#FFD6A0', 0, 0.6);
+  };
+  if (!(integ || o.integration) || !drawLitROI(ctx, win, body, fx)) body(ctx);
 }
 
 /** Vykreslí scénu do kontextu, jehož transformace mapuje logické souřadnice scény na výstup. */
@@ -239,6 +303,9 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
   const fixed = (layer: 'background' | 'foreground') => visible.filter(({ o }) => o.layer === layer).sort((a, b) => a.o.zBias - b.o.zBias || a.i - b.i);
   for (const { o } of fixed('background')) drawObject(ctx, o, assets.get(o.assetId), images.get(o.assetId));
   if (sim) drawFootprints(ctx, project, sim, sim.time());
+  const worldObjs = visible.filter(({ o }) => o.layer === 'world').map(({ o }) => o);
+  drawGroundIntegration(ctx, project, worldObjs, assets, opts.time);
+  litCtx = { objects: worldObjs.filter((o) => o.integration), assets, t: opts.time };
 
   // Světová vrstva: řazení podle bodu kontaktu se zemí (+ ruční úprava pořadí).
   type Item = { key: number; tie: number; draw: () => void };
@@ -247,8 +314,10 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
   for (const { o, i } of visible) if (o.layer === 'world') {
     const key = o.y + o.zBias; objKey.set(o.id, key);
     items.push({ key, tie: i, draw: () => {
-      drawObject(ctx, o, assets.get(o.assetId), images.get(o.assetId), sim ? lidOpenness(sim.state, o.id, sim.time()) : 0);
+      const as = assets.get(o.assetId), im = images.get(o.assetId);
+      drawObject(ctx, o, as, (o.integration && as ? gradedImage(o, as, im, project) : im) as typeof im, sim ? lidOpenness(sim.state, o.id, sim.time()) : 0);
       if (o.seller && sim) drawSeller(ctx, project, sim, o, images);
+      if (o.integration && as) drawObjectIntegration(ctx, project, o, as, opts.time, backgroundColorAt(project, images, o.x, o.y + 6));
     } });
   }
   if (sim) {
