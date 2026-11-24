@@ -213,6 +213,8 @@ export interface CharacterInstance {
    * scénou buď jen projde, nebo si dojde na kávu, nebo se potká s přítelem a jdou na kávu spolu; pak odejde.
    */
   routine?: 'wander' | 'visitor';
+  /** Postava venčí psa (Z01). */
+  pet?: 'dog';
 }
 
 export type UnavailablePolicy = 'wait' | 'skip' | 'report';
@@ -283,6 +285,9 @@ export interface SceneSettings {
   maxWalkSlopeDeg?: number;
 }
 
+/** Kočka, která občas projde scénou (Z06/Z07). */
+export interface CatConfig { firstDelay?: number }
+
 export interface ProjectFile {
   format: typeof PROJECT_FORMAT;
   formatVersion: number;
@@ -297,4 +302,7 @@ export interface ProjectFile {
   characters: CharacterInstance[];
   schedule: ScheduledEvent[];
   export: ExportSettings;
+  /** Kočky (volitelné) a klidová místa, kde si sedají. */
+  cats?: CatConfig[];
+  catSpots?: Vec2[];
 }

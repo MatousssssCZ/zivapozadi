@@ -23,6 +23,7 @@ import { planCrowd, solveCrowd, wantVelocity, comfortRadius, insidePoly, R_BODY,
 import { cameraFor, toWorld, toScreen, worldAngleOfScreen, screenAngleOfWorld, Q, type World } from '../scene/camera';
 import { viewForDirection } from '../anim/skeleton';
 import { emit, emitsNow, windIntegral } from './environment';
+import { createAnimals, stepAnimals } from './animals';
 import { stepSnowman, startSnowman, abortSnowman, finishSession, snowmanZoneFree, type SessionHost } from '../activities/snowman';
 import { releaseArm as socialRelease, tryGesture } from '../social/social';
 import { stepFight, startFight, stepBalls, fightZoneProblem } from '../activities/snowballFight';
@@ -394,6 +395,7 @@ export class Simulation {
     for (const a of this.state.agents) this.stepAgent(a, t);
     this.stepSocial(t);
     this.stepVendors(t);
+    if (this.project.characters.some((c) => c.pet) || this.project.cats?.length) stepAnimals((this.state.animals ??= createAnimals(this.project)), this.state.agents, this.project, t, SIM_DT);
     this.stepEnvironment(t);
     this.stepProps(t);
     this.state.step++;

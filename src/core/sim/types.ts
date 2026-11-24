@@ -3,6 +3,7 @@ import type { RngState } from '../math/rng';
 import type { AnimState } from '../anim/animator';
 import type { AgentSocial, SocialWorld } from '../social/social';
 import type { Particle } from './environment';
+import type { AnimalState } from './animals';
 
 export const SIM_STATE_VERSION = 5;
 export const SIM_DT = 1 / 60;
@@ -165,6 +166,8 @@ export interface SimState {
   nextSessionId?: number;
   /** Prodavači ve stáncích (podle objectId). */
   vendors?: Record<string, VendorState>;
+  /** Psi a kočky (samostatné entity). */
+  animals?: AnimalState[];
   /** Pára a kouř (omezený pool, vypuštěné částice zůstávají ve světě). */
   particles?: Particle[];
   /** Cooldowny míst (prohlížení…): klíč → čas, odkdy je místo znovu volné. */

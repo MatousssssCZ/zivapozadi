@@ -203,6 +203,16 @@ export async function generateLiberec(dir: string): Promise<ProjectFile> {
     walkSpeed: Math.round(60 * app.motion.speed * 10) / 10, palette: testPal, wander: true, appearance: app, routine: 'visitor',
     activities: { coffee: { enabled: true, firstDelayMin: 4 + i * 6, firstDelayMax: 10 + i * 6, intervalMin: 70, intervalMax: 160 } },
   }));
+  // psi (Z01): dva majitelé bez dětí; kočka (Z06/Z07) si sedá u betléma nebo u lavičky
+  for (const id of ['ch_3', 'ch_11']) p.characters.find((c) => c.id === id)!.pet = 'dog';
+  p.cats = [{ firstDelay: 25 }];
+  p.catSpots = [{ x: Math.round(0.585 * SW), y: Math.round(0.655 * SH) }, { x: Math.round(0.17 * SW), y: Math.round(0.965 * SH) }, { x: Math.round(0.83 * SW), y: Math.round(0.965 * SH) }];
+  for (const n of ['dog_torso', 'dog_torso_back', 'dog_fu_a', 'dog_fu_b', 'dog_fl_a', 'dog_fl_b', 'dog_hu_a', 'dog_hu_b', 'dog_hl_a', 'dog_hl_b', 'dog_head', 'dog_head_back', 'dog_head_down', 'dog_tail', 'dog_sit',
+    'cat_torso', 'cat_torso_back', 'cat_fu_a', 'cat_fu_b', 'cat_fl_a', 'cat_fl_b', 'cat_hu_a', 'cat_hu_b', 'cat_hl_a', 'cat_hl_b', 'cat_head', 'cat_head_back', 'cat_sit', 'cat_tail_1', 'cat_tail_2', 'cat_tail_3']) {
+    const a = await importAssetFile(dir, path.join(G, 'animals', `${n}.png`), 'image');
+    a.id = `animal_${n}`; a.name = `Zvíře – ${n}`; a.anchor = { x: 0.5, y: 0.5 }; a.pixelScale = 1;
+    p.assets.push(a);
+  }
   // rodiny: 5 dětí chodí po boku rodiče (stálá dvojice – dítě následuje)
   const childLib = JSON.parse(await fs.readFile('resources/builtin/painted-parts-child/library.json', 'utf8')) as PartLibrary;
   const kids = generateGroup(childLib, 5, 777).appearances;

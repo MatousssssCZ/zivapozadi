@@ -3,15 +3,17 @@
  * Neobsahuje editorové značky ani nekontrolovanou náhodu. Používá ji náhled i export.
  */
 import { sessionBalls } from '../activities/snowman';
+import { drawAnimal, drawAnimalShadow } from './animalRenderer';
+import { SPECIES } from '../sim/animals';
 import { ballAt } from '../activities/snowballFight';
 import { particleAt, snowDensityFactor, windIntegral } from '../sim/environment';
 import { drawGroundIntegration, drawObjectIntegration, gradedImage, characterLightAt } from './integration';
 import type { ProjectFile, SceneObject, AssetEntry } from '../model/types';
 import type { Simulation } from '../sim/simulation';
 import type { AgentState, PropState } from '../sim/types';
-import { characterVisual } from './characterPose';
+import { characterVisual, localToScene } from './characterPose';
 import { drawFigure } from '../anim/testFigure';
-import { cameraFor, toScreen, toWorld } from '../scene/camera';
+import { cameraFor, toScreen, toWorld, Q } from '../scene/camera';
 import type { SimState } from '../sim/types';
 import { lidOpenness } from '../sim/simulation';
 import { FOOTPRINT_LIFE, FOOTPRINT_FADE } from '../sim/types';
@@ -395,6 +397,30 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
     // sněhuláci (runtime objekty) a rozpracované koule – řazené podle bodu dotyku se zemí
     const cam = cameraFor(sc);
     for (const o of sim.state.runtimeObjects ?? []) items.push({ key: o.y, tie: 15000, draw: () => drawSnowman(ctx, cam, o) });
+    // psi a kočky (+ vodítko od ruky majitele k obojku)
+    for (const an of sim.state.animals ?? []) {
+      if (an.hidden) continue;
+      const ds = depthScaleAt(sc.depth, an.pos.y), ppm = ds / Q;
+      items.push({ key: an.pos.y, tie: 12000, draw: () => {
+        ctx.save(); ctx.translate(an.pos.x, an.pos.y); drawAnimalShadow(ctx, an, ppm);
+        drawAnimal(ctx, an, (n) => (images.get(`animal_${n}`) ?? null) as never, ppm, opts.time); ctx.restore();
+      } });
+      const owner = an.ownerId ? sim.state.agents.find((x) => x.id === an.ownerId) : undefined;
+      if (owner && !owner.hidden) {
+        const oc = sim.characterOf(owner.id), om = oc ? sim.manifests[oc.assetId] : undefined;
+        if (oc && om) {
+          const cv = characterVisual(owner, om, oc, sc), hand = localToScene(cv, cv.grip);
+          const dir = Math.cos(an.facing) < 0 ? -1 : 1;
+          const collar = { x: an.pos.x + dir * SPECIES.dog.length * 0.42 * ppm, y: an.pos.y - SPECIES.dog.shoulder * 1.05 * ppm };
+          const key = Math.max(owner.pos.y, an.pos.y) + 0.1;
+          items.push({ key, tie: 12001, draw: () => {
+            const mx = (hand.x + collar.x) / 2, my = Math.max(hand.y, collar.y) + Math.max(4, Math.abs(hand.x - collar.x) * 0.18) * Math.min(1, ds);
+            ctx.save(); ctx.strokeStyle = 'rgba(70,40,30,0.85)'; ctx.lineWidth = Math.max(0.6, 0.012 * ppm);
+            ctx.beginPath(); ctx.moveTo(hand.x, hand.y); ctx.quadraticCurveTo(mx, my, collar.x, collar.y); ctx.stroke(); ctx.restore();
+          } });
+        }
+      }
+    }
     for (const p of sim.state.props) if (p.place.kind === 'flying') {
       const q = ballAt(p.place, opts.time); if (!q) continue;
       const g = toScreen(cam, { X: q.X, Z: q.Z });

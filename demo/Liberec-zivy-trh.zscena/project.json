@@ -3,8 +3,8 @@
   "formatVersion": 1,
   "meta": {
     "name": "Liberec – živý vánoční trh",
-    "createdAt": "2026-11-24T18:02:16.374Z",
-    "modifiedAt": "2026-11-24T18:02:16.478Z",
+    "createdAt": "2026-11-24T18:08:46.623Z",
+    "modifiedAt": "2026-11-24T18:08:46.750Z",
     "appVersion": "0.1.0"
   },
   "seed": 2611,
@@ -696,6 +696,409 @@
       "file": "assets/images/steam-6-18b9975d.png",
       "width": 307,
       "height": 421,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_torso",
+      "kind": "image",
+      "name": "Zvíře – dog_torso",
+      "file": "assets/images/dog-torso-e994d39c.png",
+      "width": 393,
+      "height": 239,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_torso_back",
+      "kind": "image",
+      "name": "Zvíře – dog_torso_back",
+      "file": "assets/images/dog-torso-back-19cc4c0d.png",
+      "width": 405,
+      "height": 240,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_fu_a",
+      "kind": "image",
+      "name": "Zvíře – dog_fu_a",
+      "file": "assets/images/dog-fu-a-0289f2db.png",
+      "width": 140,
+      "height": 238,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_fu_b",
+      "kind": "image",
+      "name": "Zvíře – dog_fu_b",
+      "file": "assets/images/dog-fu-b-81fffad9.png",
+      "width": 138,
+      "height": 232,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_fl_a",
+      "kind": "image",
+      "name": "Zvíře – dog_fl_a",
+      "file": "assets/images/dog-fl-a-e0e9f1cc.png",
+      "width": 98,
+      "height": 216,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_fl_b",
+      "kind": "image",
+      "name": "Zvíře – dog_fl_b",
+      "file": "assets/images/dog-fl-b-b41c8f1f.png",
+      "width": 92,
+      "height": 214,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_hu_a",
+      "kind": "image",
+      "name": "Zvíře – dog_hu_a",
+      "file": "assets/images/dog-hu-a-a5e60c13.png",
+      "width": 165,
+      "height": 238,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_hu_b",
+      "kind": "image",
+      "name": "Zvíře – dog_hu_b",
+      "file": "assets/images/dog-hu-b-d74b3b4c.png",
+      "width": 147,
+      "height": 240,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_hl_a",
+      "kind": "image",
+      "name": "Zvíře – dog_hl_a",
+      "file": "assets/images/dog-hl-a-8ace2ff5.png",
+      "width": 114,
+      "height": 220,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_hl_b",
+      "kind": "image",
+      "name": "Zvíře – dog_hl_b",
+      "file": "assets/images/dog-hl-b-ecc20bac.png",
+      "width": 118,
+      "height": 220,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_head",
+      "kind": "image",
+      "name": "Zvíře – dog_head",
+      "file": "assets/images/dog-head-938e6dfa.png",
+      "width": 255,
+      "height": 256,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_head_back",
+      "kind": "image",
+      "name": "Zvíře – dog_head_back",
+      "file": "assets/images/dog-head-back-a5d3fc3e.png",
+      "width": 226,
+      "height": 243,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_head_down",
+      "kind": "image",
+      "name": "Zvíře – dog_head_down",
+      "file": "assets/images/dog-head-down-66c7a7a6.png",
+      "width": 281,
+      "height": 267,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_tail",
+      "kind": "image",
+      "name": "Zvíře – dog_tail",
+      "file": "assets/images/dog-tail-110e4c33.png",
+      "width": 180,
+      "height": 206,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_sit",
+      "kind": "image",
+      "name": "Zvíře – dog_sit",
+      "file": "assets/images/dog-sit-d1233436.png",
+      "width": 295,
+      "height": 340,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_torso",
+      "kind": "image",
+      "name": "Zvíře – cat_torso",
+      "file": "assets/images/cat-torso-f6dede7e.png",
+      "width": 419,
+      "height": 213,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_torso_back",
+      "kind": "image",
+      "name": "Zvíře – cat_torso_back",
+      "file": "assets/images/cat-torso-back-1e8ccd03.png",
+      "width": 439,
+      "height": 227,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_fu_a",
+      "kind": "image",
+      "name": "Zvíře – cat_fu_a",
+      "file": "assets/images/cat-fu-a-0e38db5e.png",
+      "width": 118,
+      "height": 240,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_fu_b",
+      "kind": "image",
+      "name": "Zvíře – cat_fu_b",
+      "file": "assets/images/cat-fu-b-153f5019.png",
+      "width": 113,
+      "height": 226,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_fl_a",
+      "kind": "image",
+      "name": "Zvíře – cat_fl_a",
+      "file": "assets/images/cat-fl-a-84a3e10c.png",
+      "width": 90,
+      "height": 212,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_fl_b",
+      "kind": "image",
+      "name": "Zvíře – cat_fl_b",
+      "file": "assets/images/cat-fl-b-f8ef92be.png",
+      "width": 86,
+      "height": 207,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_hu_a",
+      "kind": "image",
+      "name": "Zvíře – cat_hu_a",
+      "file": "assets/images/cat-hu-a-72171fab.png",
+      "width": 134,
+      "height": 229,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_hu_b",
+      "kind": "image",
+      "name": "Zvíře – cat_hu_b",
+      "file": "assets/images/cat-hu-b-819d7c07.png",
+      "width": 135,
+      "height": 227,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_hl_a",
+      "kind": "image",
+      "name": "Zvíře – cat_hl_a",
+      "file": "assets/images/cat-hl-a-d14ffe24.png",
+      "width": 122,
+      "height": 232,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_hl_b",
+      "kind": "image",
+      "name": "Zvíře – cat_hl_b",
+      "file": "assets/images/cat-hl-b-bf236ac6.png",
+      "width": 134,
+      "height": 227,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_head",
+      "kind": "image",
+      "name": "Zvíře – cat_head",
+      "file": "assets/images/cat-head-ea0b7b21.png",
+      "width": 240,
+      "height": 268,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_head_back",
+      "kind": "image",
+      "name": "Zvíře – cat_head_back",
+      "file": "assets/images/cat-head-back-841a221f.png",
+      "width": 232,
+      "height": 256,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_sit",
+      "kind": "image",
+      "name": "Zvíře – cat_sit",
+      "file": "assets/images/cat-sit-519d98e2.png",
+      "width": 293,
+      "height": 345,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_tail_1",
+      "kind": "image",
+      "name": "Zvíře – cat_tail_1",
+      "file": "assets/images/cat-tail-1-79b46ff9.png",
+      "width": 132,
+      "height": 76,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_tail_2",
+      "kind": "image",
+      "name": "Zvíře – cat_tail_2",
+      "file": "assets/images/cat-tail-2-73a0542f.png",
+      "width": 169,
+      "height": 88,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_tail_3",
+      "kind": "image",
+      "name": "Zvíře – cat_tail_3",
+      "file": "assets/images/cat-tail-3-82e5d55e.png",
+      "width": 161,
+      "height": 116,
       "anchor": {
         "x": 0.5,
         "y": 0.5
@@ -3725,7 +4128,8 @@
           "intervalMin": 70,
           "intervalMax": 160
         }
-      }
+      },
+      "pet": "dog"
     },
     {
       "id": "ch_4",
@@ -4253,7 +4657,8 @@
           "intervalMin": 70,
           "intervalMax": 160
         }
-      }
+      },
+      "pet": "dog"
     },
     {
       "id": "ch_12",
@@ -5427,5 +5832,24 @@
     "chunkSec": 20,
     "outputPath": null,
     "diagnosticPngSequence": false
-  }
+  },
+  "cats": [
+    {
+      "firstDelay": 25
+    }
+  ],
+  "catSpots": [
+    {
+      "x": 1123,
+      "y": 707
+    },
+    {
+      "x": 326,
+      "y": 1042
+    },
+    {
+      "x": 1594,
+      "y": 1042
+    }
+  ]
 }
