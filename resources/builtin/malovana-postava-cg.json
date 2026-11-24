@@ -84,12 +84,8 @@
         }
       ]
     },
-    "look": {
-      "duration": 2,
-      "loop": "once"
-    },
     "lidDrop": {
-      "duration": 3.0,
+      "duration": 3,
       "loop": "once",
       "events": [
         {
@@ -105,6 +101,10 @@
           "name": "lidClose"
         }
       ]
+    },
+    "look": {
+      "duration": 2,
+      "loop": "once"
     }
   },
   "clipFallbacks": {
@@ -119,7 +119,8 @@
     "talk"
   ],
   "supportedActivities": [
-    "coffee"
+    "coffee",
+    "shop"
   ],
   "rig": {
     "library": "painted-parts-cg/library.json",

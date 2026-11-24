@@ -11,7 +11,7 @@ import { cameraFor, toScreen } from '../scene/camera';
 import { lidOpenness } from '../sim/simulation';
 import { FOOTPRINT_LIFE, FOOTPRINT_FADE } from '../sim/types';
 import { getCanvasFactory, drawRig } from './rigRenderer';
-import { depthScaleAt } from '../scene/geometry';
+import { depthScaleAt, objectLocalToScene } from '../scene/geometry';
 import { hashNoise } from '../math/rng';
 import { clamp, smoothstep } from '../math/vec';
 
@@ -187,6 +187,34 @@ function drawFootprints(ctx: Ctx, project: ProjectFile, sim: Simulation, time: n
   ctx.restore();
 }
 
+/**
+ * Prodavač ve stánku: postava za pultem (ve stavu klidu), vidět jen v okně stánku nad pultem.
+ * Když zákazník objednává, mluví s ním a natočí se k němu; při předání podává zboží.
+ */
+function drawSeller(ctx: Ctx, project: ProjectFile, sim: Simulation, o: SceneObject, images: AssetImages) {
+  const sl = o.seller!;
+  const m = sim.manifests[sl.assetId];
+  if (!m || m.backend !== 'skeleton') return;
+  const t = sim.time();
+  const pos = objectLocalToScene(o, sl.offset);
+  const cust = sim.state.agents.find((a) => !a.hidden && a.activity && (a.activity.data as { standId?: string }).standId === o.id && (a.activity.phase === 'order' || a.activity.phase === 'receive' || a.activity.phase === 'to-service'));
+  const seed = hashNoise(o.id.length * 31 + o.x, 7) * 10;
+  const dir = cust ? (cust.pos.x < pos.x ? 'SW' : 'SE') : seed > 5 ? 'SE' : 'SW';
+  const anim = { dir, walkPhase: 0, walkBlend: 0, idleTime: t + seed, action: null as AgentState['anim']['action'] } as AgentState['anim'];
+  if (cust?.activity?.phase === 'order') anim.action = { requested: 'talk', clip: 'talk', time: (t + seed) % 1.4, duration: 1.4, loop: 'loop', events: [], finished: false };
+  else if (cust?.activity?.phase === 'receive') anim.action = { requested: 'receive', clip: 'receive', time: Math.min(1.1, t - cust.activity.phaseStart), duration: 1.1, loop: 'once', events: [], finished: false };
+  const agent = { id: 'seller:' + o.id, name: sl.name ?? 'Prodavač', pos, facing: dir === 'SE' ? 0.6 : Math.PI - 0.6, anim, holding: null } as unknown as AgentState;
+  const cv = characterVisual(agent, m, { baseScale: 1, appearance: sl.appearance }, project.scene);
+  if (!cv.rig || !m.rigLibrary) return;
+  const a0 = objectLocalToScene(o, { x: sl.window.x0, y: sl.window.y0 }), a1 = objectLocalToScene(o, { x: sl.window.x1, y: sl.window.y1 });
+  ctx.save();
+  ctx.beginPath(); ctx.rect(Math.min(a0.x, a1.x), a0.y, Math.abs(a1.x - a0.x), a1.y - a0.y); ctx.clip();
+  ctx.translate(cv.x, cv.y);
+  ctx.scale(cv.mirror ? -cv.scale : cv.scale, cv.scale);
+  drawRig(ctx as unknown as CanvasRenderingContext2D, cv.rig, images, m.rigLibraryDir ?? '', m.rigLibrary.bodyTemplates[0]?.farShade ?? 0.8);
+  ctx.restore();
+}
+
 /** Vykreslí scénu do kontextu, jehož transformace mapuje logické souřadnice scény na výstup. */
 export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null, images: AssetImages, opts: DrawOptions) {
   const sc = project.scene;
@@ -208,7 +236,10 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
   const objKey = new Map<string, number>();
   for (const { o, i } of visible) if (o.layer === 'world') {
     const key = o.y + o.zBias; objKey.set(o.id, key);
-    items.push({ key, tie: i, draw: () => drawObject(ctx, o, assets.get(o.assetId), images.get(o.assetId), sim ? lidOpenness(sim.state, o.id, sim.time()) : 0) });
+    items.push({ key, tie: i, draw: () => {
+      drawObject(ctx, o, assets.get(o.assetId), images.get(o.assetId), sim ? lidOpenness(sim.state, o.id, sim.time()) : 0);
+      if (o.seller && sim) drawSeller(ctx, project, sim, o, images);
+    } });
   }
   if (sim) {
     for (const a of sim.state.agents) if (!a.hidden) items.push({ key: a.pos.y, tie: 10000 + sim.state.agents.indexOf(a), draw: () => drawAgent(ctx, project, sim, a, 1, images) });

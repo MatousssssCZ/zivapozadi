@@ -64,6 +64,18 @@ export interface InteractionSpec {
   points: InteractionPoint[];
 }
 
+/** Prodavač ve stánku: postava za pultem, vidět jen v okně stánku (nad pultem). */
+export interface StallSeller {
+  /** Asset postavy (manifest se skládanou kostrou). */
+  assetId: string;
+  appearance: import('../anim/partLibrary').CharacterAppearance;
+  name?: string;
+  /** Poloha chodidel vůči kotvě objektu (logické jednotky při měřítku 1). */
+  offset: Vec2;
+  /** Okno stánku, ve kterém je prodavač vidět (vůči kotvě, logické jednotky při měřítku 1); spodní hrana = horní hrana pultu. */
+  window: { x0: number; y0: number; x1: number; y1: number };
+}
+
 export interface SceneObject {
   id: string;
   name: string;
@@ -79,6 +91,8 @@ export interface SceneObject {
   /** Ruční úprava pořadí: přičítá se k hloubce (u světové vrstvy) / pořadí (u pevných vrstev). */
   zBias: number;
   flipX: boolean;
+  /** Obsluha stánku (volitelné). */
+  seller?: StallSeller;
   visible: boolean;
   locked: boolean;
   /** Kolizní stopa vůči kotvě (logické jednotky při měřítku 1). Slouží jako pevná překážka. */

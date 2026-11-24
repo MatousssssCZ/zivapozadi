@@ -226,6 +226,27 @@ rychlé začátky švihu po ostrém zatočení.
 * Zaboření v jednotkách postavy je stálé (0,02 m / q ≈ 1,5 j.), takže v obraze je úměrné
   perspektivě.
 
+**Žádná chůze pozpátku.** Řešič davu má pro každou pohybující se postavu navíc podmínku
+v · (směr natočení) ≥ 0: když ji ostatní tlačí dozadu, raději zastaví (dříve ~800 snímků pozpátku
+za 3 min, teď 0).
+
+**Kelímek a vrstvy.**
+* Zepředu se kelímek kreslí pod palčákem a blízkou paží (ruka ho obepíná).
+* Zezadu se kreslí před trupem, takže ho zakryje tělo, blízká ruka i hlava.
+
+**Obsluha ve stáncích** (`SceneObject.seller`).
+* Prodavač je skládaná postava za pultem, vykreslená do okna stánku nad pultem (ořez, pult ho
+  zakryje).
+* V klidu dýchá a přešlapuje. Když zákazník vybírá nebo objednává, mluví s ním a natočí se
+  k němu; při předání nákupu podává zboží.
+* V demu mají prodavače všechny 4 stánky.
+
+**Nákup u stánku** (činnost `shop`).
+* Postup: fronta (3 místa) → obsluha → výběr a placení 8–14 s s prodavačem → převzetí nákupu.
+* Návštěvníci se rádi přidají tam, kde už někdo stojí, a po nákupu nebo kávě často zajdou ještě
+  k dalšímu stánku.
+* V demu je 24 návštěvníků; fronty u stánků mají typicky 2–3 lidi včetně obsluhovaného.
+
 **Koše.**
 * *S víkem* (`builtin_kos_vika`, asset má `lid`: pant vlevo, otevírá se vpravo): místo
   vhození je jen na straně otvírání. Akce `lidDrop` (3 s):

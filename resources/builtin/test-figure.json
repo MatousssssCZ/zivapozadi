@@ -131,6 +131,7 @@
     "talk"
   ],
   "supportedActivities": [
-    "coffee"
+    "coffee",
+    "shop"
   ]
 }

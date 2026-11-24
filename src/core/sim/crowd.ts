@@ -29,6 +29,8 @@ export interface CrowdItem {
   r: number; rc: number; // tělo, osobní prostor (m)
   partnerOf?: string | null; // druhý člen dvojice (osobní prostor se mezi nimi nepočítá)
   choice?: { ang: number; k: number } | null; // volba plánovače vůči preferovanému směru
+  /** Směr, kam je postava natočená (jednotkový) – nikdy se nepohne proti němu (žádná chůze pozpátku). */
+  head?: World | null;
 }
 export interface ObstacleW { poly: World[] }
 
@@ -155,6 +157,11 @@ export function solveCrowd(items: CrowdItem[], want: World[], obstacles: Obstacl
 
     const Rs = Math.min(R + GAP_G, d);
     halves.push({ i, j, nX: nn.X, nZ: nn.Z, b: (Rs - d) / dt });
+  }
+  // žádná chůze pozpátku: v · směr natočení ≥ 0 (nulová rychlost je vždy přípustná)
+  for (let i = 0; i < n; i++) {
+    const h = items[i].head;
+    if (!items[i].fixed && h) halves.push({ i, j: -1, nX: h.X, nZ: h.Z, b: 0 });
   }
   // pevné překážky: podpůrná přímka v nejbližším bodě obrysu
   for (let i = 0; i < n; i++) {

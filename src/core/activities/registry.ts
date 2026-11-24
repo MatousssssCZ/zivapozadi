@@ -1,5 +1,6 @@
 import type { ActivityRunner, ActivityDefinition } from './types';
 import { coffeeRunner } from './coffee';
+import { shopRunner } from './shop';
 
 const runners = new Map<string, ActivityRunner>();
 
@@ -9,3 +10,4 @@ export function getActivity(type: string): ActivityRunner | undefined { return r
 export function listActivityDefinitions(): ActivityDefinition[] { return [...runners.values()].map((r) => r.definition); }
 
 registerActivity(coffeeRunner);
+registerActivity(shopRunner);

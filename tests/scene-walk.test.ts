@@ -18,7 +18,7 @@ beforeAll(async () => {
   lp = await loadProject(dir);
 }, 60_000);
 
-describe('chůze ve scéně (náměstí, 12 postav, 2 dvojice)', () => {
+describe('chůze ve scéně (náměstí, 24 návštěvníků, 4 prodavači, 2 dvojice)', () => {
   it('opřená bota se ve scéně neposouvá (pata během celé podrážky)', () => {
     const sim = Simulation.create(lp.project, lp.manifests);
     sim.advanceTo(2);
@@ -186,6 +186,25 @@ describe('chůze ve scéně (náměstí, 12 postav, 2 dvojice)', () => {
     expect(wrongSide).toBe(0);
     expect(maxOpen).toBeGreaterThan(0.99);
     expect(lidOpenness(sim.state, 'obj_kos', sim.time() + 5)).toBe(0);
+  });
+
+  it('nikdo nejde pozpátku; obsluha ve stáncích; u stánků se tvoří fronty', () => {
+    const sim = Simulation.create(lp.project, lp.manifests);
+    let back = 0, moving = 0; const qMax: Record<string, number> = {}, qSum: Record<string, number> = {}; let samples = 0;
+    for (let i = 0; i < 60 * 180; i++) {
+      sim.step();
+      for (const a of sim.state.agents) {
+        if (a.hidden || !a.vel) continue;
+        const v = Math.hypot(a.vel.X, a.vel.Z); if (v < 0.03) continue; moving++;
+        const h = a.groundHeading ?? 0;
+        if ((a.vel.X * Math.cos(h) + a.vel.Z * Math.sin(h)) / v < -0.05) back++;
+      }
+      if (i % 60 === 0) { samples++; for (const [k, q] of Object.entries(sim.state.queues)) { qMax[k] = Math.max(qMax[k] ?? 0, q.length); qSum[k] = (qSum[k] ?? 0) + q.length; } }
+    }
+    console.log('fronty (max / průměr):', Object.keys(qMax).map((k) => `${k.replace('stand:obj_st_', '')} ${qMax[k]}/${(qSum[k] / samples).toFixed(1)}`).join(', '));
+    expect(back).toBe(0);
+    expect(lp.project.objects.filter((o) => o.seller).length).toBe(4);
+    expect(Object.values(qMax).filter((m) => m >= 2).length).toBeGreaterThanOrEqual(2); // fronty aspoň u dvou stánků
   });
 
   it('dvojice se obnoví z checkpointu beze změny průběhu', () => {

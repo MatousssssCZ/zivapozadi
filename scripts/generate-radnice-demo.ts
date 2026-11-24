@@ -48,6 +48,11 @@ export async function generateRadnice(dir: string): Promise<ProjectFile> {
     { id: 'queue4', kind: 'queue', offset: { x: -570, y: 146 }, facing: -0.3, label: 'Fronta 4' },
     { id: 'counter', kind: 'counter', offset: { x: 70, y: -100 }, label: 'Pult' },
   ] };
+  // nákupní stánky: obsluha vpředu uprostřed, fronta 3 místa do strany (směr podle volného místa)
+  const shopInteraction = (dir: 1 | -1): InteractionSpec => ({ kind: 'stand', points: [
+    { id: 'service1', kind: 'service', offset: { x: 0, y: 92 }, facing: -Math.PI / 2, label: 'Obsluha' },
+    ...[1, 2, 3].map((k) => ({ id: `queue${k}`, kind: 'queue' as const, offset: { x: dir * (150 + (k - 1) * 135), y: 104 + k * 6 }, facing: dir > 0 ? Math.PI + 0.9 - k * 0.15 : -0.9 + k * 0.15, label: `Fronta ${k}` })),
+  ] });
   const O = (id: string, name: string, a: AssetEntry, x: number, y: number, scale: number, extra: Partial<SceneObject> = {}): SceneObject => ({
     id, name, assetId: a.id, x, y, scale, layer: 'world', zBias: 0, flipX: false, visible: true, locked: false,
     footprint: a.defaultFootprint ? structuredClone(a.defaultFootprint) : undefined,
@@ -55,10 +60,10 @@ export async function generateRadnice(dir: string): Promise<ProjectFile> {
   });
   const table = p.assets.find((a) => a.id === 'builtin_stolecek')!, bin = p.assets.find((a) => a.id === 'builtin_kos')!, binLid = p.assets.find((a) => a.id === 'builtin_kos_vika')!;
   p.objects = [
-    O('obj_st_hracky', 'Stánek – hračky', st.hracky, 175, 992, 0.45, { footprint: stallFootprint }),
-    O('obj_st_pernik', 'Stánek – perník', st.pernik, 420, 976, 0.43, { footprint: stallFootprint }),
+    O('obj_st_hracky', 'Stánek – hračky', st.hracky, 175, 992, 0.45, { footprint: stallFootprint, interaction: shopInteraction(1) }),
+    O('obj_st_pernik', 'Stánek – perník', st.pernik, 420, 976, 0.43, { footprint: stallFootprint, interaction: shopInteraction(1) }),
     O('obj_st_napoje', 'Stánek – nápoje', st.napoje, 1235, 985, 0.44, { footprint: stallFootprint, interaction: coffeeInteraction }),
-    O('obj_st_pletene', 'Stánek – pletené zboží', st.pletene, 1765, 996, 0.46, { footprint: stallFootprint }),
+    O('obj_st_pletene', 'Stánek – pletené zboží', st.pletene, 1765, 996, 0.46, { footprint: stallFootprint, interaction: shopInteraction(-1) }),
     O('obj_strom', 'Vánoční strom', strom, 1490, 935, 0.49, {
       footprint: rect(-130, -30, 130, 15),
       interaction: { kind: 'viewpoint', points: [
@@ -98,15 +103,26 @@ export async function generateRadnice(dir: string): Promise<ProjectFile> {
   ];
   p.areas = [{ id: 'area_snih', name: 'Zasněžené náměstí', kind: 'snow', polygon: rect(0, 905, 1920, 1080) }];
   p.zones = [{
+    id: 'zone_nakup', name: 'Nákup u stánků', activityType: 'shop', activityVersion: 1, enabled: true,
+    bounds: rect(0, 900, 1920, 1080),
+    objectRoles: { stand: ['obj_st_hracky', 'obj_st_pernik', 'obj_st_pletene'] }, params: {},
+  }, {
     id: 'zone_kava', name: 'Káva u stánku s nápoji', activityType: 'coffee', activityVersion: 1, enabled: true,
     bounds: rect(700, 900, 1700, 1075),
     objectRoles: { stand: ['obj_st_napoje'], seating: ['obj_stolecek', 'obj_stolecek2', 'obj_strom'], bin: ['obj_kos', 'obj_kos2'] }, params: {},
   }];
-  // 12 postav z generátoru (malované díly z ChatGPT, pohled šikmo zepředu)
+  // 24 návštěvníků z generátoru (malované díly z ChatGPT) + 4 prodavači ve stáncích
   const lib = JSON.parse(await fs.readFile('resources/builtin/painted-parts-cg/library.json', 'utf8')) as PartLibrary;
-  const group = generateGroup(lib, 12, 2024);
-  const names = ['Anna', 'Bára', 'Cyril', 'Dana', 'Emil', 'Františka', 'Gustav', 'Hana', 'Ivan', 'Jana', 'Karel', 'Lenka'];
-  const starts = ['b', 'h', 'k', 'a', 'i', 'c', 'g', 'd', 'n', 'j', 'e', 'l'];
+  const group = generateGroup(lib, 24, 2024);
+  const names = ['Anna', 'Bára', 'Cyril', 'Dana', 'Emil', 'Františka', 'Gustav', 'Hana', 'Ivan', 'Jana', 'Karel', 'Lenka', 'Marek', 'Nikola', 'Ota', 'Petra', 'Radek', 'Šárka', 'Tomáš', 'Uršula', 'Václav', 'Věra', 'Zdeněk', 'Žaneta'];
+  const starts = ['b', 'h', 'k', 'a', 'i', 'c', 'g', 'd', 'n', 'j', 'e', 'l', 'a', 'i', 'a', 'i', 'a', 'i', 'b', 'h', 'c', 'g', 'd', 'n'];
+  const sellers = generateGroup(lib, 4, 777).appearances;
+  const sellerNames = ['Prodavačka hraček', 'Perníkář', 'Prodavač nápojů', 'Prodavačka pleteného zboží'];
+  ['obj_st_hracky', 'obj_st_pernik', 'obj_st_napoje', 'obj_st_pletene'].forEach((id, i) => {
+    const o = p.objects.find((x) => x.id === id)!;
+    // okno stánku nad pultem (souřadnice obrázku → vůči kotvě 0,5/0,985 obrázku 431×395)
+    o.seller = { assetId: 'builtin_postava_cg', appearance: sellers[i], name: sellerNames[i], offset: { x: i % 2 ? 18 : -18, y: -4 }, window: { x0: -155, y0: -259, x1: 156, y1: -105 } };
+  });
   const testPal = { coat: '#c8553d', hat: '#f2c14e', scarf: '#f7f3e3', skin: '#f1c9a5', trousers: '#3b4a6b' };
   p.characters = group.appearances.map((app, i): CharacterInstance => ({
     id: `ch_${i + 1}`, name: names[i], assetId: 'builtin_postava_cg', startNodeId: starts[i], baseScale: 1,

@@ -116,7 +116,8 @@
     "talk"
   ],
   "supportedActivities": [
-    "coffee"
+    "coffee",
+    "shop"
   ],
   "rig": {
     "library": "painted-parts/library.json",

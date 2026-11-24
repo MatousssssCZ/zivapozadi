@@ -89,7 +89,7 @@ describe('generátor postav', () => {
     await generateRadnice(dir);
     const lp = await loadProject(dir);
     const before = canonicalJson(lp.project.characters.map((c) => c.appearance));
-    expect(lp.project.characters.length).toBe(12);
+    expect(lp.project.characters.length).toBe(24);
     await saveProject(dir, lp.project);
     const lp2 = await loadProject(dir);
     expect(canonicalJson(lp2.project.characters.map((c) => c.appearance))).toBe(before);

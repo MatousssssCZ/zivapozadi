@@ -44,7 +44,7 @@
 
 ## Výsledky ověření (prostředí: Linux x64, 4 jádra, 15 GB RAM, bez GPU, Node 22, Electron 45.2.3)
 
-### Automatické testy – `npm test` (Vitest): 57 testů, všechny prošly (vč. tests/gait.test.ts a tests/scene-walk.test.ts)
+### Automatické testy – `npm test` (Vitest): 58 testů, všechny prošly (vč. tests/gait.test.ts a tests/scene-walk.test.ts)
 
 * **Determinismus:** stejný hash stavu ve 90 s při náhledu 0,5×/1×/2×/4×/8× s nepravidelnými snímky;
   stejný seed ⇒ stejný průběh, jiný seed ⇒ jiný.

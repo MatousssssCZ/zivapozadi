@@ -174,10 +174,10 @@
      "head",
      "hat",
      "scarf",
+     "held",
      "near.hand",
      "near.forearm",
-     "near.upperArm",
-     "held"
+     "near.upperArm"
     ],
     "back3q": [
      "far.hand",
@@ -189,11 +189,11 @@
      "near.foot",
      "near.shin",
      "near.thigh",
+     "held",
      "torso",
      "near.hand",
      "near.forearm",
      "near.upperArm",
-     "held",
      "head",
      "scarf",
      "hat"
