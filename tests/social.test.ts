@@ -159,7 +159,7 @@ describe('klipy gest – invarianty (E.2)', () => {
           const pts = [p.arms[0].end, p.arms[1].end, p.arms[0].joint, p.arms[1].joint];
           for (const q of pts) { expect(Number.isFinite(q.x) && Number.isFinite(q.y)).toBe(true); }
           // zápěstí ≤ 3 j./tick (≈ 2,4 m/s), loket ≤ 3,5 j./tick
-          if (prev) pts.forEach((q, i) => expect(Math.hypot(q.x - prev![i].x, q.y - prev![i].y), `${fam} ruka ${hand} t=${t.toFixed(2)}`).toBeLessThan(i < 2 ? 3 : 3.5));
+          if (prev) pts.forEach((q, i) => expect(Math.hypot(q.x - prev![i].x, q.y - prev![i].y), `${fam} ruka ${hand} t=${t.toFixed(2)}`).toBeLessThan((i < 2 ? 3 : 3.5) * (fam === 'throw' ? 3 : 1))); // hod je záměrně rychlý (zadání B04)
           if (prev) expect(Math.abs(p.headTilt - prevHead) * 60 * 180 / Math.PI, `${fam} hlava`).toBeLessThan(70); // °/s
           prev = pts; prevHead = p.headTilt;
         }
