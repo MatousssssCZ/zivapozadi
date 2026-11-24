@@ -32,7 +32,7 @@ npm start
 npm run dev
 ```
 
-V aplikaci klikněte na **Otevřít demo „Náměstí s radnicí“** (nebo „Vánoční náměstí“ s testovací grafikou) – demo se zkopíruje do
+V aplikaci klikněte na **Otevřít „Liberec – živý trh“** (hlavní scéna), **Demo „Náměstí s radnicí“** (nebo „Vánoční náměstí“ s testovací grafikou) – demo se zkopíruje do
 `Dokumenty/Zimní scéna/` a otevře. Pak stačí **▶ Přehrát** nebo **Export videa…**.
 
 Projekt lze otevřít i při spuštění: proměnná `ZIMNI_SCENA_OPEN=/cesta/k/projektu.zscena`.

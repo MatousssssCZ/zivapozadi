@@ -9,7 +9,7 @@ export interface OpenResult { dir: string; project: ProjectFile; manifests: Reco
 export interface ZsApi {
   newProject(): Promise<OpenResult | null>;
   openProject(dir?: string): Promise<OpenResult | null>;
-  openDemo(which?: 'namesti' | 'radnice'): Promise<OpenResult>;
+  openDemo(which?: 'namesti' | 'radnice' | 'liberec'): Promise<OpenResult>;
   saveProject(dir: string, project: ProjectFile): Promise<string>;
   saveProjectAs(fromDir: string, project: ProjectFile): Promise<string | null>;
   readAsset(dir: string, rel: string): Promise<Uint8Array>;

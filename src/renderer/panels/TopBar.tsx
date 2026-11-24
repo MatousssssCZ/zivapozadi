@@ -7,10 +7,10 @@ async function guardDirty(): Promise<boolean> {
   return window.confirm('Projekt má neuložené změny. Opravdu pokračovat bez uložení?');
 }
 
-export async function doOpen(kind: 'new' | 'open' | 'demo' | 'demo2', dir?: string) {
+export async function doOpen(kind: 'new' | 'open' | 'demo' | 'demo2' | 'liberec', dir?: string) {
   if (!(await guardDirty())) return;
   try {
-    const r = kind === 'new' ? await zs().newProject() : kind === 'demo' ? await zs().openDemo() : kind === 'demo2' ? await zs().openDemo('radnice') : await zs().openProject(dir);
+    const r = kind === 'new' ? await zs().newProject() : kind === 'demo' ? await zs().openDemo() : kind === 'demo2' ? await zs().openDemo('radnice') : kind === 'liberec' ? await zs().openDemo('liberec') : await zs().openProject(dir);
     if (r) { await store.load(r); store.toast('info', `Otevřen projekt „${r.project.meta.name}“.`, 2500); }
   } catch (e) { store.toast('error', (e as Error).message, 12000); }
 }
