@@ -10,6 +10,16 @@ export class Reservations {
     if (o !== undefined && o !== by) return false;
     this.st.reservations[key] = by; return true;
   }
+  /**
+   * Atomická rezervace více klíčů (skupinové činnosti): buď všechny, nebo žádný.
+   * Klíče se zpracují v ustáleném pořadí; cizí vlastník kteréhokoli z nich ⇒ false bez změny stavu.
+   */
+  tryReserveMany(keys: string[], by: string): boolean {
+    const uniq = [...new Set(keys)].sort();
+    if (uniq.some((k) => !this.isFree(k, by))) return false;
+    for (const k of uniq) this.st.reservations[k] = by;
+    return true;
+  }
   release(key: string, by: string): void { if (this.st.reservations[key] === by) delete this.st.reservations[key]; }
   /** Uvolní vše, co postava drží (rezervace i místa ve frontách). Bezpečnostní síť při přerušení. */
   releaseAll(by: string): string[] {

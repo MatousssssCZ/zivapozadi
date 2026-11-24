@@ -89,6 +89,34 @@ export function drawCup(ctx: Ctx, x: number, y: number, s: number, sips = 0, til
   ctx.restore();
 }
 
+/** Papírová taška se zbožím (malovaný styl kelímku); (x,y) = úchop v uchu, taška visí dolů. */
+const BAG_COLORS: Record<string, [string, string]> = { pernik: ['#b98a5a', '#7a4a2c'], hracky: ['#c9b48a', '#a33a32'], pletene: ['#a89c8c', '#3f5a7a'], zbozi: ['#bfa27c', '#6b5a43'] };
+export function drawBag(ctx: Ctx, x: number, y: number, s: number, variant = 'zbozi') {
+  const [paper, band] = BAG_COLORS[variant] ?? BAG_COLORS.zbozi;
+  ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
+  // ucho (provázek) – dvě poutka k ruce
+  ctx.strokeStyle = 'rgba(70,50,35,0.85)'; ctx.lineWidth = 0.9;
+  ctx.beginPath(); ctx.moveTo(-3.2, 5); ctx.quadraticCurveTo(-1.5, -0.8, 0, 0); ctx.quadraticCurveTo(1.5, -0.8, 3.2, 5); ctx.stroke();
+  // tělo tašky s mírným zúžením a měkkým stínováním
+  const g = ctx.createLinearGradient(-6, 0, 6, 0);
+  g.addColorStop(0, shadeHex(paper, 0.82)); g.addColorStop(0.45, paper); g.addColorStop(1, shadeHex(paper, 0.7));
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.moveTo(-5.6, 4.5); ctx.lineTo(5.6, 4.5); ctx.lineTo(6, 17); ctx.lineTo(-6, 17); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = shadeHex(paper, 0.6); ctx.fillRect(-5.6, 4.5, 11.2, 1.1); // přehnutý okraj
+  ctx.fillStyle = band; ctx.globalAlpha = 0.85; ctx.fillRect(-5.8, 10, 11.7, 2.4); ctx.globalAlpha = 1;
+  ctx.fillStyle = 'rgba(40,30,50,0.18)'; ctx.fillRect(2.8, 4.5, 3.2, 12.5); // zadní stěna ve stínu
+  ctx.restore();
+}
+function shadeHex(h: string, k: number): string {
+  const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i.exec(h)!;
+  return `rgb(${[1, 2, 3].map((i) => Math.round(parseInt(m[i], 16) * k)).join(',')})`;
+}
+/** Rekvizita podle druhu (kelímek nebo taška). */
+function drawProp(ctx: Ctx, p: PropState, x: number, y: number, s: number, tilt = 0) {
+  if (p.kind === 'bag') drawBag(ctx, x, y - 17 * s, s, p.variant);
+  else drawCup(ctx, x, y, s, p.sips, tilt);
+}
+
 function drawShadow(ctx: Ctx, x: number, y: number, s: number) {
   ctx.fillStyle = 'rgba(60,70,100,0.18)';
   ctx.beginPath(); ctx.ellipse(x, y, 17 * s, 5 * s, 0, 0, Math.PI * 2); ctx.fill();
@@ -145,7 +173,7 @@ function drawAgentBody(ctx: Ctx, project: ProjectFile, sim: Simulation, a: Agent
   const held = a.holding ? sim.state.props.find((p) => p.id === a.holding) : undefined;
   if (m.backend === 'skeleton' && cv.rig && m.rigLibrary) {
     const snowColor = cv.rig.snowLips ? backgroundColorAt(project, images, cv.x, cv.y + 3 * cv.scale) : undefined;
-    drawRig(ctx, cv.rig, images, m.rigLibraryDir ?? '', m.rigLibrary.bodyTemplates[0]?.farShade ?? 0.8, held ? () => drawCup(ctx, cv.grip.x, cv.grip.y + 6, 1, held.sips, cv.pose.cupTilt ?? 0) : undefined, snowColor);
+    drawRig(ctx, cv.rig, images, m.rigLibraryDir ?? '', m.rigLibrary.bodyTemplates[0]?.farShade ?? 0.8, held ? () => (held.kind === 'bag' ? drawBag(ctx, cv.grip.x, cv.grip.y + 1, 1, held.variant) : drawCup(ctx, cv.grip.x, cv.grip.y + 6, 1, held.sips, cv.pose.cupTilt ?? 0)) : undefined, snowColor);
   } else if (m.backend === 'procedural-test-figure') {
     drawFigure(ctx, cv.pose as Parameters<typeof drawFigure>[1], c.palette, held ? () => drawCup(ctx, cv.pose.handR.x, cv.pose.handR.y + 6, 1, held.sips) : undefined);
   } else {
@@ -249,11 +277,15 @@ function drawSeller(ctx: Ctx, project: ProjectFile, sim: Simulation, o: SceneObj
   if (!m || m.backend !== 'skeleton') return;
   const t = sim.time();
   const pos = objectLocalToScene(o, sl.offset);
-  const cust = sim.state.agents.find((a) => !a.hidden && a.activity && (a.activity.data as { standId?: string }).standId === o.id && (a.activity.phase === 'order' || a.activity.phase === 'receive' || a.activity.phase === 'to-service'));
+  // stav prodavače ze simulace (attend / retrieve / handover / tidy)
+  const vs = sim.state.vendors?.[o.id];
+  const cust = vs?.customerId ? sim.state.agents.find((a) => a.id === vs.customerId) : undefined;
   const seed = hashNoise(o.id.length * 31 + o.x, 7) * 10;
-  const dir = cust ? (cust.pos.x < pos.x ? 'SW' : 'SE') : seed > 5 ? 'SE' : 'SW';
+  const since = vs ? t - vs.since : 0;
+  // při přípravě zboží se otočí k regálu (zády), jinak k zákazníkovi nebo do volného prostoru
+  const dir = vs?.mode === 'retrieve' && since > 0.4 && since < 2.2 ? (seed > 5 ? 'NE' : 'NW') : cust ? (cust.pos.x < pos.x ? 'SW' : 'SE') : seed > 5 ? 'SE' : 'SW';
   const anim = { dir, walkPhase: 0, walkBlend: 0, idleTime: t + seed, action: null as AgentState['anim']['action'] } as AgentState['anim'];
-  if (cust?.activity?.phase === 'order') {
+  if (vs?.mode === 'attend' && cust?.activity?.phase === 'order') {
     // rozhovor se zákazníkem řídí režisér (prodavač je jeho virtuální účastník): mluví ve svých
     // tazích a na akcentech frází občas zdůrazní řeč rukou; když mluví zákazník, poslouchá
     const vid = `v:${o.id}`;
@@ -264,7 +296,13 @@ function drawSeller(ctx: Ctx, project: ProjectFile, sim: Simulation, o: SceneObj
       const ph = turn.phrases.find((p, i) => (turn.id + i) % 2 === 0 && t >= p.accent - 0.62 && t < p.accent - 0.62 + 1.4);
       if (ph) anim.gestures = [{ fam: 'beat', t: t - (ph.accent - 0.62), dur: 1.4, hand: 0, amp: 0.9, sgn: 1 }];
     }
-  } else if (cust?.activity?.phase === 'receive') anim.action = { requested: 'receive', clip: 'receive', time: Math.min(1.1, t - cust.activity.phaseStart), duration: 1.1, loop: 'once', events: [], finished: false };
+  } else if (vs?.mode === 'retrieve' || vs?.mode === 'tidy') {
+    // sáhne do regálu / srovná zboží na pultu (krátké opakované dosahy)
+    const per = vs.mode === 'retrieve' ? 1.6 : 1.3;
+    anim.action = { requested: 'drop', clip: 'drop', time: (since % per) / per * 1.1, duration: 1.1, loop: 'once', events: [], finished: false };
+  } else if (vs?.mode === 'handover' && cust?.activity) {
+    anim.action = { requested: 'receive', clip: 'receive', time: Math.min(1.1, t - cust.activity.phaseStart), duration: 1.1, loop: 'once', events: [], finished: false };
+  }
   const agent = { id: 'seller:' + o.id, name: sl.name ?? 'Prodavač', pos, facing: dir === 'SE' ? 0.6 : Math.PI - 0.6, anim, holding: null } as unknown as AgentState;
   const cv = characterVisual(agent, m, { baseScale: 1, appearance: sl.appearance }, project.scene);
   if (!cv.rig || !m.rigLibrary) return;
@@ -328,10 +366,10 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
         const pl = p.place;
         const age = opts.time - p.appearedAt;
         const pop = 0.6 + 0.4 * smoothstep(clamp(age / 0.3, 0, 1));
-        items.push({ key: (objKey.get(pl.objectId) ?? pl.y) + 0.5, tie: 20000, draw: () => drawCup(ctx, pl.x, pl.y, s * pop, p.sips) });
+        items.push({ key: (objKey.get(pl.objectId) ?? pl.y) + 0.5, tie: 20000, draw: () => drawProp(ctx, p, pl.x, pl.y, s * pop) });
       } else if (p.place.kind === 'ground') {
         const pl = p.place;
-        items.push({ key: pl.y, tie: 20000, draw: () => drawCup(ctx, pl.x, pl.y, s, p.sips) });
+        items.push({ key: pl.y, tie: 20000, draw: () => drawProp(ctx, p, pl.x, pl.y, s) });
       } else if (p.place.kind === 'falling') {
         const pl = p.place;
         const k = clamp((opts.time - pl.t0) / Math.max(1e-3, pl.t1 - pl.t0), 0, 1);

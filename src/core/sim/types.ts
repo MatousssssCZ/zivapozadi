@@ -3,7 +3,7 @@ import type { RngState } from '../math/rng';
 import type { AnimState } from '../anim/animator';
 import type { AgentSocial, SocialWorld } from '../social/social';
 
-export const SIM_STATE_VERSION = 4;
+export const SIM_STATE_VERSION = 5;
 export const SIM_DT = 1 / 60;
 export const STEPS_PER_SECOND = 60;
 
@@ -104,19 +104,26 @@ export interface AgentState {
   visit?: VisitState | null;
   /** Po společné činnosti se postava znovu připojí k vůdci dvojice. */
   rejoin?: { leaderId: string; side: number; permanent: boolean } | null;
+  /** Druh drženého předmětu (kelímek se drží u hrudi, taška visí v ruce). */
+  holdingKind?: PropKind | null;
   /** Sociální vrstva: profil, cooldowny, odložené reakce (src/core/social). */
   social?: AgentSocial;
 }
 
-export type PropKind = 'cup';
+/** Druhy rekvizit (balíček „živá pozadí“, 02 §4). */
+export type PropKind = 'cup' | 'bag' | 'snowball' | 'snowmanPart';
 export type PropPlace =
   | { kind: 'counter'; objectId: string; x: number; y: number }
-  | { kind: 'held'; agentId: string }
+  | { kind: 'held'; agentId: string; /** paže: 1 = blízká (výchozí, kelímek), 0 = vzdálená */ arm?: 0 | 1 }
   | { kind: 'falling'; from: Vec2; to: Vec2; t0: number; t1: number; binId: string }
   | { kind: 'inBin'; objectId: string }
   | { kind: 'ground'; x: number; y: number };
 
-export interface PropState { id: string; kind: PropKind; place: PropPlace; appearedAt: number; sips: number }
+export interface PropState {
+  id: string; kind: PropKind; place: PropPlace; appearedAt: number; sips: number;
+  /** varianta (zboží v tašce: hracky / pernik / pletene…) */ variant?: string;
+  /** poloměr (koule sněhu, m) */ radius?: number;
+}
 
 export interface ScheduleRuntime { status: 'pending' | 'waiting' | 'started' | 'skipped' | 'conflict'; waitingSince?: number; nextTry?: number; agentId?: string }
 
@@ -144,6 +151,43 @@ export interface SimState {
   footprints?: Footprint[];
   /** Rozhovory a statistika sociální vrstvy. */
   social?: SocialWorld;
+  /** Společné činnosti více účastníků (jedno autoritativní řízení). */
+  sessions?: ActivitySession[];
+  nextSessionId?: number;
+  /** Prodavači ve stáncích (podle objectId). */
+  vendors?: Record<string, VendorState>;
+  /** Trvalé objekty vzniklé během simulace (sněhuláci…) – nejsou součástí projektu. */
+  runtimeObjects?: RuntimeObject[];
+}
+
+/** Společná činnost (sněhulák, koulovačka…): fáze a termíny patří jen sem, ne účastníkům. */
+export interface ActivitySession {
+  id: string; type: string; zoneId: string;
+  participantIds: string[];
+  roles: Record<string, string>;
+  phase: string; phaseStart: number; deadline: number;
+  rng: RngState;
+  ownedKeys: string[];
+  data: Record<string, unknown>;
+}
+/** Stav prodavače: co právě dělá (zákazník má přednost; předání před vším). */
+export interface VendorState {
+  objectId: string;
+  mode: 'idle' | 'attend' | 'retrieve' | 'handover' | 'tidy';
+  since: number; until: number;
+  /** zákazník, kterého obsluhuje */ customerId?: string | null;
+  /** další drobná práce bez zákazníka */ nextTidy: number;
+  rng: RngState;
+}
+/** Runtime objekt (sněhulák): poloha na zemi, fáze stavby, kolizní stopa. */
+export interface RuntimeObject {
+  id: string; kind: 'snowman'; zoneId: string;
+  x: number; y: number;
+  /** poloměry koulí (m): spodní, prostřední, hlava; 0 = ještě není */ radii: [number, number, number];
+  stage: 'base' | 'middle' | 'head' | 'decorated' | 'done';
+  decorations: string[];
+  createdAt: number;
+  seed: number;
 }
 
 /** Otisk boty ve sněhu: střed podrážky (X, Z v metrech), směr boty, velikost, čas vzniku. */

@@ -291,8 +291,8 @@ export class Simulation {
       },
       stopAction: (a) => stopAction(a.anim),
       actionFinished: (a) => !a.anim.action || a.anim.action.finished,
-      spawnProp(kind, place) {
-        const p: PropState = { id: `prop${self.state.nextPropId++}`, kind, place, appearedAt: self.time(), sips: 0 };
+      spawnProp(kind, place, extra) {
+        const p: PropState = { id: `prop${self.state.nextPropId++}`, kind, place, appearedAt: self.time(), sips: 0, ...extra };
         self.state.props.push(p); return p;
       },
       prop: (id) => self.state.props.find((p) => p.id === id),
@@ -328,9 +328,9 @@ export class Simulation {
       },
       attachToHand(a, propId) {
         const p = self.state.props.find((x) => x.id === propId); if (!p) return;
-        p.place = { kind: 'held', agentId: a.id }; a.holding = p.id;
+        p.place = { kind: 'held', agentId: a.id }; a.holding = p.id; a.holdingKind = p.kind;
       },
-      detachFromHand(a) { const id = a.holding; a.holding = null; return id; },
+      detachFromHand(a) { const id = a.holding; a.holding = null; a.holdingKind = null; return id; },
       capabilities(a) {
         const m = man(a);
         const views = m.rigLibrary
@@ -388,6 +388,7 @@ export class Simulation {
     this.stepCrowdMotion();
     for (const a of this.state.agents) this.stepAgent(a, t);
     this.stepSocial(t);
+    this.stepVendors(t);
     this.stepProps(t);
     this.state.step++;
   }
@@ -853,6 +854,8 @@ export class Simulation {
   }
 
   private goOffstage(a: AgentState, t: number) {
+    // odchod portálem: postava odnese své věci (taška) – zmizí spolu s ní, ne dřív ani později
+    if (a.holding) { const id = a.holding; this.state.props = this.state.props.filter((p) => p.id !== id); a.holding = null; a.holdingKind = null; }
     a.hidden = true; a.speed = 0; a.look = null; stopAction(a.anim);
     a.visit = { mode: 'offstage', until: t + randRange(a.rng, 4, 15), since: t };
     a.status = 'Mimo scénu';
@@ -1100,6 +1103,28 @@ export class Simulation {
     }
     a.wander.prevNode = here; a.wander.atStop = false;
     if (next) this.ctx.goToNode(a, next, 'procházka');
+  }
+
+  /**
+   * Prodavači (balíček 02 §5, A10): zákazník má přednost, předání před vším; bez zákazníka občas
+   * srovná zboží na pultu. Stav je v SimState (checkpoint), vykreslení ho jen čte.
+   */
+  private stepVendors(t: number) {
+    const vs = (this.state.vendors ??= {});
+    for (const o of this.project.objects) {
+      if (!o.seller) continue;
+      const v = (vs[o.id] ??= { objectId: o.id, mode: 'idle', since: t, until: 0, customerId: null, nextTidy: t + 5 + hashString(o.id) % 20, rng: seedRng(this.project.seed, `vendor:${o.id}`) });
+      const cust = this.state.agents.find((a) => !a.hidden && a.activity && (a.activity.data as { standId?: string }).standId === o.id && ['browse', 'order', 'prepare', 'receive'].includes(a.activity.phase));
+      let mode: typeof v.mode = 'idle';
+      if (cust) {
+        const ph = cust.activity!.phase;
+        mode = ph === 'receive' ? 'handover' : ph === 'prepare' ? 'retrieve' : 'attend';
+      } else if (v.mode === 'tidy' && t < v.until) mode = 'tidy';
+      else if (t >= v.nextTidy) { mode = 'tidy'; v.until = t + randRange(v.rng, 2, 4); v.nextTidy = v.until + randRange(v.rng, 20, 60); }
+      if (cust && v.mode === 'tidy') v.nextTidy = t + randRange(v.rng, 20, 60); // úklid přerušen zákazníkem
+      if (mode !== v.mode) { v.mode = mode; v.since = t; }
+      v.customerId = cust?.id ?? null;
+    }
   }
 
   private stepProps(t: number) {

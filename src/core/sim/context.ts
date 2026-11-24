@@ -37,7 +37,7 @@ export interface SimContext {
   playAction(agent: AgentState, clip: string, defaults: { duration: number; events?: { time: number; name: string }[]; loop?: 'loop' | 'once' }): void;
   stopAction(agent: AgentState): void;
   actionFinished(agent: AgentState): boolean;
-  spawnProp(kind: 'cup', place: PropState['place']): PropState;
+  spawnProp(kind: PropState['kind'], place: PropState['place'], extra?: Partial<PropState>): PropState;
   prop(id: string): PropState | undefined;
   /** Poloha úchopového bodu ruky postavy ve scéně (stejný výpočet jako ve vykreslení). */
   handPosition(agent: AgentState): Vec2;
