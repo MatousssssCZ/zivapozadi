@@ -123,6 +123,7 @@ export interface SkeletonPose {
   /** zápěstí přední ruky (úchop se dopočítá z dílu ruky) */ handR: Vec2;
   /** body paty obou bot (lokálně) – kotva při došlapu */ heelPts?: [Vec2, Vec2];
   /** naklonění drženého kelímku (rad, záporně = okrajem k ústům) */ cupTilt?: number;
+  /** aktuální zaboření obou bot do sněhu (lokální jednotky) */ snowSink?: [number, number];
 }
 
 export function ik(root: Vec2, target: Vec2, l1: number, l2: number, bendSign: number): Limb {
@@ -158,6 +159,8 @@ export interface PoseOptions {
   ground?: Vec2;
   /** Opěrné body pat ve světě převedené do lokálních souřadnic (null = noha bez kotvy). */
   anchors?: [Anchor | null, Anchor | null];
+  /** Zaboření boty do sněhu (lokální jednotky postavy; 0 = mimo sníh). */
+  snowSink?: number;
 }
 /** Kotva paty: poloha a směr chodidla na zemi (lokálně), uložené při došlapu. */
 export interface Anchor { x: number; y: number; gx?: number; gy?: number }
@@ -239,7 +242,7 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
   // opřená bota leží na zemi ve směru, ve kterém došlápla (i když tělo mezitím zatáčí)
   const gOf = (i: number): Vec2 => { const o = opts.anchors?.[i]; return isAnch(i) && o && o.gx !== undefined ? { x: o.gx, y: o.gy! } : { x: gfx, y: gfy }; };
   // pojistka: kotva, která se od odhadu z dráhy vzdálí víc než o MIS (prudký úhyb, otočka), se k němu přitáhne
-  const MIS = 0.35 * L;
+  const MIS = 0.2 * L;
   const anchorPull = [0, 1].map((i) => {
     const o = opts.anchors?.[i];
     if (!o || !anchored[i] || rel[i] == null) return { x: 0, y: 0 };
@@ -253,7 +256,9 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
   // Perspektiva hloubky: krok do hloubky posune chodidlo i svisle (výš = dál). Nohy se proto
   // počítají v „plochém“ prostoru (jako z boku) a výsledek se zkosí – noha se zkrátí/prodlouží
   // perspektivou, místo aby se ohnula v koleni jako na schodech.
-  const shear = Math.abs(gfx) > 0.05 ? Math.max(-0.6, Math.min(0.6, gfy / gfx)) : 0;
+  // Kamera scény promítá krok do hloubky jen nepatrně (K = h/Z ≈ 0,03–0,12), proto se noha už
+  // nezkosuje ani nenatahuje (zadání C4: zkosení jako náhradu hloubky odstranit).
+  const shear = 0;
   const flat = (p: Vec2, i: number): Vec2 => ({ x: p.x, y: p.y - shear * (p.x - hipRoots[i].x) });
   const unflat = (p: Vec2, i: number): Vec2 => ({ x: p.x, y: p.y + shear * (p.x - hipRoots[i].x) });
   const reachAdjust = (f: { u: number; h: number; theta: number }, i: number) => {
@@ -268,6 +273,7 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
     return at(hi);
   };
   const swingShift: Vec2[] = [{ x: 0, y: 0 }, { x: 0, y: 0 }];
+  const swingCarry = [0, 0]; // jak moc noha v začátku švihu ještě „drží“ pánev (plynulé narovnání)
   if (!a.settle && b >= 1) {
     const ev = gaitEvents(w);
     for (let i = 0; i < 2; i++) {
@@ -278,6 +284,7 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
         const sw = (qs[i] - ev.toeOff) / (1 - ev.toeOff);
         if (sw < 0.3) {
           const k = 1 - smoothstep(sw / 0.3);
+          swingCarry[i] = k;
           const f0 = footAt(ev.toeOff - 1e-6, S, w, geom, rel[i] ?? undefined);
           let f1 = reachAdjust(f0, i);
           if (anchored[i]) {
@@ -303,14 +310,26 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
       }
     }
   }
-  const ankles: Vec2[] = feet.map((f, i) => { const p = ankleXY(f, i); return { x: p.x + swingShift[i].x + settleShift[i].x, y: p.y + swingShift[i].y + settleShift[i].y }; });
+  // sníh: zatížená bota se během ~0,11 fáze zaboří (pata i přednoží zůstanou v prohlubni),
+  // švihová z ní plynule vyjde; pánev se sníží o průměr zatížených
+  const sinkMax = opts.snowSink ?? 0;
+  const sink = [0, 1].map((i) => {
+    if (sinkMax <= 0) return 0;
+    if (a.settle || b < 1) return sinkMax;
+    const g = gaitFeet[i];
+    if (g.contact !== 'swing') return sinkMax * smoothstep(qs[i] / 0.08);
+    return sinkMax * swingCarry[i];
+  });
+  const ankles: Vec2[] = feet.map((f, i) => { const p = ankleXY(f, i); return { x: p.x + swingShift[i].x + settleShift[i].x, y: p.y + swingShift[i].y + settleShift[i].y + sink[i] }; });
+  if (sinkMax > 0) { const avg = (sink[0] + sink[1]) / 2; hip.y += avg; for (const r of hipRoots) r.y += avg; }
   let lower = 0;
   for (let i = 0; i < 2; i++) {
     const inContact = a.settle || b < 1 || gaitFeet[i].contact !== 'swing';
-    if (!inContact) continue;
+    const w8 = inContact ? 1 : swingCarry[i];
+    if (w8 <= 0) continue;
     const fa = flat(ankles[i], i);
     const dx = fa.x - hipRoots[i].x, dy = fa.y - hipRoots[i].y; // dy > 0: kotník pod kyčlí
-    if (dx * dx + dy * dy > maxD * maxD) lower = Math.max(lower, dy - Math.sqrt(Math.max(0, maxD * maxD - dx * dx)));
+    if (dx * dx + dy * dy > maxD * maxD) lower = Math.max(lower, w8 * (dy - Math.sqrt(Math.max(0, maxD * maxD - dx * dx))));
   }
   if (lower > 0) { hip.y += lower; for (const r of hipRoots) r.y += lower; }
   const legs = [0, 1].map((i) => {
@@ -423,7 +442,7 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
   const ka = 1 - armShorten;
   const frontArm = (): Limb => { const l = ik(frontRoot, frontTarget!, B.upperArm * ka, B.forearm * ka, bend); return ka < 1 ? { ...l, k1: ka, k2: ka } : l; };
   const arms = [backTarget ? ik(backRoot, backTarget, B.upperArm, B.forearm, bend) : armBackFK, frontTarget ? frontArm() : armFrontFK] as [Limb, Limb];
-  return { view, mirror, root: { x: 0, y: 0 }, hip, neck, shoulder, head, headTilt, torsoAngle, legs, arms, feet: [footAng[0], footAng[1]], handR: arms[1].end, heelPts, cupTilt };
+  return { view, mirror, root: { x: 0, y: 0 }, hip, neck, shoulder, head, headTilt, torsoAngle, legs, arms, feet: [footAng[0], footAng[1]], handR: arms[1].end, heelPts, cupTilt, snowSink: [sink[0], sink[1]] };
 }
 
 /** Geometrie chůze ze šablony (výchozí bota podle zadání: pata 0,042 L, přednoží 0,113 L). */

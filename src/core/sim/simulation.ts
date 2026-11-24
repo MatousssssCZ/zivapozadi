@@ -8,16 +8,18 @@ import { initialAnimState, playAction, stepAnimator, stopAction } from '../anim/
 import { getActivity } from '../activities/registry';
 import { coffeeFreeSlots } from '../activities/coffee';
 import { characterVisual, localToScene, gaitContextFor } from '../render/characterPose';
-import { depthScaleAt, groundLen, groundAngle, GROUND_DEPTH_K } from '../scene/geometry';
+import { depthScaleAt } from '../scene/geometry';
 import { Reservations } from './reservations';
-import { stepMovement, directionFromAngle, turnInPlace } from './movement';
+import { directionFromAngle, edgeKey } from './movement';
 import type { SimContext, ResolvedPoint, CharacterControl } from './context';
 import { ALL_VIEWS } from '../anim/skeleton';
 import { gaitEvents } from '../anim/gaitProfile';
 import { SIM_DT, SIM_STATE_VERSION, type AgentState, type SimState, type Waypoint, type PropState, type LogEntry } from './types';
-import { dist, approachAngle, type Vec2 } from '../math/vec';
+import { dist, approachAngle, wrapAngle, type Vec2 } from '../math/vec';
 import { limitSlope } from '../nav/slope';
-import { stepSpacing, stepFollower, visualRoot, PAIR_GAP } from './spacing';
+import { pointInPolygon } from '../math/geom';
+import { planCrowd, solveCrowd, wantVelocity, comfortRadius, insidePoly, R_BODY, type CrowdItem, type ObstacleW } from './crowd';
+import { cameraFor, toWorld, toScreen, worldAngleOfScreen, screenAngleOfWorld, Q, type World } from '../scene/camera';
 
 export interface Diagnostic { level: 'warning' | 'error'; message: string; ref?: string }
 
@@ -172,9 +174,11 @@ export class Simulation {
       if (this.state.agents.some((x) => x.follow?.leaderId === l.id)) { this.addDiag('warning', `${c.name}: ${lc.name} už má dvojici – ${c.name} chodí sama.`, c.id); continue; }
       const side = c.companionSide === -1 ? -1 : 1;
       f.follow = { leaderId: l.id, side };
-      const g = PAIR_GAP * this.scaleOf(l);
+      // na volné místo ve formaci vedle vůdce (ve světových metrech; nikdy v překážce ani na jiné postavě)
+      const cam = this.cam();
       f.facing = l.facing;
-      f.pos = { x: l.pos.x - Math.sin(l.facing) * side * g, y: l.pos.y + Math.cos(l.facing) * side * g };
+      const spot = this.freeSpot(f, this.formationSpots(l, side));
+      if (spot) f.pos = toScreen(cam, spot);
       f.loc = l.loc; f.cooldowns = {};
     }
   }
@@ -318,7 +322,7 @@ export class Simulation {
       xy[i] = null;
       const hn = heelsNow?.[i];
       if (hn) { xy[i] = { x: hn.x, y: hn.y, key: an[i]!, h: a.groundHeading ?? a.facing }; continue; }
-      const cv = characterVisual(a, m, c, this.project.scene.depth);
+      const cv = characterVisual(a, m, c, this.project.scene);
       const hp = cv.pose.heelPts?.[i];
       if (hp) { const p = localToScene(cv, hp); xy[i] = { x: p.x, y: p.y, key: an[i]!, h: a.groundHeading ?? a.facing }; }
     }
@@ -326,7 +330,7 @@ export class Simulation {
 
   handPosition(a: AgentState) {
     const c = this.chars.get(a.id)!;
-    const cv = characterVisual(a, this.manifests[c.assetId], c, this.project.scene.depth);
+    const cv = characterVisual(a, this.manifests[c.assetId], c, this.project.scene);
     return localToScene(cv, cv.grip);
   }
 
@@ -334,9 +338,9 @@ export class Simulation {
   step(): void {
     const t = this.time();
     this.stepSchedule(t);
-    // 1) pohyb (trasy, dvojice), 2) rozestupy, 3) animace a rozhodování
-    for (const a of this.state.agents) this.stepMotion(a);
-    stepSpacing(this.state.agents.filter((a) => !a.hidden).map((a) => ({ a, scale: this.scaleOf(a) })), SIM_DT);
+    // 1) pohyb davu ve světových metrech (trasy, dvojice, předvídavé míjení, pevné rozestupy),
+    // 2) animace a rozhodování
+    this.stepCrowdMotion();
     for (const a of this.state.agents) this.stepAgent(a, t);
     this.stepProps(t);
     this.state.step++;
@@ -388,40 +392,219 @@ export class Simulation {
 
   private motion = new Map<string, { arrived: boolean; waitingNarrow: boolean }>();
 
-  /** Pohyb po trase (nebo vedle vůdce dvojice) a natáčení v klidu. */
-  private stepMotion(a: AgentState) {
-    if (a.hidden && !a.follow) { a.speed = 0; this.motion.set(a.id, { arrived: false, waitingNarrow: false }); return; }
-    if (a.follow) {
-      const leader = this.state.agents.find((x) => x.id === a.follow!.leaderId);
-      if (leader && leader.hidden) { a.hidden = true; a.pos = { ...leader.pos }; a.speed = 0; a.follow!.vel = { x: 0, y: 0 }; a.visPrev = undefined; this.motion.set(a.id, { arrived: false, waitingNarrow: false }); return; }
-      if (leader && a.hidden) { a.hidden = false; a.pos = { ...leader.pos }; a.visPrev = undefined; }
-      if (leader) { stepFollower(a, leader, this.scaleOf(a), this.vmax(a), SIM_DT, this.project.scene.maxWalkSlopeDeg ?? 45); this.motion.set(a.id, { arrived: false, waitingNarrow: false }); return; }
-      a.follow = null;
-    }
-    const dest = a.route?.dest ?? null;
-    const cap = a.speedCap;
-    const mv = stepMovement(a, this.graph, this.res, SIM_DT, cap != null ? Math.max(0, Math.min(this.vmax(a), cap)) : this.vmax(a));
-    if (mv.arrived && dest) a.loc = dest;
-    if (!a.route) {
-      if (a.look) {
-        const target = 'angle' in a.look ? a.look.angle : Math.atan2(a.look.y - a.pos.y, a.look.x - a.pos.x);
-        turnInPlace(a, target, SIM_DT);
+  private cam() { return cameraFor(this.project.scene); }
+  private obstaclesW: ObstacleW[] | null = null;
+  private worldObstacles(): ObstacleW[] {
+    if (!this.obstaclesW) { const c = this.cam(); this.obstaclesW = this.graph.obstacles.map((o) => ({ poly: o.polygon.map((p) => toWorld(c, p)) })); }
+    return this.obstaclesW;
+  }
+
+  /** Rychlost chůze postavy v m/s (dvojice jde tempem pomalejšího). */
+  private vmaxMps(a: AgentState): number {
+    const own = (x: AgentState) => { const c = this.chars.get(x.id)!; return c.walkSpeed * x.pace * (x.speedFactor ?? 1) * Q * c.baseScale; };
+    const f = this.state.agents.find((x) => x.follow?.leaderId === a.id && !x.hidden);
+    return f ? Math.min(own(a), own(f) * 0.97) : own(a);
+  }
+
+  /**
+   * Pohyb všech postav v jednom kroku (svět v metrech): záměr (trasa / formace / klid) →
+   * předvídavý výběr rychlosti → společná bezpečná projekce → posun → postup po trase.
+   */
+  private stepCrowdMotion() {
+    const cam = this.cam(), dt = SIM_DT;
+    const items: CrowdItem[] = [];
+    const ags: AgentState[] = [];
+    const mvs: { arrived: boolean; waitingNarrow: boolean }[] = [];
+    for (const a of this.state.agents) {
+      const mv = { arrived: false, waitingNarrow: false };
+      this.motion.set(a.id, mv);
+      a.off = undefined; a.speedCap = null;
+      if (a.follow) {
+        const leader = this.state.agents.find((x) => x.id === a.follow!.leaderId);
+        if (!leader) { a.follow = null; }
+        else if (leader.hidden) { a.hidden = true; a.pos = { ...leader.pos }; a.speed = 0; a.vel = { X: 0, Z: 0 }; a.visPrev = undefined; continue; }
+        else if (a.hidden) {
+          // vstup do scény se stálým vůdcem: vedle něj (ne do stejného bodu)
+          a.hidden = false; a.visPrev = undefined;
+          const lp = toWorld(cam, leader.pos), side = a.follow.side;
+          a.pos = toScreen(cam, this.freeSpot(a, [{ X: lp.X, Z: lp.Z + side * 0.7 }, { X: lp.X, Z: lp.Z - side * 0.7 }, ...this.formationSpots(leader, side)]) ?? { X: lp.X, Z: lp.Z + side * 0.7 });
+        }
       }
+      if (a.hidden) { a.speed = 0; a.vel = { X: 0, Z: 0 }; continue; }
+      const P = toWorld(cam, a.pos);
+      const vmax = this.vmaxMps(a);
+      let pref: World = { X: 0, Z: 0 }, fixed = false;
+      if (a.follow) {
+        // daleko od vůdce (překážka mezi nimi): dojít k němu po trase, ne přímo
+        const L = this.state.agents.find((x) => x.id === a.follow!.leaderId)!;
+        const LP = toWorld(cam, L.pos), far = Math.hypot(LP.X - P.X, LP.Z - P.Z) > 2.5;
+        if (far && (!a.route || this.state.step % 60 === 0)) {
+          const near = nearestAccessibleNode(this.graph, a.pos), target = nearestAccessibleNode(this.graph, L.pos);
+          if (near && target) { a.loc = { kind: 'node', nodeId: near }; a.route = null; const wps = this.buildRoute(a, target, { x: L.pos.x, y: L.pos.y, key: 'follow' }); if (wps?.length) this.startRoute(a, wps, 'za vůdcem', null, target); }
+        }
+        if (!far && a.route) { for (const e of a.route.heldEdges) this.res.release(edgeKey(e), a.id); a.route = null; }
+        if (a.route) { const ri = this.routeIntent(a, P, vmax * 1.15); pref = ri.pref; mv.waitingNarrow = ri.waitingNarrow; }
+        else pref = this.formationPref(a, P, vmax);
+      }
+      else if (a.route) { const ri = this.routeIntent(a, P, vmax); pref = ri.pref; mv.waitingNarrow = ri.waitingNarrow; }
+      else fixed = true;
+      const partner = a.follow?.leaderId ?? this.state.agents.find((x) => x.follow?.leaderId === a.id)?.id ?? null;
+      items.push({ id: a.id, p: P, v: a.vel ?? { X: 0, Z: 0 }, pref, vmax, fixed, r: R_BODY, rc: comfortRadius(a.id), partnerOf: partner, choice: a.crowdChoice ?? null });
+      ags.push(a); mvs.push(mv);
     }
-    this.motion.set(a.id, mv);
+    const obstacles = this.worldObstacles();
+    if (this.state.step % 4 === 0) planCrowd(items, obstacles);
+    const want = items.map((it) => wantVelocity(it, dt));
+    const { v } = solveCrowd(items, want, obstacles, dt);
+    for (let i = 0; i < items.length; i++) {
+      const a = ags[i], it = items[i];
+      a.crowdChoice = it.choice ?? null;
+      a.vel = v[i];
+      const P = { X: it.p.X + v[i].X * dt, Z: it.p.Z + v[i].Z * dt };
+      if (!it.fixed) a.pos = toScreen(cam, P);
+      const sp = Math.hypot(v[i].X, v[i].Z);
+      a.speed = (sp / Q) * this.scaleOf(a); // px/s v místě postavy (pro animaci a stav)
+      // natočení: za skutečným pohybem; v klidu k bodu pohledu
+      let psi = a.groundHeading ?? worldAngleOfScreen(cam, a.pos, a.facing);
+      if (sp > 0.12) psi = approachAngle(psi, Math.atan2(v[i].Z, v[i].X), 5 * dt);
+      else if (a.turnTo !== undefined && a.turnTo !== null) psi = approachAngle(psi, a.turnTo, 3.5 * dt);
+      else if (!a.route && !a.follow && a.look) {
+        const target = 'angle' in a.look ? a.look.angle : Math.atan2(a.look.y - a.pos.y, a.look.x - a.pos.x);
+        psi = approachAngle(psi, worldAngleOfScreen(cam, a.pos, target), 2.2 * dt);
+      }
+      a.groundHeading = psi;
+      a.facing = screenAngleOfWorld(cam, a.pos, psi);
+      // sníh pod postavou (oblasti typu „sníh“)
+      const snow = this.project.areas.find((ar) => ar.kind === 'snow' && pointInPolygon(a.pos, ar.polygon));
+      a.snowDepth = snow ? snow.snowDepthM ?? 0.02 : 0;
+      if (a.route) { const dest = a.route.dest; if (this.routeAdvance(a, P, sp, mvs[i])) { mvs[i].arrived = true; if (dest) a.loc = dest; } }
+    }
+  }
+
+  /** Volné místo pro postavu: první z kandidátů (svět), které není v překážce ani na jiné postavě. */
+  private freeSpot(self: AgentState, cands: World[]): World | null {
+    const cam = this.cam();
+    for (const c of cands) {
+      if (this.worldObstacles().some((o) => insidePoly(c, o.poly))) continue;
+      if (this.state.agents.some((o) => o !== self && !o.hidden && (() => { const q = toWorld(cam, o.pos); return Math.hypot(q.X - c.X, q.Z - c.Z) < 2 * R_BODY + 0.05; })())) continue;
+      return c;
+    }
+    return null;
+  }
+
+  /** Místa formace vedle vůdce (vpravo/vlevo, za ním, rovnou za ním). */
+  private formationSpots(L: AgentState, side: number): World[] {
+    const cam = this.cam(), LP = toWorld(cam, L.pos), psi = L.groundHeading ?? worldAngleOfScreen(cam, L.pos, L.facing);
+    const d = { X: Math.cos(psi), Z: Math.sin(psi) }, right = { X: d.Z, Z: -d.X };
+    const at = (r: number, b: number) => ({ X: LP.X + right.X * r - d.X * b, Z: LP.Z + right.Z * r - d.Z * b });
+    return [at(side * 0.72, 0.4), at(-side * 0.72, 0.4), at(0, 0.85), at(side * 0.6, 1.0), at(-side * 0.6, 1.0), at(0, 1.4)];
+  }
+
+  /** Druhý člen dvojice: místo vedle vůdce (a kousek za ním), sladěná rychlost. */
+  private formationPref(f: AgentState, P: World, vmax: number): World {
+    const cam = this.cam();
+    const L = this.state.agents.find((x) => x.id === f.follow!.leaderId)!;
+    const LP = toWorld(cam, L.pos), lv = L.vel ?? { X: 0, Z: 0 }, lsp = Math.hypot(lv.X, lv.Z);
+    const psi = L.groundHeading ?? 0;
+    const d = { X: Math.cos(psi), Z: Math.sin(psi) }, right = { X: d.Z, Z: -d.X };
+    const side = f.follow!.side;
+    const slot = { X: LP.X + right.X * side * 0.72 - d.X * 0.4, Z: LP.Z + right.Z * side * 0.72 - d.Z * 0.4 };
+    const e = { X: slot.X - P.X, Z: slot.Z - P.Z }, el = Math.hypot(e.X, e.Z);
+    let v: World;
+    if (lsp > 0.15) v = { X: lv.X + e.X * 1.2, Z: lv.Z + e.Z * 1.2 };
+    else v = el < 0.08 ? { X: 0, Z: 0 } : { X: e.X * 1.0, Z: e.Z * 1.0 };
+    const vl = Math.hypot(v.X, v.Z), m = lsp > 0.15 ? vmax * 1.3 : vmax * 0.7;
+    return vl > m ? { X: (v.X / vl) * m, Z: (v.Z / vl) * m } : v;
+  }
+
+  /** Záměr po trase: preferovaná rychlost k bodu 1 m dopředu, brzdění, zatáčky, úzké průchody. */
+  private routeIntent(a: AgentState, P: World, vmax: number): { pref: World; waitingNarrow: boolean } {
+    const cam = this.cam(), r = a.route!, wps = r.wps;
+    const W = wps.map((w) => toWorld(cam, w));
+    const dist = (p: World, q: World) => Math.hypot(p.X - q.X, p.Z - q.Z);
+    const remaining = (from: number, to: number) => { let d = dist(P, W[from]); for (let k = from; k < to; k++) d += dist(W[k], W[k + 1]); return d; };
+    const sp = Math.hypot(a.vel?.X ?? 0, a.vel?.Z ?? 0);
+    // úzké průchody: rezervace před vstupem
+    let effEnd = wps.length - 1;
+    for (let k = r.idx - 1; k < wps.length - 1; k++) {
+      const e = wps[k + 1].edgeId;
+      if (!e || !this.graph.edges.get(e)?.narrow || r.heldEdges.includes(e)) continue;
+      const kk = Math.max(k, r.idx - 1);
+      const dToK = k < r.idx ? 0 : remaining(r.idx, k);
+      if (dToK <= (sp * sp) / (2 * 1.4) + 0.6 && this.res.tryReserve(edgeKey(e), a.id)) { r.heldEdges.push(e); continue; }
+      effEnd = kk;
+      break;
+    }
+    if (effEnd === r.idx - 1) { a.turnTo = null; return { pref: { X: 0, Z: 0 }, waitingNarrow: true }; }
+    // bod ~1 m dopředu podél trasy
+    let left = 1.0, cur = P, k = r.idx, target = W[r.idx];
+    while (k <= effEnd) {
+      const d = dist(cur, W[k]);
+      if (d >= left) { target = { X: cur.X + ((W[k].X - cur.X) / d) * left, Z: cur.Z + ((W[k].Z - cur.Z) / d) * left }; break; }
+      left -= d; cur = W[k]; target = W[k]; k++;
+    }
+    const dEnd = remaining(r.idx, effEnd);
+    let v = Math.min(vmax, Math.sqrt(2 * 1.4 * Math.max(0, dEnd - 0.02)) + 0.04);
+    if (r.idx < effEnd) {
+      const prev = r.idx > 0 ? W[r.idx - 1] : P, A = W[r.idx], B = W[r.idx + 1];
+      const turn = Math.abs(wrapAngle(Math.atan2(B.Z - A.Z, B.X - A.X) - Math.atan2(A.Z - prev.Z, A.X - prev.X)));
+      const vc = vmax * Math.max(0.35, Math.min(1, 1 - turn / 2.4));
+      v = Math.min(v, Math.sqrt(vc * vc + 2 * 1.4 * dist(P, A)));
+    }
+    const dx = target.X - P.X, dz = target.Z - P.Z, dl = Math.hypot(dx, dz);
+    if (dl < 1e-6) return { pref: { X: 0, Z: 0 }, waitingNarrow: false };
+    // nechodit bokem ani pozpátku: při velkém rozdílu směru se nejdřív otočit na místě
+    const want = Math.atan2(dz, dx), psi = a.groundHeading ?? want;
+    const diff = Math.abs(wrapAngle(want - psi));
+    // obrat: zastavit, otočit se na místě, pak vykročit (opěrná noha nezůstane daleko vzadu)
+    if (diff > 1.75 && sp >= 0.15) { a.turnTo = null; return { pref: { X: 0, Z: 0 }, waitingNarrow: false }; }
+    if (sp < 0.15 && diff > 1.2) { a.turnTo = want; return { pref: { X: 0, Z: 0 }, waitingNarrow: false }; }
+    a.turnTo = null;
+    return { pref: { X: (dx / dl) * v, Z: (dz / dl) * v }, waitingNarrow: false };
+  }
+
+  /** Postup po trase po posunu: průchod body, uvolnění úzkých průchodů, příchod do cíle. */
+  private routeAdvance(a: AgentState, P: World, sp: number, mv: { arrived: boolean }): boolean {
+    const cam = this.cam(), r = a.route!, wps = r.wps;
+    for (;;) {
+      const wp = wps[r.idx], Wk = toWorld(cam, wp), last = r.idx >= wps.length - 1;
+      const d = Math.hypot(P.X - Wk.X, P.Z - Wk.Z);
+      let passed = d < (last ? 0.06 : 0.35);
+      if (!passed && !last) {
+        // už je „za bodem“: na dalším úseku (bod → následující) s kladným postupem a blízko něj
+        const B = toWorld(cam, wps[r.idx + 1]), ab = { X: B.X - Wk.X, Z: B.Z - Wk.Z }, L2 = ab.X * ab.X + ab.Z * ab.Z;
+        if (L2 > 1e-9) {
+          const t = ((P.X - Wk.X) * ab.X + (P.Z - Wk.Z) * ab.Z) / L2;
+          const qx = Wk.X + ab.X * Math.max(0, Math.min(1, t)), qz = Wk.Z + ab.Z * Math.max(0, Math.min(1, t));
+          passed = t > 0 && Math.hypot(P.X - qx, P.Z - qz) < 1.2;
+        }
+      }
+      // cíl obsazený někým jiným (např. přítel na místě setkání): stačí dojít co nejblíž
+      if (!passed && last) {
+        a.stuckT = d < 1.5 && sp < 0.05 ? (a.stuckT ?? 0) + SIM_DT : 0;
+        if ((a.stuckT ?? 0) > 0.8) passed = true;
+      }
+      if (!passed) return false;
+      if (wp.edgeId && r.heldEdges.includes(wp.edgeId) && wps[r.idx + 1]?.edgeId !== wp.edgeId) { this.res.release(edgeKey(wp.edgeId), a.id); r.heldEdges = r.heldEdges.filter((e) => e !== wp.edgeId); }
+      if (wp.nodeId) a.loc = { kind: 'node', nodeId: wp.nodeId };
+      if (last) {
+        // dojít přesně na bod (nejvýš pár cm), jen když tím nikoho nepřekryje
+        if (d < 0.06 && this.state.agents.every((o) => o === a || o.hidden || Math.hypot(toWorld(cam, o.pos).X - Wk.X, toWorld(cam, o.pos).Z - Wk.Z) >= 2 * R_BODY)) a.pos = { x: wp.x, y: wp.y };
+        for (const e of r.heldEdges) this.res.release(edgeKey(e), a.id);
+        a.route = null; a.speed = 0; a.vel = { X: 0, Z: 0 }; a.arrived = true; a.stuckT = 0;
+        void mv;
+        return true;
+      }
+      r.idx++;
+    }
   }
 
   private stepAgent(a: AgentState, t: number) {
     const c = this.chars.get(a.id)!;
     const m = this.manifests[c.assetId];
     const mv = this.motion.get(a.id) ?? { arrived: false, waitingNarrow: false };
-    // skutečný pohyb vizuálního kořene (trasa + rozestupy) pohání nohy
-    const vr = visualRoot(a), vp = a.visPrev ?? vr;
-    const vdx = vr.x - vp.x, vdy = vr.y - vp.y, visSpeed = groundLen(vdx, vdy) / SIM_DT;
-    // směr kroků: plynule za skutečným pohybem (bez šumu malých posunů)
-    const gTarget = visSpeed > 3 ? Math.atan2(vdy / GROUND_DEPTH_K, vdx) : groundAngle(a.facing);
-    a.groundHeading = approachAngle(a.groundHeading ?? groundAngle(a.facing), gTarget, 6 * SIM_DT);
-    a.visPrev = vr;
+    // skutečný přijatý pohyb těla (po bezpečné projekci) pohání nohy
+    const visSpeed = a.hidden ? 0 : a.speed;
     // změna pohledu jen při dvojí opoře (nebo v klidu), aby opřená bota neposkočila
     const wantDir = directionFromAngle(a.facing, a.anim.dir);
     if (wantDir !== a.anim.dir) {
@@ -434,10 +617,10 @@ export class Simulation {
     // rozejití z (dokračujícího) klidu: kotvy převezmou místa, kde boty právě stojí (žádný skok)
     let heelsNow: (Vec2 | null)[] | null = null;
     if (a.anim.settle && visSpeed > 0.5 && m.backend === 'skeleton') {
-      const cv = characterVisual(a, m, c, this.project.scene.depth);
+      const cv = characterVisual(a, m, c, this.project.scene);
       heelsNow = [0, 1].map((i) => (cv.pose.heelPts ? localToScene(cv, cv.pose.heelPts[i]) : null));
     }
-    const events = stepAnimator(a.anim, m, SIM_DT, visSpeed, this.vmax(a), scale, gaitContextFor(m, c));
+    const events = stepAnimator(a.anim, m, SIM_DT, visSpeed, (this.vmaxMps(a) / Q) * scale, scale, gaitContextFor(m, c));
     this.latchFootAnchors(a, c, m, heelsNow);
     if (mv.waitingNarrow) a.status = 'Čeká před úzkým průchodem';
     // 3) rozhodování + účast v činnosti
@@ -532,7 +715,12 @@ export class Simulation {
     a.visit = { mode: 'choose', until: t, since: t };
     // stálý druhý z dvojice přichází s ním
     const f = this.state.agents.find((x) => x.follow?.leaderId === a.id);
-    if (f) { f.pos = { ...a.pos }; f.loc = a.loc; f.hidden = false; f.visPrev = undefined; }
+    if (f) {
+      // nikdy do stejného bodu: vedle vůdce (o 0,7 m blíž / dál od kamery podle strany)
+      const cam = this.cam(), P = toWorld(cam, a.pos);
+      const spot = this.freeSpot(f, [{ X: P.X, Z: P.Z + 0.7 * (f.follow?.side ?? 1) }, { X: P.X, Z: P.Z - 0.7 * (f.follow?.side ?? 1) }, ...this.formationSpots(a, f.follow?.side ?? 1)]);
+      f.pos = toScreen(cam, spot ?? { X: P.X, Z: P.Z + 0.7 }); f.loc = a.loc; f.hidden = false; f.visPrev = undefined; f.vel = { X: 0, Z: 0 };
+    }
   }
 
   /** Vstup/výstup nejdál od daného místa (průchod přes celou scénu). */

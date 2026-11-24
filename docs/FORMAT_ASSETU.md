@@ -28,6 +28,8 @@ Projekt je tedy přenositelný jako celá složka. Ukládání: dočasný soubor
 | `nav` | `nodes[] {id, x, y, name?, stop?}`, `edges[] {id, a, b, oneWay, narrow}` |
 | `areas[]` | `{id, name, kind: obstacle|snow, polygon[]}` |
 | `zones[]` | `{id, name, activityType, activityVersion, enabled, bounds[], objectRoles{role: objectId[]}, params}` |
+| `scene.fovDeg` | volitelné, vodorovný zorný úhel kamery ve stupních (výchozí 50) – spolu s nastavením hloubky určuje skutečné metry scény |
+| `areas[].snowDepthM` | volitelné u oblasti typu sníh: zaboření bot v metrech (výchozí 0,02) |
 | `scene.maxWalkSlopeDeg` | volitelné, největší sklon chůze po obrazovce od vodorovné ve stupních (výchozí 45, 90 = bez omezení) |
 | `nav.nodes[].portal` | volitelné, `true` = vstup/výstup ze scény pro návštěvníky |
 | `characters[]` | `{id, name, assetId, startNodeId, baseScale, walkSpeed, palette, wander, activities{type: {enabled, firstDelayMin/Max, intervalMin/Max}}, appearance?, companionId?, companionSide?, routine?}` – `routine`: `wander` (volná procházka) nebo `visitor` (návštěvník: průchod / káva / setkání s přítelem) – `companionId` = postava, se kterou tato chodí ve dvojici (vůdce), `companionSide` 1/−1 = vpravo/vlevo |

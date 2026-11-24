@@ -110,7 +110,11 @@ export interface NavEdge {
 }
 
 export type AreaKind = 'obstacle' | 'snow';
-export interface Area { id: string; name: string; kind: AreaKind; polygon: Vec2[] }
+export interface Area {
+  id: string; name: string; kind: AreaKind; polygon: Vec2[];
+  /** Sníh: o kolik se bota při došlapu zaboří (m, výchozí 0,02). */
+  snowDepthM?: number;
+}
 
 /** Umístěná zóna činnosti (instance definice činnosti ve scéně). */
 export interface ActivityZone {
@@ -207,6 +211,8 @@ export interface SceneSettings {
   depth: DepthSettings;
   /** Atmosférické sněžení (deterministické podle seedu). */
   snowfall: { enabled: boolean; density: number; wind: number };
+  /** Vodorovný zorný úhel kamery (°, výchozí 50) – spolu s nastavením hloubky určuje skutečné metry scény. */
+  fovDeg?: number;
   /** Největší sklon chůze po obrazovce od vodorovné (°, výchozí 45; 90 = bez omezení). */
   maxWalkSlopeDeg?: number;
 }

@@ -88,4 +88,4 @@ export function strideLegLen(vMps: number, legPhysM = 0.9): number {
 }
 
 /** Fyzická délka nohy referenčního dospělého (m) – převod rychlosti scény na m/s. */
-export const LEG_PHYS_M = 0.9;
+export const LEG_PHYS_M = 0.9; // pozn.: zadání A1 uvádí 0,8346 m (62 j. při 1,75 m) – přechod mění kadenci, zatím ponecháno

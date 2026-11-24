@@ -6,8 +6,8 @@ import { generateRadnice } from '../scripts/generate-radnice-demo';
 import { Simulation } from '../src/core/sim/simulation';
 import { characterVisual, localToScene } from '../src/core/render/characterPose';
 import { gaitEvents } from '../src/core/anim/gaitProfile';
-import { visualRoot, BODY_W } from '../src/core/sim/spacing';
-import { depthScaleAt, groundLen } from '../src/core/scene/geometry';
+import { cameraFor, toWorld } from '../src/core/scene/camera';
+import { R_BODY } from '../src/core/sim/crowd';
 import { directionFromAngle } from '../src/core/sim/movement';
 
 let lp: LoadedProject;
@@ -46,35 +46,30 @@ describe('chůze ve scéně (náměstí, 12 postav, 2 dvojice)', () => {
     expect(worst).toBeLessThan(2);
   });
 
-  it('dvojice jdou spolu, ostatní postavy se nepřekrývají (hlavně ve stoje)', () => {
+  it('těla se nikdy neprotnou (ani pár, ani stojící); dvojice jdou spolu', () => {
     const sim = Simulation.create(lp.project, lp.manifests);
+    const cam = cameraFor(lp.project.scene);
     const pairs = lp.project.characters.filter((c) => c.companionId).map((c) => [c.id, c.companionId!] as const);
     expect(pairs.length).toBe(2);
-    let far = 0, n = 0, overlap = 0, overlapStanding = 0, pairActivities = 0;
+    let far = 0, n = 0, pairActivities = 0, minD = Infinity;
     for (let i = 0; i < 60 * 90; i++) {
       sim.step();
-      const ags = sim.state.agents;
+      const ags = sim.state.agents.filter((a) => !a.hidden);
+      const W = ags.map((a) => toWorld(cam, a.pos));
       for (const [f, l] of pairs) {
-        const A = ags.find((x) => x.id === f)!, B = ags.find((x) => x.id === l)!;
-        if (!A.follow || A.hidden) continue; // u kávy má každý své místo ve frontě / u stolku
-        const va = visualRoot(A), vb = visualRoot(B);
-        const d = groundLen(va.x - vb.x, va.y - vb.y) / depthScaleAt(lp.project.scene.depth, vb.y);
-        n++; if (d > 60) far++;
+        const A = ags.find((x) => x.id === f), B = ags.find((x) => x.id === l);
+        if (!A || !B || !A.follow) continue; // u kávy má každý své místo ve frontě / u stolku
+        const pa = W[ags.indexOf(A)], pb = W[ags.indexOf(B)];
+        n++; if (Math.hypot(pa.X - pb.X, pa.Z - pb.Z) > 1.6) far++;
         if (A.activity) pairActivities++; // když jde s vůdcem, nemá vlastní činnost
       }
-      for (let x = 0; x < ags.length; x++) for (let y = x + 1; y < ags.length; y++) {
-        const a = ags[x], b = ags[y];
-        if (a.follow?.leaderId === b.id || b.follow?.leaderId === a.id || a.hidden || b.hidden) continue;
-        const va = visualRoot(a), vb = visualRoot(b);
-        const d = groundLen(va.x - vb.x, va.y - vb.y) / depthScaleAt(lp.project.scene.depth, va.y);
-        if (d < BODY_W * 0.5) { overlap++; if (a.speed < 4 && b.speed < 4) overlapStanding++; }
-      }
+      // fyzická těla (disky 0,23 m) – všechny páry včetně dvojic a stojících
+      for (let x = 0; x < ags.length; x++) for (let y = x + 1; y < ags.length; y++) minD = Math.min(minD, Math.hypot(W[x].X - W[y].X, W[x].Z - W[y].Z));
     }
-    console.log(`dvojice daleko od sebe: ${(100 * far / n).toFixed(1)} % času; překryvy: ${overlap} snímko-dvojic (ve stoje ${overlapStanding})`);
+    console.log(`dvojice dál než 1,6 m: ${(100 * far / n).toFixed(1)} % času; nejmenší vzdálenost středů ${minD.toFixed(3)} m`);
+    expect(minD).toBeGreaterThanOrEqual(2 * R_BODY - 1e-6); // G1: nikdy průnik těl
     expect(far / n).toBeLessThan(0.05);
     expect(pairActivities).toBe(0);
-    expect(overlapStanding).toBeLessThan(30);
-    expect(overlap).toBeLessThan(200); // osobní prostor: dříve ~3 600 snímko-dvojic; zbytek = krátké rozestupování
   });
 
   it('při chůzi se nepoužívá čistě čelní ani zadní pohled', () => {

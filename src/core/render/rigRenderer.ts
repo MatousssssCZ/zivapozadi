@@ -24,6 +24,7 @@ type AnyCanvas = { width: number; height: number; getContext(t: '2d'): unknown }
 let canvasFactory: ((w: number, h: number) => AnyCanvas) | null = null;
 /** Registruje prostředí (OffscreenCanvas v editoru, @napi-rs/canvas v Node). */
 export function setCanvasFactory(f: (w: number, h: number) => AnyCanvas) { canvasFactory = f; }
+export function getCanvasFactory() { return canvasFactory; }
 
 const tintCache = new Map<string, ImageLike>();
 /** Přebarvení POUZE oblasti masky (násobení – zachová stínování); vzdálené končetiny mírně ztmavené. */
@@ -63,6 +64,8 @@ export interface RigAssembly {
   missing: string[];
   view: ViewId;
   heldOrder: number;
+  /** Závěje přes zabořené boty (vzdálená, blízká) v lokálních souřadnicích. */
+  snowLips?: [{ x: number; y: number; w: number; h: number } | null, { x: number; y: number; w: number; h: number } | null];
 }
 
 const GROUP_OF: Record<PartSlot, GroupId> = { torso: 'jacket', upperArm: 'jacket', forearm: 'jacket', hat: 'hat', scarf: 'scarf', thigh: 'trousers', shin: 'trousers', foot: 'boots', hand: 'gloves', head: 'head' };
@@ -158,10 +161,26 @@ export function assembleRig(lib: PartLibrary, tpl: BodyTemplateDef, app: Charact
   return { items, grip, joints, anchors, missing, view, heldOrder: (ho < 0 ? 999 : ho) * 100 };
 }
 
+function drawSnowLip(ctx: CanvasRenderingContext2D, l: { x: number; y: number; w: number; h: number }, color: string) {
+  ctx.save();
+  ctx.fillStyle = color;
+  ctx.globalAlpha = 0.88;
+  ctx.beginPath();
+  // spodní polovina kopce (od povrchu sněhu dolů) + nízký lem nad povrchem
+  ctx.ellipse(l.x, l.y + l.h * 0.55, l.w / 2, l.h * 0.95, 0, Math.PI, 0, false);
+  ctx.lineTo(l.x + l.w / 2, l.y + l.h * 1.6);
+  ctx.lineTo(l.x - l.w / 2, l.y + l.h * 1.6);
+  ctx.closePath();
+  ctx.fill();
+  // drobné hrudky na okraji (deterministické podle tvaru)
+  for (let k = 0; k < 3; k++) { ctx.beginPath(); ctx.ellipse(l.x + (k - 1) * l.w * 0.3, l.y + l.h * 0.35, l.w * 0.1, l.h * 0.3, 0, 0, Math.PI * 2); ctx.fill(); }
+  ctx.restore();
+}
+
 export function rigImageKey(libDir: string, file: string) { return `rig:${libDir}/${file}`; }
 
 /** Vykreslí sestavu; kontext je posunut na chodidla, zmenšen a případně zrcadlen. */
-export function drawRig(ctx: CanvasRenderingContext2D, asm: RigAssembly, images: AssetImages, libDir: string, farShade: number, drawHeld?: () => void) {
+export function drawRig(ctx: CanvasRenderingContext2D, asm: RigAssembly, images: AssetImages, libDir: string, farShade: number, drawHeld?: () => void, snowColor?: string) {
   let heldDone = false;
   for (const it of asm.items) {
     if (!heldDone && drawHeld && it.order > asm.heldOrder) { drawHeld(); heldDone = true; }
@@ -174,6 +193,9 @@ export function drawRig(ctx: CanvasRenderingContext2D, asm: RigAssembly, images:
     ctx.transform(it.m[0], it.m[1], it.m[2], it.m[3], it.m[4], it.m[5]);
     ctx.drawImage(img as CanvasImageSource, p.trim.x, p.trim.y, p.trim.w, p.trim.h);
     ctx.restore();
+    // zaboření do sněhu: spodek boty zakryje nepravidelná závěj v barvě sněhu z pozadí
+    const lip = p.slot === 'foot' && asm.snowLips ? asm.snowLips[it.key === 'far.foot' ? 0 : 1] : null;
+    if (lip && snowColor) drawSnowLip(ctx, lip, snowColor);
   }
   if (!heldDone && drawHeld) drawHeld();
 }

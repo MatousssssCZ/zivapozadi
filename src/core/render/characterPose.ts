@@ -3,11 +3,12 @@ import type { CharacterManifest } from '../anim/manifest';
 import { resolveDirection } from '../anim/manifest';
 import { figurePose, TEST_FIGURE_TEMPLATE, type BaseDir } from '../anim/testFigure';
 import type { GaitContext } from '../anim/animator';
-import type { DepthSettings } from '../model/types';
+import type { DepthSettings, SceneSettings } from '../model/types';
+import { cameraFor, groundStepLocal, worldAngleOfScreen, Q, type Camera } from '../scene/camera';
 import type { CharacterAppearance } from '../anim/partLibrary';
 import { resolveView } from '../anim/partLibrary';
 import { skeletonPose, viewForDirection, footGeomOf, type SkeletonPose, type ViewId, type PoseOptions, type Anchor } from '../anim/skeleton';
-import { depthScaleAt, groundAngle, GROUND_DEPTH_K } from '../scene/geometry';
+import { depthScaleAt } from '../scene/geometry';
 import { assembleRig, scaledTemplate, type RigAssembly } from './rigRenderer';
 import type { Vec2 } from '../math/vec';
 import { hashString } from '../math/rng';
@@ -30,7 +31,10 @@ export interface CharacterLook { baseScale: number; appearance?: CharacterAppear
  * Jediný zdroj pravdy pro vizuální polohu postavy a jejích úchopových bodů
  * (používá simulace, náhled i export).
  */
-export function characterVisual(agent: AgentState, m: CharacterManifest, look: CharacterLook, depth: DepthSettings): CharacterVisual {
+export function characterVisual(agent: AgentState, m: CharacterManifest, look: CharacterLook, sceneOrDepth: DepthSettings | SceneSettings): CharacterVisual {
+  // kamera scény (při samotném nastavení hloubky: šířka 1920 px, zorný úhel 50°)
+  const scene: SceneSettings = 'depth' in sceneOrDepth ? sceneOrDepth : { width: 1920, height: 1080, depth: sceneOrDepth } as SceneSettings;
+  const depth = scene.depth, cam = cameraFor(scene);
   const scale = look.baseScale * depthScaleAt(depth, agent.pos.y);
   // vizuální kořen = poloha na trase + posun z rozestupů (simulace ho mění jen spolu s kroky)
   const x = agent.pos.x + (agent.off?.x ?? 0);
@@ -41,8 +45,18 @@ export function characterVisual(agent: AgentState, m: CharacterManifest, look: C
     const req = viewForDirection(agent.anim.dir);
     const rv = resolveView(tpl, req.view);
     const stpl = scaledTemplate(tpl, app.proportions);
-    const pose = skeletonPose(stpl, rv.use, req.mirror, agent.anim, agent.holding !== null, app.motion, hashString(agent.id), groundOptions(agent, x, y, scale, req.mirror));
+    const pose = skeletonPose(stpl, rv.use, req.mirror, agent.anim, agent.holding !== null, app.motion, hashString(agent.id), { ...groundOptions(agent, x, y, scale, req.mirror, cam), snowSink: (agent.snowDepth ?? 0) > 0 && agent.anim ? (agent.snowDepth ?? 0) / Q : 0 });
     const rig = assembleRig(lib, tpl, app, pose, rv.use);
+    // závěj přes spodek zabořené boty (kreslí se hned po botě; barvu dodá vykreslování z pozadí)
+    if (pose.snowSink) {
+      const g = footGeomOf(stpl);
+      rig.snowLips = [0, 1].map((i) => {
+        const sk = pose.snowSink![i];
+        if (sk < 0.05) return null;
+        const A = pose.legs[i].end;
+        return { x: A.x + (g.toe - g.heel) * 0.3, y: A.y + g.AH - sk, w: (g.heel + g.toe) * 0.55, h: Math.max(0.5, sk * 0.9) };
+      }) as RigAssembly['snowLips'];
+    }
     return { x, y, scale, mirror: req.mirror, pose, rig, grip: rig.grip, view: { requested: req.view, used: rv.use, substituted: rv.substituted },
       warning: rig.missing.length ? `Chybí díly: ${rig.missing.join(', ')}` : undefined };
   }
@@ -53,28 +67,30 @@ export function characterVisual(agent: AgentState, m: CharacterManifest, look: C
   return { x, y, scale, mirror, pose, grip: pose.handR, warning: rd.warning };
 }
 
-/** Směr na zemi v lokálních souřadnicích; pohled vždy odpovídá směru – pojistka proti chůzi „pozpátku“. */
-function clampGround(x: number, y: number): Vec2 {
-  if (x < 0.05) x = 0.05;
-  const n = Math.hypot(x, y);
-  // jednotkový směr na zemi, svislá (hloubková) složka zkrácená perspektivou
-  return { x: x / n, y: (y / n) * GROUND_DEPTH_K };
+/**
+ * Promítnutý krok kamerou scény (lokálně, se zrcadlením): 1 jednotka chůze ve světovém směru → posun
+ * v jednotkách postavy. Do strany ≈ (1, 0), do hloubky jen ≈ (0, −h/Z) – chůze po rovině, ne po schodech.
+ * Pohled vždy odpovídá směru – pojistka proti chůzi „pozpátku“ (vodorovná složka aspoň 0,05).
+ */
+function groundVec(cam: Camera, at: Vec2, worldAngle: number, sx: number): Vec2 {
+  const g = groundStepLocal(cam, at, worldAngle);
+  return { x: Math.max(0.05, sx * g.x), y: g.y };
 }
 
 /**
  * Promítnutí země pro kostru: skutečný směr pohybu ve scéně (lokálně, se zrcadlením) a světové kotvy pat
  * převedené do lokálních souřadnic postavy.
  */
-function groundOptions(agent: AgentState, x: number, y: number, scale: number, mirror: boolean): PoseOptions {
+function groundOptions(agent: AgentState, x: number, y: number, scale: number, mirror: boolean, cam: Camera): PoseOptions {
   const sx = mirror ? -1 : 1;
-  const gh = agent.groundHeading ?? groundAngle(agent.facing); // fyzický směr na zemi
-  const ground = clampGround(sx * Math.cos(gh), Math.sin(gh));
+  const gh = agent.groundHeading ?? worldAngleOfScreen(cam, agent.pos, agent.facing); // světový směr chůze
+  const ground = groundVec(cam, { x, y }, gh, sx);
   const an = agent.anim.anchors, xy = agent.anim.anchorsXY;
   const anchors = [0, 1].map((i) => {
     const k = an?.[i], p = xy?.[i];
     if (!(p && (agent.anim.settle || (k != null && p.key === k)))) return null;
     const out: Anchor = { x: sx * (p.x - x) / scale, y: (p.y - y) / scale };
-    if (p.h !== undefined) { const g = clampGround(sx * Math.cos(p.h), Math.sin(p.h)); out.gx = g.x; out.gy = g.y; }
+    if (p.h !== undefined) { const g = groundVec(cam, p, p.h, sx); out.gx = g.x; out.gy = g.y; }
     return out;
   }) as [Anchor | null, Anchor | null];
   return { ground, anchors };

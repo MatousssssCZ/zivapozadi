@@ -7,7 +7,7 @@ import type { Simulation } from '../sim/simulation';
 import type { AgentState, PropState } from '../sim/types';
 import { characterVisual } from './characterPose';
 import { drawFigure } from '../anim/testFigure';
-import { drawRig } from './rigRenderer';
+import { getCanvasFactory, drawRig } from './rigRenderer';
 import { depthScaleAt } from '../scene/geometry';
 import { hashNoise } from '../math/rng';
 import { clamp, smoothstep } from '../math/vec';
@@ -63,19 +63,46 @@ function drawShadow(ctx: Ctx, x: number, y: number, s: number) {
   ctx.beginPath(); ctx.ellipse(x, y, 17 * s, 5 * s, 0, 0, Math.PI * 2); ctx.fill();
 }
 
+/** Barva pozadí v daném místě (zmenšená kopie pozadí, vytvoří se jednou) – pro závěje u bot. */
+const bgSample = new WeakMap<object, { w: number; h: number; d: Uint8ClampedArray; sx: number; sy: number }>();
+function backgroundColorAt(project: ProjectFile, images: AssetImages, x: number, y: number): string | undefined {
+  const id = project.scene.backgroundAssetId;
+  const img = id ? (images.get(id) as unknown as { width: number; height: number } | undefined) : undefined;
+  if (!img) return undefined;
+  let s = bgSample.get(img);
+  if (!s) {
+    const f = getCanvasFactory();
+    if (!f) return undefined;
+    const w = 480, h = Math.round((480 * project.scene.height) / project.scene.width);
+    const c = f(w, h); const cx = c.getContext('2d') as CanvasRenderingContext2D;
+    cx.drawImage(img as unknown as CanvasImageSource, 0, 0, w, h);
+    s = { w, h, d: cx.getImageData(0, 0, w, h).data, sx: w / project.scene.width, sy: h / project.scene.height };
+    bgSample.set(img, s);
+  }
+  // průměr malé oblasti těsně pod chodidly (sníh kolem boty), mírně zesvětlený
+  let r = 0, g = 0, b = 0, n = 0;
+  for (let dy = 0; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
+    const px = Math.min(s.w - 1, Math.max(0, Math.round(x * s.sx) + dx)), py = Math.min(s.h - 1, Math.max(0, Math.round(y * s.sy) + dy));
+    const i = (py * s.w + px) * 4; r += s.d[i]; g += s.d[i + 1]; b += s.d[i + 2]; n++;
+  }
+  const L = (v: number) => Math.min(255, Math.round((v / n) * 0.97));
+  return `rgb(${L(r)},${L(g)},${L(b)})`;
+}
+
 function drawAgent(ctx: Ctx, project: ProjectFile, sim: Simulation, a: AgentState, cupScaleFallback: number, images: AssetImages) {
   const c = sim.characterOf(a.id);
   if (!c) return;
   const m = sim.manifests[c.assetId];
   if (!m) return;
-  const cv = characterVisual(a, m, c, project.scene.depth);
+  const cv = characterVisual(a, m, c, project.scene);
   drawShadow(ctx, cv.x, cv.y, cv.scale);
   ctx.save();
   ctx.translate(cv.x, cv.y);
   ctx.scale(cv.mirror ? -cv.scale : cv.scale, cv.scale);
   const held = a.holding ? sim.state.props.find((p) => p.id === a.holding) : undefined;
   if (m.backend === 'skeleton' && cv.rig && m.rigLibrary) {
-    drawRig(ctx, cv.rig, images, m.rigLibraryDir ?? '', m.rigLibrary.bodyTemplates[0]?.farShade ?? 0.8, held ? () => drawCup(ctx, cv.grip.x, cv.grip.y + 6, 1, held.sips, cv.pose.cupTilt ?? 0) : undefined);
+    const snowColor = cv.rig.snowLips ? backgroundColorAt(project, images, cv.x, cv.y + 3 * cv.scale) : undefined;
+    drawRig(ctx, cv.rig, images, m.rigLibraryDir ?? '', m.rigLibrary.bodyTemplates[0]?.farShade ?? 0.8, held ? () => drawCup(ctx, cv.grip.x, cv.grip.y + 6, 1, held.sips, cv.pose.cupTilt ?? 0) : undefined, snowColor);
   } else if (m.backend === 'procedural-test-figure') {
     drawFigure(ctx, cv.pose as Parameters<typeof drawFigure>[1], c.palette, held ? () => drawCup(ctx, cv.pose.handR.x, cv.pose.handR.y + 6, 1, held.sips) : undefined);
   } else {

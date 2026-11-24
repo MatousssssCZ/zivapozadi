@@ -85,6 +85,16 @@ export interface AgentState {
   speedCap?: number | null;
   /** Dvojice: tato postava jde s vůdcem (id) na dané straně. */
   follow?: { leaderId: string; side: number; vel?: Vec2 } | null;
+  /** Skutečná rychlost ve světě (m/s, X doprava, Z od kamery). */
+  vel?: { X: number; Z: number };
+  /** Volba předvídavého plánovače (úhel a násobek rychlosti vůči trase). */
+  crowdChoice?: { ang: number; k: number } | null;
+  /** Otáčení na místě před vykročením (světový úhel). */
+  turnTo?: number | null;
+  /** Hloubka sněhu pod postavou (m; 0 = mimo sníh) – zaboření bot. */
+  snowDepth?: number;
+  /** Jak dlouho postava stojí těsně před obsazeným cílem. */
+  stuckT?: number;
   /** Postava je mimo scénu (návštěvník čeká za vstupem) – nekreslí se a neovlivňuje ostatní. */
   hidden?: boolean;
   /** Návštěvník: co právě dělá. */

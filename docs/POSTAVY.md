@@ -163,16 +163,78 @@ za 90 s), za chůze ~600 (dříve ~3 600, zbytek jsou krátká křížení drah)
   při stoupání do schodu. Posun se rozkládá podle polohy chodidla (ohnuté koleno neklesá k zemi) a
   zkrácení je nejvýš ±15 % – zbytek vyrovná koleno (žádné „gumové“ nohy).
 
-### Osobní prostor (rozestupy)
+### Perspektiva, dav a sníh (zadání `docs/zdroje/zadani-dav-perspektiva-koncetiny-2D.md`)
 
-Každá postava má **osobní poloměr** 0,55–0,8 šířky postavy (podle id, takže se rozestupy mírně
-liší). Středy dvou postav nejsou nikdy blíž než součet poloměrů: případné překrytí se plynule
-rozestoupí (klidným krokem stranou – posun pohání nohy). Chodci plánují úhyb s pohodlnějším odstupem
-(1,3× součet), protijdoucí se míjejí vpravo, za pomalejším zpomalí. Při **křížení drah** (nejbližší
-přiblížení do 1,6 s) dá přednost ten, kdo je od místa střetu dál, a zpomalí (nikdy nezastaví úplně).
-Postavy stojící na místě činnosti (fronta, obsluha, stolek) se neodstrkují – ostatní je obcházejí.
-Na náměstí klesl počet „průchodů skrz“ (středy blíž než 0,6 šířky) z ~2 070 na ~130 snímko-dvojic
-za 5 min (zbytek jsou zlomky sekundy, než se dvojice přátel rozestoupí).
+**Kamera (A2–A4, `src/core/scene/camera.ts`).**
+* Kamera je pinhole bez náklonu s posunutým hlavním bodem.
+* Z nastavení hloubky scény plyne horizont y_h a výška kamery h = q/a, kde q = 1,75/130 m na
+  jednotku postavy. Ohnisko vychází ze zorného úhlu (`scene.fovDeg`, výchozí 50°).
+* Náměstí: horizont y ≈ 831 px, kamera 2,58 m nad zemí, hloubka pásu y 900 → 1080 je 55,66 m.
+* Rychlost, promítání kroků i vzdálenosti postav se počítají v metrech přes tuto kameru.
+  Konstanta K = 0,4 je pryč.
+* Do hloubky je proto postava po obrazovce pomalá a hlavně roste. Krok 0,6 m ke kameře dává
+  dole jen 7,2 px oproti 58 px do strany, takže chůze ke kameře vypadá jako chůze po rovině,
+  ne ze schodů.
+* Zkosení nohou jako náhrada hloubky je odstraněné (C4).
+* V panelu scény lze nastavit zorný úhel; panel zobrazuje skutečné rozměry scény v metrech.
+
+**Dav (B4–B6, `src/core/sim/crowd.ts`).** Pohyb probíhá ve světových metrech. Každá postava je
+fyzický disk o poloměru 0,23 m s osobním prostorem 0,35–0,49 m (podle id).
+1. *Záměr:* bod ~1 m dopředu po trase, brzdění, zatáčky a úzké průchody. U druhého člena
+   dvojice místo ve formaci (0,72 m vedle a 0,4 m za vůdcem); když je od vůdce dál, dojde
+   k němu po trase.
+2. *Předvídavá volba* (15 Hz): kandidáti ±60° × 6 rychlostí. Skóre ze zadání zahrnuje ztrátu
+   rychlosti, odchylku, stabilitu volby, budoucí přiblížení (minimum vzdálenosti a čas do něj
+   v horizontu 3 s) a míjení vpravo. Při křížení drah má přednost ten, kdo je u průsečíku dřív.
+   Kandidáti mířící do stánku jsou vyřazeni.
+3. *Pevná nepřekročitelnost* (60 Hz): Dykstrova projekce požadovaných rychlostí na podmínky
+   n·(vi − vj) ≥ (R_step − d)/dt pro všechny páry (včetně dvojic a stojících) a pevné
+   překážky, plus disk maximální rychlosti. Podmínka platí pro celou úsečku pohybu, takže
+   nemůže dojít k průletu mezi snímky.
+4. *Spojitá kontrola:* kdo by ji porušil, v ticku stojí.
+5. *Rozestavení:* postavy stojící na místě činnosti jsou pevné překážky; nikdo se neobjeví v
+   překážce ani na jiné postavě; při obratu nad ~100° postava zastaví a otočí se na místě.
+
+Výsledek na náměstí:
+
+| Ukazatel | Hodnota |
+|---|---|
+| Nejmenší vzdálenost středů | 0,462 m (mez těl 0,46 m) – žádný průnik |
+| Skoro stojící na trase | 2,6 % času |
+
+Scénáře ze zadání (`tests/crowd.test.ts`):
+
+| Scénář | Výsledek |
+|---|---|
+| Protijdoucí | bez zpomalení, úhyb 0,26 m |
+| Křížení 90° | bez zaseknutí |
+| Předjíždění | projde |
+| Stojící | obejdou ho ze všech stran |
+| Spojitý průlet | zachycen |
+| 20 lidí z 4 směrů | min. vzdálenost 0,462 m, ≥ 18 dojde do cíle |
+
+**Kolena.** Bez zkosení a s plynulým dorovnáním pánve na začátku švihu klesla největší změna
+úhlu kolena ze 112° na ~34° za tick a počet změn nad 7°/tick na polovinu. Zbývají hlavně
+rychlé začátky švihu po ostrém zatočení.
+
+**Sníh (D).**
+* Oblasti typu „sníh“ (polygon, `snowDepthM`, výchozí 0,02 m) – barva pozadí se nepoužívá.
+* Zatížená bota se během ~0,08 fáze zaboří, pánev se sníží o průměr a švihová bota z
+  prohlubně plynule vyjde.
+* Spodek boty zakryje nízká nepravidelná závěj v barvě sněhu odebrané z pozadí těsně pod
+  postavou.
+* Zaboření v jednotkách postavy je stálé (0,02 m / q ≈ 1,5 j.), takže v obraze je úměrné
+  perspektivě.
+
+**Ze zadání zatím neimplementováno:**
+* úplná 2.5D kostra (klouby v X, Z, H a prostorová IK, C2/C4);
+* koridory a visibility graph kolem fronty (fronta je zatím jen soubor pevných překážek);
+* přechod dvojice do zástupu v úzkém průchodu;
+* body rozhovoru 1 m od sebe;
+* stopy ve sněhu (decaly);
+* kalibrační mřížka v editoru;
+* komfortní limity uvnitř řešiče (zrychlení se omezuje před projekcí);
+* přechod fyzické délky nohy na 0,835 m (mění kadenci; zatím 0,9 m).
 
 ### Pití
 

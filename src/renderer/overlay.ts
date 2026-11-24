@@ -143,7 +143,7 @@ export function drawOverlay(ctx: Ctx, o: OverlayInput) {
       if (a.hidden) continue; // návštěvník mimo scénu
       const c = o.sim.characterOf(a.id); if (!c) continue;
       const m = o.sim.manifests[c.assetId]; if (!m) continue;
-      const cv = characterVisual(a, m, c, p.scene.depth);
+      const cv = characterVisual(a, m, c, p.scene);
       const selected = isSel('character', a.id);
       if (o.rigDiagnostics) {
         ctx.save(); ctx.translate(cv.x, cv.y); ctx.scale(cv.mirror ? -cv.scale : cv.scale, cv.scale);

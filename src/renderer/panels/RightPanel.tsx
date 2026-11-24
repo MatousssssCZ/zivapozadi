@@ -1,3 +1,4 @@
+import { cameraFor, toWorld } from '../../core/scene/camera';
 import { store, useEditor, useSimTick } from '../store';
 import { Row, NumField, TextField, Select, Check, Section } from './fields';
 import type { ProjectFile, SceneObject, Layer, InteractionPointKind, StopConfig } from '../../core/model/types';
@@ -263,6 +264,8 @@ function SceneProps({ p }: { p: ProjectFile }) {
         <div className="muted small">Postavy se zmenšují lineárně podle svislé polohy chodidel (mimo rozsah se měřítko nemění). Vodorovný pohyb velikost nemění.</div>
       </Section>
       <Section title="Sněžení">
+        <Row label="Zorný úhel kamery (°)"><NumField value={sc.fovDeg ?? 50} min={20} max={120} step={1} onCommit={(v) => upd('Zorný úhel kamery', (d) => { d.scene.fovDeg = v; })} /></Row>
+        {(() => { const cam = cameraFor(sc); const near = toWorld(cam, { x: sc.width / 2, y: sc.depth.yNear }), far = toWorld(cam, { x: sc.width / 2, y: sc.depth.yFar }), wNear = toWorld(cam, { x: 0, y: sc.depth.yNear }); return sc.depth.enabled ? <div className="muted small">Skutečné rozměry podle kamery: hloubka od spodní po vzdálenou hranu {(far.Z - near.Z).toFixed(1)} m, šířka obrazu dole {(2 * Math.abs(wNear.X)).toFixed(1)} m, kamera {cam.h.toFixed(2)} m nad zemí. Užší zorný úhel = hlubší scéna; chůze do hloubky je na obrazovce pomalá (perspektiva).</div> : null; })()}
         <Row label="Max. sklon chůze (°)"><NumField value={sc.maxWalkSlopeDeg ?? 45} min={20} max={90} step={5} onCommit={(v) => upd('Sklon chůze', (d) => { d.scene.maxWalkSlopeDeg = v; })} /></Row>
         <div className="muted small">Postavy nikdy nejdou po obrazovce strměji (čistě dopředu/dozadu) – strmý úsek projdou šikmo. 90 = bez omezení.</div>
         <Check label="Padající sníh" value={sc.snowfall.enabled} onChange={(v) => upd('Sněžení', (d) => { d.scene.snowfall.enabled = v; })} />
