@@ -124,6 +124,12 @@ export async function generateLiberec(dir: string): Promise<ProjectFile> {
     }
     p.objects.push(so);
   }
+  // malované sprity sněhuláka, koulí a páry (renderer je najde podle id `sprite_*`)
+  for (const n of ['snowman_base', 'snowman_middle', 'snowman_head', 'snowball', 'carrot', 'scarf', 'coal_0', 'coal_1', 'coal_2', 'coal_3', 'coal_4', 'steam_1', 'steam_2', 'steam_3', 'steam_4', 'steam_5', 'steam_6']) {
+    const a = await importAssetFile(dir, path.join(G, 'sprites_clean', `${n}.png`), 'image');
+    a.id = `sprite_${n}`; a.name = `Sprite – ${n}`; a.anchor = { x: 0.5, y: 0.5 }; a.pixelScale = 1;
+    p.assets.push(a);
+  }
   // koše (nová grafika je neobsahuje): u stolků vlevo a vpravo vpředu
   const binLid = p.assets.find((a) => a.id === 'builtin_kos_vika')!, bin = p.assets.find((a) => a.id === 'builtin_kos')!;
   binLid.shape = { bodyU0: 0.167, bodyU1: 0.824, depthM: 0.45 }; bin.shape = { bodyU0: 0.185, bodyU1: 0.806, depthM: 0.45 };

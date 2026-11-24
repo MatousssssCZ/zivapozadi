@@ -356,6 +356,7 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
   const worldObjs = visible.filter(({ o }) => o.layer === 'world').map(({ o }) => o);
   drawGroundIntegration(ctx, project, worldObjs, assets, opts.time);
   litCtx = { objects: worldObjs.filter((o) => o.integration), assets, t: opts.time };
+  spriteSrc = images;
 
   // Světová vrstva: řazení podle bodu kontaktu se zemí (+ ruční úprava pořadí).
   type Item = { key: number; tie: number; draw: () => void };
@@ -413,7 +414,17 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
  * Koule sněhu (malovaná): mírně nepravidelný obrys, chladný stín vpravo dole, světlejší horní
  * plocha, pár stop válení (otáčí se podle dráhy), úzký kontaktní stín na zemi.
  */
-function drawSnowBall(ctx: Ctx, cam: ReturnType<typeof cameraFor>, X: number, Z: number, H: number, r: number, rot: number, seed: number, shadow: boolean) {
+/** Malované sprity z projektu (assety s id `sprite_*`, např. ze sady „Živá pozadí“); chybí = kresba kódem. */
+let spriteSrc: AssetImages | null = null;
+const sprite = (name: string) => (spriteSrc?.get(`sprite_${name}`) ?? null) as (CanvasImageSource & { width: number; height: number }) | null;
+/** Sprite vycentrovaný na bod, s průměrem `d` px (podle šířky), volitelně otočený. */
+function drawSpriteAt(ctx: Ctx, img: CanvasImageSource & { width: number; height: number }, x: number, y: number, d: number, rot = 0, flip = false) {
+  const w = d, h = (d * img.height) / img.width;
+  ctx.save(); ctx.translate(x, y); if (rot) ctx.rotate(rot); if (flip) ctx.scale(-1, 1);
+  ctx.drawImage(img, -w / 2, -h / 2, w, h); ctx.restore();
+}
+
+function drawSnowBall(ctx: Ctx, cam: ReturnType<typeof cameraFor>, X: number, Z: number, H: number, r: number, rot: number, seed: number, shadow: boolean, spriteName = 'snowball') {
   const c = toScreen(cam, { X, Z }, H), R = (r * cam.f) / Math.max(1e-3, Z);
   if (R < 0.4) return;
   if (shadow) {
@@ -421,6 +432,8 @@ function drawSnowBall(ctx: Ctx, cam: ReturnType<typeof cameraFor>, X: number, Z:
     ctx.save(); ctx.fillStyle = 'rgba(98,113,150,0.22)';
     ctx.beginPath(); ctx.ellipse(g0.x + R * 0.1, g0.y, R * 1.05, Math.max(0.8, R * 0.18), 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
   }
+  const img = sprite(spriteName) ?? sprite('snowball');
+  if (img) { drawSpriteAt(ctx, img, c.x, c.y, 2.06 * R, rot); return; } // malovaná koule (okraj sprite je měkký)
   ctx.save();
   ctx.beginPath();
   for (let i = 0; i <= 28; i++) {
@@ -448,10 +461,12 @@ function drawSnowman(ctx: Ctx, cam: ReturnType<typeof cameraFor>, o: NonNullable
   const P = toWorld(cam, { x: o.x, y: o.y });
   const [r0, r1, r2] = o.radii;
   const h0 = r0, h1 = 2 * r0 * 0.92 + r1 * 0.92, h2 = 2 * r0 * 0.92 + 2 * r1 * 0.92 + r2 * 0.9;
-  drawSnowBall(ctx, cam, P.X, P.Z, h0, r0, 0.4, o.seed % 97, true);
-  if (r1) drawSnowBall(ctx, cam, P.X, P.Z - 0.01, h1, r1, 1.3, (o.seed % 97) + 3, false);
+  drawSnowBall(ctx, cam, P.X, P.Z, h0, r0, 0, o.seed % 97, true, 'snowman_base');
+  if (r1) drawSnowBall(ctx, cam, P.X, P.Z - 0.01, h1, r1, 0, (o.seed % 97) + 3, false, 'snowman_middle');
   const px = (m: number) => (m * cam.f) / P.Z;
   const at = (H: number, dx = 0) => { const q = toScreen(cam, { X: P.X, Z: P.Z }, H); return { x: q.x + px(dx), y: q.y }; };
+  const coal = (k: number) => sprite(`coal_${k % 5}`);
+  if (coal(0) && sprite('snowman_head')) { drawSnowmanSprites(ctx, o, at, px, coal, h1, h2, r1, r2); return; }
   if (o.decorations.includes('buttons') && r1) {
     ctx.fillStyle = '#2b2b33';
     for (const k of [-0.35, 0.1]) { const q = at(h1 + r1 * k, 0.02); ctx.beginPath(); ctx.arc(q.x, q.y, Math.max(0.5, px(0.018)), 0, Math.PI * 2); ctx.fill(); }
@@ -474,6 +489,19 @@ function drawSnowman(ctx: Ctx, cam: ReturnType<typeof cameraFor>, o: NonNullable
   }
 }
 
+/** Sněhulák z malovaných spritů: hlava, uhlíky (oči, knoflíky), mrkev, pletená šála. */
+function drawSnowmanSprites(ctx: Ctx, o: NonNullable<SimState['runtimeObjects']>[number], at: (H: number, dx?: number) => { x: number; y: number }, px: (m: number) => number,
+  coal: (k: number) => (CanvasImageSource & { width: number; height: number }) | null, h1: number, h2: number, r1: number, r2: number) {
+  const dot = (H: number, dx: number, k: number, size: number) => { const q = at(H, dx); drawSpriteAt(ctx, coal(k)!, q.x, q.y, Math.max(1.2, px(size)), (k * 1.3) % 6.28); };
+  if (o.decorations.includes('buttons') && r1) for (const [i, kH] of [[0, 0.35], [1, -0.05], [2, -0.45]] as const) dot(h1 + r1 * kH, 0.015, i + o.seed, 0.04);
+  if (!r2) return;
+  const head = sprite('snowman_head')!, q0 = at(h2);
+  drawSpriteAt(ctx, head, q0.x, q0.y, 2.06 * px(r2));
+  if (o.decorations.includes('scarf') && sprite('scarf')) { const q = at(h2 - r2 * 0.95); drawSpriteAt(ctx, sprite('scarf')!, q.x + px(0.01), q.y + px(r2 * 0.22), px(r2 * 1.95)); }
+  if (o.decorations.includes('eyes')) { dot(h2 + r2 * 0.28, -0.045, o.seed + 3, 0.032); dot(h2 + r2 * 0.28, 0.045, o.seed + 4, 0.032); }
+  if (o.decorations.includes('nose') && sprite('carrot')) { const q = at(h2 + r2 * 0.02); const c = sprite('carrot')!; const w = px(0.12); ctx.drawImage(c, q.x - w * 0.12, q.y - (w * c.height) / c.width / 2, w, (w * c.height) / c.width); }
+}
+
 /** Pára a kouř: měkké průsvitné obláčky (malovaný dojem, bez ostrých okrajů). */
 function drawParticles(ctx: Ctx, project: ProjectFile, ps: NonNullable<Simulation['state']['particles']>, t: number) {
   const env = project.scene.environment!;
@@ -481,6 +509,14 @@ function drawParticles(ctx: Ctx, project: ProjectFile, ps: NonNullable<Simulatio
   for (const p of ps) {
     const q = particleAt(p, t, project.scene.snowfall.wind, project.seed, env.gusts);
     if (!q || q.a < 0.004) continue;
+    const st = p.kind !== 'snowPuff' ? sprite(`steam_${(p.seed % 6) + 1}`) : null;
+    if (st) {
+      // malovaný obláček páry: nízká celková průhlednost, pomalý růst (sprite nikdy nezesilovat)
+      ctx.globalAlpha = Math.min(0.55, q.a * (p.kind === 'smoke' ? 1.4 : 1.8));
+      drawSpriteAt(ctx, st, q.x, q.y - q.r * 0.6, q.r * 2.6, ((p.seed % 7) - 3) * 0.08);
+      ctx.globalAlpha = 1;
+      continue;
+    }
     const col = p.kind === 'smoke' ? '214,216,228' : '248,248,252';
     const g = ctx.createRadialGradient(q.x, q.y, 0, q.x, q.y, q.r);
     g.addColorStop(0, `rgba(${col},${q.a.toFixed(3)})`); g.addColorStop(0.6, `rgba(${col},${(q.a * 0.45).toFixed(3)})`); g.addColorStop(1, `rgba(${col},0)`);

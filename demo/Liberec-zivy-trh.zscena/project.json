@@ -3,8 +3,8 @@
   "formatVersion": 1,
   "meta": {
     "name": "Liberec – živý vánoční trh",
-    "createdAt": "2026-11-24T17:53:15.580Z",
-    "modifiedAt": "2026-11-24T17:53:15.657Z",
+    "createdAt": "2026-11-24T18:02:16.374Z",
+    "modifiedAt": "2026-11-24T18:02:16.478Z",
     "appVersion": "0.1.0"
   },
   "seed": 2611,
@@ -480,6 +480,227 @@
         "bodyU1": 0.85,
         "depthM": 0.4
       }
+    },
+    {
+      "id": "sprite_snowman_base",
+      "kind": "image",
+      "name": "Sprite – snowman_base",
+      "file": "assets/images/snowman-base-1456dd69.png",
+      "width": 455,
+      "height": 456,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "sprite_snowman_middle",
+      "kind": "image",
+      "name": "Sprite – snowman_middle",
+      "file": "assets/images/snowman-middle-4f3fa7e1.png",
+      "width": 358,
+      "height": 351,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "sprite_snowman_head",
+      "kind": "image",
+      "name": "Sprite – snowman_head",
+      "file": "assets/images/snowman-head-e00f8459.png",
+      "width": 270,
+      "height": 268,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "sprite_snowball",
+      "kind": "image",
+      "name": "Sprite – snowball",
+      "file": "assets/images/snowball-a3bd5900.png",
+      "width": 223,
+      "height": 219,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "sprite_carrot",
+      "kind": "image",
+      "name": "Sprite – carrot",
+      "file": "assets/images/carrot-c9713499.png",
+      "width": 217,
+      "height": 86,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "sprite_scarf",
+      "kind": "image",
+      "name": "Sprite – scarf",
+      "file": "assets/images/scarf-bf8a014c.png",
+      "width": 356,
+      "height": 325,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "sprite_coal_0",
+      "kind": "image",
+      "name": "Sprite – coal_0",
+      "file": "assets/images/coal-0-83531266.png",
+      "width": 80,
+      "height": 76,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "sprite_coal_1",
+      "kind": "image",
+      "name": "Sprite – coal_1",
+      "file": "assets/images/coal-1-bbc956e2.png",
+      "width": 82,
+      "height": 73,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "sprite_coal_2",
+      "kind": "image",
+      "name": "Sprite – coal_2",
+      "file": "assets/images/coal-2-130c6425.png",
+      "width": 76,
+      "height": 68,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "sprite_coal_3",
+      "kind": "image",
+      "name": "Sprite – coal_3",
+      "file": "assets/images/coal-3-246f18fa.png",
+      "width": 77,
+      "height": 69,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "sprite_coal_4",
+      "kind": "image",
+      "name": "Sprite – coal_4",
+      "file": "assets/images/coal-4-c6bd7a3c.png",
+      "width": 76,
+      "height": 68,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "sprite_steam_1",
+      "kind": "image",
+      "name": "Sprite – steam_1",
+      "file": "assets/images/steam-1-f65a9c6e.png",
+      "width": 327,
+      "height": 460,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "sprite_steam_2",
+      "kind": "image",
+      "name": "Sprite – steam_2",
+      "file": "assets/images/steam-2-8822c6d7.png",
+      "width": 347,
+      "height": 454,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "sprite_steam_3",
+      "kind": "image",
+      "name": "Sprite – steam_3",
+      "file": "assets/images/steam-3-34b5e740.png",
+      "width": 357,
+      "height": 456,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "sprite_steam_4",
+      "kind": "image",
+      "name": "Sprite – steam_4",
+      "file": "assets/images/steam-4-1357a7bf.png",
+      "width": 295,
+      "height": 404,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "sprite_steam_5",
+      "kind": "image",
+      "name": "Sprite – steam_5",
+      "file": "assets/images/steam-5-cddaee4d.png",
+      "width": 248,
+      "height": 417,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "sprite_steam_6",
+      "kind": "image",
+      "name": "Sprite – steam_6",
+      "file": "assets/images/steam-6-18b9975d.png",
+      "width": 307,
+      "height": 421,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
     }
   ],
   "objects": [
