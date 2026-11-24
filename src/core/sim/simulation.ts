@@ -24,6 +24,7 @@ import { cameraFor, toWorld, toScreen, worldAngleOfScreen, screenAngleOfWorld, Q
 import { viewForDirection } from '../anim/skeleton';
 import { emit, emitsNow, windIntegral } from './environment';
 import { createAnimals, stepAnimals } from './animals';
+import { stepClearing, type ClearingHost } from './clearing';
 import { stepSled, sledObstacles, sledPathProblem, type SledHost } from './sled';
 import { maybeCarryMitten, mittenBusy, stepMitten, type MittenHost } from './mitten';
 import { stepSnowman, startSnowman, abortSnowman, finishSession, snowmanZoneFree, type SessionHost } from '../activities/snowman';
@@ -408,6 +409,7 @@ export class Simulation {
     if (this.project.characters.some((c) => c.pet) || this.project.cats?.length) stepAnimals((this.state.animals ??= createAnimals(this.project)), this.state.agents, this.project, t, SIM_DT);
     this.stepEnvironment(t);
     if (this.project.sled && !this.sledBlocked) stepSled(this.sledHost(), (this.state.sled ??= { phase: 'offstage', until: this.project.sled.firstDelay ?? 40, dir: 1, n: 0, hist: [] }));
+    if (this.project.clearing && this.project.characters.some((c) => c.id === this.project.clearing!.workerId)) stepClearing(this.clearingHost(), (this.state.clearing ??= { phase: 'offstage', until: this.project.clearing.firstDelay ?? 90, n: 0, band: 0, progress: 0, pile: 0, doneAt: null }));
     if (this.state.mitten || this.state.agents.some((a) => a.holdingKind === 'mitten') || this.state.step % 60 === 0) stepMitten(this.mittenHost());
     this.stepProps(t);
     this.state.step++;
@@ -424,6 +426,25 @@ export class Simulation {
       walkPath: (a, pts) => { self.sessionHost().walkPath(a, pts, 'sáňky'); a.speedFactor = 0.85; },
       hide: (a) => { a.hidden = true; a.route = null; a.speed = 0; a.vel = { X: 0, Z: 0 }; stopAction(a.anim); },
       show: (a, p) => { a.pos = { ...p }; a.hidden = false; a.visPrev = undefined; a.off = { x: 0, y: 0 }; a.look = null; a.anim.walkBlend = 0; a.anim.settle = null; a.anim.anchors = undefined; a.anim.anchorsXY = undefined; },
+      log: (m, aid) => self.log('info', m, aid),
+    });
+  }
+
+  private clearingCache: ClearingHost | null = null;
+  private clearingHost(): ClearingHost {
+    const self = this, id = this.project.clearing?.workerId, sh = () => this.sledHost();
+    return (this.clearingCache ??= {
+      project: this.project, time: () => self.time(),
+      worker: () => self.state.agents.find((x) => x.id === id),
+      others: () => self.state.agents.filter((x) => x.id !== id),
+      walkPath: (a, pts, slow) => { self.sessionHost().walkPath(a, pts, 'odklízení'); a.speedFactor = slow ? 0.4 : 0.9; },
+      hide: (a) => sh().hide(a), show: (a, p) => sh().show(a, p),
+      gesture: (a, dur) => self.sessionHost().gesture(a, 'shovel', { dur }),
+      stopGesture: (a) => { for (const g of a.anim.gestures ?? []) if (g.fam === 'shovel') g.t = Math.max(g.t, g.dur - 0.6); },
+      giveShovel: (a, on) => {
+        if (on && !a.holding) { const p: PropState = { id: `prop${self.state.nextPropId++}`, kind: 'shovel', place: { kind: 'held', agentId: a.id }, appearedAt: self.time(), sips: 0 }; self.state.props.push(p); a.holding = p.id; a.holdingKind = 'shovel'; }
+        if (!on && a.holdingKind === 'shovel') { const hid = a.holding; self.state.props = self.state.props.filter((p) => p.id !== hid); a.holding = null; a.holdingKind = null; }
+      },
       log: (m, aid) => self.log('info', m, aid),
     });
   }
@@ -878,6 +899,7 @@ export class Simulation {
     if (a.hidden && a.pendingActivity) this.enterScene(a, t); // plánovaná činnost: návštěvník přijde
     if (a.pendingActivity && !a.route) { this.tryStartPending(a); if (a.activity) return; }
     if (a.route) { if (!mv.waitingNarrow) a.status = a.pendingActivity ? 'Jde k činnosti' : this.routeStatus(a); return; }
+    if (c.routine === 'shovel') { if (a.hidden) a.status = 'Mimo scénu'; return; } // řídí stepClearing
     if (c.routine === 'sled') { a.status = a.hidden ? 'Mimo scénu' : 'Táhne sáňky s dítětem'; return; } // řídí stepSled
     if (mittenBusy(this.state, a)) return; // vrací se pro rukavici / zvedá ji
     if (c.routine === 'visitor') { this.stepVisitor(a, c, t); return; }

@@ -119,7 +119,7 @@ export interface AgentState {
 }
 
 /** Druhy rekvizit (balíček „živá pozadí“, 02 §4). */
-export type PropKind = 'cup' | 'bag' | 'snowball' | 'snowmanPart' | 'phone' | 'mitten';
+export type PropKind = 'cup' | 'bag' | 'snowball' | 'snowmanPart' | 'phone' | 'mitten' | 'shovel';
 export type PropPlace =
   | { kind: 'counter'; objectId: string; x: number; y: number }
   | { kind: 'held'; agentId: string; /** paže: 1 = blízká (výchozí, kelímek), 0 = vzdálená */ arm?: 0 | 1 }
@@ -174,6 +174,8 @@ export interface SimState {
   particles?: Particle[];
   /** Cooldowny míst (prohlížení…): klíč → čas, odkdy je místo znovu volné. */
   placeCooldowns?: Record<string, number>;
+  /** Odklízení sněhu (A11). */
+  clearing?: import('./clearing').ClearingState;
   /** Sáňky (B02): stav průchodu. */
   sled?: import('./sled').SledState;
   /** Upadlá rukavice (B03): stav jediné události ve scéně. */

@@ -74,6 +74,11 @@ describe('Liberec – živý trh', () => {
     expect(maxRope).toBeLessThanOrEqual(SLED.rope + 0.01);
     expect(sledOffSnow).toBe(0);
     expect(sledHit).toBeGreaterThan(0.45);
+    // odklízení sněhu (A11): pruh odkrytý celý, hromada narostla, pracovník odešel i s lopatou
+    expect(msgs.some((m) => m.includes('odklidil(a) sníh'))).toBe(true);
+    expect(sim.state.clearing?.progress).toBe(1);
+    expect(sim.state.clearing?.pile).toBeGreaterThan(0.9);
+    expect(sim.state.props.some((p) => p.kind === 'shovel')).toBe(sim.state.clearing?.phase !== 'offstage');
     // upadlá rukavice (B03): upadne, majitel se pro ni vrátí a zvedne ji (dřep)
     expect(msgs.filter((m) => m.includes('ztratil(a) rukavici')).length).toBeGreaterThanOrEqual(1);
     expect(msgs.filter((m) => m.includes('zvedl(a) rukavici')).length).toBe(msgs.filter((m) => m.includes('ztratil(a) rukavici')).length);

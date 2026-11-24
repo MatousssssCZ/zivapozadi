@@ -28,7 +28,9 @@ export type Family =
   /** práce (sněhulák): tlačení koule, zvednutí, zdobení – souřadnice x DOPŘEDU ve směru pohledu */
   | 'push' | 'lift' | 'decorate' | 'throw'
   /** dřep s rukama ke sněhu (nabrání sněhu, zvednutí rukavice) a focení telefonem */
-  | 'scoop' | 'photo';
+  | 'scoop' | 'photo'
+  /** odhrnování sněhu lopatou: obě ruce na násadě, tahy vpřed a zpět */
+  | 'shovel';
 
 /** Spuštěný klip u postavy (čistá data – součást stavu simulace). */
 export interface GestureInst {
@@ -64,6 +66,7 @@ export function resourcesOf(g: Pick<GestureInst, 'fam' | 'hand' | 'both'>): Res[
     case 'throw': return [h, 'torso'];
     case 'scoop': return ['arm0', 'arm1', 'torso', 'pelvis'];
     case 'photo': return ['arm0', 'arm1', 'head'];
+    case 'shovel': return ['arm0', 'arm1', 'torso'];
   }
 }
 
@@ -237,6 +240,15 @@ export function evalGesture(g: GestureInst): GestureOut {
       out.headDeg = 2 * env(u, 0.3, 0.4, 0.8, 0.9) * g.sgn;
       return out;
     }
+    case 'shovel': { // lopata: horní ruka u boku na držadle, dolní vpředu na násadě; tahy ~1,3 s
+      const e = Math.min(1, g.t / 0.6), f = Math.min(1, Math.max(0, (g.dur - g.t) / 0.6));
+      const w = e * e * (3 - 2 * e) * (f * f * (3 - 2 * f));
+      const st = 0.5 - 0.5 * Math.cos((g.t * 2 * Math.PI) / 1.3); // 0 = zpět, 1 = vpřed (tah)
+      if (w > 0) out.arms = [{ w, p: { x: 6 + 5 * st, y: -24 + st }, fwd: true, keep: true }, { w, p: { x: 15 + 6 * st, y: -36 + 2 * st }, fwd: true, keep: true }];
+      out.trunkDeg = -(2 + 1.6 * st) * w * g.sgn;
+      out.headDeg = -2 * w * g.sgn;
+      return out;
+    }
     case 'throw': { // hod: nápřah (25 %), zrychlení, výhoz v 55 %, doznění; trup se protočí s hodem
       const tr = track([[0, 'R'], [0.14, { x: -6, y: -20 }], [0.3, { x: -4, y: 13 }], [0.44, { x: 9, y: 23 }], [0.55, { x: 23, y: 13 }], [0.75, { x: 18, y: -12 }], [1, 'R']], u); // oblouk nad ramenem
       if (tr.w > 0) out.arms[hand] = { ...tr, fwd: true, keep: true };
@@ -286,5 +298,5 @@ export const CLIP_T: Record<Family, { T: [number, number, number]; cd: number }>
   thanks: { T: [0.7, 0.9, 1.3], cd: 3 }, waveFar: { T: [2.0, 2.5, 3.2], cd: 45 }, amusement: { T: [1.5, 2.2, 3.2], cd: 35 },
   rubHands: { T: [2.3, 3.0, 4.2], cd: 50 }, adjustScarf: { T: [1.9, 2.5, 3.3], cd: 75 }, adjustCap: { T: [2.1, 2.7, 3.6], cd: 90 },
   hunch: { T: [2.5, 3.2, 4.5], cd: 45 }, queuePeek: { T: [1.6, 2.2, 3.0], cd: 15 }, warmCup: { T: [6, 11, 21], cd: 10 },
-  push: { T: [3, 3, 3], cd: 0 }, scoop: { T: [1.6, 2.2, 3.2], cd: 0 }, photo: { T: [6, 8, 12], cd: 60 }, throw: { T: [0.65, 0.8, 0.95], cd: 0 }, lift: { T: [3.2, 4, 5], cd: 0 }, decorate: { T: [2, 2.6, 3.4], cd: 0 },
+  push: { T: [3, 3, 3], cd: 0 }, scoop: { T: [1.6, 2.2, 3.2], cd: 0 }, photo: { T: [6, 8, 12], cd: 60 }, shovel: { T: [3, 4.5, 6], cd: 0 }, throw: { T: [0.65, 0.8, 0.95], cd: 0 }, lift: { T: [3.2, 4, 5], cd: 0 }, decorate: { T: [2, 2.6, 3.4], cd: 0 },
 };

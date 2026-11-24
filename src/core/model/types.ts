@@ -214,7 +214,7 @@ export interface CharacterInstance {
    * Chování: `wander` = volná procházka po trasách (původní), `visitor` = návštěvník: přijde vstupem,
    * scénou buď jen projde, nebo si dojde na kávu, nebo se potká s přítelem a jdou na kávu spolu; pak odejde.
    */
-  routine?: 'wander' | 'visitor' | 'sled';
+  routine?: 'wander' | 'visitor' | 'sled' | 'shovel';
   /** Postava venčí psa (Z01). */
   pet?: 'dog';
 }
@@ -313,4 +313,9 @@ export interface ProjectFile {
   catSpots?: Vec2[];
   /** Sáňky (B02): dráha po sněhu (body ve scéně, začátek a konec mimo obraz) a postava rodiče (routine 'sled'). */
   sled?: { path: Vec2[]; parentId: string; firstDelay?: number };
+  /**
+   * Odklízení sněhu (A11): pruh (x0–x1 ve výšce y, výška decalu h px), hromada, příchod/odchod mimo obraz,
+   * odstup pracovníka za lopatou (px), počet pásů; postava pracovníka má routine 'shovel'.
+   */
+  clearing?: { workerId: string; strip: { x0: number; x1: number; y: number; h: number }; pile: Vec2; enter: Vec2; approach?: Vec2[]; standBack: number; bands?: number; firstDelay?: number };
 }

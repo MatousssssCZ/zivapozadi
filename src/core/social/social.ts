@@ -133,7 +133,7 @@ export function tryGesture(a: SocialAgent, world: SocialWorld | null, now: numbe
   if (cupFams.includes(fam) && !a.holding) return false;
   const g: GestureInst = { fam, t: 0, dur: 1, hand, amp: req.amp ?? 1, sgn: req.sgn ?? 1, dir: req.dir, second: req.second, both: req.both };
   const need = resourcesOf(g);
-  if (a.holding && need.includes('arm1') && !cupFams.includes(fam)) return false;
+  if (a.holding && need.includes('arm1') && !cupFams.includes(fam) && fam !== 'shovel') return false; // lopata: klip s ní počítá
   const used = usedRes(a);
   if (need.some((r) => used.has(r))) return false;
   // délka: Tri(min, default, max) / tempo, vylosovaná jednou při spuštění

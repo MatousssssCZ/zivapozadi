@@ -16,6 +16,7 @@ import { characterVisual, localToScene } from './characterPose';
 import { drawFigure } from '../anim/testFigure';
 import { cameraFor, toScreen, toWorld, Q } from '../scene/camera';
 import { SLED } from '../sim/sled';
+import { clearedVisible } from '../sim/clearing';
 import type { SimState } from '../sim/types';
 import { lidOpenness } from '../sim/simulation';
 import { FOOTPRINT_LIFE, FOOTPRINT_FADE } from '../sim/types';
@@ -144,6 +145,26 @@ function drawSled(ctx: Ctx, c: { x: number; y: number }, k: number, sx: number, 
   }
   ctx.restore();
 }
+/** Odklizený pruh: malovaná dlažba v odkryté části, před lopatou valoun shrnutého sněhu. */
+function drawClearedStrip(ctx: Ctx, project: ProjectFile, st: SimState['clearing'], t: number) {
+  const cfg = project.clearing!, v = clearedVisible(st, project, t);
+  if (!st || v <= 0.002) return;
+  const s = cfg.strip, img = sprite('pavement'), xr = s.x0 + (s.x1 - s.x0) * st.progress;
+  const fade = st.progress > 0 ? v / st.progress : 0;
+  ctx.save(); ctx.globalAlpha = Math.min(1, fade * 1.1);
+  const lead = 30 * Math.min(1, st.progress * 6); // levý zasněžený okraj decalu se odkryje postupně
+  ctx.beginPath(); ctx.rect(s.x0 - lead, s.y - s.h, xr - s.x0 + lead, s.h * 2); ctx.clip();
+  if (img) ctx.drawImage(img, s.x0 - 30, s.y - s.h / 2, s.x1 - s.x0 + 60, s.h);
+  else { ctx.fillStyle = 'rgba(120,110,120,0.8)'; ctx.fillRect(s.x0, s.y - s.h / 2, s.x1 - s.x0, s.h); }
+  ctx.restore();
+  // valoun sněhu před lopatou (během práce)
+  const pile = sprite('snow_pile');
+  if (pile && st.phase !== 'offstage' && st.phase !== 'leave' && st.progress > 0 && st.progress < 1) {
+    const ppm = depthScaleAt(project.scene.depth, s.y) / Q, band = 1 / (cfg.bands ?? 6);
+    const frac = (st.progress % band) / band, W = (0.28 + 0.12 * frac) * ppm, H = (W * pile.height) / pile.width;
+    ctx.drawImage(pile, xr - W * 0.3, s.y + s.h * 0.15 - H, W, H);
+  }
+}
 /** Rukavice ležící na zemi (spodek na bodu dotyku), s = hloubkové měřítko. */
 function drawGroundMitten(ctx: Ctx, x: number, y: number, s: number, rot: number) {
   const img = sprite('mitten_ground'), W = (0.17 * s) / Q;
@@ -154,7 +175,7 @@ function drawGroundMitten(ctx: Ctx, x: number, y: number, s: number, rot: number
   ctx.restore();
 }
 /** Věc v ruce postavy (souřadnice postavy, 1 jednotka = Q m). */
-function drawHeld(ctx: Ctx, held: PropState, cv: ReturnType<typeof characterVisual>) {
+function drawHeld(ctx: Ctx, held: PropState, cv: ReturnType<typeof characterVisual>, agent?: AgentState) {
   const g = cv.grip;
   if (held.kind === 'bag') return drawBag(ctx, g.x, g.y + 1, 1, held.variant);
   if (held.kind === 'phone') {
@@ -167,6 +188,37 @@ function drawHeld(ctx: Ctx, held: PropState, cv: ReturnType<typeof characterVisu
       const W = (H * sw) / img.height;
       ctx.drawImage(img, 0, 0, sw, img.height, g.x - W / 2, g.y - H * 0.75, W, H);
     } else { ctx.fillStyle = '#4a4650'; ctx.fillRect(g.x - H * 0.25, g.y - H * 0.75, H * 0.5, H); }
+    return;
+  }
+  if (held.kind === 'shovel') {
+    // násada prochází oběma rukama a pokračuje k zemi (list lopaty na sněhu před postavou)
+    // při tahu: horní ruka (zadní, u boku) drží D-držadlo, dolní vpředu na násadě → list na zemi vpředu;
+    // jinak nese lopatu v blízké ruce šikmo k zemi před sebou (plynulý přechod podle váhy klipu)
+    const L = 1.15 / Q;
+    const g = agent?.anim.gestures?.find((x) => x.fam === 'shovel');
+    const w = g ? (() => { const e = Math.min(1, g.t / 0.6), f = Math.min(1, Math.max(0, (g.dur - g.t) / 0.6)); return e * e * (3 - 2 * e) * (f * f * (3 - 2 * f)); })() : 0;
+    const hi = cv.pose.arms[0].end, lo = cv.pose.arms[1].end;
+    let ux = lo.x - hi.x, uy = lo.y - hi.y; const n0 = Math.hypot(ux, uy) || 1; ux /= n0; uy /= n0;
+    if (uy < 0.25 || ux < 0) { ux = 0.55; uy = 0.83; }
+    const topW = { x: hi.x - ux * 4, y: hi.y - uy * 4 };
+    const kW = Math.min(L, Math.max(L * 0.6, -topW.y / uy));
+    const bladeW = { x: topW.x + ux * kW, y: topW.y + uy * kW };
+    const gr = cv.grip, bladeC = { x: gr.x + 0.55 * L, y: 0 }, dC = Math.hypot(bladeC.x - gr.x, bladeC.y - gr.y) || 1;
+    const topC = { x: gr.x - ((bladeC.x - gr.x) / dC) * (L - dC) * 0.9, y: gr.y - ((bladeC.y - gr.y) / dC) * (L - dC) * 0.9 };
+    const mix = (p: { x: number; y: number }, q: { x: number; y: number }) => ({ x: p.x + (q.x - p.x) * w, y: p.y + (q.y - p.y) * w });
+    const top = mix(topC, topW), blade = mix(bladeC, bladeW);
+    const img = sprite('shovel');
+    if (img) {
+      // kotvy spritu: D-držadlo (45,65) a spodní hrana listu (735,345)
+      const sx0 = 45, sy0 = 65, sx1 = 735, sy1 = 345, sl = Math.hypot(sx1 - sx0, sy1 - sy0);
+      const sc = Math.hypot(blade.x - top.x, blade.y - top.y) / sl;
+      const ang = Math.atan2(blade.y - top.y, blade.x - top.x) - Math.atan2(sy1 - sy0, sx1 - sx0);
+      ctx.save(); ctx.translate(top.x, top.y); ctx.rotate(ang); ctx.scale(sc, sc);
+      ctx.drawImage(img, -sx0, -sy0);
+      ctx.restore();
+    } else {
+      ctx.save(); ctx.strokeStyle = '#7a5434'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(top.x, top.y); ctx.lineTo(blade.x, blade.y); ctx.stroke(); ctx.restore();
+    }
     return;
   }
   if (held.kind === 'mitten') {
@@ -234,7 +286,7 @@ function drawAgentBody(ctx: Ctx, project: ProjectFile, sim: Simulation, a: Agent
   if (m.backend === 'skeleton' && cv.rig && m.rigLibrary) {
     const top = held?.kind === 'phone' && /back/.test(cv.view?.used ?? '');
     const snowColor = cv.rig.snowLips ? backgroundColorAt(project, images, cv.x, cv.y + 3 * cv.scale) : undefined;
-    drawRig(ctx, cv.rig, images, m.rigLibraryDir ?? '', m.rigLibrary.bodyTemplates[0]?.farShade ?? 0.8, held && !top ? () => drawHeld(ctx, held, cv) : undefined, snowColor);
+    drawRig(ctx, cv.rig, images, m.rigLibraryDir ?? '', m.rigLibrary.bodyTemplates[0]?.farShade ?? 0.8, held && !top ? () => drawHeld(ctx, held, cv, a) : undefined, snowColor);
     // telefon při pohledu zezadu: displej před hlavou je vidět přes rameno → kreslit navrch
     if (held && top) drawHeld(ctx, held, cv);
   } else if (m.backend === 'procedural-test-figure') {
@@ -412,6 +464,8 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
   const fixed = (layer: 'background' | 'foreground') => visible.filter(({ o }) => o.layer === layer).sort((a, b) => a.o.zBias - b.o.zBias || a.i - b.i);
   for (const { o } of fixed('background')) drawObject(ctx, o, assets.get(o.assetId), images.get(o.assetId));
   // okna a dveře budovy v pozadí (rozsvícení, otevření při průchodu)
+  // odklizený pruh (A11): plochý decal dlažby pod chodci; odkrývá se zleva podle postupu, při sněžení zapadá
+  if (sim && project.clearing) drawClearedStrip(ctx, project, sim.state.clearing, opts.time);
   if (sc.environment && (sc.environment.windows?.length || sc.environment.door)) drawFacade(ctx, project, (sc.backgroundAssetId ? images.get(sc.backgroundAssetId) : null) as never, (images.get('sprite_door_interior') ?? null) as never, sim?.state.doorPasses, opts.time);
   if (sim) drawFootprints(ctx, project, sim, sim.time());
   const worldObjs = visible.filter(({ o }) => o.layer === 'world').map(({ o }) => o);
@@ -484,6 +538,15 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
           } });
         }
       }
+    }
+    // hromada odhrnutého sněhu (A11) – roste s každým pásem
+    const cl = sim.state.clearing, ccfg = project.clearing;
+    if (ccfg && cl && cl.pile > 0.01) {
+      const img = sprite('snow_pile'), ppm = depthScaleAt(sc.depth, ccfg.pile.y) / Q;
+      if (img) items.push({ key: ccfg.pile.y, tie: 11000, draw: () => {
+        const W = (0.45 + 0.75 * Math.min(1.3, cl.pile)) * ppm, H = (W * img.height) / img.width * (0.8 + 0.3 * Math.min(1, cl.pile));
+        ctx.drawImage(img, ccfg.pile.x - W / 2, ccfg.pile.y - H * 0.92, W, H);
+      } });
     }
     // sáňky s dítětem (B02) + provázek od ruky rodiče k úchytu
     const sl = sim.state.sled;

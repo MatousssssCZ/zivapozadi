@@ -3,8 +3,8 @@
   "formatVersion": 1,
   "meta": {
     "name": "Liberec – živý vánoční trh",
-    "createdAt": "2026-11-24T18:54:33.294Z",
-    "modifiedAt": "2026-11-24T18:54:33.412Z",
+    "createdAt": "2026-11-24T18:59:30.510Z",
+    "modifiedAt": "2026-11-24T18:59:30.636Z",
     "appVersion": "0.1.0"
   },
   "seed": 2611,
@@ -6089,6 +6089,64 @@
       },
       "routine": "sled",
       "activities": {}
+    },
+    {
+      "id": "ch_lopata",
+      "name": "Pracovník údržby",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n1",
+      "baseScale": 1,
+      "walkSpeed": 55,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": false,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 226174647,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
+        },
+        "colors": {
+          "jacket": "petrolejova",
+          "hat": "olivova",
+          "scarf": "tmave-seda",
+          "gloves": "tmave-seda",
+          "trousers": "olivova",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 0.956,
+          "build": 0.969
+        },
+        "motion": {
+          "strideScale": 0.995,
+          "armSwing": 1.129,
+          "bob": 1.159,
+          "sway": 0.898,
+          "idleTempo": 1.01,
+          "lean": 2.829,
+          "speed": 1.247,
+          "phase": 0.833,
+          "armLag": 1.02,
+          "armLR": 1.077
+        },
+        "locks": []
+      },
+      "routine": "shovel",
+      "activities": {}
     }
   ],
   "schedule": [],
@@ -6120,8 +6178,8 @@
       "y": 1000
     },
     {
-      "x": 1594,
-      "y": 1042
+      "x": 1520,
+      "y": 985
     }
   ],
   "sled": {
@@ -6177,5 +6235,31 @@
         "y": 1047
       }
     ]
+  },
+  "clearing": {
+    "workerId": "ch_lopata",
+    "strip": {
+      "x0": 1545,
+      "x1": 1835,
+      "y": 1052,
+      "h": 30
+    },
+    "pile": {
+      "x": 1880,
+      "y": 1056
+    },
+    "enter": {
+      "x": 2080,
+      "y": 1072
+    },
+    "approach": [
+      {
+        "x": 1700,
+        "y": 1074
+      }
+    ],
+    "standBack": 70,
+    "bands": 6,
+    "firstDelay": 70
   }
 }
