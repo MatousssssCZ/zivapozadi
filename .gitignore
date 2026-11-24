@@ -6,3 +6,4 @@ out/
 *.log
 .tmp/
 /ukazky-*.mp4
+dist-web/

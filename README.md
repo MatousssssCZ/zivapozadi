@@ -14,6 +14,15 @@ a stejný renderer.
 
 ![Editor se zónou činnosti](docs/img/editor-zona.png)
 
+## Webová verze (bez instalace)
+
+Aplikace běží i v prohlížeči z odkazu **https://matousssssCZ.github.io/zivapozadi/** (Chrome / Edge).
+Po otevření se rovnou načte scéna „Liberec – živý trh“; úpravy se po **Uložit** ukládají v prohlížeči
+a při dalším otevření odkazu zůstanou. Export videa (MP4, bez zvuku) se stáhne jako soubor.
+Webová verze se sestaví a zveřejní automaticky při každém pushi do `main`
+(`.github/workflows/pages.yml`; jednorázově je potřeba v GitHubu zapnout Settings → Pages →
+Source: „GitHub Actions“). Lokálně: `npm run build:web` → složka `dist-web/`.
+
 ## Spuštění (vývoj)
 
 Požadavky: Node.js 22+, npm. FFmpeg se instaluje automaticky balíčkem `ffmpeg-static`.
