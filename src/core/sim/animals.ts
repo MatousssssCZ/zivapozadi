@@ -26,7 +26,11 @@ export interface AnimalState {
     /** Z03 pohlazení */
     | 'pet'
     /** Z08 očista a protažení kočky */
-    | 'groom' | 'stretch';
+    | 'groom' | 'stretch'
+    /** Z09 skok na sokl: příprava, let, (sed na soklu = 'sit'), seskok */
+    | 'prep' | 'jump' | 'jumpDown';
+  /** výška nad zemí (m) – kočka na soklu / ve skoku */ h?: number;
+  /** index soklu (Z09) a body skoku */ perch?: number | null; jumpFrom?: Vec2; jumpTo?: Vec2; jumpH0?: number; jumpH1?: number;
   /** začátek aktuálního režimu (pro animaci) */ since?: number;
   /** jak dlouho majitel stojí (s) – Z02 */ stillT?: number;
   /** příští možné setřesení / očista (cooldown zvířete) */ nextShake?: number;
@@ -69,7 +73,7 @@ let byId = new Map<string, AnimalState>();
 export interface AnimalEnv {
   snowing: boolean;
   puff(x: number, y: number, n: number, t: number, seed: number): void;
-  dir: { nextDogs: number; nextDogCat: number };
+  dir: { nextDogs: number; nextDogCat: number; perchNext?: number[] };
   /** Z03: známý člověk poblíž (přítel majitele, jinak sám majitel), který může psa pohladit */
   petter?(owner: AgentState, dog: AnimalState): AgentState | null;
   /** spustí klip pohlazení; false = ruka/trup obsazené */
@@ -84,7 +88,7 @@ export function stepAnimals(animals: AnimalState[], agents: AgentState[], projec
   for (const a of animals) {
     const before = a.mode;
     if (a.species === 'dog') stepDog(a, agents, cam, t, dt, env);
-    else stepCat(a, project, cam, t, dt);
+    else stepCat(a, project, cam, t, dt, env);
     if (a.mode !== before) a.since = t;
     a.headDown += ((a.mode === 'sniff' || (a.mode === 'meet' && a.speed < 0.1) ? 1 : 0) - a.headDown) * Math.min(1, dt * 4);
     const sitting = a.mode === 'sit' || a.mode === 'groom';
@@ -257,17 +261,46 @@ function stepDog(a: AnimalState, agents: AgentState[], cam: ReturnType<typeof ca
   }
 }
 
-function stepCat(a: AnimalState, project: ProjectFile, cam: ReturnType<typeof cameraFor>, t: number, dt: number) {
-  const spots = project.catSpots ?? [];
+function stepCat(a: AnimalState, project: ProjectFile, cam: ReturnType<typeof cameraFor>, t: number, dt: number, env?: AnimalEnv) {
+  const spots = project.catSpots ?? [], perches = project.catPerches ?? [];
   if (a.mode === 'offstage') {
-    a.hidden = true;
+    a.hidden = true; a.h = 0; a.perch = null;
     if (t < a.until || !spots.length) return;
-    // vstup od okraje, k náhodnému klidovému místu, odchod druhým okrajem
-    const spot = spots[Math.floor(rand(a.rng) * spots.length)];
+    // vstup od okraje, k náhodnému klidovému místu (vzácně na sokl – Z09), odchod druhým okrajem
+    const pn = env ? (env.dir.perchNext ??= perches.map(() => 0)) : [];
+    const pi = perches.findIndex((_, i) => t >= (pn[i] ?? 0));
+    const usePerch = pi >= 0 && rand(a.rng) < 0.4;
+    const spot = usePerch ? perches[pi].from : spots[Math.floor(rand(a.rng) * spots.length)];
     const left = rand(a.rng) < 0.5, W = project.scene.width;
     const enter = { x: left ? -40 : W + 40, y: spot.y + randRange(a.rng, -20, 40) };
     const exit = { x: left ? W + 40 : -40, y: spot.y + randRange(a.rng, -20, 60) };
     a.pos = enter; a.path = [{ x: spot.x, y: spot.y }, exit]; a.hidden = false; a.mode = 'walk'; a.speed = 0; a.stretchDone = false;
+    a.perch = usePerch ? pi : null;
+    if (usePerch && env) pn[pi] = t + 1e6; // obsazeno do seskoku
+    return;
+  }
+  if (a.mode === 'prep') {
+    // Z09: krátká příprava (přikrčení, pohled nahoru na sokl)
+    a.speed = 0;
+    if (t >= a.until) { a.mode = 'jump'; a.until = t + 0.5; }
+    return;
+  }
+  if (a.mode === 'jump' || a.mode === 'jumpDown') {
+    // let po oblouku (svět): odraz → let → dopad; výška h nad zemí
+    const dur = 0.5, u = Math.min(1, 1 - (a.until - t) / dur);
+    const F = toWorld(cam, a.jumpFrom!), T = toWorld(cam, a.jumpTo!);
+    a.pos = toScreen(cam, { X: F.X + (T.X - F.X) * u, Z: F.Z + (T.Z - F.Z) * u });
+    a.h = (a.jumpH0 ?? 0) + ((a.jumpH1 ?? 0) - (a.jumpH0 ?? 0)) * u + 0.22 * Math.sin(Math.PI * u);
+    a.speed = 0.6;
+    if (u >= 1) {
+      a.h = a.jumpH1 ?? 0; a.speed = 0;
+      if (a.mode === 'jump') { a.mode = 'sit'; a.until = t + randRange(a.rng, 10, 30); }
+      else {
+        a.mode = 'leave';
+        const pn = env?.dir.perchNext; if (pn && a.perch !== null && a.perch !== undefined) pn[a.perch] = t + randRange(a.rng, 180, 360);
+        a.perch = null;
+      }
+    }
     return;
   }
   const P = toWorld(cam, a.pos);
@@ -297,6 +330,12 @@ function stepCat(a: AnimalState, project: ProjectFile, cam: ReturnType<typeof ca
       a.nextShake = t + randRange(a.rng, 60, 150);
       if (rand(a.rng) < 0.6) { a.mode = 'groom'; a.walkLeft = randRange(a.rng, 3, 6); return; }
     }
+    if (t >= a.until && (a.h ?? 0) > 0.05) {
+      // Z09: seskok ze soklu zpět na odrazový bod, pak odchod
+      const pr = perches[a.perch ?? 0];
+      a.mode = 'jumpDown'; a.until = t + 0.5; a.jumpFrom = { ...a.pos }; a.jumpTo = pr ? { ...pr.from } : { ...a.pos }; a.jumpH0 = a.h; a.jumpH1 = 0;
+      return;
+    }
     if (t >= a.until) {
       // vstane; občas se před odchodem protáhne
       if (!a.stretchDone && rand(a.rng) < 0.45) { a.stretchDone = true; a.mode = 'stretch'; a.until = t + randRange(a.rng, 2, 3); return; }
@@ -311,7 +350,13 @@ function stepCat(a: AnimalState, project: ProjectFile, cam: ReturnType<typeof ca
   a.pos = toScreen(cam, N);
   if (Math.hypot(T.X - N.X, T.Z - N.Z) < 0.08) {
     a.path!.shift();
-    if (a.mode === 'walk') { a.mode = 'sit'; a.until = t + randRange(a.rng, 20, 60); }
+    if (a.mode === 'walk' && a.perch !== null && a.perch !== undefined && perches[a.perch]) {
+      const pr = perches[a.perch];
+      a.mode = 'prep'; a.until = t + randRange(a.rng, 0.35, 0.6);
+      a.jumpFrom = { ...a.pos }; a.jumpTo = { ...pr.at }; a.jumpH0 = 0; a.jumpH1 = pr.height;
+      const Tw = toWorld(cam, pr.at); a.facing = screenAngleOfWorld(cam, a.pos, Math.atan2(Tw.Z - N.Z, Tw.X - N.X));
+    }
+    else if (a.mode === 'walk') { a.mode = 'sit'; a.until = t + randRange(a.rng, 20, 60); }
     else if (!a.path!.length) { a.mode = 'offstage'; a.hidden = true; a.until = t + randRange(a.rng, 180, 420); }
   }
 }

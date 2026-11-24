@@ -6,7 +6,7 @@ import { generateLiberec } from '../scripts/generate-liberec-demo';
 import { Simulation } from '../src/core/sim/simulation';
 import { R_BODY } from '../src/core/sim/crowd';
 import { cameraFor, toWorld } from '../src/core/scene/camera';
-import { LEASH } from '../src/core/sim/animals';
+import { LEASH, createAnimals, stepAnimals } from '../src/core/sim/animals';
 import { SLED } from '../src/core/sim/sled';
 
 /** Nové náměstí z balíku grafiky „Živá pozadí – Liberec“ (AKCEPTACE.md body 1–4, 10). */
@@ -33,13 +33,14 @@ describe('Liberec – živý trh', () => {
     const sim = Simulation.create(lp.project, lp.manifests);
     const cam = cameraFor(lp.project.scene);
     let minD = Infinity, maxLeash = 0, catSat = false, dogsSeen = 0, photoPhone = 0, photoNoPhone = 0, sledFrames = 0, maxRope = 0, sledOffSnow = 0, sledHit = 1e9;
-    const modes = new Set<string>();
+    const modes = new Set<string>(); let maxCatH = 0;
     for (let i = 0; i < 60 * 300; i++) {
       sim.step();
       for (const an of sim.state.animals ?? []) {
         if (an.hidden) continue;
         if (an.species === 'cat' && an.sit > 0.9) catSat = true;
         modes.add(`${an.species}:${an.mode}`);
+        if (an.species === 'cat') maxCatH = Math.max(maxCatH, an.h ?? 0);
         const o = an.ownerId ? sim.state.agents.find((x) => x.id === an.ownerId) : undefined;
         if (o && !o.hidden) { dogsSeen++; const A = toWorld(cam, an.pos), B = toWorld(cam, o.pos); maxLeash = Math.max(maxLeash, Math.hypot(A.X - B.X, A.Z - B.Z)); }
       }
@@ -71,10 +72,12 @@ describe('Liberec – živý trh', () => {
     // focení u stromu (A06): telefon je skutečná rekvizita v ruce po celou dobu klipu, pak zmizí
     expect(photoPhone).toBeGreaterThan(300);
     expect(photoNoPhone).toBe(0);
-    // Z02 pes si sedne u stojícího majitele, Z05 setřese sníh, Z08 kočka se očistí / protáhne
+    // Z02 pes si sedne u stojícího majitele, Z05 setřese sníh
     expect(modes.has('dog:sit')).toBe(true);
     expect(modes.has('dog:shake')).toBe(true);
-    expect(modes.has('cat:groom') || modes.has('cat:stretch')).toBe(true);
+    // Z09 skok kočky na sokl (sedák lavičky 0,44 m) a zpět; nikdy výš než sokl + oblouk skoku
+    expect(modes.has('cat:jump') && modes.has('cat:jumpDown')).toBe(true);
+    expect(maxCatH).toBeLessThanOrEqual(0.44 + 0.23);
     // Z03 pohlazení: pes přijde k hladícímu a ten se k němu skloní
     expect(modes.has('dog:pet') && msgs.some((m) => m.includes('hladí psa'))).toBe(true);
     // sáňky (B02): průchod proběhl, provázek nikdy delší než jeho délka, sáně jen na sněhu, nikdo jimi neprošel
@@ -92,4 +95,18 @@ describe('Liberec – živý trh', () => {
     expect(msgs.filter((m) => m.includes('zvedl(a) rukavici')).length).toBe(msgs.filter((m) => m.includes('ztratil(a) rukavici')).length);
     expect(sim.state.props.filter((p) => p.kind === 'phone' && !sim.state.agents.some((a) => a.holding === p.id))).toEqual([]);
   }, 180000);
+
+  it('kočka (Z07/Z08): vsedě se občas očistí, před odchodem se někdy protáhne; ne při každém sedu', () => {
+    const p = structuredClone(lp.project); p.catPerches = []; p.cats = [{ firstDelay: 1 }];
+    const animals = createAnimals(p), modes: string[] = [];
+    let prev = '';
+    for (let i = 0; i < 60 * 3000; i++) {
+      stepAnimals(animals, [], p, i / 60, 1 / 60);
+      const m = animals.find((x) => x.species === 'cat')!.mode; if (m !== prev) { modes.push(m); prev = m; }
+    }
+    const sits = modes.filter((m) => m === 'sit').length, grooms = modes.filter((m) => m === 'groom').length;
+    expect(grooms).toBeGreaterThan(0);
+    expect(modes.includes('stretch')).toBe(true);
+    expect(grooms).toBeLessThan(sits); // ne automaticky při každém zastavení
+  });
 });

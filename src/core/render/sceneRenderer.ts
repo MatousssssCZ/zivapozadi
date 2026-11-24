@@ -519,8 +519,15 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
     for (const an of sim.state.animals ?? []) {
       if (an.hidden) continue;
       const ds = depthScaleAt(sc.depth, an.pos.y), ppm = ds / Q;
-      items.push({ key: an.pos.y, tie: 12000, draw: () => {
-        ctx.save(); ctx.translate(an.pos.x, an.pos.y); drawAnimalShadow(ctx, an, ppm);
+      // kočka na soklu / ve skoku (Z09): zvednutá o výšku h, řazená před objekt soklu
+      const lift = (an.h ?? 0) > 0.005 ? an.pos.y - toScreen(cam, toWorld(cam, an.pos), an.h ?? 0).y : 0;
+      const perch = an.perch !== null && an.perch !== undefined ? project.catPerches?.[an.perch] : undefined;
+      const akey = lift > 0 && perch ? Math.max(an.pos.y, perch.sortY) : an.pos.y;
+      items.push({ key: akey, tie: 12000, draw: () => {
+        ctx.save(); ctx.translate(an.pos.x, an.pos.y);
+        if (lift > 0 && an.mode !== 'sit' && an.mode !== 'groom') { drawAnimalShadow(ctx, an, ppm * Math.max(0.5, 1 - (an.h ?? 0))); }
+        ctx.translate(0, -lift);
+        if (!(lift > 0 && an.mode !== 'sit' && an.mode !== 'groom')) drawAnimalShadow(ctx, an, ppm);
         drawAnimal(ctx, an, (n) => (images.get(`animal_${n}`) ?? null) as never, ppm, opts.time); ctx.restore();
       } });
       const owner = an.ownerId ? sim.state.agents.find((x) => x.id === an.ownerId) : undefined;

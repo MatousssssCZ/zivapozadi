@@ -311,6 +311,11 @@ export interface ProjectFile {
   /** Kočky (volitelné) a klidová místa, kde si sedají. */
   cats?: CatConfig[];
   catSpots?: Vec2[];
+  /**
+   * Z09: explicitně označené nízké sokly (0,25–0,55 m), kam kočka občas vyskočí: bod na zemi pod místem
+   * sedu, výška, odrazový bod před soklem a klíč řazení (vykreslit před objektem soklu).
+   */
+  catPerches?: { at: Vec2; height: number; from: Vec2; sortY: number }[];
   /** Sáňky (B02): dráha po sněhu (body ve scéně, začátek a konec mimo obraz) a postava rodiče (routine 'sled'). */
   sled?: { path: Vec2[]; parentId: string; firstDelay?: number };
   /**

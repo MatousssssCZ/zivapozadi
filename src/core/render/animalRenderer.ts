@@ -30,7 +30,7 @@ export function drawAnimal(ctx: Ctx, a: AnimalState, img: AnimalImages, pxPerM: 
   const pre = `${sp}_`;
   const mirror = Math.cos(a.facing) < -0.05;
   const away = Math.sin(a.facing) < -0.45; // jde od kamery → zadní pohled trupu
-  const walk = Math.min(1, a.speed / 0.25);
+  const walk = a.mode === 'jump' || a.mode === 'jumpDown' || a.mode === 'prep' ? 0 : Math.min(1, a.speed / 0.25);
   ctx.save();
   if (mirror) ctx.scale(-1, 1);
   // ---- sed (samostatná malovaná póza)
@@ -66,6 +66,11 @@ export function drawAnimal(ctx: Ctx, a: AnimalState, img: AnimalImages, pxPerM: 
   const envl = (x: number) => Math.max(0, Math.min(1, x));
   const st = a.mode === 'stretch' ? envl(age / 0.45) * envl((dur - age) / 0.45) : 0;
   if (st > 0) { const hp = J(R.hip); ctx.translate(hp.x, hp.y); ctx.rotate(0.24 * st); ctx.translate(-hp.x, -hp.y); }
+  // Z09: příprava ke skoku (přikrčení) a let (nohy natažené, trup se při odrazu zvedá, při dopadu sklání)
+  const pr = a.mode === 'prep' ? envl(age / 0.25) : 0;
+  const fl = a.mode === 'jump' || a.mode === 'jumpDown' ? Math.sin(Math.PI * envl(age / 0.5)) : 0;
+  if (pr > 0) ctx.translate(0, legLen * 0.28 * pr);
+  if (fl > 0) { const c0 = J([0.5, 0.5]); const pitch = (a.mode === 'jump' ? -0.35 : 0.3) * (1 - 2 * envl(age / 0.5)); ctx.translate(c0.x, c0.y); ctx.rotate(pitch * fl); ctx.translate(-c0.x, -c0.y); }
   // Z05 setřesení: rychlé kývání trupu (~7 Hz), hlava napřed, ocas se zpožděním
   const sh = a.mode === 'shake' ? Math.sin(Math.PI * envl(age / dur)) : 0;
   const shakeAt = (lag: number) => sh * 0.11 * Math.sin((t - lag) * 2 * Math.PI * 7);
@@ -75,10 +80,10 @@ export function drawAnimal(ctx: Ctx, a: AnimalState, img: AnimalImages, pxPerM: 
     if (!up || !lo) return;
     const j = J(kind === 'f' ? R.shoulder : R.hip);
     const s = Math.sin(2 * Math.PI * (ph + off));
-    const th1 = R.swing * s * walk + (kind === 'f' ? 0.95 : -0.12) * st; // + = dopředu
+    const th1 = R.swing * s * walk + (kind === 'f' ? 0.95 : -0.12) * st + (kind === 'f' ? 0.35 : -0.45) * pr + (kind === 'f' ? 0.9 : -0.95) * fl; // + = dopředu
     // koleno/hlezno: ohnutí při švihu (noha jde dopředu nad zemí)
     const lift = Math.max(0, Math.cos(2 * Math.PI * (ph + off))) * walk;
-    const th2 = (kind === 'f' ? -0.9 : 0.7) * lift * (1 - st);
+    const th2 = (kind === 'f' ? -0.9 : 0.7) * lift * (1 - st) + (kind === 'f' ? -1.0 : 1.0) * pr;
     const uL = R.upper * pxPerM, lL = R.lower * pxPerM;
     ctx.save();
     if (far) ctx.globalAlpha = 1; // (ztmavení řeší filtr níže)
