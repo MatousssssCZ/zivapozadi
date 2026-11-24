@@ -220,6 +220,10 @@ function shovelGeom(cv: ReturnType<typeof characterVisual>, agent?: AgentState) 
   return { org, ang: a, k, w, blade: { x: org.x + bl.x, y: org.y + bl.y } };
 }
 
+/** Ztmavení vzdálené ruky/nohy: jen polovina hodnoty z knihovny – silné ztmavení měnilo světlé barvy
+ * (krémová, olivová) natolik, že vzdálený rukáv/nohavice působily jako jiná barva oblečení. */
+const softFar = (f: number) => 1 - (1 - f) * 0.5;
+
 /** Věc v ruce postavy (souřadnice postavy, 1 jednotka = Q m). */
 function drawHeld(ctx: Ctx, held: PropState, cv: ReturnType<typeof characterVisual>, agent?: AgentState) {
   const g = cv.grip;
@@ -310,7 +314,7 @@ function drawAgentBody(ctx: Ctx, project: ProjectFile, sim: Simulation, a: Agent
   if (m.backend === 'skeleton' && cv.rig && m.rigLibrary) {
     const top = held?.kind === 'phone' && /back/.test(cv.view?.used ?? '');
     const snowColor = cv.rig.snowLips ? backgroundColorAt(project, images, cv.x, cv.y + 3 * cv.scale) : undefined;
-    drawRig(ctx, cv.rig, images, m.rigLibraryDir ?? '', m.rigLibrary.bodyTemplates[0]?.farShade ?? 0.8, held && !top ? () => drawHeld(ctx, held, cv, a) : undefined, snowColor);
+    drawRig(ctx, cv.rig, images, m.rigLibraryDir ?? '', softFar(m.rigLibrary.bodyTemplates[0]?.farShade ?? 0.8), held && !top ? () => drawHeld(ctx, held, cv, a) : undefined, snowColor);
     // telefon při pohledu zezadu: displej před hlavou je vidět přes rameno → kreslit navrch
     if (held && top) drawHeld(ctx, held, cv);
   } else if (m.backend === 'procedural-test-figure') {
@@ -460,7 +464,7 @@ function drawSeller(ctx: Ctx, project: ProjectFile, sim: Simulation, o: SceneObj
     c.beginPath(); c.rect(win.x, win.y, win.w, win.h); c.clip();
     c.translate(cv.x, cv.y);
     c.scale(cv.mirror ? -cv.scale : cv.scale, cv.scale);
-    drawRig(c as unknown as CanvasRenderingContext2D, cv.rig!, images, m.rigLibraryDir ?? '', m.rigLibrary!.bodyTemplates[0]?.farShade ?? 0.8);
+    drawRig(c as unknown as CanvasRenderingContext2D, cv.rig!, images, m.rigLibraryDir ?? '', softFar(m.rigLibrary!.bodyTemplates[0]?.farShade ?? 0.8));
     c.restore();
   };
   // prodavač je uvnitř: pod střechou zastíněný (interiorShade 0,10–0,22), od luceren teplé světlo

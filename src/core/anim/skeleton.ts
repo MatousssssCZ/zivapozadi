@@ -203,6 +203,8 @@ function weightShift(t: number, period: number, seed: number): number {
 export interface PoseOptions {
   /** Skutečný směr chůze v lokálních souřadnicích obrazu (jednotkový vektor; x vpřed). Bez něj směr podle pohledu. */
   ground?: Vec2;
+  /** jak moc je chodidlo vidět z boku: |cos(směr chůze vůči kameře)| (1 = bokem, 0 = ke kameře / od ní) */
+  footSide?: number;
   /** Opěrné body pat ve světě převedené do lokálních souřadnic (null = noha bez kotvy). */
   anchors?: [Anchor | null, Anchor | null];
   /** Zaboření boty do sněhu (lokální jednotky postavy; 0 = mimo sníh). */
@@ -408,11 +410,15 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
   // bota ve 3D: natočení chodidla v rovině nohy (θ) promítnuté jako země (g); vůči malovanému
   // pohledu (nativní směr vpřed) se boty natočí a zkrátí/prodlouží podél chodidla – při chůzi
   // ke kameře se bota zkrátí, místo aby se jen točila v rovině obrazu
-  const g0 = { x: fx, y: fy * 0.35 }, phi0 = Math.atan2(g0.y, g0.x), n0 = Math.hypot(g0.x, g0.y) || 1;
-  const footProj = feet.map((f, i) => {
-    const g = gOf(i), vx = g.x * Math.cos(f.theta), vy = g.y * Math.cos(f.theta) - Math.sin(f.theta);
-    return { ang: Math.atan2(vy, vx) - phi0, k: clamp(Math.hypot(vx, vy) / n0, 0.85, 1.12) }; // (víc zkrátit nejde – holínka by odkryla konec nohavice)
-  });
+  // Malovaná bota odpovídá natočení pohledu (3/4 ≈ 35° od boku). Při chůzi nahoru/dolů obrazem se
+  // směr chodidla do obrazu NEPŘENÁŠÍ jako otočení v rovině (bota by mířila svisle dolů/nahoru) – jen
+  // se zkrátí do hloubky; sklon chodidla (došlap patou, odraz špičkou) se v rovině obrazu natočí jen
+  // tolik, kolik je chodidlo vidět z boku (side = |cos| úhlu chůze vůči kameře).
+  const side = opts.footSide ?? 1, side0 = Math.abs(fx) > 0.9 ? 1 : 0.82;
+  const footProj = feet.map((f) => ({
+    ang: -f.theta * clamp(side, 0.25, 1),
+    k: clamp((side / side0) * Math.cos(f.theta) + (1 - side) * 0.2, 0.85, 1.12), // (víc zkrátit nejde – holínka by odkryla konec nohavice)
+  }));
   const footAng = footProj.map((p) => p.ang);
   // body paty v lokálních souřadnicích (pro uložení kotvy při došlapu)
   const heelPts = ankles.map((A, i) => { const g = gOf(i), th = feet[i].theta, hu = -geom.heel * Math.cos(th) + geom.AH * Math.sin(th), hh = -geom.heel * Math.sin(th) - geom.AH * Math.cos(th); return { x: A.x + g.x * hu, y: A.y - hh + g.y * hu }; }) as [Vec2, Vec2];

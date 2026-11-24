@@ -94,7 +94,7 @@ function groundOptions(agent: AgentState, x: number, y: number, scale: number, m
     if (p.h !== undefined) { const g = groundVec(cam, p, p.h, sx); out.gx = g.x; out.gy = g.y; }
     return out;
   }) as [Anchor | null, Anchor | null];
-  return { ground, anchors };
+  return { ground, anchors, footSide: Math.abs(Math.cos(gh)) };
 }
 
 /** Údaje pro chůzi postavy (délka nohy, bota, individuální délka kroku) – stejné pro simulaci i náhled. */
