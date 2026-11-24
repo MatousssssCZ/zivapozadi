@@ -993,6 +993,13 @@ export class Simulation {
           a.status = 'Jde na kávu';
           return;
         }
+        // cestou se občas zastaví u stromu / výlohy a chvíli se dívá (A04)
+        const view = r < 0.14 ? this.zoneFor(a, c, 'viewing') : null;
+        if (view) {
+          a.pendingActivity = { type: 'viewing', zoneId: view.id, source: 'auto', sourceId: null };
+          a.visit = { mode: 'coffee', until: 0, since: t };
+          return;
+        }
         this.leaveScene(a, t); // jen projde scénou
         return;
       }
@@ -1022,6 +1029,11 @@ export class Simulation {
         if (!f || f.hidden || f.visit?.friendId !== a.id) { this.leaveScene(a, t); return; }
         a.status = `Čeká na: ${f.name}`;
         this.maybeWave(a, v, t);
+        // čekání (A09): po 7–15 s se rozhlédne, jestli už přítel jde, pak zas klidně stojí
+        if (!a.route && t >= (v.lookAt ?? t + 1)) {
+          a.look = { x: a.pos.x + (rand(a.rng) < 0.5 ? -1 : 1) * 300, y: a.pos.y - 30 + rand(a.rng) * 40 };
+          v.lookAt = t + randRange(a.rng, 7, 15);
+        } else if (v.lookAt === undefined) v.lookAt = t + randRange(a.rng, 7, 15);
         if (f.visit.mode === 'meet-wait' && !f.route && dist(f.pos, a.pos) < 120) {
           // pozdrav: natočit se k sobě, chvíli si povídat
           for (const [x, y] of [[a, f], [f, a]] as const) {
@@ -1052,7 +1064,6 @@ export class Simulation {
           f.follow = null;
           if (zz && (v.goal === 'snowman' ? startSnowman(this.sessionHost(), zz, a, f) : startFight(this.sessionHost(), zz, a, f))) {
             a.visit = { mode: 'coffee', until: 0, since: t }; f.visit = { mode: 'coffee', until: 0, since: t };
-            (this.state.director ??= { nextSignificant: 0 }).nextSignificant = Infinity; // běží výrazná událost
             return;
           }
           f.follow = { leaderId: a.id, side: rand(a.rng) < 0.5 ? 1 : -1 };

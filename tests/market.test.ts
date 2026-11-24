@@ -21,6 +21,7 @@ describe('trh: nákup s taškou a prodavač', () => {
     const lastPlace = new Map<string, string>();
     let leftWith = 0, browseOnly = 0, maxCounterAge = 0;
     const modes = new Set<string>();
+    const viewers = new Set<string>();
     for (let i = 0; i < 60 * 300; i++) {
       const hiddenBefore = new Map(sim.state.agents.map((a) => [a.id, a.holdingKind === 'bag' && !a.hidden]));
       sim.step();
@@ -35,11 +36,13 @@ describe('trh: nákup s taškou a prodavač', () => {
       }
       for (const a of sim.state.agents) if (hiddenBefore.get(a.id) && a.hidden) { leftWith++; expect(a.holding).toBeNull(); }
       for (const v of Object.values(sim.state.vendors ?? {})) modes.add(v.mode);
+      for (const a of sim.state.agents) if (a.activity?.type === 'viewing' && a.activity.phase === 'look') viewers.add(a.id);
     }
     browseOnly = sim.state.log.filter((l) => l.msg.includes('bez nákupu')).length;
     const bought = sim.state.log.filter((l) => l.msg.includes('nakoupil')).length;
-    console.log(`nákupy: ${bought}, jen prohlédli ${browseOnly}, odešli s taškou ${leftWith}, režimy prodavačů ${[...modes].join(',')}`);
+    console.log(`nákupy: ${bought}, jen prohlédli ${browseOnly}, odešli s taškou ${leftWith}, prohlíželo strom ${viewers.size}, režimy prodavačů ${[...modes].join(',')}`);
     expect(bought).toBeGreaterThan(3);
+    expect(viewers.size).toBeGreaterThan(0); // A04: prohlížení stromu
     expect(browseOnly).toBeGreaterThan(0);
     for (const n of transfers.values()) expect(n).toBe(1);
     expect(maxCounterAge).toBeLessThan(5);

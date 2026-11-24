@@ -125,6 +125,9 @@ export async function generateRadnice(dir: string): Promise<ProjectFile> {
     bounds: rect(700, 900, 1700, 1075),
     objectRoles: { stand: ['obj_st_napoje'], seating: ['obj_stolecek', 'obj_stolecek2', 'obj_strom'], bin: ['obj_kos', 'obj_kos2'] }, params: {},
   }, {
+    id: 'zone_vyhled', name: 'Prohlížení stromu', activityType: 'viewing', activityVersion: 1, enabled: true,
+    bounds: rect(1200, 900, 1800, 1075), objectRoles: { view: ['obj_strom'] }, params: { lookMin: 5, lookMax: 18 },
+  }, {
     // stavba sněhuláka: volný sníh vpředu (koule se válí vodorovně podél okraje)
     id: 'zone_snehulak', name: 'Sněhulák vpředu', activityType: 'snowman', activityVersion: 1, enabled: true,
     bounds: rect(600, 1060, 800, 1076), objectRoles: {}, params: { chance: 0.5 },

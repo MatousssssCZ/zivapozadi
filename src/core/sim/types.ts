@@ -51,6 +51,8 @@ export interface VisitState {
   goal?: 'snowman' | 'snowball' | null;
   /** Zóna, kde budou stavět. */
   goalZone?: string | null;
+  /** Čekání na přítele: kdy se znovu rozhlédne. */
+  lookAt?: number;
 }
 
 export interface AgentState {
@@ -165,6 +167,8 @@ export interface SimState {
   vendors?: Record<string, VendorState>;
   /** Pára a kouř (omezený pool, vypuštěné částice zůstávají ve světě). */
   particles?: Particle[];
+  /** Cooldowny míst (prohlížení…): klíč → čas, odkdy je místo znovu volné. */
+  placeCooldowns?: Record<string, number>;
   /** Režisér scény: kdy smí začít další výrazná událost (sněhulák, koulovačka…). */
   director?: { nextSignificant: number };
   /** Trvalé objekty vzniklé během simulace (sněhuláci…) – nejsou součástí projektu. */

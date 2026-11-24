@@ -3,8 +3,8 @@
   "formatVersion": 1,
   "meta": {
     "name": "Náměstí s radnicí (test dodané grafiky)",
-    "createdAt": "2026-11-24T13:54:47.206Z",
-    "modifiedAt": "2026-11-24T13:54:47.257Z",
+    "createdAt": "2026-11-24T14:02:34.834Z",
+    "modifiedAt": "2026-11-24T14:02:34.868Z",
     "appVersion": "0.1.0"
   },
   "seed": 1224,
@@ -2130,6 +2130,40 @@
         ]
       },
       "params": {}
+    },
+    {
+      "id": "zone_vyhled",
+      "name": "Prohlížení stromu",
+      "activityType": "viewing",
+      "activityVersion": 1,
+      "enabled": true,
+      "bounds": [
+        {
+          "x": 1200,
+          "y": 900
+        },
+        {
+          "x": 1800,
+          "y": 900
+        },
+        {
+          "x": 1800,
+          "y": 1075
+        },
+        {
+          "x": 1200,
+          "y": 1075
+        }
+      ],
+      "objectRoles": {
+        "view": [
+          "obj_strom"
+        ]
+      },
+      "params": {
+        "lookMin": 5,
+        "lookMax": 18
+      }
     },
     {
       "id": "zone_snehulak",
