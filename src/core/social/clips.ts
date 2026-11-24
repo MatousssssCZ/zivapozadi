@@ -217,7 +217,7 @@ export function evalGesture(g: GestureInst): GestureOut {
       return out;
     }
     case 'throw': { // hod: nápřah (25 %), zrychlení, výhoz v 55 %, doznění; trup se protočí s hodem
-      const tr = track([[0, 'R'], [0.25, { x: -7, y: 6 }], [0.55, { x: 24, y: 6 }], [0.75, { x: 17, y: -14 }], [1, 'R']], u);
+      const tr = track([[0, 'R'], [0.3, { x: 3, y: 1 }], [0.55, { x: 24, y: 6 }], [0.75, { x: 17, y: -14 }], [1, 'R']], u);
       if (tr.w > 0) out.arms[hand] = { ...tr, fwd: true, keep: true };
       out.trunkDeg = 3 * (env(u, 0.05, 0.25, 0.3, 0.45) - env(u, 0.45, 0.6, 0.7, 0.95)) * g.sgn;
       out.headDeg = -1 * env(u, 0.2, 0.4, 0.6, 0.9) * g.sgn;
