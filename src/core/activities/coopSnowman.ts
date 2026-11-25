@@ -146,7 +146,9 @@ function lanePath(h: SessionHost, d: CoopData, k: 0 | 1 | 2, zone: ActivityZone)
   const goal: World = k === 0 ? S : k === 1 ? { X: S.X + 0.85, Z: S.Z + 0.15 } : { X: S.X - 0.9, Z: S.Z - 0.85 };
   // blíž ke kameře a kousek stranou: zády (3/4) k obrazu, koule zůstane vidět vedle postavy
   const side = k === 2 ? -1 : 1, work: World = { X: goal.X + side * (rF * 0.8 + 0.06), Z: goal.Z - (rF + (k === 0 ? 0.32 : 0.28)) };
-  return [W2S(h, work), W2S(h, goal)];
+  // místo před koulí by bylo pod okrajem obrazu: pracuje vedle koule (stále zády ke kameře)
+  const w2 = W2S(h, work).y > h.project.scene.height - 6 ? { X: goal.X + side * (rF + 0.42), Z: goal.Z - 0.08 } : work;
+  return [W2S(h, w2), W2S(h, goal)];
 }
 /** doba tvoření koule (s) a sběr sněhu z okolí (kotouč 12 cm, mezikruží 0,45–1,3 m kolem koule) */
 const FORM_T: [number, number, number] = [42, 28, 22];

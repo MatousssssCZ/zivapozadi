@@ -27,16 +27,16 @@ export interface ProfileDef {
   /** odstup odrazů (s), počet odrazů v sérii, dojezd na obou (s) */ pushInt: [number, number]; pushN: [number, number]; glide: [number, number];
   /** šířka postoje (L), pokrčení kolen (L), ruce do stran (0–1), předklon (°) */ stance: number; knee: number; arms: number; pitch: number;
   /** nejmenší poloměr oblouku (m), max. náklon (°), brzdné zpomalení (m/s²), max. zrychlení odrazem (m/s²) */ rMin: number; leanMax: number; brake: number; aPush: number;
-  /** dovednosti (repertoár) */ skills: { oneFoot?: boolean; backward?: boolean; spin?: boolean; crossover?: boolean; plow?: boolean };
+  /** dovednosti (repertoár) */ skills: { oneFoot?: boolean; backward?: boolean; spin?: boolean; jump?: boolean; arabesque?: boolean; crossover?: boolean; plow?: boolean };
   /** váha při výběru pádu (relativní) */ fallW: number;
 }
 export const SKATE_PROFILES: Record<SkateProfile, ProfileDef> = {
   rec: { label: 'Rekreační', v: [0.7, 1.5], pushInt: [0.8, 1.6], pushN: [2, 5], glide: [1, 4], stance: 0.1, knee: 0.05, arms: 0.15, pitch: 8, rMin: 2.2, leanMax: 9, brake: 0.9, aPush: 0.55, skills: { plow: true }, fallW: 1 },
-  unsure: { label: 'Nejistý dospělý', v: [0.25, 0.8], pushInt: [1.0, 1.6], pushN: [2, 3], glide: [0.6, 1.6], stance: 0.17, knee: 0.025, arms: 0.6, pitch: 3, rMin: 3.0, leanMax: 4, brake: 0.6, aPush: 0.5, skills: { plow: true }, fallW: 4 },
-  beginnerKid: { label: 'Dítě poprvé', v: [0.12, 0.35], pushInt: [0.6, 0.9], pushN: [3, 6], glide: [0.3, 0.8], stance: 0.17, knee: 0.04, arms: 0.55, pitch: 6, rMin: 1.0, leanMax: 2, brake: 0.5, aPush: 0.6, skills: {}, fallW: 6 },
-  good: { label: 'Jistější bruslař', v: [0.9, 1.6], pushInt: [0.8, 1.3], pushN: [2, 4], glide: [1.2, 3.2], stance: 0.1, knee: 0.065, arms: 0.2, pitch: 10, rMin: 1.7, leanMax: 12, brake: 1.2, aPush: 0.8, skills: { oneFoot: true, spin: true, crossover: true, plow: true }, fallW: 0.4 },
-  goodKid: { label: 'Šikovné dítě', v: [0.8, 1.7], pushInt: [0.7, 1.1], pushN: [2, 4], glide: [0.8, 2.5], stance: 0.1, knee: 0.07, arms: 0.2, pitch: 10, rMin: 1.6, leanMax: 12, brake: 1.2, aPush: 0.8, skills: { oneFoot: true, crossover: true, plow: true }, fallW: 0.4 },
-  expert: { label: 'Velmi dobrý bruslař', v: [1.0, 2.0], pushInt: [1.1, 1.8], pushN: [2, 4], glide: [2, 4.5], stance: 0.09, knee: 0.08, arms: 0.25, pitch: 10, rMin: 1.4, leanMax: 15, brake: 1.5, aPush: 0.9, skills: { oneFoot: true, backward: true, spin: true, crossover: true, plow: true }, fallW: 0.1 },
+  unsure: { label: 'Nejistý dospělý', v: [0.35, 0.85], pushInt: [1.0, 1.6], pushN: [2, 3], glide: [0.6, 1.6], stance: 0.17, knee: 0.025, arms: 0.6, pitch: 3, rMin: 3.0, leanMax: 4, brake: 0.6, aPush: 0.5, skills: { plow: true }, fallW: 4 },
+  beginnerKid: { label: 'Dítě poprvé', v: [0.35, 0.65], pushInt: [0.55, 0.8], pushN: [3, 6], glide: [0.4, 1.0], stance: 0.17, knee: 0.04, arms: 0.55, pitch: 6, rMin: 1.0, leanMax: 2, brake: 0.5, aPush: 0.6, skills: {}, fallW: 6 },
+  good: { label: 'Jistější bruslař', v: [0.9, 1.6], pushInt: [0.8, 1.3], pushN: [2, 4], glide: [1.2, 3.2], stance: 0.1, knee: 0.065, arms: 0.2, pitch: 10, rMin: 1.7, leanMax: 12, brake: 1.2, aPush: 0.8, skills: { oneFoot: true, spin: true, jump: true, arabesque: true, crossover: true, plow: true }, fallW: 0.4 },
+  goodKid: { label: 'Šikovné dítě', v: [0.8, 1.7], pushInt: [0.7, 1.1], pushN: [2, 4], glide: [0.8, 2.5], stance: 0.1, knee: 0.07, arms: 0.2, pitch: 10, rMin: 1.6, leanMax: 12, brake: 1.2, aPush: 0.8, skills: { oneFoot: true, arabesque: true, crossover: true, plow: true }, fallW: 0.4 },
+  expert: { label: 'Velmi dobrý bruslař', v: [1.0, 2.0], pushInt: [1.1, 1.8], pushN: [2, 4], glide: [2, 4.5], stance: 0.09, knee: 0.08, arms: 0.25, pitch: 10, rMin: 1.4, leanMax: 15, brake: 1.5, aPush: 0.9, skills: { oneFoot: true, backward: true, spin: true, jump: true, arabesque: true, crossover: true, plow: true }, fallW: 0.1 },
 };
 
 export interface RinkConfig {
@@ -53,9 +53,15 @@ export interface RinkConfig {
   /** pády: první pokus a interval (s), osobní odstup (s); prvky: interval (s), osobní odstup (s), skok */
   events?: { fallEvery?: [number, number]; fallPersonal?: number; trickEvery?: [number, number]; trickPersonal?: [number, number]; jump?: boolean; tricks?: Partial<Record<TrickKind, number>> };
 }
-export type TrickKind = 'oneFoot' | 'backward' | 'spin' | 'hop';
+/** oneFoot = skluz na jedné noze, backward = jízda vzad, spin = pirueta na místě, jump = skok s otočkou
+ *  ve vzduchu (rozmach volnou nohou, odraz, otočka, dopad na jednu nohu), arabesque = holubička, hop = (vypnuto) */
+export type TrickKind = 'oneFoot' | 'backward' | 'spin' | 'jump' | 'arabesque' | 'hop';
 /** výchozí váhy prvků; pirueta potřebuje pohledy pro otočení kolem svislé osy (nejsou) a skok fázi letu – vypnuté */
-export const TRICK_WEIGHTS: Record<TrickKind, number> = { oneFoot: 40, backward: 30, spin: 0, hop: 0 };
+export const TRICK_WEIGHTS: Record<TrickKind, number> = { oneFoot: 40, backward: 30, spin: 0, jump: 0, arabesque: 0, hop: 0 };
+/** skok s otočkou: doba letu (s) a výška (m) – h = g·T²/8 */
+export const JUMP_AIR = 0.62, JUMP_H = (9.81 * JUMP_AIR * JUMP_AIR) / 8;
+const prepDur = (k: TrickKind) => (k === 'jump' ? 1.3 : k === 'arabesque' ? 1.2 : 1.0);
+const exitDur = (k: TrickKind) => (k === 'jump' ? 1.1 : 1.0);
 
 export type SkState = 'ENTER' | 'SKATE' | 'BRAKE' | 'REST' | 'EXIT' | 'OUT' | 'WOBBLE' | 'FALL' | 'RECOVER' | 'TRICK_PREPARE' | 'TRICK' | 'TRICK_EXIT' | 'MARCH';
 /** stav brusle: zatížený skluz, zatížený odraz, odlehčený kontakt, návrat nad ledem */
@@ -221,7 +227,13 @@ export function stepSkater(s: Skater, c: RinkCtx): void {
         vTarget = Math.min(vTarget, vGap);
         s.blocked = vGap < s.vCruise * 0.75 ? s.blocked + dt : Math.max(0, s.blocked - dt);
       } else s.blocked = Math.max(0, s.blocked - dt);
-      if (s.blocked > 1.5 && !s.pair) { changeLane(s, c.geo); s.blocked = 0; }
+      // stojící překážka (odpočívající, dítě u mantinelu): pomalu objet po straně blíž ke středu ledu
+      if (g.who && g.who.v < 0.15 && s.blocked > 1.2 && !s.pair) {
+        const o = g.who, rx = o.X - s.X, rz = o.Z - s.Z, d = Math.hypot(rx, rz) || 1, px = -rz / d, pz = rx / d;
+        const sgn = (c.geo.cx - o.X) * px + (c.geo.cz - o.Z) * pz >= 0 ? 1 : -1;
+        steer = Math.atan2(o.Z + pz * sgn * 1.3 - s.Z, o.X + px * sgn * 1.3 - s.X); vTarget = Math.max(vTarget, 0.3);
+      }
+      if (s.blocked > 1.5 && !s.pair && !(g.who && g.who.v < 0.15)) { changeLane(s, c.geo); s.blocked = 0; }
       // odpočinek u okraje (možnost, ne povinný rituál): dojet k mantinelu, tam zabrzdit
       if (s.st === 'SKATE' && t > s.restAt && !s.pair) {
         if (!s.goal) { const rn = railNearest(c.geo.poly, { X: s.X, Z: s.Z }); s.goal = { X: rn.q.X + rn.n.X * 0.55 + Math.cos(s.psi) * 1.2, Z: rn.q.Z + rn.n.Z * 0.55 + Math.sin(s.psi) * 1.2 }; if (!insideW(s.goal, c.geo.poly) || railNearest(c.geo.poly, s.goal).d < 0.4) s.goal = { X: rn.q.X + rn.n.X * 0.6, Z: rn.q.Z + rn.n.Z * 0.6 }; }
@@ -249,9 +261,9 @@ export function stepSkater(s: Skater, c: RinkCtx): void {
       // dítě poprvé: drobné kroky podél mantinelu k lokálnímu cíli, pauzy; nejezdí okruhy
       const rn = railNearest(c.geo.poly, { X: s.X, Z: s.Z });
       if (!s.goal || Math.hypot(s.goal.X - s.X, s.goal.Z - s.Z) < 0.35 || railNearest(c.geo.poly, s.goal).d < 0.45) {
-        if (s.goal && s.tSt < 1e9) { s.restUntil = t + randRange(s.rng, 2, 6); s.goal = null; }
+        if (s.goal && s.tSt < 1e9) { s.restUntil = t + randRange(s.rng, 0.6, 2.2); s.goal = null; } // krátké zastávky
         if (t > s.restUntil) { // nový cíl pár metrů podél mantinelu (0,45 m od něj)
-          const along = { X: -rn.n.Z, Z: rn.n.X }, d = randRange(s.rng, 1.2, 3) * (c.cfg.dir > 0 ? 1 : -1);
+          const along = { X: -rn.n.Z, Z: rn.n.X }, d = randRange(s.rng, 2.5, 5) * (c.cfg.dir > 0 ? 1 : -1);
           s.goal = { X: rn.q.X + rn.n.X * 0.6 + along.X * d, Z: rn.q.Z + rn.n.Z * 0.6 + along.Z * d };
           if (!insideW(s.goal, c.geo.poly)) s.goal = { X: c.geo.cx + (rn.q.X - c.geo.cx) * 0.8, Z: c.geo.cz + (rn.q.Z - c.geo.cz) * 0.8 };
         }
@@ -401,9 +413,11 @@ function stepTrickMotion(s: Skater, c: RinkCtx) {
   if (tr.kind === 'spin') s.spin = tr.phase === 'do' ? c.cfg.dir * 2 * Math.PI * (1 - Math.cos((Math.PI * Math.min(tr.t, tr.dur)) / tr.dur)) : 0;
   // jízda vzad: plynulá půlotočka těla na konci nájezdu a zpět při výjezdu (žádné otočení spritu naráz)
   if (tr.kind === 'backward') s.spin = c.cfg.dir * Math.PI * (tr.phase === 'prep' ? ss((tr.t - 0.35) / 0.65) : tr.phase === 'do' ? 1 : 1 - ss(tr.t / 0.8));
-  if (tr.phase === 'prep' && tr.t > 1.0) { tr.phase = 'do'; tr.t = 0; s.st = 'TRICK'; }
+  // skok: otočka jen ve vzduchu (jedna celá, plynule se rozjede a dobrzdí), dopad zase po směru jízdy
+  if (tr.kind === 'jump') s.spin = tr.phase === 'do' ? c.cfg.dir * 2 * Math.PI * ss(tr.t / tr.dur) : 0;
+  if (tr.phase === 'prep' && tr.t > prepDur(tr.kind)) { tr.phase = 'do'; tr.t = 0; s.st = 'TRICK'; }
   else if (tr.phase === 'do' && tr.t > tr.dur) { tr.phase = 'exit'; tr.t = 0; s.st = 'TRICK_EXIT'; }
-  else if (tr.phase === 'exit' && tr.t > 1.0) { s.st = 'SKATE'; s.tSt = 0; s.trick = null; s.lastTrick = c.t; c.st.event = null; c.st.lastTrickEnd = c.t; s.glideLeft = 0.5; }
+  else if (tr.phase === 'exit' && tr.t > exitDur(tr.kind)) { s.st = 'SKATE'; s.tSt = 0; s.trick = null; s.lastTrick = c.t; c.st.event = null; c.st.lastTrickEnd = c.t; s.glideLeft = 0.5; }
 }
 
 // ---------------------------------------------------------------- globální události (pády, prvky)
@@ -424,17 +438,17 @@ export function stepRinkEvents(c: RinkCtx): void {
   // prvek: globální interval 90–150 s; kandidáti s dovedností, osobní odstup jen při ≥ 2 způsobilých
   if (t >= st.nextTrick) {
     if (st.trickWindow === null) st.trickWindow = t;
-    const capable = c.all.filter((s) => SKATE_PROFILES[s.prof].skills.oneFoot || SKATE_PROFILES[s.prof].skills.backward || SKATE_PROFILES[s.prof].skills.spin);
+    const capable = c.all.filter((s) => { const k = SKATE_PROFILES[s.prof].skills; return k.oneFoot || k.backward || k.spin || k.jump || k.arabesque; });
     const personal = capable.length >= 2 ? randRange(st.rng, ...(ev.trickPersonal ?? [180, 300])) : 0;
     const ready = !st.event && t - st.lastFallEnd > 20 ? capable.filter((s) => s.st === 'SKATE' && s.v > 0.7 && t - s.lastTrick >= personal && t - s.lastFall > 30) : []; // pád a prvek nikdy současně ani těsně za sebou
     const kinds = availableTricks(c.cfg).filter((k) => k !== st.lastTrickKind || availableTricks(c.cfg).length === 1);
     let started = false;
     for (const s of ready) {
-      const sk = SKATE_PROFILES[s.prof].skills, ks = kinds.filter((k) => (k === 'oneFoot' && sk.oneFoot) || (k === 'backward' && sk.backward) || (k === 'spin' && sk.spin));
+      const sk = SKATE_PROFILES[s.prof].skills, ks = kinds.filter((k) => (k === 'oneFoot' && sk.oneFoot) || (k === 'backward' && sk.backward) || (k === 'spin' && sk.spin) || (k === 'jump' && sk.jump) || (k === 'arabesque' && sk.arabesque));
       if (!ks.length) continue;
       const W = ks.map((k) => (ev.tricks?.[k] ?? TRICK_WEIGHTS[k])), tot = W.reduce((a, b) => a + b, 0);
       let r = rand(st.rng) * tot; const kind = ks.find((_, i) => (r -= W[i]) < 0) ?? ks[0];
-      const dur = kind === 'oneFoot' ? randRange(st.rng, 3, 5) : kind === 'spin' ? randRange(st.rng, 2.2, 2.8) : randRange(st.rng, 3, 6);
+      const dur = kind === 'oneFoot' ? randRange(st.rng, 3, 5) : kind === 'spin' ? randRange(st.rng, 2.2, 2.8) : kind === 'jump' ? JUMP_AIR : kind === 'arabesque' ? randRange(st.rng, 3, 4.5) : randRange(st.rng, 3, 6);
       if (!spaceFree(s, c, dur + 2)) continue; // nájezd, provedení a výjezd volné
       s.st = 'TRICK_PREPARE'; s.tSt = 0; s.trick = { kind, t: 0, dur, phase: 'prep' }; st.event = { kind: 'trick', id: s.id, t0: t };
       st.stats.tricks++; st.stats.tricksByKind[kind] = (st.stats.tricksByKind[kind] ?? 0) + 1; st.lastTrickKind = kind;
@@ -479,7 +493,7 @@ export function forceRinkEvent(c: RinkCtx, kind: 'fall' | 'trick', id?: string |
   const s = pool.find((x) => x.st === 'SKATE' && (trick === 'backward' ? SKATE_PROFILES[x.prof].skills.backward : SKATE_PROFILES[x.prof].skills.oneFoot || SKATE_PROFILES[x.prof].skills.backward));
   if (!s) return { ok: false, msg: 'Žádný bruslař s dovedností pro prvek.' };
   const k: TrickKind = trick ?? (SKATE_PROFILES[s.prof].skills.backward && rand(st.rng) < 0.5 ? 'backward' : 'oneFoot');
-  s.st = 'TRICK_PREPARE'; s.tSt = 0; s.trick = { kind: k, t: 0, dur: 4, phase: 'prep' }; st.event = { kind: 'trick', id: s.id, t0: c.t };
+  s.st = 'TRICK_PREPARE'; s.tSt = 0; s.trick = { kind: k, t: 0, dur: k === 'jump' ? JUMP_AIR : k === 'spin' ? 2.5 : 4, phase: 'prep' }; st.event = { kind: 'trick', id: s.id, t0: c.t };
   st.stats.tricks++; st.stats.tricksByKind[k] = (st.stats.tricksByKind[k] ?? 0) + 1;
   return { ok: true, msg: s.id };
 }
@@ -566,8 +580,40 @@ export function skatePose(s: Skater, t: number, opts: { kidArm?: boolean; partne
     hip.lat = (hip.lat ?? 0) + w; pitch += 6 * Math.sin(s.tSt * 6);
   }
   if (s.trick && (s.st === 'TRICK' || s.st === 'TRICK_PREPARE' || s.st === 'TRICK_EXIT')) {
-    const tr = s.trick, k = tr.phase === 'prep' ? ss(tr.t / 1.0) : tr.phase === 'do' ? 1 : 1 - ss(tr.t / 1.0);
-    if (tr.kind === 'oneFoot') {
+    const tr = s.trick, k = tr.phase === 'prep' ? ss(tr.t / prepDur(tr.kind)) : tr.phase === 'do' ? 1 : 1 - ss(tr.t / exitDur(tr.kind));
+    if (tr.kind === 'jump') {
+      // skok s otočkou: nájezd na jedné noze s pokrčeným kolenem a rukama vzadu → rozmach volnou
+      // nohou dozadu a prudce vpřed nahoru, ruce vpřed → odraz → ve vzduchu nohy u sebe, ruce na hrudi,
+      // otočka (natočení těla řídí s.spin) → dopad na jednu nohu, volná noha dozadu, ruce do stran
+      const sup = 0, free = 1;
+      if (tr.phase === 'prep') {
+        const T = prepDur('jump'), a = ss(tr.t / (T * 0.55)), b = ss((tr.t - T * 0.55) / (T * 0.45)); // a: nájezd a nádech, b: švih
+        hip.h -= 0.12 * a * (1 - b * 0.6); hip.lat = -0.05 * a; pitch = P.pitch + 8 * a - 6 * b;
+        feet[sup] = { u: 0.02, h: BLADE_H, lat: -0.04, th: 0 };
+        feet[free] = { u: -0.55 * a * (1 - b) + 0.62 * b, h: BLADE_H + 0.2 * a * (1 - b) + 0.72 * b, lat: 0.06, th: -30 * a * (1 - b) + 30 * b }; // rozmach dozadu → švih vpřed nahoru
+        hands = [{ u: -0.25 * a * (1 - b) + 0.35 * b, h: 1.0 + 0.35 * b, lat: -0.35 }, { u: -0.3 * a * (1 - b) + 0.4 * b, h: 1.0 + 0.35 * b, lat: 0.35 }];
+      } else if (tr.phase === 'do') {
+        const u = tr.t / tr.dur, tuck = Math.sin(Math.PI * Math.min(1, u * 1.2));
+        feet = [{ u: 0.02, h: BLADE_H + 0.06 * tuck, lat: -0.02, th: 0 }, { u: 0.06 * (1 - tuck), h: BLADE_H + 0.1 + 0.08 * tuck, lat: 0.03, th: 12 }];
+        hip.lat = 0; pitch = 2; head = -2;
+        hands = [{ u: 0.18, h: 1.32, lat: -0.1 }, { u: 0.2, h: 1.36, lat: 0.1 }];
+      } else {
+        const a = 1 - ss(tr.t / exitDur('jump')), land = Math.max(0, 1 - tr.t / 0.25); // dopad: pokrčení koleny
+        hip.h -= 0.14 * land + 0.04 * a; pitch = P.pitch + 10 * a;
+        feet[sup] = { u: 0.02, h: BLADE_H, lat: -0.03, th: 0 };
+        feet[free] = { u: -0.5 * a, h: BLADE_H + 0.3 * a, lat: 0.06, th: -25 * a };
+        hands = [{ u: 0.1, h: 1.22, lat: -0.75 * a - 0.2 * (1 - a) }, { u: 0.1, h: 1.22, lat: 0.75 * a + 0.2 * (1 - a) }];
+      }
+    } else if (tr.kind === 'arabesque') {
+      // holubička: opěrná noha propnutá, volná noha natažená dozadu do výše pánve, trup v předklonu,
+      // ruce rozpažené, hlava zvednutá; plynulý nájezd a návrat
+      const sup = 0, free = 1;
+      hip.h = STAND + BLADE_H - 0.01; hip.lat = -0.06 * k;
+      feet[sup] = { u: 0.04 * k, h: BLADE_H, lat: -0.03, th: 0 };
+      feet[free] = { u: -0.92 * k, h: BLADE_H + 0.92 * k, lat: 0.04, th: -40 * k };
+      pitch = P.pitch + 52 * k; head = -34 * k;
+      hands = [{ u: 0.3 * k + 0.1, h: 1.25 + 0.12 * k, lat: -0.25 - 0.45 * k }, { u: 0.3 * k + 0.1, h: 1.25 + 0.12 * k, lat: 0.25 + 0.45 * k }];
+    } else if (tr.kind === 'oneFoot') {
       // jednonohý skluz: přenos váhy, volná noha zvednutá dozadu, paže do stran, klidný průjezd, návrat
       const free = 1, sup = 0;
       feet[sup] = { u: 0.03, h: BLADE_H, lat: -0.04, th: 0 };
@@ -592,6 +638,12 @@ export function skatePose(s: Skater, t: number, opts: { kidArm?: boolean; partne
     const i = opts.partnerSide > 0 ? 1 : 0;
     hands[i] = opts.kidArm ? { u: 0.05, h: 1.42, lat: 0.54 * (i ? 1 : -1) } : { u: 0.05, h: 0.9, lat: 0.32 * (i ? 1 : -1) };
   }
-  const c = s.feet.map((b, i) => (b.c === 'glide' || b.c === 'push' ? `f${i}~` : b.c === 'light' ? `f${i}` : '')).filter(Boolean);
+  // výška skoku nad ledem (v délkách nohy, dospělý ~0,9 m): parabola, celé tělo i brusle nahoru
+  if (s.trick?.kind === 'jump' && s.trick.phase === 'do') {
+    const u = Math.min(1, s.trick.t / s.trick.dur), z = (4 * JUMP_H * u * (1 - u)) / 0.9;
+    hip.h += z; feet = feet.map((f) => ({ ...f, h: f.h + z })) as [P3, P3]; hands = hands.map((q) => ({ ...q, h: q.h + z })) as [P3, P3];
+  }
+  const air = s.trick?.kind === 'jump' && s.trick.phase === 'do';
+  const c = air ? [] : s.feet.map((b, i) => (b.c === 'glide' || b.c === 'push' ? `f${i}~` : b.c === 'light' ? `f${i}` : '')).filter(Boolean);
   return { t: 0, ph: 'pause', hip, pitch, roll: s.roll * (opts.backwardBody ? -1 : 1), head, feet, hands, c };
 }

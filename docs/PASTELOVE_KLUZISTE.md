@@ -57,6 +57,7 @@ Vše je na jednom místě a laditelné:
   - podíly schopností: rekreační 60 %, začátečníci 20 % (z toho 2 děti poprvé), jistější 15 % (z toho 1 šikovné dítě), velmi dobří 5 %;
   - jeden rodič drží dítě za ruku;
   - věk je samostatná vlastnost: profil `good` mají dospělí i děti.
+- **Strom:** 16 m (dvojnásobek proti první verzi), dominuje středu scény.
 - **Výška objektů v metrech:** velikost se v místě paty odvodí z perspektivy, takže strom, stánek a lampy sedí k domům a lidem.
 - **Rozmístění:**
   - strom v ústí ulice za zadním okrajem ledu;
@@ -68,7 +69,7 @@ Vše je na jednom místě a laditelné:
   - délka bruslení 420–900 s, mimo led 40–150 s;
   - na začátku je na ledě 85 % bruslařů, po bruslení jde 50 % na nápoj;
   - prvky s globální prodlevou 100–140 s;
-  - váhy prvků: pirueta 45, jízda vzad 30, jedna noha 25, skok vypnutý;
+  - váhy prvků: skok s otočkou 35, holubička 30, jízda vzad 20, jedna noha 15 (pirueta na místě vypnutá);
   - pády zhruba každých 110–210 s;
   - odrazy postav v ledu: síla 0,2, délka 0,42 výšky postavy.
 
@@ -103,9 +104,13 @@ Za běhu je totéž v `project.rink` (`entry`, `events`, `reflections`, `particl
   7. horký nápoj (fronta, převzetí kelímku, pití, kelímek do koše), nebo odchod.
 
   Dvojice rodič a dítě odchází i přichází spolu.
-- **Pirueta:**
-  - zpomalení, ruce k tělu, volná noha u kolena;
-  - tělo se otočí přesně dvakrát (rychlost roste a klesá plynule), pak navazuje běžná jízda.
+- **Skok s otočkou:**
+  - nájezd na jedné noze s pokrčeným kolenem a rukama vzadu;
+  - rozmach volnou nohou dozadu a prudký švih vpřed nahoru, ruce vpřed;
+  - odraz a let 0,62 s (výška 0,47 m, celé tělo i brusle nad ledem, stín zůstává na ledě), ve vzduchu nohy u sebe, ruce na hrudi a jedna celá otočka;
+  - dopad na jednu nohu s pokrčením, volná noha dozadu, ruce do stran, výjezd.
+- **Holubička:** opěrná noha propnutá, volná noha natažená dozadu do výšky pánve, trup v předklonu, ruce rozpažené, hlava zvednutá; 3–4,5 s.
+- **Pirueta na místě** zůstává v kódu (váha 0).
 - **Jízda vzad:** začíná plynulou půlotočkou a končí návratem, sprite se nikdy neotočí naráz.
 - **Pád:** zaváhání a pokus o vyrovnání, nízký pád, krátké sklouznutí, pak jedna ze dvou variant:
   - dozadu do sedu, vstává s oporou rukou;
@@ -127,7 +132,7 @@ Za běhu je totéž v `project.rink` (`entry`, `events`, `reflections`, `particl
 
 ## Sněhulák (změna pro všechny scény)
 
-Rodič s dítětem koule už neválí. Přijdou na místo a tvoří koule u země zády ke kameře:
+Koule se už neválí, a to při stavbě rodiče s dítětem i dvou dospělých. Přijdou na místo a tvoří koule u země zády ke kameře:
 
 - spodní kouli vkleče,
 - prostřední v mírném předklonu,
@@ -153,6 +158,5 @@ Koule roste podle sněhu skutečně nabraného z okolí. Bilance hmoty platí d�
 
 - **Pohledy:** postavy mají jen 3/4 pohledy, takže předklon u lavičky a při tvoření koulí se ve 3/4 pohledu kreslí jako náklon do strany. Pirueta prochází dostupnými pohledy, plynulejší otáčení by chtělo víc pohledů.
 - **Brusle při chůzi po sněhu** jsou zabořené (nůž sahá pod úroveň boty).
-- **Sněhulák dvou dospělých** (`snowman.ts`, starší varianta pro přátele) koule stále válí, změna se týká stavby rodič + dítě.
 - **Prodavačka** je ořezaná oknem stánku podle odhadnutého obdélníku otvoru, ne podle přesné masky.
 - **Přední pás u kamery** má velké postavy, proto jsou na něm jen dva chodci.

@@ -28,12 +28,12 @@ function setup() {
 }
 
 describe('sněhulák', () => {
-  it('postup fází, růst koule jen pohybem, hotový objekt s kolizí; další stavba jen na druhém místě zóny', () => {
+  it('postup fází, koule se tvoří na místě (klek / předklon, bez válení), hotový objekt s kolizí; další stavba jen na druhém místě zóny', () => {
     const { sim, zone, s } = setup();
     expect(s).not.toBeNull();
     expect(snowmanZoneFree(sim.sessionHost(), zone)).not.toBeNull(); // probíhá stavba
     const phases: string[] = [];
-    let lastR = 0, standGrow = 0; // přírůstek poloměru, když tlačící postava stojí (m)
+    let lastR = 0, growAway = 0, moved = 0, last: { X: number; Z: number } | null = null; // růst bez práce u koule; posun koule při tvoření (m)
     for (let i = 0; i < 60 * 260 && sim.state.sessions?.length; i++) {
       sim.step();
       const ss = sim.state.sessions?.[0];
@@ -41,13 +41,18 @@ describe('sněhulák', () => {
       const b = sessionBalls(sim.state)[0];
       if (b) {
         const roller = sim.state.agents.find((x) => x.id === (ss!.phase === 'roll1' ? ss!.participantIds.find((id) => ss!.roles[id] === 'helper') : ss!.participantIds.find((id) => ss!.roles[id] === 'lead')));
-        if (roller && lastR > 0 && roller.speed < 0.01 && b.r > lastR && ss!.phase.startsWith('roll')) standGrow += b.r - lastR;
-        lastR = b.r;
+        if (ss!.phase.startsWith('roll')) {
+          // koule roste jen, když u ní tvořící postava pracuje (sed/klek nebo předklon), a nehýbe se
+          if (roller && lastR > 0 && b.r > lastR && !(roller.anim.sit && (roller.anim.sit.kind === 'kneel' || roller.anim.sit.kind === 'bend'))) growAway += b.r - lastR;
+          if (last && lastR > 0 && b.r >= lastR) moved += Math.hypot(b.X - last.X, b.Z - last.Z); // (nová koule = jiné místo)
+        }
+        lastR = b.r; last = { X: b.X, Z: b.Z };
         expect(b.r).toBeLessThanOrEqual(SNOWMAN_RADII[0] * 1.06);
-      } else lastR = 0;
+      } else { lastR = 0; last = null; }
     }
     expect(phases).toEqual(['gather', 'roll0', 'roll1', 'lift1', 'roll2', 'lift2', 'decorate', 'admire']);
-    expect(standGrow).toBeLessThan(0.003); // jen dorovnání posledních cm na konci dráhy
+    expect(growAway).toBe(0);
+    expect(moved).toBeLessThan(1e-9);
     const o = sim.state.runtimeObjects![0];
     expect(o.stage).toBe('done');
     expect(o.radii.every((r, i) => r > SNOWMAN_RADII[i] * 0.85 && r <= SNOWMAN_RADII[i] * 1.06)).toBe(true);

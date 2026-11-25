@@ -29,7 +29,7 @@ export const PASTEL = {
   skaters: { count: 18, mix: { rec: 0.6, beginner: 0.2, good: 0.15, expert: 0.05 }, kidsAmongBeginners: 2, kidsAmongGood: 1, parentWithKid: true },
   /** chodci */ visitors: 14, families: 3, seniors: 2, dogs: 2,
   /** výška objektů (m) – velikost se odvodí z perspektivy v místě paty */
-  heights: { tree: 8.5, stall: 3.9, lamp: 3.6, lampArc: 3.7, bench: 0.95, bin: 0.95, leafyWide: 9.5, leafyNarrow: 10.5 },
+  heights: { tree: 16, stall: 3.9, lamp: 3.6, lampArc: 3.7, bench: 0.95, bin: 0.95, leafyWide: 9.5, leafyNarrow: 10.5 },
   objects: {
     tree: { x: 960, y: 722 },
     stall: { x: 1800, y: 800 },
@@ -43,8 +43,8 @@ export const PASTEL = {
   gateAtX: 168,
   /** jak dlouho bruslí (s), jak dlouho jsou mimo led, kolik jich je na začátku na ledě, kolik jde po bruslení na nápoj */
   session: [420, 900] as [number, number], offIce: [40, 150] as [number, number], startOnIce: 0.85, drinkChance: 0.5,
-  /** prvky: globální prodleva ~120 s s mírnou náhodností; váhy (otočka/pirueta, jízda vzad = půlotočka, jedna noha) */
-  tricks: { every: [100, 140] as [number, number], weights: { spin: 45, backward: 30, oneFoot: 25, hop: 0 } },
+  /** prvky: globální prodleva ~120 s s mírnou náhodností; váhy (skok s otočkou, holubička, jízda vzad = půlotočka, jedna noha; pirueta na místě vypnutá) */
+  tricks: { every: [100, 140] as [number, number], weights: { jump: 35, arabesque: 30, backward: 20, oneFoot: 15, spin: 0, hop: 0 } },
   falls: { every: [110, 210] as [number, number], personal: 200 },
   reflections: { alpha: 0.2, len: 0.42 },
 };
@@ -96,11 +96,11 @@ export async function generatePastel(dir: string): Promise<ProjectFile> {
   A.tree.shape = { bodyU0: 0.3, bodyU1: 0.7, depthM: 2.6 };
   A.tree.sparkle = meta.sprites['vanocni-strom'].lights ?? [];
   const tree = O('obj_strom', 'Vánoční strom', A.tree, ob.tree.x, ob.tree.y, ts, {
-    footprint: fp(ob.tree.x, ob.tree.y, ts, 1.3, 1.3, 1.3),
+    footprint: fp(ob.tree.x, ob.tree.y, ts, 2.5, 2.0, 2.0), // podstavec (koruna je nad hlavami)
     interaction: { kind: 'viewpoint', points: [
-      { id: 'view1', kind: 'view', offset: off(ob.tree.x, ob.tree.y, ts, -2.6, -2.8), facing: -Math.PI / 2 + 0.5, label: 'Výhled 1' },
-      { id: 'view2', kind: 'view', offset: off(ob.tree.x, ob.tree.y, ts, 2.7, -2.9), facing: -Math.PI / 2 - 0.5, label: 'Výhled 2' },
-      { id: 'view3', kind: 'view', offset: off(ob.tree.x, ob.tree.y, ts, 0.4, -3.6), facing: -Math.PI / 2, label: 'Výhled 3' },
+      { id: 'view1', kind: 'view', offset: off(ob.tree.x, ob.tree.y, ts, -3.4, -3.4), facing: -Math.PI / 2 + 0.5, label: 'Výhled 1' },
+      { id: 'view2', kind: 'view', offset: off(ob.tree.x, ob.tree.y, ts, 3.5, -3.5), facing: -Math.PI / 2 - 0.5, label: 'Výhled 2' },
+      { id: 'view3', kind: 'view', offset: off(ob.tree.x, ob.tree.y, ts, 0.4, -4.4), facing: -Math.PI / 2, label: 'Výhled 3' },
     ] },
   });
   // stánek s nápoji vpravo na sněhu: výdej před okénkem, fronta doprava (mimo promenádu i led)
@@ -178,7 +178,7 @@ export async function generatePastel(dir: string): Promise<ProjectFile> {
     N('pl', -50, 744, 'Vstup vlevo (promenáda)'), N('p1', 135, 750, 'Promenáda u lavičky'), N('p0', 112, 786, 'Před lavičkou (nástup na led)'), N('p2', 330, 760, 'Promenáda 2'), N('p3', 560, 756, 'Promenáda 3'),
     N('p4', 780, 752, 'Ústí ulice vlevo'), N('p5', 960, 754, 'Před stromem', { waitMin: 2, waitMax: 6, look: { mode: 'object', objectId: 'obj_strom' }, next: [] }),
     N('p6', 1140, 752, 'Ústí ulice vpravo'), N('p7', 1380, 756, 'Promenáda 7'), N('p8', 1585, 760, 'Promenáda u koše'), N('s0', 1702, 816, 'Před stánkem'), N('p9', 1720, 768, 'Za stánkem'), N('pr', 1975, 772, 'Vstup vpravo (promenáda)'),
-    N('t1', 850, 728, 'Strom vlevo'), N('t2', 1075, 728, 'Strom vpravo'),
+    N('t1', 838, 736, 'Strom vlevo'), N('t2', 1082, 736, 'Strom vpravo'),
     N('fl', -60, 1068, 'Vstup vlevo (vpředu)'), N('f1', 520, 1066, 'Vpředu 1'), N('f2', 1000, 1072, 'Vpředu 2'), N('f3', 1460, 1066, 'Vpředu 3'), N('fr', 1985, 1066, 'Vstup vpravo (vpředu)'),
   ];
   const E = (a: string, b: string): NavEdge => ({ id: `e_${a}_${b}`, a, b, oneWay: false, narrow: false });
@@ -192,8 +192,8 @@ export async function generatePastel(dir: string): Promise<ProjectFile> {
       objectRoles: { stand: ['obj_stanek'], seating: ['obj_strom', 'obj_lampa3', 'obj_lampa4'], bin: ['obj_kos'] }, params: { queueTimeout: 300 } },
     { id: 'zone_vyhled', name: 'Pozorování stromu a bruslařů', activityType: 'viewing', activityVersion: 1, enabled: true, bounds: rect(0, 690, 1920, 800), objectRoles: { view: ['obj_strom', 'obj_lampa1', 'obj_lampa2', 'obj_lampa3', 'obj_lampa4'] }, params: { lookMin: 6, lookMax: 20 } },
     // menší sněhové plochy po stranách stromu v ústí ulice
-    { id: 'zone_snehulak', name: 'Sněhulák (vlevo od stromu)', activityType: 'snowman', activityVersion: 1, enabled: true, bounds: rect(772, 700, 880, 738), objectRoles: {}, params: { chance: 0.35 } },
-    { id: 'zone_koulovacka', name: 'Koulovačka (vpravo od stromu)', activityType: 'snowballFight', activityVersion: 1, enabled: true, bounds: rect(1040, 698, 1128, 738), objectRoles: {}, params: { chance: 0.3, allowAdults: false } },
+    { id: 'zone_snehulak', name: 'Sněhulák (vlevo od stromu)', activityType: 'snowman', activityVersion: 1, enabled: true, bounds: rect(762, 704, 846, 742), objectRoles: {}, params: { chance: 0.35 } },
+    { id: 'zone_koulovacka', name: 'Koulovačka (vpravo od stromu)', activityType: 'snowballFight', activityVersion: 1, enabled: true, bounds: rect(1066, 702, 1132, 742), objectRoles: {}, params: { chance: 0.3, allowAdults: false } },
   ];
 
   // ------------------------------------------------------------------ zvířata, rekvizity (převzaté z balíku živých pozadí)

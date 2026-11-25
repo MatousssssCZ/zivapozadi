@@ -5,8 +5,9 @@
  * gather → roll0 (spodní koule) → roll1 (prostřední) → lift1 → roll2 (hlava) → lift2 →
  * decorate (oči, nos, šála – každý doplněk vlastní událostí) → admire → konec.
  *
- * Koule roste podle skutečně uražené dráhy: r³ = r0³ + k·d (stojící postava ji nezvětšuje),
- * otáčí se podle dráhy a poloměru. Hotový sněhulák je runtime objekt (SimState.runtimeObjects) s
+ * Koule se neválí: tvoří se na svém místě (spodní na místě sněhuláka, další vedle), postava u ní
+ * klečí (spodní) nebo stojí v mírném předklonu (prostřední, hlava) zády ke kameře; koule roste
+ * rovnoměrně v objemu po dobu tvoření. Hotový sněhulák je runtime objekt (SimState.runtimeObjects) s
  * kolizí – projekt se nemění; po přerušení koule nezmizí.
  */
 import type { ActivityDefinition, ActivityRunner } from './types';
@@ -34,9 +35,9 @@ export const snowmanDefinition: ActivityDefinition = {
   capacity: { description: 'Jedna stavba na zónu, nejvýše 2 sněhuláci ve scéně; zóna s hotovým sněhulákem se znovu nepoužije.' },
   preconditions: ['Zóna leží ve sněhu a mimo hlavní průchod (asi 4 × 4 m).', 'Dva volní návštěvníci bez věcí v rukou.'],
   phases: [
-    { id: 'gather', label: 'Sejití na místě (do 45 s)' }, { id: 'roll0', label: 'Válení spodní koule' },
-    { id: 'roll1', label: 'Válení prostřední koule' }, { id: 'lift1', label: 'Zvednutí prostřední koule', events: ['place'] },
-    { id: 'roll2', label: 'Válení hlavy' }, { id: 'lift2', label: 'Nasazení hlavy', events: ['place'] },
+    { id: 'gather', label: 'Sejití na místě (do 45 s)' }, { id: 'roll0', label: 'Tvoření spodní koule (vkleče)' },
+    { id: 'roll1', label: 'Tvoření prostřední koule' }, { id: 'lift1', label: 'Zvednutí prostřední koule', events: ['place'] },
+    { id: 'roll2', label: 'Tvoření hlavy' }, { id: 'lift2', label: 'Nasazení hlavy', events: ['place'] },
     { id: 'decorate', label: 'Zdobení (oči, nos, šála)', events: ['decorate'] }, { id: 'admire', label: 'Prohlížení díla' },
   ],
   outcome: 'Ve scéně stojí sněhulák (runtime objekt s kolizí) až do restartu simulace.',
@@ -140,27 +141,22 @@ export function startSnowman(host: SessionHost, zone: ActivityZone, a: AgentStat
 const cam = (h: SessionHost) => cameraFor(h.project.scene);
 const W2S = (h: SessionHost, w: World) => toScreen(cam(h), w);
 const S2W = (h: SessionHost, p: Vec2) => toWorld(cam(h), p);
-/** Dráha válení koule k (v metrech kolem místa): oblouk se dvěma zatáčkami, končí u cíle. */
-function pathOf(h: SessionHost, d: SnowmanData, k: 0 | 1 | 2): Vec2[] {
-  const C = S2W(h, d.spot), L = LEN[k];
-  // koule 0 končí na místě sněhuláka; 1 a 2 vedle něj (pak se zvednou)
-  const side = k === 0 ? 0 : k === 1 ? -1 : 1;
-  const endBall = { X: C.X + side * 0.75, Z: C.Z + (k === 0 ? 0 : 0.25) };
-  const ang = [Math.PI, 0, Math.PI * 0.92][k]; // ze které strany se přijíždí (vodorovně – ne do hloubky)
-  const rF = SNOWMAN_RADII[k];
-  const dirIn = { X: -Math.cos(ang), Z: -Math.sin(ang) * 0.6 };
-  const n = Math.hypot(dirIn.X, dirIn.Z); dirIn.X /= n; dirIn.Z /= n;
-  const end = { X: endBall.X - dirIn.X * (0.3 + rF), Z: endBall.Z - dirIn.Z * (0.3 + rF) };
-  // zpětně od konce: mírná vlnovka délky L
-  const pts: World[] = [];
-  for (let i = 4; i >= 0; i--) {
-    const u = i / 4, back = u * L;
-    const perp = { X: -dirIn.Z, Z: dirIn.X }, wig = Math.sin(u * Math.PI * 1.5) * 0.45 * u;
-    pts.push({ X: end.X - dirIn.X * back + perp.X * wig, Z: end.Z - dirIn.Z * back + perp.Z * wig });
-  }
-  return pts.map((w) => W2S(h, w));
+function startOf(h: SessionHost, d: SnowmanData, k: 0 | 1 | 2): Vec2 { return W2S(h, formSpot(h, d, k).work); }
+/**
+ * Koule se tvoří na místě (neválí se): koule leží na svém konečném místě (spodní na místě sněhuláka,
+ * prostřední a hlava vedle), postava klečí / stojí šikmo před ní – zády ke kameře, koule je vidět.
+ */
+function formSpot(h: SessionHost, d: SnowmanData, k: 0 | 1 | 2): { ball: World; work: World } {
+  const C = S2W(h, d.spot), side = k === 0 ? 0 : k === 1 ? -1 : 1, rF = SNOWMAN_RADII[k];
+  const ball = { X: C.X + side * 0.75, Z: C.Z + (k === 0 ? 0 : 0.25) };
+  const sx = k === 1 ? -1 : 1;
+  let work = { X: ball.X + sx * (rF * 0.8 + 0.06), Z: ball.Z - (rF + (k === 0 ? 0.32 : 0.28)) };
+  // místo před koulí by bylo pod okrajem obrazu (zóna u spodního kraje): postava pracuje vedle koule
+  if (W2S(h, work).y > h.project.scene.height - 6) work = { X: ball.X + sx * (rF + 0.42), Z: ball.Z - 0.08 };
+  return { ball, work };
 }
-function startOf(h: SessionHost, d: SnowmanData, k: 0 | 1 | 2): Vec2 { return pathOf(h, d, k)[0]; }
+/** doba tvoření koule (s): spodní vkleče, prostřední a hlava v předklonu */
+const FORM_T = [40, 28, 20];
 /** Kde čeká ten, kdo zrovna neválí (stranou, s výhledem na stavbu). */
 function standby(h: SessionHost, d: SnowmanData, who: 0 | 1): Vec2 {
   const C = S2W(h, d.spot);
@@ -194,15 +190,23 @@ export function stepSnowman(h: SessionHost, s: ActivitySession): 'running' | 'do
         return 'running';
       }
       if (d.step === 'scoop') {
-        // nabrat sníh a uplácat malou kouli, pak tlačit
+        // nabrat sníh a uplácat malou kouli, pak ji na místě tvořit (vkleče / v předklonu, zády ke kameře)
         if (now < d.until!) return 'running';
-        d.step = 'push';
-        h.gesture(R, 'push', { dur: 600 });
-        h.walkPath(R, d.path!, 'válí kouli');
+        d.step = 'push'; d.liftT0 = now;
+        R.anim.sit = { kind: k === 0 ? 'kneel' : 'bend', t: 0, dur: 1e6, w: 0 };
         return 'running';
       }
-      rollBall(h, d.ball!, R);
-      if (h.moving(R)) return 'running';
+      {
+        const b = d.ball!, w = R.anim.sit, u = Math.min(1, (now - d.liftT0!) / FORM_T[k]);
+        R.turnTo = Math.PI / 2; R.look = null; // zády k obrazu
+        if (w) { w.t += 1 / 60; w.w = Math.min(1, w.t / 0.9, Math.max(0, (w.dur - w.t) / 0.9)); }
+        // koule roste rovnoměrně v objemu (přihrnutý a uplácaný sníh z okolí), pomalu se natáčí
+        b.r = Math.cbrt(R0 ** 3 + (b.rMax ** 3 - R0 ** 3) * u); b.H = b.r; b.rot = u * 0.6;
+        if (u < 1) return 'running';
+        if (w && w.dur > w.t + 0.9) w.dur = w.t + 0.9; // vstává (prolnutí)
+        if (w && w.t < w.dur) return 'running';
+        R.anim.sit = null; R.turnTo = null;
+      }
       h.releaseWork(R);
       const b = d.ball!;
       if (k === 0) {
@@ -285,27 +289,15 @@ export function stepSnowman(h: SessionHost, s: ActivitySession): 'running' | 'do
 function beginRoll(h: SessionHost, s: ActivitySession, k: 0 | 1 | 2) {
   const d = D(s), now = h.time();
   setSessionPhase(s, `roll${k}`, now);
-  const path = pathOf(h, d, k);
-  d.path = path.slice(1);
   const L = LEN[k], rT = SNOWMAN_RADII[k] * randRange(s.rng, 0.92, 1.05);
   const R = k === 1 ? h.agent(d.roles[1])! : h.agent(d.roles[0])!;
-  const P0 = S2W(h, path[0]), P1 = S2W(h, path[1]);
-  const dir = norm({ X: P1.X - P0.X, Z: P1.Z - P0.Z });
-  d.ball = { X: P0.X + dir.X * (0.3 + R0), Z: P0.Z + dir.Z * (0.3 + R0), H: R0, r: R0, rot: 0, d: 0, k: (rT ** 3 - R0 ** 3) / L, dir, stage: k, rMax: rT };
-  h.goTo(R, path[0], 'k začátku válení');
+  const f = formSpot(h, d, k), dir = norm({ X: f.ball.X - f.work.X, Z: f.ball.Z - f.work.Z });
+  d.path = [];
+  d.ball = { X: f.ball.X, Z: f.ball.Z, H: R0, r: R0, rot: 0, d: 0, k: (rT ** 3 - R0 ** 3) / L, dir, stage: k, rMax: rT };
+  h.goTo(R, W2S(h, f.work), 'k místu koule');
   d.step = 'walk';
 }
 
-/** Koule před tlačící postavou: roste a otáčí se jen podle skutečně uražené dráhy. */
-function rollBall(h: SessionHost, b: Ball, R: AgentState) {
-  const P = S2W(h, R.pos);
-  const v = R.vel;
-  if (v && Math.hypot(v.X, v.Z) > 0.05) b.dir = norm({ X: v.X, Z: v.Z });
-  const want = { X: P.X + b.dir.X * (0.3 + b.r), Z: P.Z + b.dir.Z * (0.3 + b.r) };
-  const step = Math.hypot(want.X - b.X, want.Z - b.Z);
-  if (step > 1e-4 && step < 0.5) { b.d += step; b.rot += step / b.r; b.r = Math.min(b.rMax, Math.cbrt(R0 ** 3 + b.k * b.d)); } // horní mez poloměru
-  b.X = want.X; b.Z = want.Z; b.H = b.r;
-}
 function ballScreen(h: SessionHost, b: Ball | null | undefined): Vec2 | null { return b ? W2S(h, { X: b.X, Z: b.Z }) : null; }
 const norm = (w: World): World => { const n = Math.hypot(w.X, w.Z) || 1; return { X: w.X / n, Z: w.Z / n }; };
 

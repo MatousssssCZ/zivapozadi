@@ -519,7 +519,7 @@ export class Simulation {
     for (const a of this.state.agents) {
       const s = st.sk[a.id]; if (!s) continue;
       const back = s.trick?.kind === 'backward' && Math.abs(s.spin ?? 0) > Math.PI / 2;
-      const body = s.psi + (s.spin ?? 0), spinning = !!s.spin && s.trick?.kind === 'spin';
+      const body = s.psi + (s.spin ?? 0), spinning = !!s.spin && (s.trick?.kind === 'spin' || s.trick?.kind === 'jump');
       a.pos = toScreen(cam, { X: s.X, Z: s.Z });
       a.groundHeading = body; a.facing = screenAngleOfWorld(cam, a.pos, body);
       a.speed = (s.v / Q) * this.scaleOf(a); a.vel = { X: Math.cos(s.psi) * s.v, Z: Math.sin(s.psi) * s.v };
@@ -1128,6 +1128,21 @@ export class Simulation {
       L.yieldDir = { X: perp1.X * side * 0.85 + n.X * 0.5, Z: perp1.Z * side * 0.85 + n.Z * 0.5 };
       const l = Math.hypot(L.yieldDir.X, L.yieldDir.Z); L.yieldDir = { X: L.yieldDir.X / l, Z: L.yieldDir.Z / l };
       L.yieldT = 1.1; L.blockedT = 0; W.blockedT = Math.max(W.blockedT ?? 0, 1.3);
+    }
+    // postava jdoucí k místu činnosti (např. stavitel sněhuláka) zablokovaná proti někomu, kdo jde s doprovodem
+    // (nemá vlastní trasu, nemůže ji změnit): ustoupí ona
+    for (let i = 0; i < items.length; i++) {
+      const F = ags[i]; if (!F.follow) continue;
+      for (let j = 0; j < items.length; j++) {
+        const B = ags[j]; if (j === i || !B.activity || B.follow || !B.route || (B.blockedT ?? 0) < 1 || (B.yieldT ?? 0) > 0 || F.follow.leaderId === B.id) continue;
+        const r = { X: items[j].p.X - items[i].p.X, Z: items[j].p.Z - items[i].p.Z }, d = Math.hypot(r.X, r.Z);
+        if (d > 0.85 || d < 1e-6) continue;
+        const n = { X: r.X / d, Z: r.Z / d }, bp = items[j].pref, perp = { X: -n.Z, Z: n.X };
+        // šikmo vpřed (podle natočení těla – nikdy pozpátku) na stranu, kam stejně míří
+        const side = perp.X * bp.X + perp.Z * bp.Z > 0 ? 1 : -1, gh = B.groundHeading ?? Math.atan2(bp.Z, bp.X), fw = { X: Math.cos(gh), Z: Math.sin(gh) };
+        const y = { X: perp.X * side * 0.8 + fw.X * 0.6, Z: perp.Z * side * 0.8 + fw.Z * 0.6 }, l = Math.hypot(y.X, y.Z);
+        B.yieldDir = { X: y.X / l, Z: y.Z / l }; B.yieldT = 1.1; B.blockedT = 0;
+      }
     }
     // stojící člověk (čeká, kouká – bez trasy a bez činnosti) v cestě zablokovanému: ustoupí stranou
     for (let i = 0; i < items.length; i++) {
