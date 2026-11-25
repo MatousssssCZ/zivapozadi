@@ -23,7 +23,7 @@ export const viewingDefinition: ActivityDefinition = {
   defaultParams: { lookMin: 5, lookMax: 18 },
 };
 
-interface ViewData { key?: string; objectId?: string; until?: number; shiftAt?: number; target?: { x: number; y: number }; photo?: boolean; phoneId?: string; photoAt?: number }
+interface ViewData { showAt?: number; shown?: boolean; key?: string; objectId?: string; until?: number; shiftAt?: number; target?: { x: number; y: number }; photo?: boolean; phoneId?: string; photoAt?: number }
 const d = (r: ActivityRun) => r.data as ViewData;
 const cdKey = (k: string) => `viewcd:${k}`;
 
@@ -57,6 +57,9 @@ export const viewingRunner: ActivityRunner = {
       data.shiftAt = ctx.rand(agent) < 0.6 ? now + ctx.randRange(agent, 3, 7) : 1e12; // (ne Infinity – JSON by ho uložil jako null)
       data.target = o ? { x: o.x, y: o.y - 60 } : undefined;
       if (data.target) agent.look = { ...data.target };
+      // A03 rodič s dítětem: ukáže dítěti strom (místo focení), dítě se podívá a ukáže taky
+      const kid = ctx.state.agents.find((x) => x.follow?.leaderId === agent.id && !x.hidden);
+      if (kid) { data.showAt = now + ctx.randRange(agent, 0.8, 1.8); data.until = Math.max(data.until!, data.showAt + 6); data.photo = false; run.phase = 'look'; run.phaseStart = now; return 'running'; }
       // fotografie (A06): u stromu občas vytáhne telefon, zamíří a vyfotí (6–12 s)
       data.photo = !agent.holding && (zone.params.photoChance === undefined ? 0.35 : Number(zone.params.photoChance)) > ctx.rand(agent);
       if (data.photo) { data.photoAt = now + ctx.randRange(agent, 0.8, 2); data.until = Math.max(data.until, data.photoAt + 11); }
@@ -69,6 +72,17 @@ export const viewingRunner: ActivityRunner = {
       data.target = { x: data.target.x + (ctx.rand(agent) < 0.5 ? -60 : 60), y: data.target.y - 20 };
       agent.look = { ...data.target }; data.shiftAt = 1e12;
     }
+    if (data.showAt !== undefined && !data.shown && now >= data.showAt) {
+      const kid = ctx.state.agents.find((x) => x.follow?.leaderId === agent.id && !x.hidden);
+      if (kid && ctx.social.gesture(agent, 'point', ctx.randRange(agent, 2.6, 3.4), 0.75)) {
+        data.shown = true; agent.status = 'Ukazuje dítěti strom';
+        ctx.log('info', `${agent.name} ukazuje dítěti (${kid.name}) vánoční strom.`, agent.id);
+        // dítě se po chvíli nadchne a ukáže taky (zkusí znovu, než se zastaví)
+        (data as Record<string, unknown>).kidAt = now + ctx.randRange(agent, 1.2, 2.2); (data as Record<string, unknown>).kidId = kid.id;
+      } else if (now > data.showAt + 4) data.shown = true;
+    }
+    { const kAt = (data as Record<string, unknown>).kidAt as number | undefined, kid = ctx.state.agents.find((x) => x.id === (data as Record<string, unknown>).kidId);
+      if (kAt !== undefined && now >= kAt && kid) { if (ctx.social.gesture(kid, 'point', ctx.randRange(agent, 2.2, 3), 0.85) || now > kAt + 3) (data as Record<string, unknown>).kidAt = undefined; } }
     if (data.photo && data.photoAt !== undefined && now >= data.photoAt && !data.phoneId) {
       // telefon z kapsy do ruky (skutečná rekvizita), focení obouruč, pak zpět do kapsy
       // (gesto nejdřív – držená věc by blokovala paži; obsazené ruce → zkusit znovu za chvíli)

@@ -16,7 +16,7 @@ import type { Vec2 } from '../math/vec';
 /** Referenční polohy zápěstí ruky A (A.2, [N]). */
 export const WRIST = {
   REST: { x: 10.7, y: -44.5 }, READY: { x: 18, y: -28 }, BEAT_UP: { x: 21, y: -22 }, BEAT_DOWN: { x: 22, y: -27 },
-  OPEN: { x: 31, y: -22 }, SIZE_IN: { x: 13, y: -22 }, SIZE_OUT: { x: 29, y: -22 }, SHRUG: { x: 27, y: -16 },
+  OPEN: { x: 31, y: -22 }, SIZE_IN: { x: 13, y: -22 }, SIZE_OUT: { x: 29, y: -22 }, SHRUG: { x: 24, y: -27 },
   WAVE: { x: 28, y: 10 }, CUP: { x: 12, y: -25 }, POCKET: { x: 11, y: -32 }, RUB: { x: 2.5, y: -18 },
   FACE_NEAR: { x: 5, y: 17 }, SCARF: { x: -7, y: 5 }, CAP: { x: 11, y: 15 },
 } as const;
@@ -32,7 +32,9 @@ export type Family =
   /** odhrnování sněhu lopatou: obě ruce na násadě, tahy vpřed a zpět */
   | 'shovel'
   /** pohlazení psa: mírný předklon/přidřep, blízká ruka dolů k psovi, 1–2 tahy */
-  | 'pet';
+  | 'pet'
+  /** B01 chytání vloček: obě ruce zvednuté dlaněmi nahoru, hlava vzhůru, drobné pohyby rukou */
+  | 'catch';
 
 /** Spuštěný klip u postavy (čistá data – součást stavu simulace). */
 export interface GestureInst {
@@ -70,6 +72,7 @@ export function resourcesOf(g: Pick<GestureInst, 'fam' | 'hand' | 'both'>): Res[
     case 'photo': return ['arm0', 'arm1', 'head'];
     case 'shovel': return ['arm0', 'arm1', 'torso'];
     case 'pet': return ['arm1', 'torso', 'pelvis', 'head'];
+    case 'catch': return ['arm0', 'arm1', 'head'];
   }
 }
 
@@ -229,7 +232,7 @@ export function evalGesture(g: GestureInst): GestureOut {
     }
     case 'scoop': { // dřep: pánev dolů, trup vpřed, ruce ke sněhu (kontakt v polovině), návrat
       const e = env(u, 0.02, 0.38, 0.66, 0.98);
-      out.crouch = e;
+      out.crouch = 0.85 * e;
       const lo = { x: 17, y: -48 };
       const tr = track([[0, 'R'], [0.38, lo], [0.5, { x: 15, y: -46 }], [0.66, lo], [1, 'R']], u);
       if (tr.w > 0) out.arms = [{ ...tr, fwd: true, keep: true }, { w: tr.w, p: { x: tr.p.x + 3, y: tr.p.y + 1 }, fwd: true, keep: true }];
@@ -252,6 +255,15 @@ export function evalGesture(g: GestureInst): GestureOut {
       out.crouch = 0.18 * w;
       out.trunkDeg = -(11 + 4 * st) * w * g.sgn; // pracovní předklon (mimo limit společenských gest)
       out.headDeg = 5 * w * g.sgn; // hlava kompenzuje – dívá se dopředu na pruh
+      return out;
+    }
+    case 'catch': { // B01: ruce do stran a vzhůru dlaněmi nahoru (čitelné z každého pohledu), sledovat vločky, spustit
+      const up = { x: 22, y: 4 };
+      const tr = track([[0, 'R'], [0.16, { x: 18, y: -14 }], [0.3, up], [0.72, up], [0.86, { x: 18, y: -14 }], [1, 'R']], u);
+      const e = env(u, 0.16, 0.3, 0.72, 0.88);
+      const wob = (k: number) => 1.2 * Math.sin(g.t * 2.3 + k * 1.7) * e;
+      if (tr.w > 0) out.arms = [{ w: tr.w, p: { x: tr.p.x + wob(0), y: tr.p.y + wob(1) } }, { w: tr.w, p: { x: tr.p.x - 1 + wob(2), y: tr.p.y + 2 + wob(3) } }];
+      out.headDeg = 8 * e * g.sgn; // pohled vzhůru k vločkám (+ = nahoru)
       return out;
     }
     case 'pet': { // Z03: náklon a přidřep (0–25 %), ruka dolů k psovi, 1–2 pomalé tahy po srsti, návrat
@@ -316,5 +328,5 @@ export const CLIP_T: Record<Family, { T: [number, number, number]; cd: number }>
   thanks: { T: [0.7, 0.9, 1.3], cd: 3 }, waveFar: { T: [2.0, 2.5, 3.2], cd: 45 }, amusement: { T: [1.5, 2.2, 3.2], cd: 35 },
   rubHands: { T: [2.3, 3.0, 4.2], cd: 50 }, adjustScarf: { T: [1.9, 2.5, 3.3], cd: 75 }, adjustCap: { T: [2.1, 2.7, 3.6], cd: 90 },
   hunch: { T: [2.5, 3.2, 4.5], cd: 45 }, queuePeek: { T: [1.6, 2.2, 3.0], cd: 15 }, warmCup: { T: [6, 11, 21], cd: 10 },
-  push: { T: [3, 3, 3], cd: 0 }, scoop: { T: [1.6, 2.2, 3.2], cd: 0 }, photo: { T: [6, 8, 12], cd: 60 }, shovel: { T: [3, 4.5, 6], cd: 0 }, pet: { T: [4, 5.5, 8], cd: 0 }, throw: { T: [0.65, 0.8, 0.95], cd: 0 }, lift: { T: [3.2, 4, 5], cd: 0 }, decorate: { T: [2, 2.6, 3.4], cd: 0 },
+  push: { T: [3, 3, 3], cd: 0 }, scoop: { T: [1.6, 2.2, 3.2], cd: 0 }, photo: { T: [6, 8, 12], cd: 60 }, shovel: { T: [3, 4.5, 6], cd: 0 }, pet: { T: [4, 5.5, 8], cd: 0 }, catch: { T: [5, 7, 10], cd: 0 }, throw: { T: [0.65, 0.8, 0.95], cd: 0 }, lift: { T: [3.2, 4, 5], cd: 0 }, decorate: { T: [2, 2.6, 3.4], cd: 0 },
 };

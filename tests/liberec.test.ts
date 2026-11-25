@@ -8,6 +8,8 @@ import { R_BODY } from '../src/core/sim/crowd';
 import { cameraFor, toWorld } from '../src/core/scene/camera';
 import { LEASH, createAnimals, stepAnimals } from '../src/core/sim/animals';
 import { SLED } from '../src/core/sim/sled';
+import { startFight } from '../src/core/activities/snowballFight';
+import { snowmanSpot, freeSnowmanSlot } from '../src/core/activities/snowman';
 
 /** Nové náměstí z balíku grafiky „Živá pozadí – Liberec“ (AKCEPTACE.md body 1–4, 10). */
 let lp: LoadedProject;
@@ -117,7 +119,7 @@ describe('Liberec – živý trh', () => {
     expect(grooms).toBeLessThan(sits); // ne automaticky při každém zastavení
   });
 
-  it('za 15 min: pohlazení psa (Z03), upadlá rukavice (B03), koulovačka dětí a shození sněhuláka', () => {
+  it('za 15 min: pohlazení psa (Z03), upadlá rukavice (B03), koulovačka dětí', () => {
     const sim = Simulation.create(lp.project, lp.manifests);
     let petFrames = 0;
     for (let i = 0; i < 60 * 900; i++) {
@@ -129,10 +131,30 @@ describe('Liberec – živý trh', () => {
     expect(petFrames).toBeGreaterThan(4);
     // děti se koulují i samy (rodiče se dívají) a po hře shodí starého sněhuláka – místo se uvolní
     expect(sim.state.log.some((l) => /^Děti \(.+\) se jdou koulovat/.test(l.msg))).toBe(true);
-    expect(sim.state.log.some((l) => l.msg.includes('shodily'))).toBe(true);
     const m = sim.state.log.map((l) => l.msg), lost = m.filter((x) => x.includes('ztratil(a) rukavici')).length;
     expect(lost).toBeGreaterThanOrEqual(1);
     // zvednutá je každá, kromě případně té, která právě leží (konec běhu)
     expect(m.filter((x) => x.includes('zvedl(a) rukavici')).length).toBeGreaterThanOrEqual(lost - (sim.state.props.some((p) => p.kind === 'mitten' && p.place.kind === 'ground') ? 1 : 0));
+  }, 300000);
+
+  it('děti po koulovačce shodí starého sněhuláka; hromádka po 2 min zmizí a místo je zase volné', () => {
+    const sim = Simulation.create(lp.project, lp.manifests);
+    sim.advanceTo(30);
+    const h = sim.sessionHost();
+    const zone = lp.project.zones.find((z) => z.activityType === 'snowballFight')!, smZone = lp.project.zones.find((z) => z.activityType === 'snowman')!;
+    sim.state.sessions = []; sim.state.runtimeObjects = [];
+    const sp = snowmanSpot(smZone, 1);
+    sim.state.runtimeObjects.push({ id: 'snowman_test', kind: 'snowman', zoneId: smZone.id, x: sp.x, y: sp.y, radii: [0.3, 0.22, 0.14], stage: 'done', decorations: ['eyes'], createdAt: -400, seed: 7, slot: 1 });
+    const kids = sim.state.agents.filter((a) => !a.hidden && sim.isChild(a) && !a.activity).slice(0, 2);
+    expect(kids.length).toBe(2);
+    for (const k of kids) { k.route = null; }
+    expect(startFight(h, zone, kids[0], kids.slice(1), true)).not.toBeNull();
+    let collapsed: number | undefined;
+    for (let i = 0; i < 60 * 400 && (sim.state.sessions?.length || collapsed === undefined); i++) { sim.step(); collapsed ??= sim.state.runtimeObjects?.find((o) => o.id === 'snowman_test')?.collapseAt; if (!sim.state.sessions?.length && collapsed === undefined) break; }
+    expect(collapsed).toBeDefined();
+    expect(sim.state.log.some((l) => l.msg.includes('shodily'))).toBe(true);
+    sim.advanceTo(collapsed! + 125);
+    expect(sim.state.runtimeObjects?.some((o) => o.id === 'snowman_test')).toBe(false);
+    expect(freeSnowmanSlot(h, smZone)).toBe(0);
   }, 300000);
 });

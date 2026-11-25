@@ -172,4 +172,24 @@ describe('klipy gest – invarianty (E.2)', () => {
       expect(Math.abs(o.headDeg)).toBeLessThanOrEqual(8); expect(Math.abs(o.trunkDeg)).toBeLessThanOrEqual(4);
     }
   });
+
+  it('ruce bez nepřirozených úhlů: loket nikdy zalomený pod 15°, loket nad ramenem nikdy s rukou visící pod ním', () => {
+    const fams = Object.keys(CLIP_T) as Family[];
+    const bad: string[] = [];
+    for (const fam of fams) for (const view of ['front3q', 'back3q', 'side'] as const) for (const hand of [0, 1] as const) {
+      const T = CLIP_T[fam].T[1];
+      for (let k = 1; k < 30; k++) {
+        const a = initialAnimState('SE'); a.idleTime = 2;
+        a.gestures = [{ fam, t: (k / 30) * T, dur: T, hand, amp: 1, sgn: 1, dir: { x: 0.8, y: 0.3 } }];
+        const p = skeletonPose(TEST_FIGURE_TEMPLATE, view, false, a, fam === 'warmCup' || fam === 'cupBeat', DEFAULT_MOTION);
+        for (const arm of p.arms) {
+          const u = { x: arm.joint.x - arm.root.x, y: arm.joint.y - arm.root.y }, f = { x: arm.end.x - arm.joint.x, y: arm.end.y - arm.joint.y };
+          const inner = (Math.acos(Math.max(-1, Math.min(1, -(u.x * f.x + u.y * f.y) / ((Math.hypot(u.x, u.y) * Math.hypot(f.x, f.y)) || 1)))) * 180) / Math.PI;
+          if (inner < 15) bad.push(`${fam} ${view} t=${(k / 30).toFixed(2)}: loket ${inner.toFixed(0)}°`);
+          if (fam !== 'throw' && arm.joint.y < arm.root.y - 3 && arm.end.y > arm.joint.y + 3) bad.push(`${fam} ${view} t=${(k / 30).toFixed(2)}: loket nad ramenem, ruka visí`);
+        }
+      }
+    }
+    expect([...new Set(bad.map((b) => b.split(' t=')[0]))]).toEqual([]);
+  });
 });

@@ -180,6 +180,8 @@ export interface SimState {
   placeCooldowns?: Record<string, number>;
   /** Režisér setkání zvířat (Z04 pes–pes, Z10 pes–kočka): cooldowny scény. */
   animalDir?: { nextDogs: number; nextDogCat: number };
+  /** B01 chytání vloček: probíhající zastávka rodiny a cooldown scény. */
+  flakes?: { next: number; n: number; kidId?: string; parentId?: string; started?: boolean; until?: number; dur?: number };
   /** Odklízení sněhu (A11). */
   clearing?: import('./clearing').ClearingState;
   /** Sáňky (B02): stav průchodu. */

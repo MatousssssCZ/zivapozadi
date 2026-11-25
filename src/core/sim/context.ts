@@ -67,7 +67,7 @@ export interface SocialControl {
   /** Poděkování po převzetí zboží. */
   thanks(agent: AgentState): void;
   /** Spustí klip sociální/pracovní vrstvy (např. focení, dřep); vrací false, když nejde. */
-  gesture(agent: AgentState, fam: 'photo' | 'scoop', duration: number): boolean;
+  gesture(agent: AgentState, fam: 'photo' | 'scoop' | 'point' | 'catch', duration: number, dirY?: number): boolean;
 }
 
 /** Ovládání postavy z činností a plánovače. Vzhled nerozhoduje o chování. */

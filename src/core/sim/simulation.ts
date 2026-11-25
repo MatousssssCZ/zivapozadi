@@ -323,7 +323,7 @@ export class Simulation {
         canSip: (a, dur) => canSip(self.socialWorld(), a.id, self.time(), dur),
         releaseArm: (a, arm) => releaseArm(a, arm),
         thanks: (a) => thanks(a, self.time()),
-        gesture: (a, fam, dur) => self.sessionHost().gesture(a, fam, { dur, hand: 1 }),
+        gesture: (a, fam, dur, dirY) => self.sessionHost().gesture(a, fam, { dur, hand: 1, dirY }),
       },
     };
   }
@@ -424,6 +424,7 @@ export class Simulation {
       puff: (x, y, n, t0, seed) => { const sc = depthScaleAt(this.project.scene.depth, y); for (let i = 0; i < n; i++) emit((this.state.particles ??= []), { kind: 'snowPuff', x: x + (i - n / 2) * 4 * sc, y, t0, life: 0.35 + ((i * 37) % 30) / 100, w0: 0, sc, seed: seed + i * 13 }); },
     });
     this.stepEnvironment(t);
+    this.stepFlakes(t);
     // shozený sněhulák: hromádka sněhu po 2 min zapadne a objekt zmizí
     if (this.state.runtimeObjects?.some((o) => o.collapseAt !== undefined && t > o.collapseAt + 120)) this.state.runtimeObjects = this.state.runtimeObjects.filter((o) => !(o.collapseAt !== undefined && t > o.collapseAt + 120));
     if (this.project.sled && !this.sledBlocked) stepSled(this.sledHost(), (this.state.sled ??= { phase: 'offstage', until: this.project.sled.firstDelay ?? 40, dir: 1, n: 0, hist: [] }));
@@ -1151,7 +1152,7 @@ export class Simulation {
           return;
         }
         // cestou se občas zastaví u stromu / výlohy a chvíli se dívá (A04)
-        const view = r < 0.14 ? this.zoneFor(a, c, 'viewing') : null;
+        const view = r < 0.14 || (kid && r < 0.4) ? this.zoneFor(a, c, 'viewing') : null; // rodiny se u stromu zastaví častěji (A03)
         if (view) {
           a.pendingActivity = { type: 'viewing', zoneId: view.id, source: 'auto', sourceId: null };
           a.visit = { mode: 'coffee', until: 0, since: t };
@@ -1238,6 +1239,38 @@ export class Simulation {
         return;
       }
     }
+  }
+
+  /**
+   * B01 chytání vloček: za sněžení se rodina s dítětem občas zastaví, dítě zvedne ruce dlaněmi nahoru
+   * a 5–10 s sleduje vločky, rodič počká a dívá se na ně; pak jdou dál. Cooldown scény 240–480 s.
+   * Losování ze seedu (hashNoise) – neovlivní RNG postav.
+   */
+  private stepFlakes(t: number) {
+    if (!this.project.scene.snowfall.enabled) return;
+    const st = (this.state.flakes ??= { next: 90, n: 0 });
+    const W = this.project.scene.width, H = this.project.scene.height;
+    if (st.kidId) {
+      const kid = this.state.agents.find((x) => x.id === st.kidId), par = this.state.agents.find((x) => x.id === st.parentId);
+      if (!kid || !par || kid.hidden || par.hidden || !kid.follow) { if (par) par.speedFactor = 1; st.kidId = st.parentId = undefined; return; }
+      par.speedFactor = 0; par.look = { x: kid.pos.x, y: kid.pos.y - 40 };
+      if (!st.started) {
+        if (kid.speed < 1 && this.sessionHost().gesture(kid, 'catch', { dur: st.dur ?? 7 })) { st.started = true; st.until = t + (st.dur ?? 7) + 0.3; this.log('info', `${kid.name} chytá sněhové vločky.`, kid.id); }
+        else if (t > (st.until ?? t) ) { par.speedFactor = 1; st.kidId = st.parentId = undefined; }
+        return;
+      }
+      if (t >= (st.until ?? 0)) { par.speedFactor = 1; par.look = null; st.kidId = st.parentId = undefined; st.started = false; }
+      return;
+    }
+    if (t < st.next || this.state.step % 30) return;
+    const kid = this.state.agents.find((k) => !k.hidden && this.isChild(k) && k.follow && !k.activity && k.pos.x > W * 0.15 && k.pos.x < W * 0.85 && k.pos.y > H * 0.68
+      && (() => { const p = this.state.agents.find((q) => q.id === k.follow!.leaderId); return !!p && !p.activity && !!p.route && p.visit?.mode !== 'offstage'; })());
+    if (!kid) return;
+    st.n++;
+    st.next = t + 240 + 240 * hashNoise(this.project.seed, 9700, st.n);
+    if (hashNoise(this.project.seed, 9701, st.n) < 0.3) return; // ne pokaždé
+    st.kidId = kid.id; st.parentId = kid.follow!.leaderId; st.started = false;
+    st.dur = 5 + 5 * hashNoise(this.project.seed, 9702, st.n); st.until = t + 3;
   }
 
   /**

@@ -170,6 +170,52 @@ export function legIK3D(H: Vec2, A: Vec2, u: number, g: Vec2, l1: number, l2: nu
 }
 
 /**
+ * Paže ve 3D pro cíle „vpřed“ (práce, chytání, ukazování dopředu): cíl v obraze se rozloží na složku
+ * vpřed (u, podle promítnutí směru pohledu g) a svislou (v); loket se řeší v této rovině ve skutečných
+ * délkách a míří DOLŮ (pod spojnici rameno–zápěstí), pak se promítne. Váha w plynule prolne s rovinným
+ * řešením (začátek/konec gesta). Zápěstí zůstává přesně v cíli (pokud je dosažitelné).
+ */
+export function armIK3D(R: Vec2, A: Vec2, g: Vec2, l1: number, l2: number, w = 1): Limb {
+  const flat = ik(R, A, l1, l2, 1);
+  const gx = Math.abs(g.x) > 0.3 ? g.x : Math.sign(g.x || 1) * 0.3;
+  const d = { x: A.x - R.x, y: A.y - R.y };
+  const u = d.x / gx, v = d.y - g.y * u;
+  let D = Math.hypot(u, v);
+  const maxD = l1 + l2 - 0.01, k = D > maxD ? maxD / D : 1;
+  const uu = u * k, vv = v * k; D = Math.min(D, maxD);
+  // dvě řešení v rovině paže; převládne to s loktem NÍŽ (v = dolů), v podobné výšce plynulé prolnutí
+  // (loket se otáčí přes hloubku) – žádný přeskok, loket nikdy nad rukou visící dolů
+  const base = Math.atan2(vv, uu), al = Math.acos(clamp((l1 * l1 + D * D - l2 * l2) / (2 * l1 * Math.max(D, 1e-6)), -1, 1));
+  const e1 = { u: Math.cos(base + al) * l1, v: Math.sin(base + al) * l1 }, e2 = { u: Math.cos(base - al) * l1, v: Math.sin(base - al) * l1 };
+  const c = clamp((e1.v - e2.v) / (0.3 * l1), -1, 1); // +1 = první řešení; mezi nimi otočení lokte do hloubky
+  const cu = (e1.u + e2.u) / 2, cv = (e1.v + e2.v) / 2;
+  const eu = cu + (e1.u - cu) * c, ev = cv + (e1.v - cv) * c;
+  const joint3 = { x: R.x + gx * eu, y: R.y + ev + g.y * eu };
+  const end = { x: R.x + gx * uu, y: R.y + vv + g.y * uu };
+  const joint = { x: flat.joint.x + (joint3.x - flat.joint.x) * w, y: flat.joint.y + (joint3.y - flat.joint.y) * w };
+  const endB = { x: flat.end.x + (end.x - flat.end.x) * w, y: flat.end.y + (end.y - flat.end.y) * w };
+  return { root: R, joint, end: endB, k1: Math.hypot(joint.x - R.x, joint.y - R.y) / l1, k2: Math.hypot(endB.x - joint.x, endB.y - joint.y) / l2 };
+}
+
+/**
+ * IK s lokťem otočeným kolem osy kořen–cíl do hloubky: c = cos(φ) ∈ [−1, 1] (±1 = obě rovinná řešení,
+ * 0 = loket přímo ke kameře / od ní). V obraze se loket posouvá po kolmici přes střed kružnice
+ * lokte – nikdy se „nezlomí“ dozadu; segmenty se jen perspektivně zkrátí (k1, k2).
+ */
+export function ikRot(root: Vec2, target: Vec2, l1: number, l2: number, c: number): Limb {
+  const dx = target.x - root.x, dy = target.y - root.y;
+  let d = Math.hypot(dx, dy);
+  const maxD = l1 + l2 - 0.01;
+  let tx = target.x, ty = target.y;
+  if (d > maxD) { tx = root.x + (dx / d) * maxD; ty = root.y + (dy / d) * maxD; d = maxD; }
+  const n = { x: (tx - root.x) / Math.max(d, 1e-6), y: (ty - root.y) / Math.max(d, 1e-6) };
+  const a = (l1 * l1 - l2 * l2 + d * d) / (2 * Math.max(d, 1e-6)), h = Math.sqrt(Math.max(0, l1 * l1 - a * a));
+  const perp = { x: -n.y, y: n.x }; // (+1 odpovídá ik(..., bendSign = +1))
+  const joint = { x: root.x + n.x * a + perp.x * h * c, y: root.y + n.y * a + perp.y * h * c };
+  return { root, joint, end: { x: tx, y: ty }, k1: Math.hypot(joint.x - root.x, joint.y - root.y) / l1, k2: Math.hypot(tx - joint.x, ty - joint.y) / l2 };
+}
+
+/**
  * IK s plynulým parametrem ohybu b ∈ [−1, 1]: ±1 jsou obě rovinná řešení, mezi nimi se loket
  * otáčí přes hloubku (nadloktí drží délku, předloktí se v obraze zkrátí – vrací k2).
  */
@@ -428,7 +474,7 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
   const breathe = (0.5 + 0.5 * Math.sin((tIdle / 3.6) * Math.PI * 2)) * I.breathe;
   const fsg = Math.sign(fx || 1);
   const trunkPitch = (sampleGait('trunkPitchDeg', q0, w) + (motion.lean - 1)) * DEG * b;
-  const torsoAngle = -Math.PI / 2 + trunkPitch * fsg - shiftIdle * 0.004 - (soc ? soc.trunkDeg * DEG : 0) + crouch * 0.42 * fsg; // dřep: trup vpřed
+  const torsoAngle = -Math.PI / 2 + trunkPitch * fsg - shiftIdle * 0.004 - (soc ? soc.trunkDeg * DEG : 0) + crouch * 0.42 * fsg * Math.max(0.45, Math.abs(fx)); // dřep: trup vpřed (ve 3/4 pohledu se předklon ke kameře zkracuje)
   const neck = { x: hip.x + Math.cos(torsoAngle) * B.torso, y: hip.y + Math.sin(torsoAngle) * B.torso - breathe };
   const headTiltIdle = I.headAmp * (Math.sin(tIdle * 0.71 + motion.phase * 6.2) + 0.5 * Math.sin(tIdle * 1.37 + motion.phase * 3.1));
   const headPitch = sampleGait('headPitchDeg', q0, w) * DEG * b;
@@ -547,16 +593,34 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
     }
   }
   const arms = [backTarget ? ik(backRoot, backTarget, B.upperArm, B.forearm, bend) : armBackFK, frontTarget ? frontArm() : armFrontFK] as [Limb, Limb];
+  // pracovní/vpřed mířící gesta: loket ve 3D (rovina paže vpřed × výška, skutečné délky kostí),
+  // pak promítnutí jako u nohou – ruka natažená ke kameře se zkrátí, loket se nezlomí do ostrého úhlu
+  if (soc) for (let i = 0; i < 2; i++) {
+    const g = soc.arms[i];
+    if (!g || g.w <= 0 || !g.fwd || (i === 1 && armShorten > 0)) continue;
+    const l = arms[i], gF = { x: fx, y: fy * 0.35 };
+    arms[i] = armIK3D(l.root, l.end, gF, B.upperArm, B.forearm, g.w);
+  }
   // gesto: loket míří dolů (ne „kuřecí křídlo“). Přechod mezi oběma větvemi IK je plynulý –
   // loket se otáčí přes hloubku, takže předloktí se v obraze perspektivně zkrátí (k2 < 1).
   // Paže na levé straně obrazu má při gestu ven loket ve výchozí větvi nahoře; s obálkou gesta
   // plynule přejde do druhé větve (loket dolů) – závisí jen na straně paže a váze, ne na
   // okamžitém cíli, takže se loket nepřeklápí uprostřed pohybu.
-  if (soc && v.shoulderSpread) for (let i = 0; i < 2; i++) {
+  // Gesta k tělu/hlavě/do strany: z obou řešení IK plynule převládne to s NIŽŠÍM loktem (rameno
+  // nedovolí loket nad hlavou s předloktím visícím dolů). Když jsou obě podobně vysoko, loket se
+  // otáčí přes hloubku (ikBlend zkrátí předloktí) – žádný přeskok. Váha gesta prolne s klidovou větví.
+  if (soc) for (let i = 0; i < 2; i++) {
     const g = soc.arms[i];
-    if (!g || g.w <= 0 || g.rel || g.keep || (i === 1 && armShorten > 0) || sideX(i) * bend > 0) continue;
+    if (!g || g.w <= 0 || g.fwd || g.rel || (i === 1 && armShorten > 0)) continue;
     const l = arms[i];
-    arms[i] = ikBlend(l.root, l.end, B.upperArm, B.forearm, bend * (1 - 2 * g.w));
+    // loket ven od těla a dolů (pól paže; strana paže v obraze je v daném pohledu pevná → bez překlápění)
+    const sx = v.shoulderSpread ? sideX(i) : (i === 0 ? -1 : 1) * Math.sign(fx || 1) * -1;
+    const pole = { x: sx * 0.38, y: 0.92 };
+    const jA = ikRot(l.root, l.end, B.upperArm, B.forearm, 1).joint, jB = ikRot(l.root, l.end, B.upperArm, B.forearm, -1).joint;
+    const sA = (jA.x - l.root.x) * pole.x + (jA.y - l.root.y) * pole.y, sB = (jB.x - l.root.x) * pole.x + (jB.y - l.root.y) * pole.y;
+    const pref = clamp((sA - sB) / (1.5 * B.upperArm), -1, 1); // +1: řešení +1 lépe odpovídá pólu
+    const b = bend + (pref - bend) * g.w;
+    arms[i] = ikRot(l.root, l.end, B.upperArm, B.forearm, b);
   }
   return { view, mirror, root: { x: 0, y: 0 }, hip, neck, shoulder, head, headTilt, torsoAngle, legs, arms, feet: [footAng[0], footAng[1]], feetK: [footProj[0].k, footProj[1].k], handR: arms[1].end, heelPts, cupTilt, snowSink: [sink[0], sink[1]] };
 }
