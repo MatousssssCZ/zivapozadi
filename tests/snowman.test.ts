@@ -5,7 +5,7 @@ import { loadProject, type LoadedProject } from '../src/node/projectIO';
 import { generateRadnice } from '../scripts/generate-radnice-demo';
 import { Simulation } from '../src/core/sim/simulation';
 import { canonicalJson } from '../src/core/model/hash';
-import { startSnowman, snowmanZoneFree, sessionBalls, SNOWMAN_RADII } from '../src/core/activities/snowman';
+import { startSnowman, snowmanZoneFree, freeSnowmanSlot, sessionBalls, SNOWMAN_RADII } from '../src/core/activities/snowman';
 
 /** Balíček „živá pozadí“ B05 – stavba sněhuláka (T02, T11, T12, T13). */
 let lp: LoadedProject;
@@ -28,7 +28,7 @@ function setup() {
 }
 
 describe('sněhulák', () => {
-  it('postup fází, růst koule jen pohybem, hotový objekt s kolizí; druhá stavba v zóně zamítnuta', () => {
+  it('postup fází, růst koule jen pohybem, hotový objekt s kolizí; další stavba jen na druhém místě zóny', () => {
     const { sim, zone, s } = setup();
     expect(s).not.toBeNull();
     expect(snowmanZoneFree(sim.sessionHost(), zone)).not.toBeNull(); // probíhá stavba
@@ -54,7 +54,8 @@ describe('sněhulák', () => {
     expect(o.decorations).toEqual(['eyes', 'nose', 'scarf', 'buttons']);
     expect(sim.state.sessions).toEqual([]);
     expect(Object.keys(sim.state.reservations).some((k) => k.startsWith('actor:') || k.startsWith('zone:'))).toBe(false);
-    expect(snowmanZoneFree(sim.sessionHost(), zone)).toMatch(/už sněhulák/);
+    expect(freeSnowmanSlot(sim.sessionHost(), zone)).toBe(1); // první místo obsazené, druhé volné
+    expect(snowmanZoneFree(sim.sessionHost(), zone)).toBeNull();
   }, 120000);
 
   it('checkpoint uprostřed válení: obnovený běh je shodný', () => {
@@ -66,7 +67,7 @@ describe('sněhulák', () => {
     expect(canonicalJson(b.state)).toBe(canonicalJson(sim.state)); // nezávisle na pořadí klíčů
   }, 120000);
 
-  it('přerušení (účastník zmizí): koule nezmizí, zóna zůstane obsazená', () => {
+  it('přerušení (účastník zmizí): koule nezmizí, její místo zůstane obsazené', () => {
     const { sim, b, zone } = setup();
     for (let i = 0; i < 60 * 40 && !sessionBalls(sim.state).some((x) => x.r > 0.1); i++) sim.step();
     expect(sessionBalls(sim.state).length).toBe(1);
@@ -74,6 +75,6 @@ describe('sněhulák', () => {
     sim.step();
     expect(sim.state.sessions).toEqual([]);
     expect(sim.state.runtimeObjects?.length).toBe(1);
-    expect(snowmanZoneFree(sim.sessionHost(), zone)).not.toBeNull();
+    expect(freeSnowmanSlot(sim.sessionHost(), zone)).toBe(1);
   }, 120000);
 });

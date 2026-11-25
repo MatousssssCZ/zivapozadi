@@ -424,6 +424,8 @@ export class Simulation {
       puff: (x, y, n, t0, seed) => { const sc = depthScaleAt(this.project.scene.depth, y); for (let i = 0; i < n; i++) emit((this.state.particles ??= []), { kind: 'snowPuff', x: x + (i - n / 2) * 4 * sc, y, t0, life: 0.35 + ((i * 37) % 30) / 100, w0: 0, sc, seed: seed + i * 13 }); },
     });
     this.stepEnvironment(t);
+    // shozený sněhulák: hromádka sněhu po 2 min zapadne a objekt zmizí
+    if (this.state.runtimeObjects?.some((o) => o.collapseAt !== undefined && t > o.collapseAt + 120)) this.state.runtimeObjects = this.state.runtimeObjects.filter((o) => !(o.collapseAt !== undefined && t > o.collapseAt + 120));
     if (this.project.sled && !this.sledBlocked) stepSled(this.sledHost(), (this.state.sled ??= { phase: 'offstage', until: this.project.sled.firstDelay ?? 40, dir: 1, n: 0, hist: [] }));
     if (this.project.clearing && this.project.characters.some((c) => c.id === this.project.clearing!.workerId)) stepClearing(this.clearingHost(), (this.state.clearing ??= { phase: 'offstage', until: this.project.clearing.firstDelay ?? 90, n: 0, band: 0, progress: 0, pile: 0, doneAt: null }));
     if (this.state.mitten || this.state.agents.some((a) => a.holdingKind === 'mitten') || this.state.step % 60 === 0) stepMitten(this.mittenHost());
@@ -515,6 +517,7 @@ export class Simulation {
         socialRelease(a, 0); socialRelease(a, 1);
       },
       log: (m, id) => self.log('info', m, id),
+      isChild: (a) => self.isChild(a),
       isSnow: (p) => self.project.areas.some((ar) => ar.kind === 'snow' && ar.polygon.length >= 3 && pointInPolygon(p, ar.polygon)),
     });
   }
@@ -668,14 +671,13 @@ export class Simulation {
     const sl = this.state.sled?.phase === 'run' ? sledObstacles(this.sledHost(), this.state.sled, this.sledHost().parent()?.pos ?? null) : [];
     if (sl.length) return [...this.obstaclesW, ...sl, ...this.runtimeObstacles()];
     if (!ro?.length) return this.obstaclesW;
-    // sněhuláci: kolizní stopa (osmiúhelník kolem spodní koule)
-    const c = this.cam();
-    return [...this.obstaclesW, ...ro.map((o) => { const P = toWorld(c, o), r = o.radii[0] + 0.05; return { poly: Array.from({ length: 8 }, (_, i) => ({ X: P.X + r * Math.cos((i * Math.PI) / 4), Z: P.Z + r * Math.sin((i * Math.PI) / 4) })) }; })];
+    // sněhuláci: kolizní stopa (osmiúhelník kolem spodní koule); shozený už nepřekáží
+    return [...this.obstaclesW, ...this.runtimeObstacles()];
   }
 
   private runtimeObstacles(): ObstacleW[] {
     const c = this.cam();
-    return (this.state.runtimeObjects ?? []).map((o) => { const P = toWorld(c, o), r = o.radii[0] + 0.05; return { poly: Array.from({ length: 8 }, (_, i) => ({ X: P.X + r * Math.cos((i * Math.PI) / 4), Z: P.Z + r * Math.sin((i * Math.PI) / 4) })) }; });
+    return (this.state.runtimeObjects ?? []).filter((o) => !o.collapseAt).map((o) => { const P = toWorld(c, o), r = o.radii[0] + 0.05; return { poly: Array.from({ length: 8 }, (_, i) => ({ X: P.X + r * Math.cos((i * Math.PI) / 4), Z: P.Z + r * Math.sin((i * Math.PI) / 4) })) }; });
   }
 
   /** Rychlost chůze postavy v m/s (dvojice jde tempem pomalejšího). */
@@ -728,7 +730,7 @@ export class Simulation {
       else if (a.route) { const ri = this.routeIntent(a, P, vmax); pref = ri.pref; mv.waitingNarrow = ri.waitingNarrow; }
       else fixed = true;
       // zdvořilé uhnutí (zácpa): krátký úkrok stranou, druhý projde
-      if ((a.yieldT ?? 0) > 0 && a.yieldDir && !fixed) { pref = { X: a.yieldDir.X * Math.min(vmax, 0.55), Z: a.yieldDir.Z * Math.min(vmax, 0.55) }; a.yieldT = Math.max(0, (a.yieldT ?? 0) - dt); }
+      if ((a.yieldT ?? 0) > 0 && a.yieldDir && (!fixed || !a.activity)) { fixed = false; pref = { X: a.yieldDir.X * Math.min(vmax, 0.55), Z: a.yieldDir.Z * Math.min(vmax, 0.55) }; a.yieldT = Math.max(0, (a.yieldT ?? 0) - dt); }
       const partner = a.follow?.leaderId ?? this.state.agents.find((x) => x.follow?.leaderId === a.id)?.id ?? null;
       const hd = a.groundHeading;
       items.push({ id: a.id, p: P, v: a.vel ?? { X: 0, Z: 0 }, pref, vmax, fixed, r: R_BODY, rc: comfortRadius(a.id), partnerOf: partner, choice: a.crowdChoice ?? null, blocked: a.blockedT ?? 0, head: hd === undefined ? null : { X: Math.cos(hd), Z: Math.sin(hd) } });
@@ -752,6 +754,19 @@ export class Simulation {
       L.yieldDir = { X: perp1.X * side * 0.85 + n.X * 0.5, Z: perp1.Z * side * 0.85 + n.Z * 0.5 };
       const l = Math.hypot(L.yieldDir.X, L.yieldDir.Z); L.yieldDir = { X: L.yieldDir.X / l, Z: L.yieldDir.Z / l };
       L.yieldT = 1.1; L.blockedT = 0; W.blockedT = Math.max(W.blockedT ?? 0, 1.3);
+    }
+    // stojící člověk (čeká, kouká – bez trasy a bez činnosti) v cestě zablokovanému: ustoupí stranou
+    for (let i = 0; i < items.length; i++) {
+      const A = ags[i]; if ((A.blockedT ?? 0) < 1.5 || !A.route) continue;
+      const pa = items[i].pref, pl = Math.hypot(pa.X, pa.Z); if (pl < 1e-6) continue;
+      for (let j = 0; j < items.length; j++) {
+        const B = ags[j]; if (j === i || B.route || B.activity || B.follow || (B.yieldT ?? 0) > 0 || items[i].partnerOf === B.id) continue;
+        const r = { X: items[j].p.X - items[i].p.X, Z: items[j].p.Z - items[i].p.Z }, d = Math.hypot(r.X, r.Z);
+        if (d > 0.9 || (r.X * pa.X + r.Z * pa.Z) / (d * pl) < 0.3) continue; // jen kdo stojí přede mnou
+        const perp = { X: -pa.Z / pl, Z: pa.X / pl }, side = perp.X * r.X + perp.Z * r.Z >= 0 ? 1 : -1;
+        B.yieldDir = { X: perp.X * side, Z: perp.Z * side }; B.yieldT = 1.4; A.blockedT = 1.0;
+        for (const f of this.state.agents) if (f.follow?.leaderId === B.id) { f.yieldDir = B.yieldDir; f.yieldT = 1.4; } // s dítětem / psem spolu
+      }
     }
     for (let i = 0; i < items.length; i++) {
       const a = ags[i], it = items[i];
@@ -1101,6 +1116,8 @@ export class Simulation {
           const h = this.sessionHost();
           const zs = this.project.zones.filter((z) => (z.activityType === 'snowman' && !snowmanZoneFree(h, z)) || (z.activityType === 'snowballFight' && !fightZoneProblem(h, z, true)));
           const z = zs.length ? zs[Math.floor(rand(a.rng) * zs.length)] : null;
+          // děti spolu: další volné rodiny ve scéně → koulují se jen děti (2–3), rodiče se dívají z kraje
+          if (z?.activityType === 'snowballFight' && this.startKidsFight(a, kid, z, t)) return;
           if (z && (z.activityType === 'snowman' ? startSnowman(h, z, a, kid) : startFight(h, z, kid, a, true))) {
             a.visit = { mode: 'coffee', until: 0, since: t };
             this.log('info', `${a.name} jde s dítětem (${kid.name}) ${z.activityType === 'snowman' ? 'stavět sněhuláka' : 'koulovat'}.`, a.id);
@@ -1221,6 +1238,38 @@ export class Simulation {
         return;
       }
     }
+  }
+
+  /**
+   * Koulovačka jen dětí: k dítěti této rodiny 1–2 děti z jiných rodin, které jsou ve scéně a jejichž
+   * rodič zrovna nic nedělá. Rodiče dojdou na kraj hřiště a dívají se, děti se po hře vrátí k nim.
+   */
+  private startKidsFight(a: AgentState, kid: AgentState, z: ActivityZone, t: number): boolean {
+    // (rodič může zrovna procházet nebo mířit na kávu – kvůli dětem plán odloží)
+    const freeParent = (p: AgentState) => !p.hidden && !p.activity && !p.holding && p.visit?.mode !== 'offstage' && !this.state.agents.some((x) => x.rejoin?.leaderId === p.id);
+    const others = this.state.agents.filter((x) => x !== kid && !x.hidden && this.isChild(x) && x.follow && !x.activity && (() => { const p = this.state.agents.find((q) => q.id === x.follow!.leaderId); return !!p && p !== a && freeParent(p); })());
+    if (!others.length || rand(a.rng) > 0.75) return false;
+    const cam = this.cam(), Z = toWorld(cam, a.pos);
+    others.sort((x, y) => { const X = toWorld(cam, x.pos), Y = toWorld(cam, y.pos); return Math.hypot(X.X - Z.X, X.Z - Z.Z) - Math.hypot(Y.X - Z.X, Y.Z - Z.Z); });
+    const kids = [kid, ...others.slice(0, rand(a.rng) < 0.5 ? 2 : 1)];
+    const parents = kids.map((k) => this.state.agents.find((p) => p.id === k.follow!.leaderId)!);
+    const h = this.sessionHost();
+    if (!startFight(h, z, kids[0], kids.slice(1), true)) return false;
+    // rodiče: kraj dětského hřiště (strana blíž k nim), čekají a dívají se
+    const cx = z.bounds.reduce((q, p) => q + p.x, 0) / z.bounds.length, cy = z.bounds.reduce((q, p) => q + p.y, 0) / z.bounds.length;
+    const C = toWorld(cam, { x: cx, y: cy });
+    parents.forEach((p, i) => {
+      const P = toWorld(cam, p.pos), d = Math.hypot(P.X - C.X, P.Z - C.Z) || 1;
+      const r = 3.2 + i * 0.2, side = (i - (parents.length - 1) / 2) * 0.9;
+      const spot = toScreen(cam, { X: C.X + ((P.X - C.X) / d) * r - ((P.Z - C.Z) / d) * side, Z: C.Z + ((P.Z - C.Z) / d) * r + ((P.X - C.X) / d) * side });
+      const k = kids[i], ch = this.chars.get(k.id);
+      k.rejoin = { leaderId: p.id, side: ch?.companionSide === -1 ? -1 : 1, permanent: true };
+      p.visit = { mode: 'coffee', until: 0, since: t }; p.pendingActivity = null;
+      h.goTo(p, spot, 'k dětskému hřišti');
+      p.look = { x: cx, y: cy };
+    });
+    this.log('info', `Děti (${kids.map((k) => k.name).join(', ')}) se jdou koulovat, rodiče (${parents.map((p) => p.name).join(', ')}) se dívají.`, a.id);
+    return true;
   }
 
   /** Zamávání příteli, který se objevil 2,5–5 m daleko (jednou za setkání, p = 0,65). */

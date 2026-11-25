@@ -26,7 +26,7 @@ const G = 9.81;
 export const snowballDefinition: ActivityDefinition = {
   type: 'snowballFight', version: 1, label: 'Koulovačka', status: 'implemented',
   description: 'Dva lidé se v zasněženém prostoru koulují: naberou sníh, uplácají kouli, zamíří a hodí; partner uhne nebo dostane zásah do kabátu.',
-  participants: [{ role: 'player', min: 2, max: 2, requiredCapabilities: ['walk', 'scoop', 'child'] }],
+  participants: [{ role: 'player', min: 2, max: 3, requiredCapabilities: ['walk', 'scoop', 'child'] }],
   requiredObjects: [], props: [{ id: 'snowball', kind: 'snowball', label: 'Koule' }],
   workPointKinds: [], entryPointKinds: [], surface: 'snow',
   capacity: { description: 'Jedna hra na zónu; výrazná událost (nejvýš jedna ve scéně).' },
@@ -49,7 +49,7 @@ export const snowballParticipant: ActivityRunner = {
   usesObject: () => false,
 };
 
-interface FightData { spots: [Vec2, Vec2]; roles: [string, string]; throws: number; done: number; thrower: number; until: number; blockedSince: number | null; ballId: string | null }
+interface FightData { topple?: { id: string; kid: string; step: 'walk' | 'push' | 'done'; at: number }; spots: Vec2[]; roles: string[]; throws: number; done: number; thrower: number; target?: number; until: number; blockedSince: number | null; ballId: string | null }
 const D = (s: ActivitySession) => s.data as unknown as FightData;
 
 /** Proč nelze hrát (null = lze). */
@@ -64,33 +64,38 @@ export function fightZoneProblem(h: Pick<SessionHost, 'state' | 'isSnow'>, zone:
 }
 const centre = (z: ActivityZone): Vec2 => ({ x: z.bounds.reduce((s, p) => s + p.x, 0) / z.bounds.length, y: z.bounds.reduce((s, p) => s + p.y, 0) / z.bounds.length });
 
-export function startFight(h: SessionHost, zone: ActivityZone, a: AgentState, b: AgentState, withChild = false): ActivitySession | null {
-  if (fightZoneProblem(h, zone, withChild) || a.holding || b.holding) return null;
+/** Hra 2–3 hráčů (u tří trojúhelník, odstupy 2,6–3,8 m). */
+export function startFight(h: SessionHost, zone: ActivityZone, a: AgentState, b: AgentState | AgentState[], withChild = false): ActivitySession | null {
+  const P = [a, ...(Array.isArray(b) ? b : [b])].slice(0, 3);
+  if (P.length < 2 || fightZoneProblem(h, zone, withChild) || P.some((x) => x.holding)) return null;
   const cam = cameraFor(h.project.scene), C = toWorld(cam, centre(zone)), now = h.time();
   const gap = 1.3 + rand(a.rng) * 0.6; // odstup 2,6–3,8 m
-  const spots: [Vec2, Vec2] = [toScreen(cam, { X: C.X - gap, Z: C.Z }), toScreen(cam, { X: C.X + gap, Z: C.Z + 0.3 })];
+  const spots: Vec2[] = P.length === 2
+    ? [toScreen(cam, { X: C.X - gap, Z: C.Z }), toScreen(cam, { X: C.X + gap, Z: C.Z + 0.3 })]
+    : [0, 1, 2].map((k) => { const ang = Math.PI + k * (2 * Math.PI / 3) + 0.3; return toScreen(cam, { X: C.X + Math.cos(ang) * gap * 1.05, Z: C.Z + Math.sin(ang) * gap * 0.75 }); });
   const s = createSession(h.state, h.res, {
-    type: 'snowballFight', zoneId: zone.id, participantIds: [a.id, b.id], roles: { [a.id]: 'player', [b.id]: 'player' },
-    keys: [`zone:${zone.id}`], now, deadline: now + 45 + gatherTime(h, [a, b], spots[0]),
-    seed: h.project.seed, phase: 'gather', data: { spots, roles: [a.id, b.id], throws: 4 + Math.floor(rand(a.rng) * 5), done: 0, thrower: 0, until: 0, blockedSince: null, ballId: null } as unknown as Record<string, unknown>,
+    type: 'snowballFight', zoneId: zone.id, participantIds: P.map((x) => x.id), roles: Object.fromEntries(P.map((x) => [x.id, 'player'])),
+    keys: [`zone:${zone.id}`], now, deadline: now + 45 + Math.max(...P.map((x, i) => gatherTime(h, [x], spots[i]))),
+    seed: h.project.seed, phase: 'gather', data: { spots, roles: P.map((x) => x.id), throws: 4 + Math.floor(rand(a.rng) * 5) + (P.length - 2) * 2, done: 0, thrower: 0, target: 1, until: 0, blockedSince: null, ballId: null } as unknown as Record<string, unknown>,
   });
   if (!s) return null;
-  for (const x of [a, b]) { x.activity = { type: 'snowballFight', zoneId: zone.id, source: 'auto', sourceId: null, phase: 'gather', phaseStart: now, data: { sessionId: s.id } }; x.pendingActivity = null; x.follow = null; }
-  h.goTo(a, spots[0], 'ke koulovačce'); h.goTo(b, spots[1], 'ke koulovačce');
-  h.log(`${a.name} a ${b.name} se jdou koulovat.`, a.id);
+  P.forEach((x, i) => { x.activity = { type: 'snowballFight', zoneId: zone.id, source: 'auto', sourceId: null, phase: 'gather', phaseStart: now, data: { sessionId: s.id } }; x.pendingActivity = null; x.follow = null; h.goTo(x, spots[i], 'ke koulovačce'); });
+  h.log(`${P.map((x) => x.name).join(P.length > 2 ? ', ' : ' a ')} se jdou koulovat.`, a.id);
   return s;
 }
 
 export function stepFight(h: SessionHost, s: ActivitySession): 'running' | 'done' | 'aborted' {
   const now = h.time(), d = D(s);
-  const P = d.roles.map((id) => h.agent(id)) as [AgentState | undefined, AgentState | undefined];
-  if (!P[0] || !P[1] || P[0].hidden || P[1].hidden) return 'aborted';
-  const T = P[d.thrower]!, R = P[1 - d.thrower]!;
-  const face = () => { T.look = { x: R.pos.x, y: R.pos.y }; R.look = { x: T.pos.x, y: T.pos.y }; };
+  const P = d.roles.map((id) => h.agent(id));
+  if (P.some((x) => !x || x.hidden)) return 'aborted';
+  const tg = d.target ?? 1 - d.thrower;
+  const T = P[d.thrower]!, R = P[tg === d.thrower ? (d.thrower + 1) % P.length : tg]!;
+  // hází T na R; ostatní sledují toho, kdo hází
+  const face = () => { T.look = { x: R.pos.x, y: R.pos.y }; for (const x of P) if (x && x !== T) x.look = { x: T.pos.x, y: T.pos.y }; };
   switch (s.phase) {
     case 'gather':
       if (now > s.deadline) return 'aborted';
-      if (h.moving(P[0]!) || h.moving(P[1]!)) return 'running';
+      if (P.some((x) => h.moving(x!))) return 'running';
       face(); setSessionPhase(s, 'pause', now); d.until = now + randRange(s.rng, 1, 2);
       return 'running';
     case 'pause':
@@ -99,7 +104,13 @@ export function stepFight(h: SessionHost, s: ActivitySession): 'running' | 'done
       if (h.moving(T) || h.moving(R)) return 'running';
       if (d.done >= d.throws) { setSessionPhase(s, 'finish', now); d.until = now + randRange(s.rng, 3, 6); return 'running'; }
       // střídání není přísně ABAB
-      if (d.done > 0 && rand(s.rng) < 0.7) d.thrower = 1 - d.thrower;
+      if (P.length === 2) { if (d.done > 0 && rand(s.rng) < 0.7) d.thrower = 1 - d.thrower; d.target = 1 - d.thrower; }
+      else {
+        // ve třech: často hází ten, kdo byl naposledy terčem (oplácí), terč náhodně z ostatních
+        if (d.done > 0) d.thrower = rand(s.rng) < 0.6 ? (d.target ?? 1) : Math.floor(rand(s.rng) * P.length);
+        const others = P.map((_, i) => i).filter((i) => i !== d.thrower);
+        d.target = others[Math.floor(rand(s.rng) * others.length)];
+      }
       setSessionPhase(s, 'scoop', now); d.until = now + randRange(s.rng, 1.2, 1.8);
       h.gesture(P[d.thrower]!, 'scoop', { dur: d.until - now }); // dřep, ruce ke sněhu
       return 'running';
@@ -151,11 +162,53 @@ export function stepFight(h: SessionHost, s: ActivitySession): 'running' | 'done
       setSessionPhase(s, 'pause', now); d.until = now + randRange(s.rng, 2, 6);
       return 'running';
     }
-    case 'finish':
+    case 'finish': {
       if (now < d.until) return 'running';
+      // děti po hře občas shodí starého sněhuláka (místo se uvolní pro novou stavbu)
+      const old = P.every((x) => h.isChild?.(x!)) ? oldSnowmanNear(h, zoneCentre(h, s)) : null;
+      if (old && !d.topple) {
+        const kid = P[0]!, cam = cameraFor(h.project.scene), O = toWorld(cam, old), K = toWorld(cam, kid.pos);
+        const dl = Math.hypot(K.X - O.X, K.Z - O.Z) || 1, rr = old.radii[0] + 0.38;
+        d.topple = { id: old.id, kid: kid.id, step: 'walk', at: now + 25 };
+        h.goTo(kid, toScreen(cam, { X: O.X + ((K.X - O.X) / dl) * rr, Z: O.Z + ((K.Z - O.Z) / dl) * rr }), 'ke sněhulákovi');
+        setSessionPhase(s, 'topple', now);
+        return 'running';
+      }
       return 'done';
+    }
+    case 'topple': {
+      const tp = d.topple!, kid = h.agent(tp.kid), sm = h.state.runtimeObjects?.find((o) => o.id === tp.id);
+      if (!kid || !sm) return 'done';
+      kid.look = { x: sm.x, y: sm.y - 40 };
+      if (tp.step === 'walk') {
+        if (h.moving(kid) && now < tp.at) return 'running';
+        tp.step = 'push'; tp.at = now + 0.9;
+        h.gesture(kid, 'push', { dur: 1.6 });
+        return 'running';
+      }
+      if (tp.step === 'push' && now >= tp.at) {
+        sm.collapseAt = now; tp.step = 'done'; tp.at = now + 2.2;
+        h.log('Děti shodily starého sněhuláka.', kid.id);
+        const cam = cameraFor(h.project.scene), sc = depthScaleAt(h.project.scene.depth, sm.y);
+        for (let i = 0; i < 8; i++) emit((h.state.particles ??= []), { kind: 'snowPuff', x: sm.x + (i - 4) * 3 * sc, y: sm.y - 30 * sc, t0: now + i * 0.04, life: 0.5 + (i % 3) * 0.15, w0: 0, sc, seed: Math.floor(now * 100) + i * 17 });
+        void cam;
+      }
+      if (tp.step === 'done' && now >= tp.at) { h.releaseWork(kid); return 'done'; }
+      return 'running';
+    }
   }
   return 'running';
+}
+
+function zoneCentre(h: SessionHost, s: ActivitySession): Vec2 {
+  const z = h.project.zones.find((q) => q.id === s.zoneId);
+  return z ? centre(z) : { x: 0, y: 0 };
+}
+/** Starý (≥ 5 min) hotový sněhulák do 5 m od hřiště, který ještě stojí. */
+function oldSnowmanNear(h: SessionHost, c: Vec2) {
+  const cam = cameraFor(h.project.scene), C = toWorld(cam, c), now = h.time();
+  return (h.state.runtimeObjects ?? []).find((o) => o.kind === 'snowman' && !o.collapseAt && now - o.createdAt > 300 && (o.stage === 'done' || o.stage === 'decorated')
+    && (() => { const O = toWorld(cam, o); return Math.hypot(O.X - C.X, O.Z - C.Z) < 5; })()) ?? null;
 }
 
 function corridorBlocked(h: SessionHost, s: ActivitySession, T: AgentState, R: AgentState): boolean {

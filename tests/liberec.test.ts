@@ -117,7 +117,7 @@ describe('Liberec – živý trh', () => {
     expect(grooms).toBeLessThan(sits); // ne automaticky při každém zastavení
   });
 
-  it('za 15 min: pohlazení psa (Z03) a upadlá rukavice (B03) – každá ztracená rukavice je zvednutá', () => {
+  it('za 15 min: pohlazení psa (Z03), upadlá rukavice (B03), koulovačka dětí a shození sněhuláka', () => {
     const sim = Simulation.create(lp.project, lp.manifests);
     let petFrames = 0;
     for (let i = 0; i < 60 * 900; i++) {
@@ -127,6 +127,9 @@ describe('Liberec – živý trh', () => {
     }
     expect(sim.state.log.some((l) => l.msg.includes('hladí psa'))).toBe(true);
     expect(petFrames).toBeGreaterThan(4);
+    // děti se koulují i samy (rodiče se dívají) a po hře shodí starého sněhuláka – místo se uvolní
+    expect(sim.state.log.some((l) => /^Děti \(.+\) se jdou koulovat/.test(l.msg))).toBe(true);
+    expect(sim.state.log.some((l) => l.msg.includes('shodily'))).toBe(true);
     const m = sim.state.log.map((l) => l.msg), lost = m.filter((x) => x.includes('ztratil(a) rukavici')).length;
     expect(lost).toBeGreaterThanOrEqual(1);
     // zvednutá je každá, kromě případně té, která právě leží (konec běhu)

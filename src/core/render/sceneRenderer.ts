@@ -14,7 +14,7 @@ import type { Simulation } from '../sim/simulation';
 import type { AgentState, PropState } from '../sim/types';
 import { characterVisual, localToScene } from './characterPose';
 import { drawFigure } from '../anim/testFigure';
-import { cameraFor, toScreen, toWorld, Q } from '../scene/camera';
+import { cameraFor, toScreen, toWorld, Q, type World } from '../scene/camera';
 import { SLED } from '../sim/sled';
 import { clearedVisible } from '../sim/clearing';
 import type { SimState } from '../sim/types';
@@ -542,7 +542,7 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
   if (sim) {
     // sněhuláci (runtime objekty) a rozpracované koule – řazené podle bodu dotyku se zemí
     const cam = cameraFor(sc);
-    for (const o of sim.state.runtimeObjects ?? []) items.push({ key: o.y, tie: 15000, draw: () => drawSnowman(ctx, cam, o) });
+    for (const o of sim.state.runtimeObjects ?? []) items.push({ key: o.y, tie: 15000, draw: () => drawSnowman(ctx, cam, o, opts.time) });
     // psi a kočky (+ vodítko od ruky majitele k obojku)
     for (const an of sim.state.animals ?? []) {
       if (an.hidden) continue;
@@ -681,8 +681,9 @@ function drawSnowBall(ctx: Ctx, cam: ReturnType<typeof cameraFor>, X: number, Z:
 }
 
 /** Sněhulák ze tří koulí (runtime objekt) s ozdobami podle postupu stavby. */
-function drawSnowman(ctx: Ctx, cam: ReturnType<typeof cameraFor>, o: NonNullable<SimState['runtimeObjects']>[number]) {
+function drawSnowman(ctx: Ctx, cam: ReturnType<typeof cameraFor>, o: NonNullable<SimState['runtimeObjects']>[number], t = 0) {
   const P = toWorld(cam, { x: o.x, y: o.y });
+  if (o.collapseAt !== undefined && t >= o.collapseAt) { drawFallenSnowman(ctx, cam, o, P, t - o.collapseAt); return; }
   const [r0, r1, r2] = o.radii;
   const h0 = r0, h1 = 2 * r0 * 0.92 + r1 * 0.92, h2 = 2 * r0 * 0.92 + 2 * r1 * 0.92 + r2 * 0.9;
   drawSnowBall(ctx, cam, P.X, P.Z, h0, r0, 0, o.seed % 97, true, 'snowman_base');
@@ -711,6 +712,27 @@ function drawSnowman(ctx: Ctx, cam: ReturnType<typeof cameraFor>, o: NonNullable
       ctx.fillStyle = '#e0782f'; ctx.beginPath(); ctx.moveTo(q.x, q.y - px(0.014)); ctx.lineTo(q.x + px(0.09), q.y + px(0.006)); ctx.lineTo(q.x, q.y + px(0.014)); ctx.closePath(); ctx.fill();
     }
   }
+}
+
+/**
+ * Shozený sněhulák: hlava a prostřední koule se skutálí na stranu a sesednou (0,9 s), pak zůstane
+ * nízká hromádka sněhu (sprite hromady), která během 2 min zapadne (nemizí naráz).
+ */
+function drawFallenSnowman(ctx: Ctx, cam: ReturnType<typeof cameraFor>, o: NonNullable<SimState['runtimeObjects']>[number], P: World, age: number) {
+  const [r0, r1, r2] = o.radii, u = Math.min(1, age / 0.9), e = u * u, dir = (o.seed % 2) ? 1 : -1;
+  const fade = age < 60 ? 1 : Math.max(0, 1 - (age - 60) / 60);
+  const pile = sprite('snow_pile'), px = (m: number) => (m * cam.f) / P.Z, g = toScreen(cam, { X: P.X, Z: P.Z });
+  ctx.save(); ctx.globalAlpha = fade;
+  if (pile) { ctx.globalAlpha = fade * Math.min(1, 0.25 + u); const W = px(r0 * 3.2 + 0.2), H = (W * pile.height) / pile.width * (0.6 + 0.6 * u); ctx.drawImage(pile, g.x - W / 2, g.y - H * 0.92, W, H); }
+  if (u < 1) {
+    // koule při pádu: spodní se rozplácne, prostřední a hlava odpadnou stranou a rozpadnou se
+    // (plně viditelné, až na konci pádu splynou s hromádkou)
+    ctx.globalAlpha = fade * Math.min(1, (1 - u) / 0.3);
+    drawSnowBall(ctx, cam, P.X, P.Z, r0 * (1 - 0.5 * e), r0 * (1 - 0.25 * e), 0, o.seed % 97, false, 'snowman_base');
+    if (r1) drawSnowBall(ctx, cam, P.X + dir * r0 * 1.2 * e, P.Z - 0.02, (2 * r0 + r1) * (1 - e) + r1 * 0.6 * e, r1 * (1 - 0.3 * e), e * 1.5 * dir, (o.seed % 97) + 3, false, 'snowman_middle');
+    if (r2) drawSnowBall(ctx, cam, P.X + dir * (r0 + r1) * 1.6 * e, P.Z - 0.03, (2 * r0 + 2 * r1 + r2) * (1 - e) + r2 * 0.6 * e, r2 * (1 - 0.3 * e), e * 2.5 * dir, (o.seed % 97) + 5, false);
+  }
+  ctx.restore();
 }
 
 /** Sněhulák z malovaných spritů: hlava, uhlíky (oči, knoflíky), mrkev, pletená šála. */

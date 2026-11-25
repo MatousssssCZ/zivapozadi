@@ -72,11 +72,12 @@ export interface SessionHost {
   /** ukončí držené pracovní gesto (tlačení) jeho výstupem */ releaseWork(a: AgentState): void;
   log(msg: string, agentId?: string): void;
   isSnow(p: Vec2): boolean;
+  /** je postava dítě (dětská šablona těla) */ isChild?(a: AgentState): boolean;
 }
 
 interface Ball { X: number; Z: number; H: number; r: number; rot: number; d: number; k: number; dir: World; stage: 0 | 1 | 2; rMax: number }
 interface SnowmanData {
-  spot: Vec2; objId: string; roles: [string, string];
+  spot: Vec2; slot?: number; objId: string; roles: [string, string];
   ball?: Ball | null; path?: Vec2[]; until?: number; step?: string; decor?: number;
   liftFrom?: World; liftT0?: number; liftDur?: number;
 }
@@ -88,15 +89,24 @@ export function gatherTime(h: Pick<SessionHost, 'project'>, who: AgentState[], t
 const D = (s: ActivitySession) => s.data as unknown as SnowmanData;
 
 /** Střed zóny a test, zda je zóna použitelná (sníh, žádný sněhulák, nikdo v ní nestaví). */
-export function snowmanSpot(zone: ActivityZone): Vec2 {
+/** Místo pro sněhuláka: střed zóny posunutý vlevo / vpravo (dvě místa – staví se opakovaně). */
+export function snowmanSpot(zone: ActivityZone, slot = 0): Vec2 {
   const b = zone.bounds;
-  return { x: b.reduce((s, p) => s + p.x, 0) / b.length, y: b.reduce((s, p) => s + p.y, 0) / b.length };
+  const c = { x: b.reduce((s, p) => s + p.x, 0) / b.length, y: b.reduce((s, p) => s + p.y, 0) / b.length };
+  const w = Math.max(...b.map((p) => p.x)) - Math.min(...b.map((p) => p.x));
+  return { x: c.x + (slot === 0 ? -0.22 : 0.22) * w, y: c.y + (slot === 0 ? -4 : 6) };
+}
+/** Volné místo v zóně (bez stojícího i rozpadajícího se sněhuláka), nebo null. */
+export function freeSnowmanSlot(host: Pick<SessionHost, 'state'>, zone: ActivityZone): number | null {
+  for (const k of [0, 1]) if (!host.state.runtimeObjects?.some((o) => o.zoneId === zone.id && (o.slot ?? 0) === k)) return k;
+  return null;
 }
 export function snowmanZoneFree(host: Pick<SessionHost, 'state' | 'isSnow'>, zone: ActivityZone): string | null {
   if (!zone.enabled || zone.activityType !== 'snowman' || zone.bounds.length < 3) return 'Zóna je vypnutá nebo nemá vymezený prostor.';
-  if (!host.isSnow(snowmanSpot(zone))) return 'V zóně není sníh.';
-  if (host.state.runtimeObjects?.some((o) => o.zoneId === zone.id)) return 'V zóně už sněhulák stojí.';
-  if ((host.state.runtimeObjects?.filter((o) => o.kind === 'snowman').length ?? 0) >= MAX_SNOWMEN) return 'Ve scéně už jsou 2 sněhuláci.';
+  const slot = freeSnowmanSlot(host, zone);
+  if (slot === null) return 'V zóně už stojí dva sněhuláci.';
+  if (!host.isSnow(snowmanSpot(zone, slot))) return 'V zóně není sníh.';
+  if ((host.state.runtimeObjects?.filter((o) => o.kind === 'snowman' && !o.collapseAt).length ?? 0) >= MAX_SNOWMEN) return 'Ve scéně už jsou 2 sněhuláci.';
   if (host.state.sessions?.some((s) => s.zoneId === zone.id)) return 'V zóně se už staví.';
   return null;
 }
@@ -106,12 +116,14 @@ export function startSnowman(host: SessionHost, zone: ActivityZone, a: AgentStat
   if (snowmanZoneFree(host, zone)) return null;
   if (a.holding || b.holding) return null;
   const now = host.time();
-  const spot = snowmanSpot(zone);
+  const slot = freeSnowmanSlot(host, zone) ?? 0;
+  const spot = snowmanSpot(zone, slot);
+  const n = (host.state.runtimeObjects?.length ?? 0) + Math.floor(now);
   const s = createSession(host.state, host.res, {
     type: 'snowman', zoneId: zone.id, participantIds: [a.id, b.id], roles: { [a.id]: 'lead', [b.id]: 'helper' },
     // sejití: 45 s + čas cesty toho vzdálenějšího (oba už jsou u zóny – setkání bylo u ní)
     keys: [`zone:${zone.id}`], now, deadline: now + 45 + gatherTime(host, [a, b], spot), seed: host.project.seed, phase: 'gather',
-    data: { spot, objId: `snowman_${zone.id}`, roles: [a.id, b.id] } as unknown as Record<string, unknown>,
+    data: { spot, slot, objId: `snowman_${zone.id}_${slot}_${n}`, roles: [a.id, b.id] } as unknown as Record<string, unknown>,
   });
   if (!s) return null;
   for (const x of [a, b]) {
@@ -196,7 +208,7 @@ export function stepSnowman(h: SessionHost, s: ActivitySession): 'running' | 'do
       if (k === 0) {
         // spodní koule je na místě: vzniká sněhulák (runtime objekt s kolizí)
         const sp = W2S(h, { X: b.X, Z: b.Z });
-        const obj: RuntimeObject = { id: d.objId, kind: 'snowman', zoneId: s.zoneId, x: sp.x, y: sp.y, radii: [b.r, 0, 0], stage: 'base', decorations: [], createdAt: now, seed: Math.floor(randRange(s.rng, 0, 1e6)) };
+        const obj: RuntimeObject = { id: d.objId, kind: 'snowman', zoneId: s.zoneId, x: sp.x, y: sp.y, radii: [b.r, 0, 0], stage: 'base', decorations: [], createdAt: now, seed: Math.floor(randRange(s.rng, 0, 1e6)), slot: d.slot ?? 0 };
         (h.state.runtimeObjects ??= []).push(obj);
         d.ball = null;
         h.goTo(R, standby(h, d, 0), 'odstoupí');
@@ -302,7 +314,7 @@ export function abortSnowman(h: SessionHost, s: ActivitySession): void {
   const d = D(s);
   if (d.ball && !h.state.runtimeObjects?.some((o) => o.id === d.objId)) {
     const sp = W2S(h, { X: d.ball.X, Z: d.ball.Z });
-    (h.state.runtimeObjects ??= []).push({ id: d.objId, kind: 'snowman', zoneId: s.zoneId, x: sp.x, y: sp.y, radii: [d.ball.r, 0, 0], stage: 'base', decorations: [], createdAt: h.time(), seed: 1 });
+    (h.state.runtimeObjects ??= []).push({ id: d.objId, kind: 'snowman', zoneId: s.zoneId, x: sp.x, y: sp.y, radii: [d.ball.r, 0, 0], stage: 'base', decorations: [], createdAt: h.time(), seed: 1, slot: d.slot ?? 0 });
   }
   finishSession(h, s);
 }

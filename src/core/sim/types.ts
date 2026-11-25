@@ -220,6 +220,8 @@ export interface RuntimeObject {
   decorations: string[];
   createdAt: number;
   seed: number;
+  /** místo v zóně (0 / 1 – vlevo / vpravo od středu) */ slot?: number;
+  /** kdy ho děti shodily (rozpadá se na hromádku, ta pak zapadne a objekt zmizí) */ collapseAt?: number;
 }
 
 /** Otisk boty ve sněhu: střed podrážky (X, Z v metrech), směr boty, velikost, čas vzniku. */
