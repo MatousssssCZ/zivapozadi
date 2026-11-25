@@ -183,7 +183,7 @@ export function legIK3D(H: Vec2, A: Vec2, u: number, g: Vec2, l1: number, l2: nu
  * délkách a míří DOLŮ (pod spojnici rameno–zápěstí), pak se promítne. Váha w plynule prolne s rovinným
  * řešením (začátek/konec gesta). Zápěstí zůstává přesně v cíli (pokud je dosažitelné).
  */
-export function armIK3D(R: Vec2, A: Vec2, g: Vec2, l1: number, l2: number, w = 1): Limb {
+export function armIK3D(R: Vec2, A: Vec2, g: Vec2, l1: number, l2: number, w = 1, anatomical = false): Limb {
   const flat = ik(R, A, l1, l2, 1);
   const gx = Math.abs(g.x) > 0.3 ? g.x : Math.sign(g.x || 1) * 0.3;
   const d = { x: A.x - R.x, y: A.y - R.y };
@@ -195,7 +195,9 @@ export function armIK3D(R: Vec2, A: Vec2, g: Vec2, l1: number, l2: number, w = 1
   // (loket se otáčí přes hloubku) – žádný přeskok, loket nikdy nad rukou visící dolů
   const base = Math.atan2(vv, uu), al = Math.acos(clamp((l1 * l1 + D * D - l2 * l2) / (2 * l1 * Math.max(D, 1e-6)), -1, 1));
   const e1 = { u: Math.cos(base + al) * l1, v: Math.sin(base + al) * l1 }, e2 = { u: Math.cos(base - al) * l1, v: Math.sin(base - al) * l1 };
-  const c = clamp((e1.v - e2.v) / (0.3 * l1), -1, 1); // +1 = první řešení; mezi nimi otočení lokte do hloubky
+  // anatomicky (nástroj v obou rukou): předloktí se při ohnutí stáčí vždy dopředu → loket míří dozadu
+  // (řešení base + al); jinak převládne nižší loket (gesta)
+  const c = anatomical ? 1 : clamp((e1.v - e2.v) / (0.3 * l1), -1, 1); // +1 = první řešení; mezi nimi otočení lokte do hloubky
   const cu = (e1.u + e2.u) / 2, cv = (e1.v + e2.v) / 2;
   const eu = cu + (e1.u - cu) * c, ev = cv + (e1.v - cv) * c;
   const joint3 = { x: R.x + gx * eu, y: R.y + ev + g.y * eu };
@@ -429,7 +431,14 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
   const flat = (p: Vec2, i: number): Vec2 => ({ x: p.x, y: p.y - shear * (p.x - hipRoots[i].x) });
   const unflat = (p: Vec2, i: number): Vec2 => ({ x: p.x, y: p.y + shear * (p.x - hipRoots[i].x) });
   const reachAdjust = (f: { u: number; h: number; theta: number }, i: number) => {
-    const reach = (ff: { u: number; h: number }) => { const q = flat(ankleXY(ff, i), i); return Math.hypot(q.x - hipRoots[i].x, q.y - hipRoots[i].y); };
+    // délka nohy v obraze i skutečná (3D, vodorovná složka ve směru chodidla) – stejné míry jako
+    // při snižování pánve níže, aby se úprava paty a pokles pánve nepřebíjely skokem
+    const reach = (ff: { u: number; h: number }) => {
+      const q = flat(ankleXY(ff, i), i), dx = q.x - hipRoots[i].x, dy = q.y - hipRoots[i].y, g = gOf(i);
+      const an = isAnch(i) && rel[i] != null ? rel[i]! + ff.u : ff.u, kk = clamp((Math.abs(g.x) - 0.45) / 0.35, 0, 1);
+      const u = kk > 0 ? an + (dx / g.x - an) * kk : an, vv = dy - g.y * u;
+      return Math.max(Math.hypot(dx, dy), Math.hypot(u, vv));
+    };
     if (reach(f) <= maxD) return f;
     // přednoží (pevný bod) a natočení: A = toe + R(θ)·(−toe, AH)
     const toeU = f.u - (-geom.toe * Math.cos(f.theta) - geom.AH * Math.sin(f.theta));
@@ -445,7 +454,16 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
     const ev = gaitEvents(w);
     for (let i = 0; i < 2; i++) {
       const g = gaitFeet[i];
-      if (g.contact === 'toe') feet[i] = reachAdjust(feet[i], i);
+      // špička: když noha nedosáhne, zvedne se pata víc (otočení boty kolem přednoží) – postupně během
+      // ~12 % kroku po zvednutí paty; zbytek mezitím dorovná pánev (jinak při zvednutí paty skok pánve)
+      if (g.contact === 'toe') {
+        const ra = reachAdjust(feet[i], i), k = smoothstep((qs[i] - ev.heelRise) / 0.12);
+        if (k >= 1) feet[i] = ra;
+        else {
+          const f0 = feet[i], toeU = f0.u - (-geom.toe * Math.cos(f0.theta) - geom.AH * Math.sin(f0.theta)), th = f0.theta + (ra.theta - f0.theta) * k;
+          feet[i] = { u: toeU + (-geom.toe * Math.cos(th) - geom.AH * Math.sin(th)), h: -geom.toe * Math.sin(th) + geom.AH * Math.cos(th), theta: th };
+        }
+      }
       else if (g.contact === 'swing') {
         // úpravu z konce odvalení plynule přenést do začátku švihu (žádné cuknutí při odlepení)
         const sw = (qs[i] - ev.toeOff) / (1 - ev.toeOff);
@@ -499,7 +517,17 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
     if (isAnch(i)) return { x: o.gx, y: o.gy! };
     const k = swingCarry[i]; return k > 0 ? { x: gfx + (o.gx - gfx) * k, y: gfy + (o.gy! - gfy) * k } : gOf(i);
   };
-  const legU = (i: number) => { const g = gLeg(i), dx = ankles[i].x - hipRoots[i].x; return Math.abs(g.x) > 0.45 ? dx / g.x : feet[i].u; };
+  // (náhrada při chůzi ke kameře / od ní: u opřené nohy s kotvou je feet.u vůči kotvě paty, ne vůči
+  // pánvi → přičíst polohu kotvy vůči pánvi; jinak noha 27 j. za tělem vypadala jako 14 j. před ním)
+  const uPelvis = (i: number, u: number) => (isAnch(i) && rel[i] != null ? rel[i]! + u : u);
+  // průmět v obraze dx / g.x je přesný jen při velkém |g.x|; u hranice (chůze šikmo ke kameře) dělení
+  // malým číslem zvětší drobnou boční odchylku na desítky jednotek (dítě pak „sedlo“) → plynulý přechod
+  // k hodnotě z kroku (pevný bod opory vůči pánvi)
+  const legU = (i: number) => {
+    const g = gLeg(i), dx = ankles[i].x - hipRoots[i].x, an = uPelvis(i, feet[i].u);
+    const k = clamp((Math.abs(g.x) - 0.45) / 0.35, 0, 1);
+    return k > 0 ? an + (dx / g.x - an) * k : an;
+  };
 
 
   let lower = 0;
@@ -768,7 +796,7 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
     const held: [boolean, boolean] = [false, false];
     for (const i of [fore, rear]) {
       if (tool.oneHand && i === rear) continue;
-      const l = armIK3D(arms[i].root, sol.grips[i], gF, B.upperArm, B.forearm, 1);
+      const l = armIK3D(arms[i].root, sol.grips[i], gF, B.upperArm, B.forearm, 1, true);
       // nedosažitelný horní úchop (postava bokem, přechod do nesení): lopatu drží jen dolní ruka
       if (i === rear && Math.hypot(l.end.x - sol.grips[i].x, l.end.y - sol.grips[i].y) > 0.5) continue;
       arms[i] = l; held[i] = true;
