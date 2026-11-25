@@ -51,7 +51,7 @@ export interface RinkConfig {
   entry?: { benchId: string; gate: Vec2; inIce: Vec2; session?: [number, number]; offIce?: [number, number]; startOnIce?: number; drinkChance?: number };
   /** odrazy postav na ledě (síla 0–1, délka jako podíl výšky postavy) a částice ledu při brzdění */ reflections?: { alpha: number; len: number } | false; particles?: boolean;
   /** pády: první pokus a interval (s), osobní odstup (s); prvky: interval (s), osobní odstup (s), skok */
-  events?: { fallEvery?: [number, number]; fallPersonal?: number; trickEvery?: [number, number]; trickPersonal?: [number, number]; jump?: boolean; tricks?: Partial<Record<TrickKind, number>> };
+  events?: { fallEvery?: [number, number]; fallPersonal?: number; /** podíl zaváhání, která skončí pádem (0,6) */ fallChance?: number; trickEvery?: [number, number]; trickPersonal?: [number, number]; jump?: boolean; tricks?: Partial<Record<TrickKind, number>> };
 }
 /** oneFoot = skluz na jedné noze, backward = jízda vzad, spin = pirueta na místě, jump = skok s otočkou
  *  ve vzduchu (rozmach volnou nohou, odraz, otočka, dopad na jednu nohu), arabesque = holubička, hop = (vypnuto) */
@@ -432,7 +432,7 @@ export function stepRinkEvents(c: RinkCtx): void {
       let r = rand(st.rng) * tot; const s = cands.find((x) => (r -= SKATE_PROFILES[x.prof].fallW) < 0) ?? cands[0];
       // podnět: zakolísání (zaváhání); většina ustojí, část skončí pádem
       s.st = 'WOBBLE'; s.tSt = 0; s.wob = 1; st.stats.wobbles++;
-      (s as Skater & { willFall?: boolean }).willFall = rand(st.rng) < 0.6; st.event = { kind: 'fall', id: s.id, t0: t };
+      (s as Skater & { willFall?: boolean }).willFall = rand(st.rng) < (ev.fallChance ?? 0.6); st.event = { kind: 'fall', id: s.id, t0: t };
     }
   }
   // prvek: globální interval 90–150 s; kandidáti s dovedností, osobní odstup jen při ≥ 2 způsobilých
@@ -535,6 +535,15 @@ export function separate(all: Skater[], R = 0.24): void {
 }
 
 /** stopy nožů: jen skutečný kontakt zatížené brusle, omezený počet, postupně mizí */
+/** Po oddělení těl: nikdo nesmí zůstat za okrajem ani těsně u něj (nejméně 0,3 m dovnitř). */
+export function clampToIce(all: Skater[], geo: IceGeo, m = 0.3): void {
+  for (const s of all) {
+    const p = { X: s.X, Z: s.Z }, rn = railNearest(geo.poly, p), inside = insideW(p, geo.poly);
+    if (inside && rn.d >= m) continue;
+    const dx = geo.cx - rn.q.X, dz = geo.cz - rn.q.Z, d = Math.hypot(dx, dz) || 1; // dovnitř: k těžišti
+    s.X = rn.q.X + (dx / d) * m; s.Z = rn.q.Z + (dz / d) * m;
+  }
+}
 export function addTrails(st: RinkState, s: Skater, t: number, prevXZ: World) {
   if (s.v < 0.25 || s.st === 'FALL' || s.st === 'RECOVER') return;
   const fx = Math.cos(s.psi), fz = Math.sin(s.psi), side = { X: -fz, Z: fx };

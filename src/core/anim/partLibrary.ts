@@ -80,6 +80,8 @@ export interface BodyTemplateDef extends SkeletonTemplate {
   drawOrder: Partial<Record<ViewId, string[]>>;
   /** Ztmavení vzdálených končetin (násobek jasu). */
   farShade: number;
+  /** Protažení dílu trupu směrem dolů (od ramen, která zůstanou na místě): delší bunda/kabát → opticky níž pas. */
+  torsoStretch?: number;
 }
 
 export interface PartLibrary {

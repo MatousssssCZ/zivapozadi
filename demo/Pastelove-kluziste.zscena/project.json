@@ -3,8 +3,8 @@
   "formatVersion": 1,
   "meta": {
     "name": "Pastelové vánoční kluziště",
-    "createdAt": "2026-11-25T20:57:59.946Z",
-    "modifiedAt": "2026-11-25T20:58:00.127Z",
+    "createdAt": "2026-11-25T21:20:19.272Z",
+    "modifiedAt": "2026-11-25T21:20:19.408Z",
     "appVersion": "0.1.0"
   },
   "seed": 3141,
@@ -4768,7 +4768,7 @@
       },
       "routine": "visitor",
       "activities": {},
-      "skate": "unsure"
+      "skate": "rec"
     },
     {
       "id": "sk_12",
@@ -4827,7 +4827,7 @@
       },
       "routine": "visitor",
       "activities": {},
-      "skate": "unsure"
+      "skate": "good"
     },
     {
       "id": "sk_13",
@@ -5004,11 +5004,70 @@
       },
       "routine": "visitor",
       "activities": {},
+      "skate": "good"
+    },
+    {
+      "id": "sk_16",
+      "name": "Bruslař 16",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "pl",
+      "baseScale": 1,
+      "walkSpeed": 60,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 2101481469,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_neckwarmer_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_10_cg"
+        },
+        "colors": {
+          "jacket": "tmave-seda",
+          "hat": "kremova",
+          "scarf": "vinova",
+          "gloves": "vinova",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 1.038,
+          "build": 1.035
+        },
+        "motion": {
+          "strideScale": 1.097,
+          "armSwing": 1.001,
+          "bob": 0.911,
+          "sway": 1.003,
+          "idleTempo": 0.892,
+          "lean": 0.327,
+          "speed": 1.006,
+          "phase": 0.641,
+          "armLag": -0.948,
+          "armLR": 1.112
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {},
       "skate": "expert"
     },
     {
-      "id": "sk_kid_b1",
-      "name": "Dítě poprvé na ledě 1",
+      "id": "sk_kid_g1",
+      "name": "Šikovné dítě 1",
       "assetId": "builtin_postava_dite",
       "startNodeId": "pl",
       "baseScale": 1,
@@ -5063,12 +5122,11 @@
       },
       "routine": "visitor",
       "activities": {},
-      "skate": "beginnerKid",
-      "skatePair": "sk_1"
+      "skate": "goodKid"
     },
     {
-      "id": "sk_kid_b2",
-      "name": "Dítě poprvé na ledě 2",
+      "id": "sk_kid_g2",
+      "name": "Šikovné dítě 2",
       "assetId": "builtin_postava_dite",
       "startNodeId": "pl",
       "baseScale": 1,
@@ -5118,65 +5176,6 @@
           "phase": 0.051,
           "armLag": 2.463,
           "armLR": 1.148
-        },
-        "locks": []
-      },
-      "routine": "visitor",
-      "activities": {},
-      "skate": "beginnerKid"
-    },
-    {
-      "id": "sk_kid_g1",
-      "name": "Šikovné dítě 1",
-      "assetId": "builtin_postava_dite",
-      "startNodeId": "pl",
-      "baseScale": 1,
-      "walkSpeed": 60,
-      "palette": {
-        "coat": "#c8553d",
-        "hat": "#f2c14e",
-        "scarf": "#f7f3e3",
-        "skin": "#f1c9a5",
-        "trousers": "#3b4a6b"
-      },
-      "wander": true,
-      "appearance": {
-        "generator": "parts",
-        "libraryId": "malovane-dite-v1",
-        "seed": 1222909558,
-        "bodyTemplate": "child-cg",
-        "variants": {
-          "jacket": "jacket_coat_child",
-          "hat": "hat_beanie_child",
-          "scarf": "scarf_long_child",
-          "trousers": "trousers_child",
-          "boots": "boots_child",
-          "gloves": "gloves_child",
-          "head": "head_child"
-        },
-        "colors": {
-          "jacket": "petrolejova",
-          "hat": "tmave-seda",
-          "scarf": "hneda",
-          "gloves": "hneda",
-          "trousers": "hneda",
-          "boots": "tmave-seda"
-        },
-        "proportions": {
-          "height": 1.008,
-          "build": 0.982
-        },
-        "motion": {
-          "strideScale": 0.948,
-          "armSwing": 1.027,
-          "bob": 0.829,
-          "sway": 0.847,
-          "idleTempo": 1.124,
-          "lean": 0.048,
-          "speed": 1.07,
-          "phase": 0.581,
-          "armLag": 0.585,
-          "armLR": 0.875
         },
         "locks": []
       },
@@ -6204,10 +6203,11 @@
         "hop": 0
       },
       "fallEvery": [
-        110,
-        210
+        60,
+        120
       ],
-      "fallPersonal": 200
+      "fallPersonal": 160,
+      "fallChance": 0.85
     },
     "reflections": {
       "alpha": 0.2,

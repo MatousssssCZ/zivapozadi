@@ -256,17 +256,17 @@ function stepRoll(h: SessionHost, s: ActivitySession, a: AgentState, t: CTask): 
   const d = D(s), f = fieldOf(h, s), b = d.balls.find((x) => x.k === t.ball)!;
   const now = h.time(), dt = 1 / 60;
   // zády k obrazu: natočení od kamery, s mírným pootočením ke kouli (v obraze pak zadní pohled)
-  const face = () => { const P = S2W(h, a.pos), g = Math.atan2(b.Z - P.Z, b.X - P.X); a.turnTo = Math.PI / 2 + 0.3 * Math.sin(g - Math.PI / 2); a.look = null; };
+  const face = () => { const P = S2W(h, a.pos); a.turnTo = Math.PI / 2 - Math.sign(b.X - P.X || 1) * 0.45; a.look = null; }; // šikmo zezadu (3/4) ke kouli: dřep i ruce jsou vidět
   if (t.step === 'scoop') {
     if (now < t.until!) return false;
     t.step = 'push'; t.n = 0; t.until = now;
-    a.anim.sit = { kind: b.k === 0 ? 'kneel' : 'bend', t: 0, dur: 1e6, w: 0 };
+    a.anim.sit = { kind: 'squat', t: 0, dur: 1e6, w: 0, r: b.r };
     return false;
   }
   if (t.step === 'push') {
     face();
     const w = a.anim.sit;
-    if (w) { w.t += dt; w.w = Math.min(1, w.t / 0.9, Math.max(0, (w.dur - w.t) / 0.9)); }
+    if (w) { w.t += dt; w.w = Math.min(1, w.t / 0.9, Math.max(0, (w.dur - w.t) / 0.9)); w.r = b.r; }
     if (b.m < b.target) {
       // přihrnutí sněhu: jeden kotouč z okolí za takt (rychlost podle cílové doby), sníh ubraný ze země
       const per = Math.PI * GATHER_R * GATHER_R * SNOW.depth * SNOW.density, every = FORM_T[b.k] / Math.max(1, b.target / per);

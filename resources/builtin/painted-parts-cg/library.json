@@ -203,7 +203,8 @@
    "foot": {
     "heel": 3.33,
     "toe": 7.95
-   }
+   },
+   "torsoStretch": 1.09
   }
  ],
  "groups": [

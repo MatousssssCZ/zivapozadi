@@ -2,7 +2,7 @@
   "format": "zimni-scena-postava",
   "formatVersion": 1,
   "id": "painted-cg",
-  "name": "Malovan\u00e1 postava (ChatGPT d\u00edly)",
+  "name": "Malovaná postava (ChatGPT díly)",
   "provisional": false,
   "backend": "skeleton",
   "height": 130,
@@ -120,7 +120,10 @@
   ],
   "supportedActivities": [
     "coffee",
-    "shop"
+    "shop",
+    "viewing",
+    "snowman",
+    "snowballFight"
   ],
   "rig": {
     "library": "painted-parts-cg/library.json",

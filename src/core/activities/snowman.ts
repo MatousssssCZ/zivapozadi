@@ -193,13 +193,13 @@ export function stepSnowman(h: SessionHost, s: ActivitySession): 'running' | 'do
         // nabrat sníh a uplácat malou kouli, pak ji na místě tvořit (vkleče / v předklonu, zády ke kameře)
         if (now < d.until!) return 'running';
         d.step = 'push'; d.liftT0 = now;
-        R.anim.sit = { kind: k === 0 ? 'kneel' : 'bend', t: 0, dur: 1e6, w: 0 };
+        R.anim.sit = { kind: 'squat', t: 0, dur: 1e6, w: 0, r: d.ball!.r };
         return 'running';
       }
       {
         const b = d.ball!, w = R.anim.sit, u = Math.min(1, (now - d.liftT0!) / FORM_T[k]);
-        R.turnTo = Math.PI / 2; R.look = null; // zády k obrazu
-        if (w) { w.t += 1 / 60; w.w = Math.min(1, w.t / 0.9, Math.max(0, (w.dur - w.t) / 0.9)); }
+        { const P = S2W(h, R.pos); R.turnTo = Math.PI / 2 - Math.sign(b.X - P.X || 1) * 0.45; R.look = null; } // šikmo zezadu (3/4) ke kouli
+        if (w) { w.t += 1 / 60; w.w = Math.min(1, w.t / 0.9, Math.max(0, (w.dur - w.t) / 0.9)); w.r = b.r; }
         // koule roste rovnoměrně v objemu (přihrnutý a uplácaný sníh z okolí), pomalu se natáčí
         b.r = Math.cbrt(R0 ** 3 + (b.rMax ** 3 - R0 ** 3) * u); b.H = b.r; b.rot = u * 0.6;
         if (u < 1) return 'running';

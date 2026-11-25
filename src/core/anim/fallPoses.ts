@@ -112,8 +112,8 @@ export const fallPhaseAt = (v: FallVariant, t: number): FallPhase => sampleFall(
  * `change`: předklon, jedna noha zvednutá, obě ruce u boty (šněrování), v polovině druhá noha.
  * Klíč je vůči bodu na zemi pod pánví (místo k sezení); prolíná se vahou (sednutí / vstávání).
  */
-export function benchPose(kind: 'rest' | 'change' | 'kneel' | 'bend', t: number, dur: number): FallKey {
-  if (kind === 'kneel' || kind === 'bend') return workPose(kind, t);
+export function benchPose(kind: 'rest' | 'change' | 'kneel' | 'bend' | 'squat', t: number, dur: number, r?: number): FallKey {
+  if (kind === 'kneel' || kind === 'bend' || kind === 'squat') return workPose(kind, t, r);
   const SEAT = 0.56; // pánev na sedáku (0,45 m + stehna) v délkách nohy
   const base: FallKey = { t: 0, ph: 'pause', hip: W(-0.12, SEAT), pitch: -4, head: 4, feet: [W(0.38, 0, -0.1), W(0.44, 0, 0.1)], hands: [W(0.22, 0.6, -0.15), W(0.26, 0.6, 0.15)], c: ['s', 'f0', 'f1'] };
   if (kind === 'rest') { base.head = 4 + Math.sin(t * 0.4) * 3; return base; }
@@ -126,20 +126,26 @@ export function benchPose(kind: 'rest' | 'change' | 'kneel' | 'bend', t: number,
 }
 
 /**
- * Práce u země (tvoření koule sněhuláka): `kneel` – klečí na obou kolenou, předklon, ruce přihrnují
- * a uplácávají sníh u spodní koule; `bend` – stojí v mírném předklonu s pokrčenými koleny, ruce u koule.
- * Ruce se střídají (přihrnutí z boku → uplácání shora), hlava sleduje práci.
+ * Práce u koule sněhuláka v dřepu: pánev nízko, kolena vpředu, trup jen mírně nakloněný, hlava sleduje
+ * ruce. Ruce klidně uhlazují a uplácávají kouli (malé plynulé oblouky, střídavě), občas jedna ruka
+ * nabere sníh u země a přiloží ho na kouli. `r` = poloměr koule (m) – určuje výšku rukou.
  */
-export function workPose(kind: 'kneel' | 'bend', t: number): FallKey {
-  const ph = (t * 0.9) % 1, sw = Math.sin(t * 2 * Math.PI * 0.9), pat = Math.max(0, Math.sin(t * 2 * Math.PI * 1.8)) * 0.05;
-  if (kind === 'kneel') return {
-    t: 0, ph: 'pause', hip: W(-0.02, 0.5), pitch: 34 + 4 * sw, head: -12, roll: 3 * sw,
-    feet: [W(-0.46, 0.06, -0.12, -70), W(-0.48, 0.06, 0.12, -70)],
-    hands: [W(0.42 + 0.08 * sw, 0.16 + pat, -0.2 + 0.08 * Math.max(0, sw)), W(0.44 - 0.08 * sw, 0.18 + (ph > 0.5 ? pat : 0), 0.2 - 0.08 * Math.max(0, -sw))], c: ['k0', 'k1'],
+export function workPose(kind: 'kneel' | 'bend' | 'squat', t: number, r = 0.2): FallKey {
+  const Lm = 0.9, rb = r / Lm, reach = 0.3 / Lm + rb * 0.85; // střed koule před chodidly (délky nohy)
+  const w = 2 * Math.PI * 0.55, a0 = Math.sin(w * t), a1 = Math.sin(w * t + Math.PI * 0.85);
+  // nabírání sněhu: každých 5 s jedna ruka (střídavě) – dolů k zemi vedle koule, zpět ke kouli (2 s)
+  const cyc = t % 5, which = Math.floor(t / 5) % 2, sc = cyc < 2 ? Math.sin((Math.PI * cyc) / 2) : 0, scoop = sc * sc * (3 - 2 * sc);
+  const hb = Math.max(0.12, rb * 1.05); // výška rukou na kouli (spodní část – bok)
+  const hand = (i: 0 | 1, ph: number): P3 => {
+    const lat = (i ? 1 : -1) * (rb * 0.75 + 0.06);
+    const on: P3 = W(reach - rb * 0.55 + 0.03 * ph, hb + 0.04 * Math.cos(ph * 2), lat * (1 - 0.15 * ph));
+    if (i !== which || scoop <= 0) return on;
+    const down: P3 = W(reach * 0.75, 0.02, lat * 1.5);
+    return W(on.u + (down.u - on.u) * scoop, on.h + (down.h - on.h) * scoop, (on.lat ?? 0) + ((down.lat ?? 0) - (on.lat ?? 0)) * scoop);
   };
   return {
-    t: 0, ph: 'pause', hip: W(-0.06, 0.9), pitch: 30 + 4 * sw, head: -10, roll: 2 * sw,
-    feet: [W(-0.08, 0, -0.13), W(0.06, 0, 0.13)],
-    hands: [W(0.4 + 0.06 * sw, 0.42 + pat, -0.16), W(0.42 - 0.06 * sw, 0.44 + (ph > 0.5 ? pat : 0), 0.16)], c: ['f0', 'f1'],
+    t: 0, ph: 'pause', hip: W(-0.09, 0.5 + 0.01 * a0), pitch: 11 + 2 * a0 + 5 * scoop, head: -14 + 2 * a1, roll: 1.5 * a0,
+    feet: [W(0.02, 0, -0.17), W(0.08, 0, 0.17)],
+    hands: [hand(0, a0), hand(1, a1)], c: ['f0', 'f1'],
   };
 }

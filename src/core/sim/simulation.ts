@@ -27,7 +27,7 @@ import { createAnimals, stepAnimals } from './animals';
 import { stepClearing, newClearingState, type ClearingHost } from './clearing';
 import { viewForDirection } from '../anim/skeleton';
 import { stepCoopSnowman, startCoopSnowman } from '../activities/coopSnowman';
-import { createSkater, stepSkater, stepRinkEvents, separate, addTrails, skatePose, SKATE_PROFILES, TRAIL_LIFE, FALL_TOTAL, type IceGeo, type RinkState, type RinkCtx , forceRinkEvent, makeIceGeo, RINK_FALL_T0, rinkFallLen, LIFE_LABEL, insideW } from './rink';
+import { createSkater, stepSkater, stepRinkEvents, separate, addTrails, skatePose, SKATE_PROFILES, TRAIL_LIFE, FALL_TOTAL, type IceGeo, type RinkState, type RinkCtx , forceRinkEvent, makeIceGeo, RINK_FALL_T0, rinkFallLen, LIFE_LABEL, insideW, clampToIce } from './rink';
 import { stepFalls, startFall, newFallsState, DEFAULT_FALLS, type FallHost, type FallsState } from './falls';
 import { fallEndShift as fallEndShiftOf, type FallVariant } from '../anim/fallPoses';
 import { stepSled, sledObstacles, sledPathProblem, type SledHost } from './sled';
@@ -512,6 +512,7 @@ export class Simulation {
     stepRinkEvents(ctx);
     if (st.life) this.rinkLifeOnIce(st, t);
     separate(Object.values(st.sk));
+    clampToIce(Object.values(st.sk), geo);
     if (st.event && all.filter((s) => ['FALL', 'TRICK', 'TRICK_PREPARE', 'TRICK_EXIT'].includes(s.st)).length > 1) st.stats.overlapEvents++;
     if (this.state.step % 3 === 0) for (const s of all) addTrails(st, s, t, prev.get(s.id)!);
     if (st.trails.length && t - st.trails[0].t0 > TRAIL_LIFE) st.trails.splice(0, st.trails.findIndex((q) => t - q.t0 <= TRAIL_LIFE) < 0 ? st.trails.length : st.trails.findIndex((q) => t - q.t0 <= TRAIL_LIFE));

@@ -54,8 +54,7 @@ Vše je na jednom místě a laditelné:
   - kamera je 4,4 m vysoko a led má rozměry asi 18–40 × 24 m (malba je lichoběžník).
 - **Bruslaři:**
   - počet 18;
-  - podíly schopností: rekreační 60 %, začátečníci 20 % (z toho 2 děti poprvé), jistější 15 % (z toho 1 šikovné dítě), velmi dobří 5 %;
-  - jeden rodič drží dítě za ruku;
+  - podíly schopností: rekreační 60 %, jistější 35 % (z toho 2 šikovné děti), velmi dobří 5 %; nejistí a začátečníci jsou vypnutí (podíl `beginner: 0`);
   - věk je samostatná vlastnost: profil `good` mají dospělí i děti.
 - **Strom:** 16 m (dvojnásobek proti první verzi), dominuje středu scény.
 - **Výška objektů v metrech:** velikost se v místě paty odvodí z perspektivy, takže strom, stánek a lampy sedí k domům a lidem.
@@ -70,7 +69,7 @@ Vše je na jednom místě a laditelné:
   - na začátku je na ledě 85 % bruslařů, po bruslení jde 50 % na nápoj;
   - prvky s globální prodlevou 100–140 s;
   - váhy prvků: skok s otočkou 35, holubička 30, jízda vzad 20, jedna noha 15 (pirueta na místě vypnutá);
-  - pády zhruba každých 110–210 s;
+  - pády: pokus každých 60–120 s, 85 % zaváhání skončí pádem (zhruba jeden pád za 2 minuty);
   - odrazy postav v ledu: síla 0,2, délka 0,42 výšky postavy.
 
 Za běhu je totéž v `project.rink` (`entry`, `events`, `reflections`, `particles`). Profily bruslařů jsou v `SKATE_PROFILES` (`src/core/sim/rink.ts`).

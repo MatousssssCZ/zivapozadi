@@ -1,6 +1,6 @@
 # Rodič a dítě staví sněhuláka
 
-> Tvoření koulí na místě (vkleče / v předklonu, zády ke kameře, bez válení) platí i pro stavbu dvou dospělých (`snowman.ts`): koule leží rovnou na svém místě a roste rovnoměrně v objemu (spodní 40 s, prostřední 28 s, hlava 20 s).
+> Koule se tvoří na místě **v dřepu** (pánev nízko, kolena vpředu, trup jen mírně nakloněný): ruce klidně uhlazují a uplácávají kouli malými střídavými oblouky, každých 5 s jedna ruka nabere sníh u země a přiloží ho. Postava je natočená šikmo ke kouli (přísně zezadu by dřep nebyl čitelný). Platí i pro stavbu dvou dospělých (`snowman.ts`): koule leží rovnou na svém místě a roste rovnoměrně v objemu (spodní 40 s, prostřední 28 s, hlava 20 s).
 
 Modul `src/core/activities/coopSnowman.ts`. Kdykoli jde rodina (rodič se stálým dítětem) stavět sněhuláka, staví ho rodič s dítětem spolu. Dvojice dospělých dál staví původním postupem (`snowman.ts`).
 

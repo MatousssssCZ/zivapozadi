@@ -43,7 +43,7 @@ describe('sněhulák', () => {
         const roller = sim.state.agents.find((x) => x.id === (ss!.phase === 'roll1' ? ss!.participantIds.find((id) => ss!.roles[id] === 'helper') : ss!.participantIds.find((id) => ss!.roles[id] === 'lead')));
         if (ss!.phase.startsWith('roll')) {
           // koule roste jen, když u ní tvořící postava pracuje (sed/klek nebo předklon), a nehýbe se
-          if (roller && lastR > 0 && b.r > lastR && !(roller.anim.sit && (roller.anim.sit.kind === 'kneel' || roller.anim.sit.kind === 'bend'))) growAway += b.r - lastR;
+          if (roller && lastR > 0 && b.r > lastR && !(roller.anim.sit && (roller.anim.sit.kind === 'kneel' || roller.anim.sit.kind === 'bend' || roller.anim.sit.kind === 'squat'))) growAway += b.r - lastR;
           if (last && lastR > 0 && b.r >= lastR) moved += Math.hypot(b.X - last.X, b.Z - last.Z); // (nová koule = jiné místo)
         }
         lastR = b.r; last = { X: b.X, Z: b.Z };

@@ -25,8 +25,8 @@ const G = 'grafika/pastel', ZP = 'grafika/ziva-pozadi';
 export const PASTEL = {
   /** perspektiva: dospělý u dveří domů (y 726) má 0,51 výšky testovací postavy, horizont y ≈ 560 */
   depth: { yFar: 726, scaleFar: 0.51, yNear: 1080, scaleNear: 1.596 },
-  /** bruslaři: počet a podíly schopností (věk je samostatně: děti mohou být v kterékoli skupině kromě „velmi dobrých“) */
-  skaters: { count: 18, mix: { rec: 0.6, beginner: 0.2, good: 0.15, expert: 0.05 }, kidsAmongBeginners: 2, kidsAmongGood: 1, parentWithKid: true },
+  /** bruslaři: počet a podíly schopností (věk je samostatně); nejistí a začátečníci vypnutí – místo nich jistější (dospělí i šikovné děti) */
+  skaters: { count: 18, mix: { rec: 0.6, beginner: 0, good: 0.35, expert: 0.05 }, kidsAmongBeginners: 0, kidsAmongGood: 2, parentWithKid: false },
   /** chodci */ visitors: 14, families: 3, seniors: 2, dogs: 2,
   /** výška objektů (m) – velikost se odvodí z perspektivy v místě paty */
   heights: { tree: 16, stall: 3.9, lamp: 3.6, lampArc: 3.7, bench: 0.95, bin: 0.95, leafyWide: 9.5, leafyNarrow: 10.5 },
@@ -45,7 +45,7 @@ export const PASTEL = {
   session: [420, 900] as [number, number], offIce: [40, 150] as [number, number], startOnIce: 0.85, drinkChance: 0.5,
   /** prvky: globální prodleva ~120 s s mírnou náhodností; váhy (skok s otočkou, holubička, jízda vzad = půlotočka, jedna noha; pirueta na místě vypnutá) */
   tricks: { every: [100, 140] as [number, number], weights: { jump: 35, arabesque: 30, backward: 20, oneFoot: 15, spin: 0, hop: 0 } },
-  falls: { every: [110, 210] as [number, number], personal: 200 },
+  falls: { every: [60, 120] as [number, number], personal: 160, chance: 0.85 },
   reflections: { alpha: 0.2, len: 0.42 },
 };
 
@@ -168,7 +168,7 @@ export async function generatePastel(dir: string): Promise<ProjectFile> {
   p.rink = {
     ice, gate: gate.snow, dir: 1, boards: false, paintedIce: true,
     entry: { benchId: 'obj_lavicka', gate: gate.snow, inIce: gate.ice, session: PASTEL.session, offIce: PASTEL.offIce, startOnIce: PASTEL.startOnIce, drinkChance: PASTEL.drinkChance },
-    events: { trickEvery: PASTEL.tricks.every, tricks: PASTEL.tricks.weights, fallEvery: PASTEL.falls.every, fallPersonal: PASTEL.falls.personal },
+    events: { trickEvery: PASTEL.tricks.every, tricks: PASTEL.tricks.weights, fallEvery: PASTEL.falls.every, fallPersonal: PASTEL.falls.personal, fallChance: PASTEL.falls.chance },
     reflections: PASTEL.reflections, particles: true,
   };
 

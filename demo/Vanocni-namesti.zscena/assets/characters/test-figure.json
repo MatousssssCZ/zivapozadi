@@ -84,6 +84,24 @@
     "look": {
       "duration": 2,
       "loop": "once"
+    },
+    "lidDrop": {
+      "duration": 3.0,
+      "loop": "once",
+      "events": [
+        {
+          "time": 0.95,
+          "name": "lidOpen"
+        },
+        {
+          "time": 1.75,
+          "name": "release"
+        },
+        {
+          "time": 2.25,
+          "name": "lidClose"
+        }
+      ]
     }
   },
   "clipFallbacks": {
@@ -113,6 +131,10 @@
     "talk"
   ],
   "supportedActivities": [
-    "coffee"
+    "coffee",
+    "shop",
+    "viewing",
+    "snowman",
+    "snowballFight"
   ]
 }

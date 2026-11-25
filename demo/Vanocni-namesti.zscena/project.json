@@ -3,8 +3,8 @@
   "formatVersion": 1,
   "meta": {
     "name": "Vánoční náměstí (demo)",
-    "createdAt": "2026-11-23T19:03:40.405Z",
-    "modifiedAt": "2026-11-23T19:03:40.416Z",
+    "createdAt": "2026-11-25T21:12:47.251Z",
+    "modifiedAt": "2026-11-25T21:12:47.262Z",
     "appVersion": "0.1.0"
   },
   "seed": 20241224,
@@ -269,11 +269,21 @@
             "id": "drop1",
             "kind": "drop",
             "offset": {
-              "x": 0,
-              "y": 34
+              "x": -42,
+              "y": 6
             },
-            "facing": -1.5707963267948966,
-            "label": "Vhození"
+            "facing": 0,
+            "label": "Vhození zleva"
+          },
+          {
+            "id": "drop2",
+            "kind": "drop",
+            "offset": {
+              "x": 42,
+              "y": 6
+            },
+            "facing": 3.141592653589793,
+            "label": "Vhození zprava"
           },
           {
             "id": "opening",
@@ -566,11 +576,21 @@
             "id": "drop1",
             "kind": "drop",
             "offset": {
-              "x": 0,
-              "y": 34
+              "x": -42,
+              "y": 6
             },
-            "facing": -1.5707963267948966,
-            "label": "Vhození"
+            "facing": 0,
+            "label": "Vhození zleva"
+          },
+          {
+            "id": "drop2",
+            "kind": "drop",
+            "offset": {
+              "x": 42,
+              "y": 6
+            },
+            "facing": 3.141592653589793,
+            "label": "Vhození zprava"
           },
           {
             "id": "opening",

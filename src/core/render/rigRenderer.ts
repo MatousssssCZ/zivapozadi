@@ -129,9 +129,10 @@ export function assembleRig(lib: PartLibrary, tpl: BodyTemplateDef, app: Charact
     for (const [n, a] of Object.entries(p.anchors)) anchors.push({ name: `${p.id}:${n}`, p: apply(m, a) });
   };
   const ang = (a: Vec2, b: Vec2) => Math.atan2(b.y - a.y, b.x - a.x);
-  // trup, hlava, doplňky
-  const torso = part('torso');
-  const mTorso = torso ? frame(torso, pose.hip, pose.torsoAngle) : I;
+  // trup, hlava, doplňky; delší bunda (torsoStretch): díl se protáhne dolů, ramena a krk zůstanou na místě
+  const torso = part('torso'), kT = tpl.torsoStretch ?? 1;
+  const tOrigin = { x: pose.hip.x - (pose.neck.x - pose.hip.x) * (kT - 1), y: pose.hip.y - (pose.neck.y - pose.hip.y) * (kT - 1) };
+  const mTorso = torso ? frame(torso, kT === 1 ? pose.hip : tOrigin, pose.torsoAngle, kT) : I;
   push(torso, mTorso, null);
   const head = part('head');
   const mHead = head ? frame(head, pose.neck, pose.torsoAngle + pose.headTilt) : I;
