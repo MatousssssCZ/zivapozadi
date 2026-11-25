@@ -102,34 +102,47 @@ export function planCrowd(items: CrowdItem[], obstacles: ObstacleW[]): void {
     let best = { ang: 0, k: 1 }, bestC = Infinity, bestSafe = false;
     // jen překážky v dosahu 1,5 s chůze, a jen ty, ve kterých postava nestojí
     const nearOb = nearObstacles(obstacles, me.p, sp * 1.5 * 1.3 + 0.3).filter((ob) => !insidePoly(me.p, ob.poly));
+    // sousedé do 9 m – jednou na postavu (dřív pro každého z 90 kandidátů znovu); vše, co nezávisí na
+    // kandidátovi, spočítané předem. Vzorce i pořadí sčítání jsou stejné → výsledek shodný do bitu.
+    const nb: { rX: number; rZ: number; d0: number; vX: number; vZ: number; R: number; Rc: number; partner: boolean; opp: boolean }[] = [];
+    for (const o of items) {
+      if (o === me || ignore.has(o.id)) continue;
+      const rX = o.p.X - me.p.X, rZ = o.p.Z - me.p.Z, d0 = Math.hypot(rX, rZ);
+      if (d0 > 9) continue;
+      const lv = Math.hypot(o.v.X, o.v.Z);
+      nb.push({ rX, rZ, d0, vX: o.v.X, vZ: o.v.Z, R: me.r + o.r + 0.02, Rc: me.rc + o.rc, partner: me.partnerOf === o.id || o.partnerOf === me.id,
+        opp: lv > 0.2 && o.v.X * dir.X + o.v.Z * dir.Z < -0.5 * lv });
+    }
+    const vpX0 = dir.X * sp * prev.k, vpZ0 = dir.Z * sp * prev.k, cp = Math.cos(prev.ang), spn = Math.sin(prev.ang);
+    const vpX = vpX0 * cp - vpZ0 * spn, vpZ = vpX0 * spn + vpZ0 * cp; // (stabilita volby – předchozí kandidát)
     for (const ang of ANGLES) for (const k of SPEEDS) {
-      const v = rot({ X: dir.X * sp * k, Z: dir.Z * sp * k }, ang);
+      const v0X = dir.X * sp * k, v0Z = dir.Z * sp * k, ca = Math.cos(ang), sa = Math.sin(ang);
+      const vX = v0X * ca - v0Z * sa, vZ = v0X * sa + v0Z * ca;
       let C = 12 * (1 - k) ** 2 + 1.2 * (ang / (Math.PI / 6)) ** 2;
       // stabilita volby (žádné kmitání mezi kandidáty)
-      const vp = rot({ X: dir.X * sp * prev.k, Z: dir.Z * sp * prev.k }, prev.ang);
-      C += (0.25 * ((v.X - vp.X) ** 2 + (v.Z - vp.Z) ** 2)) / 0.09;
+      C += (0.25 * ((vX - vpX) ** 2 + (vZ - vpZ) ** 2)) / 0.09;
       let safe = true;
-      for (const o of items) {
-        if (o === me || ignore.has(o.id)) continue;
-        const r = sub(o.p, me.p), w = sub(o.v, v);
-        if (len(r) > 9) continue;
-        const { d, t } = closest(r, w, H);
+      for (const o of nb) {
+        const wX = o.vX - vX, wZ = o.vZ - vZ;
+        // minimum vzdálenosti v [0, H] (= closest)
+        const ww = wX * wX + wZ * wZ;
+        const t = ww < 1e-12 ? 0 : Math.max(0, Math.min(H, -(o.rX * wX + o.rZ * wZ) / ww));
+        const d = Math.hypot(o.rX + wX * t, o.rZ + wZ * t);
         // budoucí střet těl
-        const d0 = len(r);
-        if (d < me.r + o.r + 0.02 && t < H) safe = false;
-        if (me.partnerOf === o.id || o.partnerOf === me.id) continue;
-        const Rc = me.rc + o.rc;
+        if (d < o.R && t < H) safe = false;
+        if (o.partner) continue;
+        const Rc = o.Rc;
         if (d < Rc) C += (4 * (1 - d / Rc) ** 2) / (1 + t);
         // cizí člověk těsně vedle: preferovat rozestoupení / předejití (vzdálenost za 0,8 s)
-        if (d0 < Rc) { const r1 = { X: r.X + w.X * 0.8, Z: r.Z + w.Z * 0.8 }, d1 = Math.min(Rc, len(r1)); C += 3 * (1 - d1 / Rc) ** 2; }
+        if (o.d0 < Rc) { const d1 = Math.min(Rc, Math.hypot(o.rX + wX * 0.8, o.rZ + wZ * 0.8)); C += 3 * (1 - d1 / Rc) ** 2; }
         // protijdoucí: míjet vpravo (druhý má zůstat po naší levici)
-        if (len(o.v) > 0.2 && dot(o.v, dir) < -0.5 * len(o.v) && t > 0 && d < Rc * 1.6) {
-          const rel = { X: r.X + w.X * t, Z: r.Z + w.Z * t };
-          if (dot(rel, right) > 0) C += 0.4;
+        if (o.opp && t > 0 && d < Rc * 1.6) {
+          const relX = o.rX + wX * t, relZ = o.rZ + wZ * t;
+          if (relX * right.X + relZ * right.Z > 0) C += 0.4;
         }
       }
       // budoucí průchod pevnou překážkou (1,5 s dopředu)
-      const ahead = { X: me.p.X + v.X * 1.5, Z: me.p.Z + v.Z * 1.5 };
+      const ahead = { X: me.p.X + vX * 1.5, Z: me.p.Z + vZ * 1.5 };
       for (const ob of nearOb) if (k > 0 && segHitsPoly(me.p, ahead, ob.poly)) { C += 50; safe = false; break; }
       if (safe && !bestSafe) { bestSafe = true; bestC = C; best = { ang, k }; continue; }
       if (safe === bestSafe && C < bestC - 1e-9) { bestC = C; best = { ang, k }; }
@@ -197,41 +210,46 @@ export function solveCrowd(items: CrowdItem[], want: World[], obstacles: Obstacl
       halves.push({ i, j: -1, nX: (a.p.X - q.p.X) / d, nZ: (a.p.Z - q.p.Z) / d, b: (Rs - d) / dt });
     }
   }
-  const x = want.map((w, i) => (items[i].fixed ? { X: 0, Z: 0 } : { ...w }));
-  const resH = halves.map(() => ({ ai: { X: 0, Z: 0 }, aj: { X: 0, Z: 0 } }));
-  const resD = items.map(() => ({ X: 0, Z: 0 }));
+  // projekce v polích čísel (dřív nové objekty v každém průchodu) – stejné vzorce i pořadí → shodný výsledek
+  const xX = new Float64Array(n), xZ = new Float64Array(n);
+  for (let i = 0; i < n; i++) if (!items[i].fixed) { xX[i] = want[i].X; xZ[i] = want[i].Z; }
+  const m = halves.length;
+  const aiX = new Float64Array(m), aiZ = new Float64Array(m), ajX = new Float64Array(m), ajZ = new Float64Array(m);
+  const dX = new Float64Array(n), dZ = new Float64Array(n);
+  const fixedI = items.map((it) => it.fixed);
   const projectAll = (sweeps: number) => {
     for (let k = 0; k < sweeps; k++) {
       let moved = 0;
-      for (let c = 0; c < halves.length; c++) {
-        const h = halves[c], R = resH[c];
-        const fi = items[h.i].fixed, fj = h.j < 0 || items[h.j].fixed;
-        const yi = { X: x[h.i].X + R.ai.X, Z: x[h.i].Z + R.ai.Z };
-        const yj = h.j >= 0 ? { X: x[h.j].X + R.aj.X, Z: x[h.j].Z + R.aj.Z } : { X: 0, Z: 0 };
-        const val = h.nX * (yi.X - yj.X) + h.nZ * (yi.Z - yj.Z);
+      for (let c = 0; c < m; c++) {
+        const h = halves[c], hi = h.i, hj = h.j;
+        const fi = fixedI[hi], fj = hj < 0 || fixedI[hj];
+        const yiX = xX[hi] + aiX[c], yiZ = xZ[hi] + aiZ[c];
+        const yjX = hj >= 0 ? xX[hj] + ajX[c] : 0, yjZ = hj >= 0 ? xZ[hj] + ajZ[c] : 0;
+        const val = h.nX * (yiX - yjX) + h.nZ * (yiZ - yjZ);
         const wi = fi ? 0 : 1, wj = fj ? 0 : 1, den = wi + wj;
-        let zi = yi, zj = yj;
+        let ziX = yiX, ziZ = yiZ, zjX = yjX, zjZ = yjZ;
         if (val < h.b && den > 0) {
           const lam = (h.b - val) / den;
-          zi = { X: yi.X + wi * lam * h.nX, Z: yi.Z + wi * lam * h.nZ };
-          zj = { X: yj.X - wj * lam * h.nX, Z: yj.Z - wj * lam * h.nZ };
+          ziX = yiX + wi * lam * h.nX; ziZ = yiZ + wi * lam * h.nZ;
+          zjX = yjX - wj * lam * h.nX; zjZ = yjZ - wj * lam * h.nZ;
           moved += lam;
         }
-        R.ai = { X: yi.X - zi.X, Z: yi.Z - zi.Z };
-        if (!fi) x[h.i] = zi;
-        if (h.j >= 0) { R.aj = { X: yj.X - zj.X, Z: yj.Z - zj.Z }; if (!fj) x[h.j] = zj; }
+        aiX[c] = yiX - ziX; aiZ[c] = yiZ - ziZ;
+        if (!fi) { xX[hi] = ziX; xZ[hi] = ziZ; }
+        if (hj >= 0) { ajX[c] = yjX - zjX; ajZ[c] = yjZ - zjZ; if (!fj) { xX[hj] = zjX; xZ[hj] = zjZ; } }
       }
       // disky maximální rychlosti
       for (let i = 0; i < n; i++) {
-        if (items[i].fixed) continue;
-        const y = { X: x[i].X + resD[i].X, Z: x[i].Z + resD[i].Z }, L = len(y), m = items[i].vmax * 1.25;
-        const z = L > m ? { X: (y.X / L) * m, Z: (y.Z / L) * m } : y;
-        resD[i] = { X: y.X - z.X, Z: y.Z - z.Z }; x[i] = z;
+        if (fixedI[i]) continue;
+        const yX = xX[i] + dX[i], yZ = xZ[i] + dZ[i], L = Math.hypot(yX, yZ), mx = items[i].vmax * 1.25;
+        const zX = L > mx ? (yX / L) * mx : yX, zZ = L > mx ? (yZ / L) * mx : yZ;
+        dX[i] = yX - zX; dZ[i] = yZ - zZ; xX[i] = zX; xZ[i] = zZ;
       }
       if (moved < 1e-9 && k > 2) break;
     }
   };
   projectAll(64);
+  const x: World[] = items.map((_, i) => ({ X: xX[i], Z: xZ[i] }));
   // nezávislá spojitá kontrola; kdo ji poruší, v ticku stojí (opakovat, dokud je co opravit)
   const frozen = new Set<string>();
   for (let iter = 0; iter < n + 1; iter++) {

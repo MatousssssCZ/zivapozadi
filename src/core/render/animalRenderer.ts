@@ -6,6 +6,7 @@
 import type { AnimalState } from '../sim/animals';
 import { SPECIES } from '../sim/animals';
 import { Q } from '../scene/camera';
+import { getCanvasFactory } from './rigRenderer';
 
 type Img = CanvasImageSource & { width: number; height: number };
 type Ctx = CanvasRenderingContext2D;
@@ -35,6 +36,23 @@ const LEG_ANCHORS: Record<'dog' | 'cat', Record<'fu' | 'fl' | 'hu' | 'hl', Ancho
 const DUTY = 0.62, STAND = 0.96;
 /** měřítko nohou vůči trupu (malované díly mají nohy delší, než odpovídá plemeni) */
 const LEGK = { dog: 0.62, cat: 0.6 };
+
+/**
+ * Vzdálené nohy ztmavené na 86 % jasu – předem, jednou na obrázek. (Dřív `ctx.filter = 'brightness(0.86)'`
+ * při každém kreslení: plátno pro filtr kreslí přes celou vrstvu, ~155 ms na snímek 1920×1080.)
+ * Černá přes obrázek s krytím 0,14 jen v jeho neprůhledné části = násobení barev 0,86, průhlednost beze změny.
+ */
+const darkCache = new WeakMap<object, Img>();
+function darkened(im: Img): Img {
+  const hit = darkCache.get(im); if (hit) return hit;
+  const f = getCanvasFactory(); if (!f) return im;
+  const c = f(im.width, im.height) as unknown as Img & { getContext(k: '2d'): Ctx };
+  const x = c.getContext('2d');
+  x.drawImage(im, 0, 0);
+  x.globalCompositeOperation = 'source-atop'; x.fillStyle = 'rgba(0,0,0,0.14)'; x.fillRect(0, 0, im.width, im.height);
+  darkCache.set(im, c);
+  return c;
+}
 
 /** Vykreslí zvíře s chodidly v (0,0) – volající nastaví posun a měřítko (px na metr). */
 export function drawAnimal(ctx: Ctx, a: AnimalState, img: AnimalImages, pxPerM: number, t: number): void {
@@ -101,8 +119,9 @@ export function drawAnimal(ctx: Ctx, a: AnimalState, img: AnimalImages, pxPerM: 
   // ---- nohy: díly ve stejném měřítku jako trup (k = px obrazovky na px obrázku), dvoučlánková IK
   // s chodidly pevně na zemi ve fázi opory (stance) a obloukem ve švihu → tlapky neklouzají.
   const leg = (kind: 'f' | 'h', side: 'a' | 'b', off: number, far: boolean) => {
-    const up = img(`${pre}${kind}u_${side}`), lo = img(`${pre}${kind}l_${side}`);
-    if (!up || !lo) return;
+    const up0 = img(`${pre}${kind}u_${side}`), lo0 = img(`${pre}${kind}l_${side}`);
+    if (!up0 || !lo0) return;
+    const up = far ? darkened(up0) : up0, lo = far ? darkened(lo0) : lo0;
     const [L1, L2] = segLen(kind), u = LA[`${kind}u`], l = LA[`${kind}l`];
     const j0 = BT(J(kind === 'f' ? R.shoulder : R.hip));
     const j = { x: j0.x + (far ? 0.015 * pxPerM : 0), y: j0.y - (far ? 0.012 * pxPerM : 0) };
@@ -131,9 +150,7 @@ export function drawAnimal(ctx: Ctx, a: AnimalState, img: AnimalImages, pxPerM: 
     seg(up, u, j, kn);
   };
   // pořadí kroku: LH 0, LF 0.25, RH 0.5, RF 0.75 (vzdálená strana = levá)
-  ctx.save(); ctx.filter = 'brightness(0.86)';
   leg('h', 'b', 0, true); leg('f', 'b', 0.25, true);
-  ctx.restore();
   const tc = J([0.5, 0.45]);
   const rotAbout = (r: number) => { if (!r) return; ctx.translate(tc.x, tc.y); ctx.rotate(r); ctx.translate(-tc.x, -tc.y); };
   // ocas za trupem

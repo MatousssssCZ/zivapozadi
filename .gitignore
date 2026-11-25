@@ -7,3 +7,4 @@ out/
 .tmp/
 /ukazky-*.mp4
 dist-web/
+.perf-ref/
