@@ -24,7 +24,7 @@ import { cameraFor, toWorld, toScreen, worldAngleOfScreen, screenAngleOfWorld, Q
 import { viewForDirection } from '../anim/skeleton';
 import { emit, emitsNow, windIntegral } from './environment';
 import { createAnimals, stepAnimals } from './animals';
-import { stepClearing, type ClearingHost } from './clearing';
+import { stepClearing, newClearingState, type ClearingHost } from './clearing';
 import { stepSled, sledObstacles, sledPathProblem, type SledHost } from './sled';
 import { maybeCarryMitten, mittenBusy, stepMitten, type MittenHost } from './mitten';
 import { stepSnowman, startSnowman, abortSnowman, finishSession, snowmanZoneFree, type SessionHost } from '../activities/snowman';
@@ -428,7 +428,7 @@ export class Simulation {
     // shozený sněhulák: hromádka sněhu po 2 min zapadne a objekt zmizí
     if (this.state.runtimeObjects?.some((o) => o.collapseAt !== undefined && t > o.collapseAt + 120)) this.state.runtimeObjects = this.state.runtimeObjects.filter((o) => !(o.collapseAt !== undefined && t > o.collapseAt + 120));
     if (this.project.sled && !this.sledBlocked) stepSled(this.sledHost(), (this.state.sled ??= { phase: 'offstage', until: this.project.sled.firstDelay ?? 40, dir: 1, n: 0, hist: [] }));
-    if (this.project.clearing && this.project.characters.some((c) => c.id === this.project.clearing!.workerId)) stepClearing(this.clearingHost(), (this.state.clearing ??= { phase: 'offstage', until: this.project.clearing.firstDelay ?? 90, n: 0, band: 0, progress: 0, pile: 0, doneAt: null }));
+    if (this.project.clearing && this.project.characters.some((c) => c.id === this.project.clearing!.workerId)) stepClearing(this.clearingHost(), (this.state.clearing ??= newClearingState(this.project.clearing.firstDelay ?? 90)));
     if (this.state.mitten || this.state.agents.some((a) => a.holdingKind === 'mitten') || this.state.step % 60 === 0) stepMitten(this.mittenHost());
     this.stepProps(t);
     this.state.step++;
@@ -456,13 +456,15 @@ export class Simulation {
       project: this.project, time: () => self.time(),
       worker: () => self.state.agents.find((x) => x.id === id),
       others: () => self.state.agents.filter((x) => x.id !== id),
-      walkPath: (a, pts, slow) => { self.sessionHost().walkPath(a, pts, 'odklízení'); a.speedFactor = slow ? 0.4 : 0.9; },
+      walkPath: (a, pts, speed) => { self.sessionHost().walkPath(a, pts, 'odklízení', true); a.speedFactor = speed; },
       hide: (a) => sh().hide(a), show: (a, p) => sh().show(a, p),
-      gesture: (a, dur) => self.sessionHost().gesture(a, 'shovel', { dur }),
-      stopGesture: (a) => { for (const g of a.anim.gestures ?? []) if (g.fam === 'shovel') g.t = Math.max(g.t, g.dur - 0.6); },
       giveShovel: (a, on) => {
         if (on && !a.holding) { const p: PropState = { id: `prop${self.state.nextPropId++}`, kind: 'shovel', place: { kind: 'held', agentId: a.id }, appearedAt: self.time(), sips: 0 }; self.state.props.push(p); a.holding = p.id; a.holdingKind = 'shovel'; }
-        if (!on && a.holdingKind === 'shovel') { const hid = a.holding; self.state.props = self.state.props.filter((p) => p.id !== hid); a.holding = null; a.holdingKind = null; }
+        if (!on && a.holdingKind === 'shovel') { const hid = a.holding; self.state.props = self.state.props.filter((p) => p.id !== hid); a.holding = null; a.holdingKind = null; a.anim.tool = null; }
+      },
+      puff: (X, Z, H, n) => {
+        const cam = self.cam(), p = toScreen(cam, { X, Z }, H), sc = depthScaleAt(self.project.scene.depth, toScreen(cam, { X, Z }).y), t = self.time();
+        for (let i = 0; i < n; i++) emit((self.state.particles ??= []), { kind: 'snowPuff', x: p.x, y: p.y, t0: t, life: 0.3 + (i % 3) * 0.12, w0: 0, sc, seed: Math.floor(t * 1000) + i * 29 });
       },
       log: (m, aid) => self.log('info', m, aid),
     });
@@ -501,9 +503,9 @@ export class Simulation {
         self.startRoute(a, wps, purpose, key, entry);
         return true;
       },
-      walkPath(a, pts, purpose) {
+      walkPath(a, pts, purpose, strict = false) {
         for (const e of a.route?.heldEdges ?? []) self.res.release(edgeKey(e), a.id);
-        a.route = { wps: pts.map((p) => ({ x: p.x, y: p.y, nodeId: null, edgeId: null })), idx: 0, heldEdges: [], purpose, dest: null };
+        a.route = { wps: pts.map((p) => ({ x: p.x, y: p.y, nodeId: null, edgeId: null, ...(strict ? { strict: true } : {}) })), idx: 0, heldEdges: [], purpose, dest: null };
         a.arrived = false; a.speedFactor = 0.3; // tlačení koule: pomalu
       },
       moving: (a) => a.route !== null,
@@ -872,7 +874,9 @@ export class Simulation {
     while (k <= effEnd) {
       const d = dist(cur, W[k]);
       if (d >= left) { target = { X: cur.X + ((W[k].X - cur.X) / d) * left, Z: cur.Z + ((W[k].Z - cur.Z) / d) * left }; break; }
-      left -= d; cur = W[k]; target = W[k]; k++;
+      left -= d; cur = W[k]; target = W[k];
+      if (r.wps[k].strict) break; // obratový bod: dojít k němu, nezkracovat zatáčku
+      k++;
     }
     const dEnd = remaining(r.idx, effEnd);
     let v = Math.min(vmax, Math.sqrt(2 * 1.4 * Math.max(0, dEnd - 0.02)) + 0.04);
@@ -900,8 +904,8 @@ export class Simulation {
     for (;;) {
       const wp = wps[r.idx], Wk = toWorld(cam, wp), last = r.idx >= wps.length - 1;
       const d = Math.hypot(P.X - Wk.X, P.Z - Wk.Z);
-      let passed = d < (last ? 0.06 : 0.35);
-      if (!passed && !last) {
+      let passed = d < (last ? 0.06 : wp.strict ? 0.22 : 0.35);
+      if (!passed && !last && !wp.strict) {
         // už je „za bodem“: na dalším úseku (bod → následující) s kladným postupem a blízko něj
         const B = toWorld(cam, wps[r.idx + 1]), ab = { X: B.X - Wk.X, Z: B.Z - Wk.Z }, L2 = ab.X * ab.X + ab.Z * ab.Z;
         if (L2 > 1e-9) {

@@ -9,7 +9,9 @@ import { objectImageRect } from '../core/render/sceneRenderer';
 import { objectFootprintWorld } from '../core/scene/geometry';
 import { getActivity } from '../core/activities/registry';
 import { polygonsOverlap } from '../core/math/geom';
-import { characterVisual } from '../core/render/characterPose';
+import { characterVisual, localToScene } from '../core/render/characterPose';
+import { cameraFor, toScreen } from '../core/scene/camera';
+import { baseMass, cellMass, cellCenter, stocks } from '../core/sim/snowMaterial';
 import type { Vec2 } from '../core/math/vec';
 import { drawRigDiagnostics } from './rigDiagnostics';
 
@@ -23,6 +25,8 @@ export interface OverlayInput {
   hover: Selection;
   /** Diagnostika skládaných postav (kostra, kotvy, názvy dílů). */
   rigDiagnostics?: boolean;
+  /** Ladění odklízení: mřížka sněhu, hrana, úchopy, chodidla, fáze a zásoby. */
+  clearingDebug?: boolean;
 }
 
 type Ctx = CanvasRenderingContext2D;
@@ -52,6 +56,7 @@ function facingTick(ctx: Ctx, p: Vec2, facing: number | undefined, px: number, c
 }
 
 export function drawOverlay(ctx: Ctx, o: OverlayInput) {
+  if (o.clearingDebug && o.sim) drawClearingDebug(ctx, o);
   const { project: p, px, selection: sel } = o;
   const isSel = (kind: string, id: string) => sel?.kind === kind && sel.id === id;
   ctx.save();
@@ -211,6 +216,50 @@ function drawPoint(ctx: Ctx, pos: Vec2, kind: string, facing: number | undefined
   facingTick(ctx, pos, facing, px, col);
   ctx.font = `${10 * px}px system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.strokeStyle = 'rgba(0,0,0,0.7)'; ctx.lineWidth = 3 * px;
   ctx.strokeText(POINT_LABELS[kind] ?? kind, pos.x, pos.y + 18 * px); ctx.fillText(POINT_LABELS[kind] ?? kind, pos.x, pos.y + 18 * px);
+}
+
+/** Ladicí náhled odklízení (jen editor, nikdy v exportu ani v živém pozadí). */
+function drawClearingDebug(ctx: Ctx, o: OverlayInput) {
+  const sim = o.sim!, st = sim.state.clearing, cfg = o.project.clearing, px = o.px;
+  if (!st?.snow || !cfg) return;
+  const s = st.snow, cam = cameraFor(o.project.scene), b = baseMass(s);
+  // mřížka: hmotnost v buňkách (modrá = původní vrstva, oranžová = navršeno, průhledná = odklizeno)
+  ctx.save();
+  for (let j = 0; j < s.nz; j++) for (let i = 0; i < s.nx; i++) {
+    const m = cellMass(s, i, j); if (m < 1e-4) continue;
+    const c = cellCenter(s, i, j), h = s.p.cell / 2;
+    const q = [toScreen(cam, { X: c.X - h, Z: c.Z - h }), toScreen(cam, { X: c.X + h, Z: c.Z - h }), toScreen(cam, { X: c.X + h, Z: c.Z + h }), toScreen(cam, { X: c.X - h, Z: c.Z + h })];
+    ctx.fillStyle = m > b * 1.05 ? `rgba(255,140,40,${Math.min(0.8, 0.15 + (m - b) / (b * 8)).toFixed(2)})` : `rgba(60,120,255,${(0.45 * Math.min(1, m / b)).toFixed(2)})`;
+    poly(ctx, q); ctx.fill();
+  }
+  // pracovní plocha
+  const w = cfg.work;
+  ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 1.5 * px; ctx.setLineDash([4 * px, 3 * px]);
+  poly(ctx, [toScreen(cam, { X: w.x0, Z: w.z0 }), toScreen(cam, { X: w.x1, Z: w.z0 }), toScreen(cam, { X: w.x1, Z: w.z1 }), toScreen(cam, { X: w.x0, Z: w.z1 })]); ctx.stroke(); ctx.setLineDash([]);
+  // pracovní hrana v kontaktu
+  if (s.edge) { const A = toScreen(cam, s.edge.A), B = toScreen(cam, s.edge.B); ctx.strokeStyle = '#ff2d55'; ctx.lineWidth = 3 * px; ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(B.x, B.y); ctx.stroke(); }
+  // postava: úchopy, hrana listu, opěrné body chodidel
+  const a = sim.state.agents.find((x) => x.id === cfg.workerId);
+  if (a && !a.hidden) {
+    const c = sim.characterOf(a.id), m = c ? sim.manifests[c.assetId] : undefined;
+    if (c && m) {
+      const cv = characterVisual(a, m, c, o.project.scene), T = cv.pose.tool;
+      if (T) {
+        for (const [k, g] of T.grips.entries()) { const p = localToScene(cv, g), e = localToScene(cv, cv.pose.arms[k].end); ctx.strokeStyle = '#ff0'; ctx.lineWidth = 1.5 * px; ctx.beginPath(); ctx.arc(p.x, p.y, 5 * px, 0, 7); ctx.stroke(); ctx.fillStyle = '#0f0'; ctx.beginPath(); ctx.arc(e.x, e.y, 2.5 * px, 0, 7); ctx.fill(); }
+        const e = localToScene(cv, T.edge); ctx.fillStyle = '#ff2d55'; ctx.beginPath(); ctx.arc(e.x, e.y, 4 * px, 0, 7); ctx.fill();
+      }
+      for (const an of a.anim.anchorsXY ?? []) if (an) { ctx.fillStyle = '#00e5ff'; ctx.fillRect(an.x - 3 * px, an.y - 3 * px, 6 * px, 6 * px); }
+    }
+  }
+  // fáze a zásoby
+  const sk = stocks(s);
+  const lines = [`fáze: ${st.phase}  pruh ${st.lane + 1}`, `povrch ${sk.surface.toFixed(2)} kg · val ${sk.ridge.toFixed(2)} · list ${sk.blade.toFixed(2)} · vzduch ${sk.air.toFixed(2)}`, `okraj+hromada ${sk.edge.toFixed(2)} kg · celkem ${sk.total.toFixed(3)} kg`, `záběry ${st.stats.pushes} · nabrání ${st.stats.scoops} · odhozy ${st.stats.throws} · vytlačení ${st.stats.pushOffs}`];
+  const p0 = toScreen(cam, { X: w.x0, Z: w.z1 });
+  ctx.font = `${12 * px}px system-ui, sans-serif`; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+  const bw = Math.max(...lines.map((l) => ctx.measureText(l).width)) + 10 * px;
+  ctx.fillStyle = 'rgba(15,18,30,0.82)'; ctx.fillRect(p0.x, p0.y - 70 * px - lines.length * 15 * px, bw, lines.length * 15 * px + 6 * px);
+  ctx.fillStyle = '#fff'; lines.forEach((l, k) => ctx.fillText(l, p0.x + 5 * px, p0.y - 67 * px - lines.length * 15 * px + k * 15 * px));
+  ctx.restore();
 }
 
 export function objectHandles(ob: SceneObject, p: ProjectFile, px: number) {

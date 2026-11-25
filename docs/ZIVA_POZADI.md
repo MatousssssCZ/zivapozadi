@@ -14,7 +14,7 @@ Legenda: **hotovo** = logika, vykreslení, testy · **částečně** = funguje s
 |---|---|---|---|
 | A01 | Nákup u stánku | hotovo | prohlížení 3–8 s (25 % odejde bez nákupu), objednávka 5–12 s jako rozhovor s prodavačem, balení 2–5 s, předání tašky jednou událostí `take`, poděkování; taška je procedurálně malovaná (barva podle stánku) |
 | A02 | Dvojice s nápojem | hotovo | existující káva ve dvou + sociální vrstva (rozhovor, pití mimo vlastní řeč, pára z kelímku) |
-| A03 | Rodič a dítě u stromku | částečně | v Liberci chodí 5 dětí s rodiči (stálá dvojice) a s nimi i k činnostem; samostatná scénka „rodič ukazuje dítěti strom“ zatím není |
+| A03 | Rodič a dítě u stromku | částečně | v Liberci chodí 5 dětí s rodiči (stálá dvojice) a s nimi i k činnostem; u stromu rodič dítěti ukáže strom a dítě ukáže taky |
 | A04 | Prohlížení | hotovo | činnost `viewing`: volné místo výhledu, 5–18 s, nejvýš jeden přesun pozornosti, cooldown místa 60–180 s |
 | A05 | Setkání známých | hotovo | zamávání na dálku, pozdrav kývnutím, rozhovor, společný odchod (dříve + sociální vrstva) |
 | A06 | Fotografie u stromku | hotovo | u výhledu ~35 % lidí vytáhne telefon (skutečná rekvizita), zvedne ho do výšky očí, 7–10 s fotí a uklidí; zezadu je vidět displej, zepředu zadní strana (Liberec, `docs/img/liberec-foceni.png`) |
@@ -22,14 +22,14 @@ Legenda: **hotovo** = logika, vykreslení, testy · **částečně** = funguje s
 | A08 | Zahřívání | částečně | tření palčáků, šála, čepice, schoulení, kelímek oběma rukama; přešlápnutí a ruce v kapsách potřebují podklady |
 | A09 | Čekání na doprovod | částečně | čekání u místa setkání, rozhlédnutí po 7–15 s, limit a odchod; telefon při čekání se zatím nepoužívá (je jen u focení) |
 | A10 | Práce prodejce | hotovo | `VendorState` v simulaci: obsluha, otočení k regálu, předání, srovnání zboží bez zákazníka (20–60 s) |
-| A11 | Odklízení sněhu | hotovo | Liberec: pracovník po 6 pásech (tah 3–6 s, posun 1–2 s) odhrne pruh před pravou lavičkou; odkrývá se malovaná dlažba (plochý decal), sníh jde před lopatou na konkrétní hromadu (roste omezeně); průchod člověka práci pozastaví; při sněžení pruh zapadá, další úklid až když je co odklízet; cooldown 600–1200 s (`docs/img/liberec-odklizeni.png`) |
+| A11 | Odklízení sněhu | hotovo | materiálový model sněhu (povrch → val → list → vzduch → hromada, bilance), lopata jako tuhý nástroj s úchopy a IK, fáze hrnutí / nabrání / zdvih / natočení přešlápnutím / odhoz / vytlačení / dočištění; viz `docs/ODKLIZENI_SNEHU.md` |
 | A12 | Odchod s nákupem | hotovo | taška visí v ruce (omezený švih), odchází s majitelem portálem a zmizí s ním |
 
 ## Vzácnější situace (B)
 
 | ID | Situace | Stav | Poznámka |
 |---|---|---|---|
-| B01 | Chytání vloček | nezačato | dětská postava už existuje (Liberec); scénka zatím není |
+| B01 | Chytání vloček | hotovo | za sněžení se rodina zastaví, dítě zvedne ruce dlaněmi nahoru a sleduje vločky, rodič čeká |
 | B02 | Sáňky | hotovo | Liberec: sáně se sedícím dítětem složené z dodaných dílů (`scripts/compose-sled.py`), rodič je skutečná postava, sáně sledují historii jeho dráhy v odstupu provázku 1,25 m; dráha „vlásenkou“ po levém zasněženém poli (uprostřed dole je odhrnutá dlažba), kontrola celé dráhy na sníh a odstup od překážek; sáně a provázek jsou překážka pro chodce; průchod ~22 s, cooldown 300–600 s (`docs/img/liberec-sanky.png`) |
 | B03 | Upadlá rukavice | hotovo | průchozí občas nese rezervní palčák (oddělená rekvizita); upadne, po 1–2 s si všimne, zastaví, vrátí se, dřepne a zvedne ji (pick v nejnižším bodě), ~7 s; při abortu zůstane ležet a zvedne ji další kolemjdoucí; cooldown scény 300–600 s (`docs/img/liberec-rukavice.png`) |
 | B04 | Koulovačka | hotovo (Liberec) | session, nabrání **v dřepu** (klip `scoop`), uplácání, zamíření, hod, světová balistika, kontrola koridoru, dopad s kousky sněhu, reakce, 4–8 hodů; v Liberci dítě s rodičem na dětském sněhu. Ve starých scénách bez dětí se dál zamítá s důvodem |

@@ -13,8 +13,17 @@ export function heelRelOf(a: AnimState): [number | null, number | null] {
 }
 
 /** Stav přehrávání animací jedné postavy. Čistá data ⇒ součást checkpointu. */
+/**
+ * Nástroj v obou rukou (lopata) – tuhý objekt. Poloha je dána pracovní hranou listu v rovině chůze
+ * (u vpřed od chodidel, h nad zemí; metry) a natočením násady β (rad, 0 = jako ve spritu, + = rukojeť
+ * výš). Kostra β upraví v mezích tak, aby obě ruce dosáhly na úchopy (paže se nikdy neprodlužují),
+ * a vrátí matici spritu. crouch/lean: pokrčení kolen a předklon trupu (0..1).
+ */
+export interface ToolPose { u: number; h: number; beta: number; crouch: number; lean: number; oneHand?: boolean; load?: number }
+
 export interface AnimState {
   dir: Direction;
+  /** nástroj v rukou (lopata) */ tool?: ToolPose | null;
   walkPhase: number;
   walkBlend: number;
   idleTime: number;

@@ -1,3 +1,4 @@
+import { newClearingState, resetClearing } from '../core/sim/clearing';
 import { store } from './store';
 import { newId } from '../core/model/ids';
 import type { AssetEntry, ProjectFile, SceneObject, NavNode, CharacterInstance, ActivityZone, Area, ScheduledEvent } from '../core/model/types';
@@ -188,4 +189,14 @@ export async function importAssets(kind: 'image' | 'audio') {
     });
     store.toast('info', kind === 'image' ? `Importováno obrázků: ${entries.length} (zkopírováno do projektu).` : `Hudba „${entries[0].name}“ importována (${Math.round(entries[0].durationSec ?? 0)} s).`);
   } catch (e) { store.toast('error', (e as Error).message); }
+}
+
+/** Ladění odklízení: jeden pracovní cyklus / reset testovací situace (mění jen náhledovou simulaci). */
+export function clearingCommand(kind: 'cycle' | 'reset') {
+  const sim = store.sim.sim, cfg = store.state.project?.clearing;
+  if (!sim || !cfg) return;
+  const st = (sim.state.clearing ??= newClearingState(0)), now = sim.time();
+  if (kind === 'reset') { resetClearing(st, cfg, now); st.until = now + 1e9; const w = sim.state.agents.find((a) => a.id === cfg.workerId); if (w) { w.hidden = true; w.route = null; w.anim.tool = null; } }
+  else if (st.phase === 'offstage' || st.phase === 'hold') { st.single = true; st.until = now; }
+  store.toast('info', kind === 'reset' ? 'Sníh obnoven, postava mimo scénu.' : 'Spuštěn jeden pracovní cyklus.', 2000);
 }

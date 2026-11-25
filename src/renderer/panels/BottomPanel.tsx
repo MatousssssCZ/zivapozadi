@@ -7,7 +7,7 @@ export function formatTime(t: number): string {
   return `${m}:${s.toFixed(2).padStart(5, '0')}`;
 }
 
-const SPEEDS = [0.25, 0.5, 1, 2, 4, 8];
+const SPEEDS = [0.1, 0.25, 0.5, 1, 2, 4, 8];
 
 export function BottomPanel() {
   const t = useSimTick();

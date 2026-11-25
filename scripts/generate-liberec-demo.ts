@@ -263,7 +263,7 @@ export async function generateLiberec(dir: string): Promise<ProjectFile> {
     id: 'ch_lopata', name: 'Pracovník údržby', assetId: 'builtin_postava_cg', startNodeId: portals[0], baseScale: 1,
     walkSpeed: 55, palette: testPal, wander: false, appearance: worker, routine: 'shovel', activities: {},
   });
-  p.clearing = { workerId: 'ch_lopata', strip: { x0: 1545, x1: 1835, y: 1052, h: 30 }, pile: { x: 1880, y: 1056 }, enter: { x: 2080, y: 1072 }, approach: [{ x: 1700, y: 1074 }], standBack: 126, bands: 6, firstDelay: 70 };
+  p.clearing = { workerId: 'ch_lopata', work: { x0: 2.9, x1: 4.9, z0: 11.75, z1: 12.51 }, pileAt: { X: 5.25, Z: 11.62 }, enter: { x: 2080, y: 1074 }, approach: [{ x: 1640, y: 1078 }], firstDelay: 70 };
   p.export = { ...p.export, durationSec: 60, chunkSec: 20 };
   await saveProject(dir, p);
   return p;

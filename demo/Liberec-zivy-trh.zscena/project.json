@@ -3,8 +3,8 @@
   "formatVersion": 1,
   "meta": {
     "name": "Liberec – živý vánoční trh",
-    "createdAt": "2026-11-24T20:39:33.661Z",
-    "modifiedAt": "2026-11-24T20:39:33.776Z",
+    "createdAt": "2026-11-25T07:52:03.187Z",
+    "modifiedAt": "2026-11-25T07:52:03.341Z",
     "appVersion": "0.1.0"
   },
   "seed": 2611,
@@ -6278,28 +6278,26 @@
   },
   "clearing": {
     "workerId": "ch_lopata",
-    "strip": {
-      "x0": 1545,
-      "x1": 1835,
-      "y": 1052,
-      "h": 30
+    "work": {
+      "x0": 2.9,
+      "x1": 4.9,
+      "z0": 11.75,
+      "z1": 12.51
     },
-    "pile": {
-      "x": 1880,
-      "y": 1056
+    "pileAt": {
+      "X": 5.25,
+      "Z": 11.62
     },
     "enter": {
       "x": 2080,
-      "y": 1072
+      "y": 1074
     },
     "approach": [
       {
-        "x": 1700,
-        "y": 1074
+        "x": 1640,
+        "y": 1078
       }
     ],
-    "standBack": 126,
-    "bands": 6,
     "firstDelay": 70
   }
 }

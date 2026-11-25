@@ -9,7 +9,7 @@ export const SIM_STATE_VERSION = 5;
 export const SIM_DT = 1 / 60;
 export const STEPS_PER_SECOND = 60;
 
-export interface Waypoint { x: number; y: number; nodeId: string | null; edgeId: string | null }
+export interface Waypoint { x: number; y: number; nodeId: string | null; edgeId: string | null; /** dojít přesně (žádné „projití“ úsekem za bodem) – obratové body */ strict?: boolean }
 
 /** Kde postava stojí: v uzlu sítě, nebo v bodě mimo síť napojeném na uzel (`anchor`). */
 export type AgentLocation = { kind: 'node'; nodeId: string } | { kind: 'point'; anchor: string; pointKey: string | null };

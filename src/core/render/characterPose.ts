@@ -45,7 +45,7 @@ export function characterVisual(agent: AgentState, m: CharacterManifest, look: C
     const req = viewForDirection(agent.anim.dir);
     const rv = resolveView(tpl, req.view);
     const stpl = scaledTemplate(tpl, app.proportions);
-    const pose = skeletonPose(stpl, rv.use, req.mirror, agent.anim, agent.holding !== null && agent.holdingKind !== 'bag' && agent.holdingKind !== 'mitten', app.motion, hashString(agent.id), { ...groundOptions(agent, x, y, scale, req.mirror, cam), snowSink: (agent.snowDepth ?? 0) > 0 && agent.anim ? (agent.snowDepth ?? 0) / Q : 0 });
+    const pose = skeletonPose(stpl, rv.use, req.mirror, agent.anim, agent.holding !== null && agent.holdingKind !== 'bag' && agent.holdingKind !== 'mitten' && agent.holdingKind !== 'shovel', app.motion, hashString(agent.id), { ...groundOptions(agent, x, y, scale, req.mirror, cam), snowSink: (agent.snowDepth ?? 0) > 0 && agent.anim ? (agent.snowDepth ?? 0) / Q : 0 });
     const rig = assembleRig(lib, tpl, app, pose, rv.use);
     // závěj přes spodek zabořené boty (kreslí se hned po botě; barvu dodá vykreslování z pozadí)
     if (pose.snowSink) {

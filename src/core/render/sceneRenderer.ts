@@ -14,9 +14,10 @@ import type { Simulation } from '../sim/simulation';
 import type { AgentState, PropState } from '../sim/types';
 import { characterVisual, localToScene } from './characterPose';
 import { drawFigure } from '../anim/testFigure';
+import { SHOVEL_SPRITE } from '../anim/skeleton';
 import { cameraFor, toScreen, toWorld, Q, type World } from '../scene/camera';
 import { SLED } from '../sim/sled';
-import { clearedVisible } from '../sim/clearing';
+import { drawSnowSurface, snowItems } from './snowRender';
 import type { SimState } from '../sim/types';
 import { lidOpenness } from '../sim/simulation';
 import { FOOTPRINT_LIFE, FOOTPRINT_FADE } from '../sim/types';
@@ -145,37 +146,6 @@ function drawSled(ctx: Ctx, c: { x: number; y: number }, k: number, sx: number, 
   }
   ctx.restore();
 }
-/** Odklizený pruh: malovaná dlažba v odkryté části, před lopatou valoun shrnutého sněhu. */
-function drawClearedStrip(ctx: Ctx, project: ProjectFile, litSim: Simulation, t: number) {
-  const st = litSim.state.clearing;
-  const cfg = project.clearing!, v = clearedVisible(st, project, t);
-  if (!st || v <= 0.002) return;
-  const s = cfg.strip, img = sprite('pavement');
-  let xr = s.x0 + (s.x1 - s.x0) * st.progress;
-  // během tahu: odkrytá dlažba končí přesně u listu lopaty (pruh se odkrývá tam, kudy list projel)
-  let bladeX: number | null = null;
-  if (st.phase === 'work') {
-    const wk = litSim.state.agents.find((a) => a.id === cfg.workerId), c = wk ? litSim.characterOf(wk.id) : undefined, m = c ? litSim.manifests[c.assetId] : undefined;
-    if (wk && c && m && !wk.hidden && wk.holdingKind === 'shovel') {
-      const cv = characterVisual(wk, m, c, project.scene), sg = shovelGeom(cv, wk);
-      if (sg.w > 0.5) { bladeX = localToScene(cv, sg.blade).x; const band = (s.x1 - s.x0) / (cfg.bands ?? 6), b0 = s.x0 + band * st.band; xr = Math.max(b0, Math.min(b0 + band, bladeX)); }
-    }
-  }
-  const fade = st.progress > 0 ? v / st.progress : 0;
-  ctx.save(); ctx.globalAlpha = Math.min(1, fade * 1.1);
-  const lead = 30 * Math.min(1, st.progress * 6); // levý zasněžený okraj decalu se odkryje postupně
-  ctx.beginPath(); ctx.rect(s.x0 - lead, s.y - s.h, xr - s.x0 + lead, s.h * 2); ctx.clip();
-  if (img) ctx.drawImage(img, s.x0 - 30, s.y - s.h / 2, s.x1 - s.x0 + 60, s.h);
-  else { ctx.fillStyle = 'rgba(120,110,120,0.8)'; ctx.fillRect(s.x0, s.y - s.h / 2, s.x1 - s.x0, s.h); }
-  ctx.restore();
-  // valoun sněhu před lopatou (během práce)
-  const pile = sprite('snow_pile');
-  if (pile && st.phase !== 'offstage' && st.phase !== 'leave' && st.progress > 0 && st.progress < 1) {
-    const ppm = depthScaleAt(project.scene.depth, s.y) / Q, band = 1 / (cfg.bands ?? 6);
-    const frac = (st.progress % band) / band, W = (0.28 + 0.12 * frac) * ppm, H = (W * pile.height) / pile.width;
-    ctx.drawImage(pile, xr - W * 0.15, s.y + s.h * 0.15 - H, W, H); // valoun na čele odkrytého pruhu (u listu)
-  }
-}
 /** Sáně z dodaného pohledu (plátno 1600×1200, linie země y = 1100, délka sání v bočním pohledu ~1,1 m). */
 function drawSledView(ctx: Ctx, c: { x: number; y: number }, ppm: number, body: CanvasImageSource & { width: number; height: number }, head: (CanvasImageSource & { width: number; height: number }) | null, t: number, speed: number) {
   const k = (SLED.length * ppm) / (body.width * 0.62); // (sáně zabírají ~62 % šířky plátna v bočním pohledu)
@@ -238,6 +208,21 @@ function drawHeld(ctx: Ctx, held: PropState, cv: ReturnType<typeof characterVisu
       const W = (H * sw) / img.height;
       ctx.drawImage(img, 0, 0, sw, img.height, g.x - W / 2, g.y - H * 0.75, W, H);
     } else { ctx.fillStyle = '#4a4650'; ctx.fillRect(g.x - H * 0.25, g.y - H * 0.75, H * 0.5, H); }
+    return;
+  }
+  if (held.kind === 'shovel' && cv.pose.tool) {
+    // tuhý nástroj z kostry: jediná afinní matice spritu (úchopy rukou jsou body téhož spritu)
+    const img = sprite('shovel'), T = cv.pose.tool;
+    if (img) {
+      ctx.save(); ctx.transform(...T.M); ctx.drawImage(img, 0, 0);
+      const load = agent?.anim.tool?.load ?? 0, snow = sprite('shovel_snow');
+      if (snow && load > 0.02) {
+        // náklad na listu: objem podle hmotnosti (zhutněný sníh), drží se v oblasti listu
+        const vol = load / 280, sz = Math.min(1.25, Math.cbrt(vol / 0.009)) * 230;
+        ctx.drawImage(snow, SHOVEL_SPRITE.load.x - sz * 0.5, SHOVEL_SPRITE.load.y - sz * 0.55, sz, (sz * snow.height) / snow.width);
+      }
+      ctx.restore();
+    }
     return;
   }
   if (held.kind === 'shovel') {
@@ -493,7 +478,7 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
   for (const { o } of fixed('background')) drawObject(ctx, o, assets.get(o.assetId), images.get(o.assetId));
   // okna a dveře budovy v pozadí (rozsvícení, otevření při průchodu)
   // odklizený pruh (A11): plochý decal dlažby pod chodci; odkrývá se zleva podle postupu, při sněžení zapadá
-  if (sim && project.clearing) drawClearedStrip(ctx, project, sim, opts.time);
+  if (sim?.state.clearing?.snow) drawSnowSurface(ctx, project, sim.state.clearing.snow, sprite('pavement'));
   if (sc.environment && (sc.environment.windows?.length || sc.environment.door)) drawFacade(ctx, project, (sc.backgroundAssetId ? images.get(sc.backgroundAssetId) : null) as never, (images.get('sprite_door_interior') ?? null) as never, sim?.state.doorPasses, opts.time);
   if (sim) drawFootprints(ctx, project, sim, sim.time());
   const worldObjs = visible.filter(({ o }) => o.layer === 'world').map(({ o }) => o);
@@ -574,15 +559,8 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
         }
       }
     }
-    // hromada odhrnutého sněhu (A11) – roste s každým pásem
-    const cl = sim.state.clearing, ccfg = project.clearing;
-    if (ccfg && cl && cl.pile > 0.01) {
-      const img = sprite('snow_pile'), ppm = depthScaleAt(sc.depth, ccfg.pile.y) / Q;
-      if (img) items.push({ key: ccfg.pile.y, tie: 11000, draw: () => {
-        const W = (0.45 + 0.75 * Math.min(1.3, cl.pile)) * ppm, H = (W * img.height) / img.width * (0.8 + 0.3 * Math.min(1, cl.pile));
-        ctx.drawImage(img, ccfg.pile.x - W / 2, ccfg.pile.y - H * 0.92, W, H);
-      } });
-    }
+    // sníh z odklízení (A11): val, vytlačený sníh, hromada, shluky ve vzduchu
+    if (sim.state.clearing?.snow) items.push(...snowItems(ctx, project, sim.state.clearing.snow, opts.time, sprite('snow_pile'), sprite('snowball')));
     // sáňky s dítětem (B02) + provázek od ruky rodiče k úchytu
     const sl = sim.state.sled;
     if (sl?.phase === 'run' && sl.center) {

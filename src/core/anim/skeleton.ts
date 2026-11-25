@@ -123,6 +123,8 @@ export interface SkeletonPose {
   feet: [number, number];
   /** zkrácení/prodloužení boty podél chodidla (3D promítnutí; 1 = malovaný pohled) */
   feetK?: [number, number];
+  /** lopata: matice spritu → lokální souřadnice, úchopy (D-držadlo, násada), pracovní hrana, β */
+  tool?: { M: [number, number, number, number, number, number]; grips: [Vec2, Vec2]; edge: Vec2; beta: number; reachOk: boolean; held: [boolean, boolean] };
   /** zápěstí přední ruky (úchop se dopočítá z dílu ruky) */ handR: Vec2;
   /** body paty obou bot (lokálně) – kotva při došlapu */ heelPts?: [Vec2, Vec2];
   /** naklonění drženého kelímku (rad, záporně = okrajem k ústům) */ cupTilt?: number;
@@ -192,9 +194,66 @@ export function armIK3D(R: Vec2, A: Vec2, g: Vec2, l1: number, l2: number, w = 1
   const eu = cu + (e1.u - cu) * c, ev = cv + (e1.v - cv) * c;
   const joint3 = { x: R.x + gx * eu, y: R.y + ev + g.y * eu };
   const end = { x: R.x + gx * uu, y: R.y + vv + g.y * uu };
+  // pohled téměř zepředu/zezadu (malá průmětová složka vpřed): rovinné řešení v obraze (průmět je
+  // kratší než skutečná vzdálenost, takže zůstává dosažitelný); mezi nimi plynulý přechod
+  w *= clamp((Math.abs(g.x) - 0.2) / 0.3, 0, 1);
   const joint = { x: flat.joint.x + (joint3.x - flat.joint.x) * w, y: flat.joint.y + (joint3.y - flat.joint.y) * w };
   const endB = { x: flat.end.x + (end.x - flat.end.x) * w, y: flat.end.y + (end.y - flat.end.y) * w };
   return { root: R, joint, end: endB, k1: Math.hypot(joint.x - R.x, joint.y - R.y) / l1, k2: Math.hypot(endB.x - joint.x, endB.y - joint.y) / l2 };
+}
+
+// ------------------------------------------------------------------ lopata (tuhý nástroj)
+/** Geometrie spritu lopaty (px): D-držadlo, objímka listu (osa násady), obrys spodní části listu. */
+export const SHOVEL_SPRITE = {
+  G: { x: 50, y: 55 }, AX: { x: 525, y: 185 },
+  /** dolní úchop na násadě (podíl od D-držadla k objímce) */ grip2: 0.47,
+  hull: [{ x: 600, y: 362 }, { x: 650, y: 387 }, { x: 700, y: 375 }, { x: 750, y: 363 }, { x: 800, y: 352 }, { x: 840, y: 342 }, { x: 838, y: 250 }, { x: 760, y: 172 }, { x: 610, y: 225 }],
+  /** střed oblasti listu s nákladem a hrana vysypání (px) */ load: { x: 735, y: 300 }, lip: { x: 835, y: 300 },
+  /** délka od D-držadla k hraně listu (m) */ lengthM: 1.3,
+};
+const Qm = 1.75 / 130;
+/**
+ * Poloha lopaty: najde natočení β co nejblíž požadovanému, při kterém nejnižší bod listu leží v (u, h)
+ * a obě ramena dosáhnou na své úchopy (≤ 95 % délky paže, v rovině chůze). Vrací afinní matici
+ * sprite → lokální souřadnice postavy (promítnutí jako chodidla), úchopy, hranu a β.
+ */
+export function solveShovel(t: { u: number; h: number; beta: number; oneHand?: boolean }, g: Vec2, shoulders: [Vec2, Vec2], torsoAngle: number, fsg: number, armLen: number) {
+  void torsoAngle; void fsg;
+  const S = SHOVEL_SPRITE, k = (S.lengthM / Qm) / Math.hypot(S.hull[1].x - S.G.x, S.hull[1].y - S.G.y); // jednotek na px
+  const U = t.u / Qm, H = t.h / Qm;
+  // sprite (x vpřed, y dolů) → rovina chůze (u, h) s natočením β
+  const toW = (p: Vec2, b: number) => { const x = p.x * k, y = -p.y * k; return { u: x * Math.cos(b) - y * Math.sin(b), h: x * Math.sin(b) + y * Math.cos(b) }; };
+  const proj = (w: { u: number; h: number }) => ({ x: g.x * w.u, y: -w.h + g.y * w.u });
+  // ramena v rovině chůze (vpřed odhad z předklonu trupu, výška z obrazu)
+  const grip2 = { x: S.G.x + (S.AX.x - S.G.x) * S.grip2, y: S.G.y + (S.AX.y - S.G.y) * S.grip2 };
+  const place = (b: number) => {
+    const hw = S.hull.map((p) => toW(p, b));
+    let lo = 0; for (let i = 1; i < hw.length; i++) if (hw[i].h < hw[lo].h) lo = i;
+    const off = { u: U - hw[lo].u, h: H - hw[lo].h }; // posun tak, aby nejnižší bod listu ležel v (U, H)
+    const at = (p: Vec2) => { const w = toW(p, b); return { u: w.u + off.u, h: w.h + off.h }; };
+    return { b, off, at, gw: [at(S.G), at(grip2)], edge: { u: U, h: H } };
+  };
+  // dosah se ověřuje skutečným IK paže (stejným, jaké pak ruce použijí): dlaň musí dosednout na úchop
+  // a paže nesmí být natažená přes 95 % (lokty nejsou trvale propnuté)
+  const up = armLen * 24 / 45, fo = armLen - up;
+  const cost = (pl: ReturnType<typeof place>) => {
+    let c = Math.abs(pl.b - t.beta);
+    pl.gw.forEach((q, i) => {
+      if (t.oneHand && i === 0) return;
+      const tg = proj(q), l = armIK3D(shoulders[i], tg, g, up, fo, 1);
+      const err = Math.hypot(l.end.x - tg.x, l.end.y - tg.y), ext = Math.hypot(l.end.x - shoulders[i].x, l.end.y - shoulders[i].y) / (Math.abs(g.x) > 0.35 ? 1e9 : armLen);
+      if (err > 0.15) c += 10 + err;
+      if (ext > 0.95) c += 2 * (ext - 0.95);
+    });
+    return c;
+  };
+  let best = place(t.beta), bc = cost(best);
+  for (let d = -0.5; d <= 0.9 + 1e-9; d += 0.025) { const pl = place(t.beta + d); const c = cost(pl); if (c < bc - 1e-9) { bc = c; best = pl; } }
+  // afinní matice: lokální = P · R(β) · diag(k, −k) · sprite + posun
+  const ex = toW({ x: 1, y: 0 }, best.b), ey = toW({ x: 0, y: 1 }, best.b);
+  const o = proj(best.off), ax = proj(ex), ay = proj(ey);
+  const M: [number, number, number, number, number, number] = [ax.x, ax.y, ay.x, ay.y, o.x, o.y];
+  return { M, grips: [proj(best.gw[0]), proj(best.gw[1])] as [Vec2, Vec2], edge: proj(best.edge), beta: best.b, reachOk: bc < 10 };
 }
 
 /**
@@ -324,7 +383,8 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
   const shiftIdle = weightShift(tIdle, I.shiftPeriod, seed) * I.shiftAmp * (1 - b) * (front ? 1 : 0.3);
   const gScale = (B.upperArm + B.forearm) / 45; // tabulky gest jsou pro paži 24 + 21 j.
   // dřep (sociální vrstva): pánev dolů o až 30 % délky nohy – kolena se pokrčí (chodidla stojí)
-  const crouch = soc?.crouch ? soc.crouch * (1 - b) : 0;
+  const tool = a.tool ?? null;
+  const crouch = Math.max(soc?.crouch ? soc.crouch * (1 - b) : 0, tool ? tool.crouch * (1 - 0.45 * b) : 0);
   const hip = { x: -ns * lateral * 0.7 + shiftIdle + gfx * centerShift + (soc ? soc.pelvisX * gScale * (1 - b) : 0) - gfx * crouch * 0.07 * L, y: -pelvisH + gfy * centerShift + crouch * 0.3 * L };
   const hipRoots = [0, 1].map((i) => {
     const sgn = i === 0 ? 1 : -1; // referenční (pravá) = noha 0
@@ -474,7 +534,7 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
   const breathe = (0.5 + 0.5 * Math.sin((tIdle / 3.6) * Math.PI * 2)) * I.breathe;
   const fsg = Math.sign(fx || 1);
   const trunkPitch = (sampleGait('trunkPitchDeg', q0, w) + (motion.lean - 1)) * DEG * b;
-  const torsoAngle = -Math.PI / 2 + trunkPitch * fsg - shiftIdle * 0.004 - (soc ? soc.trunkDeg * DEG : 0) + crouch * 0.42 * fsg * Math.max(0.45, Math.abs(fx)); // dřep: trup vpřed (ve 3/4 pohledu se předklon ke kameře zkracuje)
+  const torsoAngle = -Math.PI / 2 + trunkPitch * fsg - shiftIdle * 0.004 - (soc ? soc.trunkDeg * DEG : 0) + (crouch * 0.42 + (tool ? tool.lean * 0.38 : 0)) * fsg * Math.max(0.45, Math.abs(fx)); // dřep / práce s nástrojem: trup vpřed (ve 3/4 pohledu se předklon ke kameře zkracuje)
   const neck = { x: hip.x + Math.cos(torsoAngle) * B.torso, y: hip.y + Math.sin(torsoAngle) * B.torso - breathe };
   const headTiltIdle = I.headAmp * (Math.sin(tIdle * 0.71 + motion.phase * 6.2) + 0.5 * Math.sin(tIdle * 1.37 + motion.phase * 3.1));
   const headPitch = sampleGait('headPitchDeg', q0, w) * DEG * b;
@@ -622,7 +682,24 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
     const b = bend + (pref - bend) * g.w;
     arms[i] = ikRot(l.root, l.end, B.upperArm, B.forearm, b);
   }
-  return { view, mirror, root: { x: 0, y: 0 }, hip, neck, shoulder, head, headTilt, torsoAngle, legs, arms, feet: [footAng[0], footAng[1]], feetK: [footProj[0].k, footProj[1].k], handR: arms[1].end, heelPts, cupTilt, snowSink: [sink[0], sink[1]] };
+  // nástroj (lopata): tuhý sprite, úchopy z něj, ruce na úchopy (3D IK); hlava míří k listu
+  let toolOut: SkeletonPose['tool'];
+  if (tool) {
+    const gF = { x: gfx, y: gfy };
+    const sol = solveShovel(tool, gF, [backRoot, frontRoot], torsoAngle, fsg, B.upperArm + B.forearm);
+    const tg = [sol.grips[0], sol.grips[1]];
+    const held: [boolean, boolean] = [false, false];
+    for (const i of [1, 0] as const) {
+      if (tool.oneHand && i === 0) continue;
+      const l = armIK3D(arms[i].root, tg[i], gF, B.upperArm, B.forearm, 1);
+      // nedosažitelný horní úchop (postava bokem, přechod do nesení): lopatu drží jen dolní ruka
+      if (i === 0 && Math.hypot(l.end.x - tg[i].x, l.end.y - tg[i].y) > 0.5) continue;
+      arms[i] = l; held[i] = true;
+    }
+    toolOut = { ...sol, held };
+    headTilt += -0.05 * fsg * (tool.h < 0.2 ? 1 : 0);
+  }
+  return { view, mirror, root: { x: 0, y: 0 }, hip, neck, shoulder, head, headTilt, torsoAngle, legs, arms, feet: [footAng[0], footAng[1]], feetK: [footProj[0].k, footProj[1].k], handR: arms[1].end, heelPts, cupTilt, snowSink: [sink[0], sink[1]], tool: toolOut };
 }
 
 /** Geometrie chůze ze šablony (výchozí bota podle zadání: pata 0,042 L, přednoží 0,113 L). */

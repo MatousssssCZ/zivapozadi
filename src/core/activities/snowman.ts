@@ -66,7 +66,7 @@ export interface SessionHost {
   time(): number;
   agent(id: string): AgentState | undefined;
   /** dojde k bodu (po síti tras a pak přímo) */ goTo(a: AgentState, p: Vec2, purpose: string): boolean;
-  /** projde body přímo (pracovní dráha) */ walkPath(a: AgentState, pts: Vec2[], purpose: string): void;
+  /** projde body přímo (pracovní dráha) */ walkPath(a: AgentState, pts: Vec2[], purpose: string, strict?: boolean): void;
   moving(a: AgentState): boolean;
   gesture(a: AgentState, fam: Family, opts?: { dur?: number; hand?: 0 | 1; dirY?: number; sgn?: number }): boolean;
   /** ukončí držené pracovní gesto (tlačení) jeho výstupem */ releaseWork(a: AgentState): void;

@@ -322,5 +322,5 @@ export interface ProjectFile {
    * Odklízení sněhu (A11): pruh (x0–x1 ve výšce y, výška decalu h px), hromada, příchod/odchod mimo obraz,
    * odstup pracovníka za lopatou (px), počet pásů; postava pracovníka má routine 'shovel'.
    */
-  clearing?: { workerId: string; strip: { x0: number; x1: number; y: number; h: number }; pile: Vec2; enter: Vec2; approach?: Vec2[]; standBack: number; bands?: number; firstDelay?: number };
+  clearing?: import('../sim/clearing').ClearingConfig;
 }

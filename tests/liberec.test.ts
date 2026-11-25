@@ -99,8 +99,8 @@ describe('Liberec – živý trh', () => {
     expect(sledHit).toBeGreaterThan(0.45);
     // odklízení sněhu (A11): pruh odkrytý celý, hromada narostla, pracovník odešel i s lopatou
     expect(msgs.some((m) => m.includes('odklidil(a) sníh'))).toBe(true);
-    expect(sim.state.clearing?.progress).toBe(1);
-    expect(sim.state.clearing?.pile).toBeGreaterThan(0.9);
+    // (podrobné ověření odklízení: tests/clearing.test.ts)
+    expect(sim.state.clearing?.stats.pushes).toBeGreaterThan(3);
     expect(sim.state.props.some((p) => p.kind === 'shovel')).toBe(sim.state.clearing?.phase !== 'offstage');
     expect(sim.state.props.filter((p) => p.kind === 'phone' && !sim.state.agents.some((a) => a.holding === p.id))).toEqual([]);
   }, 180000);
