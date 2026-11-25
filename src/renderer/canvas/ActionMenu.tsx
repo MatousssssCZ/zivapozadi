@@ -49,6 +49,8 @@ export function actionsAt(m: Vec2, agentId: string | null): MenuItem[] {
     if (m.x > Math.min(...xs) - pad && m.x < Math.max(...xs) + pad && m.y > Math.min(...ys) - pad && m.y < Math.max(...ys) + pad)
       items.push({ label: 'Odklízení sněhu', head: true }, { label: 'Jeden pracovní cyklus', run: () => clearingCommand('cycle') }, { label: 'Obnovit sníh', run: () => clearingCommand('reset') });
   }
+  if (p.tram) items.push({ label: 'Tramvaj a pekárna', head: true }, { label: 'Přijede tramvaj', run: () => toast(sim.tramNow()) });
+  if (p.bakery) items.push({ label: 'Pekař jde zametat', run: () => toast(sim.bakerNow()) });
   if (!a) {
     items.push({ label: 'Kdekoli', head: true });
     items.push({ label: 'Pád chodce (nejbližší)', run: () => toast(sim.triggerFall('back', 1, { helper: true }), 'Pád: ') });

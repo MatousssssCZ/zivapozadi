@@ -61,6 +61,10 @@ export interface VisitState {
 export interface AgentState {
   /** bruslař na ledě: pohyb a pózu řídí rink.ts (není v davu chodců) */
   onIce?: boolean;
+  /** ořez postavy (px scény): průchod dveřmi tramvaje / pekárny – postava zmizí za rámem */
+  clip?: { x: number; y: number }[] | null;
+  /** tramvaj: role cestujícího (čeká, vystupuje, nastupuje) a čekací místo */
+  tram?: { role: 'wait' | 'alight' | 'board'; spot?: number; step?: number; since: number } | null;
   id: string;
   name: string;
   rng: RngState;
@@ -192,6 +196,8 @@ export interface SimState {
   clearing?: import('./clearing').ClearingState;
   falls?: import('./falls').FallsState;
   rink?: import('./rink').RinkState;
+  tram?: import('./tram').TramState;
+  bakery?: import('./bakery').BakeryState;
   /** Sáňky (B02): stav průchodu. */
   sled?: import('./sled').SledState;
   /** Upadlá rukavice (B03): stav jediné události ve scéně. */

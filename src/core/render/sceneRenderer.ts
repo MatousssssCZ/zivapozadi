@@ -18,6 +18,8 @@ import { drawFigure } from '../anim/testFigure';
 import { SHOVEL_SPRITE } from '../anim/skeleton';
 import { cameraFor, toScreen, toWorld, Q, type World } from '../scene/camera';
 import { SLED } from '../sim/sled';
+import { tramGeo, tramMatrix, trackYAt, doorQuad, tramVisible, type TramGeo } from '../sim/tram';
+import { BAKERY_REFILL } from '../sim/bakery';
 import { drawSnowSurface, snowItems } from './snowRender';
 import type { SimState } from '../sim/types';
 import { lidOpenness } from '../sim/simulation';
@@ -213,6 +215,21 @@ function drawHeld(ctx: Ctx, held: PropState, cv: ReturnType<typeof characterVisu
     } else { ctx.fillStyle = '#4a4650'; ctx.fillRect(g.x - H * 0.25, g.y - H * 0.75, H * 0.5, H); }
     return;
   }
+  if (held.kind === 'shovel' && held.variant === 'broom' && cv.pose.tool) {
+    // koště (vektorově) ve stejné afinní matici jako lopata: úchopy na násadě, kartáč dosedá na zem
+    const T = cv.pose.tool, S = SHOVEL_SPRITE;
+    ctx.save(); ctx.transform(...T.M);
+    const tip = { x: 720, y: 300 }; // konec násady nad kartáčem
+    ctx.strokeStyle = '#8a5a34'; ctx.lineCap = 'round'; ctx.lineWidth = 26; ctx.beginPath(); ctx.moveTo(S.G.x - 20, S.G.y - 8); ctx.lineTo(tip.x, tip.y); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,220,170,0.35)'; ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(S.G.x - 10, S.G.y - 16); ctx.lineTo(tip.x - 6, tip.y - 10); ctx.stroke();
+    // hlava kartáče (dřevo) a štětiny k zemi (linie hull)
+    ctx.fillStyle = '#6b4226'; ctx.beginPath(); ctx.moveTo(640, 268); ctx.lineTo(800, 252); ctx.lineTo(812, 292); ctx.lineTo(652, 310); ctx.closePath(); ctx.fill();
+    const g = ctx.createLinearGradient(0, 290, 0, 370); g.addColorStop(0, '#c9a56a'); g.addColorStop(1, '#9c7a45');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(650, 300); ctx.lineTo(812, 284); ctx.lineTo(845, 345); ctx.lineTo(600, 364); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(80,55,30,0.45)'; ctx.lineWidth = 3; ctx.beginPath(); for (let i = 0; i <= 10; i++) { const u = i / 10; ctx.moveTo(652 + 160 * u, 302 - 16 * u); ctx.lineTo(604 + 240 * u, 362 - 19 * u); } ctx.stroke();
+    ctx.restore();
+    return;
+  }
   if (held.kind === 'shovel' && cv.pose.tool) {
     // tuhý nástroj z kostry: jediná afinní matice spritu (úchopy rukou jsou body téhož spritu)
     const img = sprite('shovel'), T = cv.pose.tool;
@@ -297,6 +314,12 @@ function backgroundColorAt(project: ProjectFile, images: AssetImages, x: number,
 }
 
 function drawAgent(ctx: Ctx, project: ProjectFile, sim: Simulation, a: AgentState, cupScaleFallback: number, images: AssetImages) {
+  if (a.clip?.length) {
+    // průchod dveřmi: postava je vidět jen v otvoru (zmizí za rámem a karoserií)
+    const clip = a.clip; ctx.save(); ctx.beginPath(); clip.forEach((q, i) => (i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y))); ctx.closePath(); ctx.clip();
+    a.clip = null; try { drawAgent(ctx, project, sim, a, cupScaleFallback, images); } finally { a.clip = clip; ctx.restore(); }
+    return;
+  }
   const c = sim.characterOf(a.id);
   if (!c) return;
   const m = sim.manifests[c.assetId];
@@ -533,6 +556,60 @@ function drawSparkles(ctx: Ctx, o: SceneObject, a: AssetEntry, t: number) {
   });
   ctx.restore();
 }
+const tramGeoCache = new WeakMap<object, TramGeo>();
+function tramGeoOf(p: ProjectFile): TramGeo {
+  let g = tramGeoCache.get(p.tram!); if (!g) { g = tramGeo(p.tram!, (y) => depthScaleAt(p.scene.depth, y) / Q); tramGeoCache.set(p.tram!, g); } return g;
+}
+/** Tramvaj: sprite v matici (přední podvozek na koleji, měřítko hloubky, zkosení), dveře jako lokální vrstva. */
+function drawTram(ctx: Ctx, project: ProjectFile, sim: Simulation, g: TramGeo, images: AssetImages) {
+  const c = project.tram!, st = sim.state.tram!, img = images.get(c.sprite.assetId) as (CanvasImageSource & { width: number; height: number }) | undefined; if (!img) return;
+  const { M } = tramMatrix(c, g, st.m, (y) => depthScaleAt(project.scene.depth, y) / Q);
+  ctx.save(); ctx.transform(...M); ctx.drawImage(img, 0, 0);
+  if (st.door > 0.001) {
+    // otevřené dveře: dvě křídla se odsouvají ke stranám (výřez z téhož spritu), mezi nimi teplý vstup
+    const [x0, y0, x1, y1] = c.sprite.door, mx = (x0 + x1) / 2, hw = (x1 - x0) / 2, o = st.door * hw * 0.92;
+    const gr = ctx.createLinearGradient(0, y0, 0, y1); gr.addColorStop(0, '#5a3a22'); gr.addColorStop(0.55, '#c98a3e'); gr.addColorStop(1, '#3a2416');
+    ctx.fillStyle = gr; ctx.fillRect(x0 + 4, y0 + 4, x1 - x0 - 8, y1 - y0 - 6);
+    ctx.fillStyle = 'rgba(255,210,140,0.25)'; ctx.fillRect(mx - o, y0 + 10, 2 * o, (y1 - y0) * 0.5);
+    ctx.save(); ctx.beginPath(); ctx.rect(x0, y0, x1 - x0, y1 - y0); ctx.clip();
+    ctx.drawImage(img, x0, y0, hw, y1 - y0, x0 - o, y0, hw, y1 - y0);
+    ctx.drawImage(img, mx, y0, hw, y1 - y0, mx + o, y0, hw, y1 - y0);
+    ctx.restore();
+  }
+  ctx.restore();
+  void doorQuad;
+}
+/** Dveře pekárny (křídlo z výřezu pozadí, otáčí se dovnitř kolem pantu), zametená místa a drobky sněhu. */
+function drawBakery(ctx: Ctx, project: ProjectFile, sim: Simulation, images: AssetImages) {
+  const c = project.bakery!, st = sim.state.bakery, t = sim.time(); if (!st) return;
+  // zametená místa: jemně tmavší (vlhká dlažba), pozvolna znovu zapadají sněhem
+  for (const q of st.patches) {
+    const k = 1 - (t - q.t0) / BAKERY_REFILL; if (k <= 0) continue;
+    const g = ctx.createRadialGradient(q.x, q.y, 0, q.x, q.y, q.r);
+    g.addColorStop(0, `rgba(120,120,140,${(0.22 * k).toFixed(3)})`); g.addColorStop(1, 'rgba(120,120,140,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(q.x, q.y, q.r, q.r * 0.35, 0, 0, Math.PI * 2); ctx.fill();
+  }
+  for (const q of st.crumbs) {
+    const a = t - q.t0, k = 1 - a / 0.7; if (k <= 0) continue;
+    const x = q.x + q.vx * a, y = q.y + q.vy * a + 0.5 * 9.81 * a * a * (q.vy === 0 ? 0 : -q.vy / 0.9 / 3);
+    ctx.fillStyle = `rgba(250,252,255,${(0.9 * k).toFixed(3)})`; ctx.beginPath(); ctx.arc(x, Math.min(y, q.y), 1.6, 0, Math.PI * 2); ctx.fill();
+  }
+  if (st.door <= 0.001) return;
+  const bg = project.scene.backgroundAssetId ? images.get(project.scene.backgroundAssetId) as (CanvasImageSource & { width: number; height: number }) | undefined : undefined; if (!bg) return;
+  const d = c.door, w = d.x1 - d.x0, h = d.y1 - d.y0, kx = bg.width / project.scene.width, ky = bg.height / project.scene.height;
+  // otvor: teplé světlo obchodu (lehce tlumené), na podlaze odlesk
+  const gr = ctx.createLinearGradient(0, d.y0, 0, d.y1); gr.addColorStop(0, '#6b4524'); gr.addColorStop(0.5, '#e0a55a'); gr.addColorStop(1, '#8a5a30');
+  ctx.fillStyle = gr; ctx.fillRect(d.x0, d.y0, w, h);
+  ctx.fillStyle = 'rgba(80,45,20,0.35)'; ctx.fillRect(d.x0 + w * 0.15, d.y0 + h * 0.15, w * 0.7, h * 0.85); // police v hloubce
+  // křídlo: otáčí se dovnitř kolem levého pantu – zúžené (cos úhlu), lehce ztmavené a zkosené perspektivou
+  const ang = st.door * 1.35, cw = Math.max(2, w * Math.cos(ang)), sk = Math.sin(ang) * h * 0.06;
+  ctx.save(); const hx = c.door.hinge === 'left' ? d.x0 : d.x1;
+  const sgn = c.door.hinge === 'left' ? 1 : -1;
+  ctx.transform((cw / w) * sgn, -sgn * sk / w, 0, 1, hx, d.y0);
+  ctx.drawImage(bg, d.x0 * kx, d.y0 * ky, w * kx, h * ky, sgn > 0 ? 0 : -w, 0, w, h);
+  ctx.fillStyle = `rgba(30,18,10,${(0.35 * st.door).toFixed(3)})`; ctx.fillRect(0, 0, w, h);
+  ctx.restore();
+}
 /** Mantinel: krátké úseky řazené podle hloubky (postavy za ním i před ním), výška `boardH` (0,95 m). */
 function rinkBoardItems(ctx: Ctx, project: ProjectFile): { key: number; tie: number; draw: () => void }[] {
   const cfg = project.rink!, cam = cameraFor(project.scene), W = cfg.ice.map((p) => toWorld(cam, p)), out: { key: number; tie: number; draw: () => void }[] = [];
@@ -674,6 +751,7 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
   if (sim) drawFootprints(ctx, project, sim, sim.time());
   if (sim?.state.falls?.marks.length) drawFallMarks(ctx, project, sim, sim.time());
   if (project.rink) drawRinkIce(ctx, project, sim, images, !!opts.reducedMotion);
+  if (project.bakery && sim) drawBakery(ctx, project, sim, images);
   if (sim && (sim.state as { snowFields?: Record<string, SnowField> }).snowFields) drawSnowFieldTrails(ctx, project, sim);
   const worldObjs = visible.filter(({ o }) => o.layer === 'world').map(({ o }) => o);
   drawGroundIntegration(ctx, project, worldObjs, assets, opts.time);
@@ -695,7 +773,16 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
     } });
   }
   if (sim) {
-    for (const a of sim.state.agents) if (!a.hidden) items.push({ key: a.pos.y, tie: 10000 + sim.state.agents.indexOf(a), draw: () => drawAgent(ctx, project, sim, a, 1, images) });
+    // tramvaj: kdo stojí za kolejemi (vzdálený chodník), je vždy za ní; kdo před nimi, před ní
+    const tr = project.tram && sim.state.tram && tramVisible(sim.state.tram) ? project.tram : null, trG = tr ? tramGeoOf(project) : null, K_TRAM = 600;
+    const keyOf = (a: AgentState) => {
+      if (!trG) return a.pos.y;
+      if (a.clip && a.tram) return K_TRAM + 0.5; // ve dveřích: hned po voze (ořez rámem)
+      const ty = trackYAt(trG, a.pos.x); if (ty === null) return a.pos.y;
+      return a.pos.y < ty ? a.pos.y - 5000 : Math.max(a.pos.y, K_TRAM + 1);
+    };
+    for (const a of sim.state.agents) if (!a.hidden) items.push({ key: keyOf(a), tie: 10000 + sim.state.agents.indexOf(a), draw: () => drawAgent(ctx, project, sim, a, 1, images) });
+    if (tr && trG) items.push({ key: K_TRAM, tie: 9500, draw: () => drawTram(ctx, project, sim, trG, images) });
     for (const p of sim.state.props) {
       const s = depthScaleAt(sc.depth, propY(p)) * 1.0;
       if (p.place.kind === 'counter') {

@@ -27,6 +27,9 @@ import { createAnimals, stepAnimals } from './animals';
 import { stepClearing, newClearingState, type ClearingHost } from './clearing';
 import { viewForDirection } from '../anim/skeleton';
 import { stepCoopSnowman, startCoopSnowman } from '../activities/coopSnowman';
+const TRAM_OUT_DY = 60;
+import { tramGeo, stepTram, newTramState, tramMatrix, doorQuad, applyM, tramVisible, type TramGeo } from './tram';
+import { stepBakery, newBakeryState, type BakeryHost } from './bakery';
 import { createSkater, stepSkater, stepRinkEvents, separate, addTrails, skatePose, SKATE_PROFILES, TRAIL_LIFE, FALL_TOTAL, type IceGeo, type RinkState, type RinkCtx , forceRinkEvent, makeIceGeo, RINK_FALL_T0, rinkFallLen, LIFE_LABEL, insideW, clampToIce, type TrickKind } from './rink';
 import { stepFalls, startFall, newFallsState, DEFAULT_FALLS, type FallHost, type FallsState } from './falls';
 import { fallEndShift as fallEndShiftOf, type FallVariant } from '../anim/fallPoses';
@@ -449,8 +452,104 @@ export class Simulation {
     if (this.state.mitten || this.state.agents.some((a) => a.holdingKind === 'mitten') || this.state.step % 60 === 0) stepMitten(this.mittenHost());
     if (this.project.falls || this.state.falls?.active.length) stepFalls(this.fallHost(), this.fallsState());
     if (this.project.rink) this.stepRink(t);
+    if (this.project.tram) this.stepTramAll(t);
+    if (this.project.bakery) this.stepBakeryAll(t);
     this.stepProps(t);
     this.state.step++;
+  }
+
+  // ---------------------------------------------------------------- tramvaj a cestující
+  // (vystupující nejdřív sejde ze silnice šikmo dolů na chodník – o kolik px)
+  // eslint-disable-next-line
+
+  private tramG: TramGeo | null = null;
+  tramGeometry(): TramGeo { return (this.tramG ??= tramGeo(this.project.tram!, (y) => depthScaleAt(this.project.scene.depth, y) / Q)); }
+  private tramPpm = (y: number) => depthScaleAt(this.project.scene.depth, y) / Q;
+  /** dveře stojící / jedoucí tramvaje: čtyřúhelník, bod na podlaze ve dveřích, bod na zemi před dveřmi */
+  tramDoor(): { quad: Vec2[]; floor: Vec2; ground: Vec2 } | null {
+    const c = this.project.tram, st = this.state.tram; if (!c || !st || !tramVisible(st)) return null;
+    const { M } = tramMatrix(c, this.tramGeometry(), st.m, this.tramPpm), [x0, , x1, y1] = c.sprite.door;
+    const quad = doorQuad(c, M), floor = applyM(M, (x0 + x1) / 2, y1 - 8), cam = this.cam(), w = toWorld(cam, floor);
+    return { quad, floor, ground: toScreen(cam, { X: w.X, Z: w.Z - 0.75 }) };
+  }
+  /** Ladění: tramvaj přijede hned. */
+  tramNow(): { ok: boolean; msg: string } { const st = this.state.tram; if (!st) return { ok: false, msg: 'Scéna nemá tramvaj.' }; if (st.phase !== 'wait') return { ok: false, msg: 'Tramvaj už jede.' }; st.until = this.time(); return { ok: true, msg: 'Tramvaj přijíždí.' }; }
+  bakerNow(): { ok: boolean; msg: string } { const st = this.state.bakery; if (!st) return { ok: false, msg: 'Scéna nemá pekárnu.' }; if (st.phase !== 'inside') return { ok: false, msg: 'Pekař už je venku.' }; st.until = this.time(); return { ok: true, msg: 'Pekař jde zametat.' }; }
+  private stepTramAll(t: number) {
+    const c = this.project.tram!, g = this.tramGeometry();
+    const st = (this.state.tram ??= newTramState(c, seedRng(this.project.seed, 'tram'), t));
+    const ag = this.state.agents, h = this.sessionHost();
+    const inRole = (r: string) => ag.filter((a) => a.tram?.role === r && !a.hidden);
+    const door = this.tramDoor();
+    // výstup: po jednom, jen když ve dveřích nikdo není; vystupující je zpočátku ořezaný rámem dveří
+    if (st.phase === 'alight' && door && st.alighted < st.nAlight && !inRole('alight').some((a) => a.clip) && !inRole('board').length) {
+      const cand = ag.filter((a) => a.hidden && a.visit?.mode === 'offstage' && !this.chars.get(a.id)?.companionId && !ag.some((x) => x.follow?.leaderId === a.id) && this.chars.get(a.id)?.routine === 'visitor' && !this.chars.get(a.id)?.pet && this.crowdAllows(a, 'walkers'));
+      const a = cand.length ? cand[Math.floor(rand(st.rng) * cand.length)] : null;
+      if (a) {
+        a.hidden = false; a.pos = { ...door.floor }; a.visPrev = undefined; a.off = { x: 0, y: 0 }; a.look = null; a.route = null;
+        a.anim.walkBlend = 0; a.anim.settle = null; a.anim.anchors = undefined; a.anim.anchorsXY = undefined;
+        a.clip = door.quad; a.tram = { role: 'alight', since: t }; a.visit = { mode: 'choose', until: 1e12, since: t };
+        const out = { x: door.ground.x - 0.9 * (TRAM_OUT_DY), y: door.ground.y + TRAM_OUT_DY };
+        h.walkPath(a, [door.ground, out], 'výstup z tramvaje'); a.speedFactor = 0.8; st.alighted++;
+        this.log('info', `${a.name} vystupuje z tramvaje.`, a.id);
+      } else st.alighted = st.nAlight; // nikdo k dispozici
+    }
+    for (const a of inRole('alight')) {
+      if (a.clip && door && a.pos.y > door.floor.y + 6) a.clip = null;
+      if (!a.route) { a.clip = null; a.tram = null; if (a.visit) { a.visit.until = t + 0.2; a.visit.leaveNext = rand(st.rng) < 0.6; } }
+    }
+    // nástup: čekající po jednom, až vystoupí všichni; u dveří se ořízne rámem a zmizí uvnitř
+    const waiting = ag.filter((a) => a.tram?.role === 'wait' && !a.hidden && !a.route);
+    if (st.phase === 'board' && door && st.boarded < st.nBoard && !inRole('alight').length && !inRole('board').length && waiting.length) {
+      const a = waiting.sort((p, q) => (p.tram!.since - q.tram!.since))[0];
+      if (a.tram!.spot !== undefined) this.res.release(`tram:spot:${a.tram!.spot}`, a.id);
+      // (chodci nejdou v obraze strměji než 45°: nejdřív bokem, pak šikmo ke dveřím)
+      const sg = Math.sign(a.pos.x - door.ground.x) || 1, dy = Math.max(0, a.pos.y - door.ground.y);
+      a.tram = { role: 'board', step: 0, since: t }; h.walkPath(a, [{ x: door.ground.x + sg * dy * 1.05, y: a.pos.y }, door.ground], 'nástup do tramvaje'); a.speedFactor = 0.85; st.boarded++;
+    }
+    for (const a of inRole('board')) {
+      if (a.route || !door) continue;
+      if (a.tram!.step === 0) { a.tram!.step = 1; a.clip = door.quad; h.walkPath(a, [door.floor], 'nástup do tramvaje'); a.speedFactor = 0.5; }
+      else { a.clip = null; a.tram = null; this.goOffstage(a, t); this.log('info', `${a.name} nastoupil(a) do tramvaje.`, a.id); }
+    }
+    const busy = inRole('alight').length + inRole('board').length;
+    stepTram(c, g, st, t, SIM_DT, { alightDone: st.alighted >= st.nAlight && !inRole('alight').some((a) => a.clip), boardDone: (st.boarded >= st.nBoard || !waiting.length) && !inRole('board').length, doorClear: busy === 0 });
+    // čekající se dívají směrem příjezdu (doprava); po 5 min čekání to vzdají
+    for (const a of ag) if (a.tram?.role === 'wait' && !a.route && !a.hidden) {
+      a.look = { angle: -0.15 }; a.status = st.phase === 'wait' || st.phase === 'in' ? 'Čeká na tramvaj' : 'Na zastávce';
+      if (t - a.tram.since > 300) { if (a.tram.spot !== undefined) this.res.release(`tram:spot:${a.tram.spot}`, a.id); a.tram = null; a.look = null; this.leaveScene(a, t); }
+    }
+  }
+  /** návštěvník zamíří na zastávku (volné čekací místo) */
+  private goToTram(a: AgentState, t: number): boolean {
+    const c = this.project.tram; if (!c) return false;
+    const i = c.waitSpots.findIndex((_, k) => this.res.isFree(`tram:spot:${k}`));
+    if (i < 0 || !this.res.tryReserve(`tram:spot:${i}`, a.id)) return false;
+    const p = c.waitSpots[i];
+    if (!this.sessionHost().goTo(a, p, 'na zastávku')) { this.sessionHost().walkPath(a, [p], 'na zastávku'); a.speedFactor = 1; }
+    a.tram = { role: 'wait', spot: i, since: t + 60 }; a.visit = { mode: 'coffee', until: 0, since: t };
+    return true;
+  }
+  // ---------------------------------------------------------------- pekař
+  private bakeryHost: BakeryHost | null = null;
+  private stepBakeryAll(t: number) {
+    const c = this.project.bakery!, a = this.state.agents.find((x) => x.id === c.bakerId); if (!a) return;
+    const st = (this.state.bakery ??= newBakeryState(c, seedRng(this.project.seed, 'bakery'), t));
+    const self = this;
+    this.bakeryHost ??= {
+      walk: (x, pts, sp) => { self.sessionHost().walkPath(x, pts, 'pekař', true); x.speedFactor = sp; },
+      moving: (x) => x.route !== null,
+      show: (x, p) => { x.pos = { ...p }; x.hidden = false; x.visPrev = undefined; x.off = { x: 0, y: 0 }; x.look = null; x.anim.walkBlend = 0; x.anim.settle = null; x.anim.anchors = undefined; x.anim.anchorsXY = undefined; },
+      hide: (x) => { x.hidden = true; x.route = null; x.speed = 0; x.vel = { X: 0, Z: 0 }; },
+      broom: (x, on) => {
+        if (on && !x.holding) { const p: PropState = { id: `prop${self.state.nextPropId++}`, kind: 'shovel', variant: 'broom', place: { kind: 'held', agentId: x.id }, appearedAt: self.time(), sips: 0 }; self.state.props.push(p); x.holding = p.id; x.holdingKind = 'shovel'; x.anim.tool = { u: 0.35, h: 0.55, beta: 1.25, crouch: 0, lean: 0 }; }
+        if (!on && x.holding) { const hid = x.holding; self.state.props = self.state.props.filter((p) => p.id !== hid); x.holding = null; x.holdingKind = null; x.anim.tool = null; }
+      },
+      face: (x, p) => { x.look = { x: p.x, y: p.y }; },
+      ppm: (y) => self.tramPpm(y),
+    };
+    stepBakery(c, st, a, this.bakeryHost, t, SIM_DT);
+    if (st.phase !== 'sweep' && a.holding && !a.anim.tool) a.anim.tool = { u: 0.35, h: 0.55, beta: 1.25, crouch: 0, lean: 0 }; // nese koště
   }
 
   /** Ladění: rodina (rodič + dítě) hned začne stavět sněhuláka v první volné zóně. */
@@ -1377,6 +1476,8 @@ export class Simulation {
     }
     if (a.route) { if (!mv.waitingNarrow) a.status = a.pendingActivity ? 'Jde k činnosti' : this.routeStatus(a); return; }
     if (c.routine === 'shovel') { if (a.hidden) a.status = 'Mimo scénu'; return; } // řídí stepClearing
+    if (c.routine === 'baker') return; // řídí stepBakeryAll
+    if (a.tram) { if (!a.route && a.tram.role === 'wait' && a.tram.since > t) a.tram.since = t; return; } // řídí stepTramAll
     if (c.routine === 'sled') { a.status = a.hidden ? 'Mimo scénu' : 'Táhne sáňky s dítětem'; return; } // řídí stepSled
     if (mittenBusy(this.state, a)) return; // vrací se pro rukavici / zvedá ji
     if (c.skate && this.project.rink?.entry && this.stepSkaterLife(a, c, t)) return;
@@ -1581,6 +1682,8 @@ export class Simulation {
       case 'choose': {
         if (t < v.until) { a.status = 'Stojí'; return; }
         if (v.leaveNext) { v.leaveNext = false; this.leaveScene(a, t); return; }
+        // zastávka tramvaje: část návštěvníků (bez dětí a psa) jde čekat na tramvaj
+        if (this.project.tram && !this.chars.get(a.id)?.pet && !this.state.agents.some((x) => x.follow?.leaderId === a.id) && !this.isChild(a) && rand(a.rng) < 0.3 && this.goToTram(a, t)) return;
         const r = rand(a.rng);
         const zone = this.coffeeZone(a, c);
         // rodina s dítětem: občas si jdou na dětský sníh postavit sněhuláka nebo se koulovat

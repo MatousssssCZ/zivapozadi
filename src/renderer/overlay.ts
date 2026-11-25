@@ -73,6 +73,7 @@ export function drawOverlay(ctx: Ctx, o: OverlayInput) {
   if (o.fallDebug && o.sim) drawFallDebug(ctx, o);
   if (o.snowmanDebug && o.sim) drawSnowmanDebug(ctx, o);
   if (o.rinkDebug && o.sim?.state.rink && o.project.rink) drawRinkDebug(ctx, o);
+  if (o.rinkDebug && o.sim && (o.project.tram || o.project.bakery)) drawTramDebug(ctx, o);
   // zdroje kouře a páry (značky – posun tažením v nástroji Kouř)
   for (const q of o.project.scene.environment?.sources ?? []) {
     ctx.save(); ctx.strokeStyle = MARKER_ACCENT; ctx.lineWidth = 1.5 * o.px; ctx.fillStyle = q.kind === 'smoke' ? 'rgba(90,90,100,0.6)' : 'rgba(220,230,255,0.7)';
@@ -271,6 +272,27 @@ function drawRinkDebug(ctx: Ctx, o: OverlayInput) {
     `prvky ${S.tricks} (${Object.entries(S.tricksByKind).map(([k, v]) => `${k} ${v}`).join(', ') || '—'}) · pády ${S.falls} · zaváhání ${S.wobbles} · odloženo ${S.deferred} · stop na ledě ${st.trails.length}`,
   ];
   lines.forEach((l, i) => label(ctx, l, o.project.scene.width / 2, 40 * px + i * 18 * px, px));
+  ctx.restore();
+}
+
+/** Ladění tramvajové ulice: trať (kotevní body), zastávka, dveře, čekací místa, pekárna, stavy aktérů. */
+function drawTramDebug(ctx: Ctx, o: OverlayInput) {
+  const sim = o.sim!, p = o.project, px = o.px; ctx.save();
+  if (p.tram) {
+    const g = sim.tramGeometry(), st = sim.state.tram;
+    ctx.strokeStyle = '#ffb000'; ctx.lineWidth = 2 * px; ctx.beginPath(); g.pts.forEach((q, i) => (i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y))); ctx.stroke();
+    for (const q of g.pts) { ctx.fillStyle = '#ffb000'; ctx.fillRect(q.x - 2 * px, q.y - 2 * px, 4 * px, 4 * px); }
+    const sx = p.tram.stopX; ctx.strokeStyle = '#ff3030'; ctx.beginPath(); ctx.moveTo(sx, 480); ctx.lineTo(sx, 700); ctx.stroke(); label(ctx, 'zastavení (přední podvozek)', sx, 478, px);
+    p.tram.waitSpots.forEach((w, i) => { ctx.strokeStyle = sim.res.isFree(`tram:spot:${i}`) ? '#22ff66' : '#ff9800'; ctx.beginPath(); ctx.arc(w.x, w.y, 6 * px, 0, 7); ctx.stroke(); });
+    const d = sim.tramDoor(); if (d) { ctx.strokeStyle = '#00e5ff'; ctx.beginPath(); d.quad.forEach((q, i) => (i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y))); ctx.closePath(); ctx.stroke(); ctx.fillStyle = '#00e5ff'; ctx.beginPath(); ctx.arc(d.ground.x, d.ground.y, 4 * px, 0, 7); ctx.fill(); }
+    if (st) label(ctx, `tramvaj: ${st.phase} · ${st.v.toFixed(1)} m/s · dveře ${(st.door * 100).toFixed(0)} % · výstup ${st.alighted}/${st.nAlight} · nástup ${st.boarded}/${st.nBoard} · průjezdů ${st.runs}${st.phase === 'wait' ? ` · další za ${Math.max(0, st.until - sim.time()).toFixed(0)} s` : ''}`, p.scene.width / 2, 40 * px, px);
+  }
+  if (p.bakery) {
+    const b = p.bakery, st = sim.state.bakery; ctx.strokeStyle = '#ff00e6'; ctx.strokeRect(b.door.x0, b.door.y0, b.door.x1 - b.door.x0, b.door.y1 - b.door.y0);
+    ctx.beginPath(); ctx.moveTo(b.sweep[0].x, b.sweep[0].y); ctx.lineTo(b.sweep[1].x, b.sweep[1].y); ctx.stroke();
+    if (st) label(ctx, `pekař: ${st.phase}${st.phase === 'inside' ? ` · venku za ${Math.max(0, st.until - sim.time()).toFixed(0)} s` : ''} · zametených míst ${st.patches.length}`, p.scene.width / 2, 58 * px, px);
+  }
+  for (const a of sim.state.agents) if (!a.hidden && (a.tram || sim.characterOf(a.id)?.routine === 'baker')) label(ctx, `${a.name}: ${a.tram ? a.tram.role : a.status}`, a.pos.x, a.pos.y + 16 * px, px, '#fff', 'rgba(30,60,140,0.8)');
   ctx.restore();
 }
 

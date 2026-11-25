@@ -17,7 +17,7 @@ import { createEmptyProject } from '../core/model/defaults';
 import { Muxer, ArrayBufferTarget } from 'mp4-muxer';
 
 const BASE = new URL('.', document.baseURI).href;
-const DEMOS: Record<string, string> = { namesti: 'Vanocni-namesti', radnice: 'Namesti-radnice', liberec: 'Liberec-zivy-trh', pastel: 'Pastelove-kluziste' };
+const DEMOS: Record<string, string> = { namesti: 'Vanocni-namesti', radnice: 'Namesti-radnice', liberec: 'Liberec-zivy-trh', pastel: 'Pastelove-kluziste', tram: 'Tramvajova-ulice' };
 const DEFAULT_DEMO = 'Liberec-zivy-trh';
 
 // ------------------------------------------------------------------ IndexedDB (klíč → hodnota)

@@ -1,0 +1,1986 @@
+{
+  "format": "zimni-scena-projekt",
+  "formatVersion": 1,
+  "meta": {
+    "name": "Vánoční tramvajová ulice",
+    "createdAt": "2026-11-25T23:46:01.552Z",
+    "modifiedAt": "2026-11-25T23:46:01.630Z",
+    "appVersion": "0.1.0"
+  },
+  "seed": 4242,
+  "scene": {
+    "width": 1920,
+    "height": 1080,
+    "backgroundAssetId": "asset_image_pozadi-ulice_a57934ce",
+    "backgroundColor": "#dfe8f2",
+    "depth": {
+      "enabled": true,
+      "yFar": 597,
+      "scaleFar": 0.877,
+      "yNear": 1080,
+      "scaleNear": 2.59
+    },
+    "snowfall": {
+      "enabled": true,
+      "density": 0.4,
+      "wind": 0.08
+    },
+    "environment": {
+      "variableSnow": true,
+      "gusts": false,
+      "cupSteam": true,
+      "stallSteam": false,
+      "sources": []
+    }
+  },
+  "assets": [
+    {
+      "id": "asset_image_pozadi-ulice_a57934ce",
+      "kind": "image",
+      "name": "Pozadí – vánoční tramvajová ulice",
+      "file": "assets/images/pozadi-ulice-a57934ce.png",
+      "width": 1920,
+      "height": 1080,
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "asset_image_zastavka_1f98cd11",
+      "kind": "image",
+      "name": "Zastávka",
+      "file": "assets/images/zastavka-1f98cd11.png",
+      "width": 267,
+      "height": 217,
+      "anchor": {
+        "x": 0,
+        "y": 0.9861751152073732
+      },
+      "pixelScale": 1,
+      "shape": {
+        "bodyU0": 0.1,
+        "bodyU1": 0.95,
+        "depthM": 1.6
+      }
+    },
+    {
+      "id": "asset_image_popredi_702fe74e",
+      "kind": "image",
+      "name": "Popředí – lampa, lavička, zábradlí",
+      "file": "assets/images/popredi-702fe74e.png",
+      "width": 589,
+      "height": 941,
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "tram_sprite",
+      "kind": "image",
+      "name": "Tramvaj",
+      "file": "assets/images/tramvaj-db5df8ab.png",
+      "width": 1051,
+      "height": 913,
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "asset_image_neviditelny_ff9f5906",
+      "kind": "image",
+      "name": "Výloha pekárny (bod pro prohlížení)",
+      "file": "assets/images/neviditelny-ff9f5906.png",
+      "width": 4,
+      "height": 4,
+      "anchor": {
+        "x": 0.5,
+        "y": 1
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "builtin_postava_cg",
+      "kind": "character",
+      "name": "Malovaná postava – díly z ChatGPT",
+      "file": "assets/characters/malovana-postava-cg.json",
+      "includeDir": "painted-parts-cg"
+    },
+    {
+      "id": "builtin_postava_dite",
+      "kind": "character",
+      "name": "Malované dítě – díly z ChatGPT",
+      "file": "assets/characters/malovana-postava-dite.json",
+      "includeDir": "painted-parts-child"
+    },
+    {
+      "id": "animal_dog_collie_fl_a",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_fl_a",
+      "file": "assets/images/dog-collie-fl-a-5435b082.png",
+      "width": 100,
+      "height": 193,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_fl_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_fl_a_back",
+      "file": "assets/images/dog-collie-fl-a-back-75234da3.png",
+      "width": 102,
+      "height": 194,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_fl_b",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_fl_b",
+      "file": "assets/images/dog-collie-fl-b-d37dd7eb.png",
+      "width": 107,
+      "height": 187,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_fl_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_fl_b_back",
+      "file": "assets/images/dog-collie-fl-b-back-61d142ee.png",
+      "width": 104,
+      "height": 188,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_fu_a",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_fu_a",
+      "file": "assets/images/dog-collie-fu-a-5f64d955.png",
+      "width": 120,
+      "height": 222,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_fu_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_fu_a_back",
+      "file": "assets/images/dog-collie-fu-a-back-6c245298.png",
+      "width": 122,
+      "height": 222,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_fu_b",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_fu_b",
+      "file": "assets/images/dog-collie-fu-b-24dc9ee3.png",
+      "width": 109,
+      "height": 221,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_fu_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_fu_b_back",
+      "file": "assets/images/dog-collie-fu-b-back-13e30766.png",
+      "width": 111,
+      "height": 221,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_head",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_head",
+      "file": "assets/images/dog-collie-head-9e2570dd.png",
+      "width": 221,
+      "height": 317,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_head_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_head_back",
+      "file": "assets/images/dog-collie-head-back-79a4e62f.png",
+      "width": 222,
+      "height": 316,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_hl_a",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_hl_a",
+      "file": "assets/images/dog-collie-hl-a-fc9eac34.png",
+      "width": 95,
+      "height": 197,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_hl_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_hl_a_back",
+      "file": "assets/images/dog-collie-hl-a-back-21207ab7.png",
+      "width": 105,
+      "height": 199,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_hl_b",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_hl_b",
+      "file": "assets/images/dog-collie-hl-b-023758f4.png",
+      "width": 102,
+      "height": 199,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_hl_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_hl_b_back",
+      "file": "assets/images/dog-collie-hl-b-back-2d68bb8d.png",
+      "width": 103,
+      "height": 198,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_hu_a",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_hu_a",
+      "file": "assets/images/dog-collie-hu-a-a57a1471.png",
+      "width": 159,
+      "height": 266,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_hu_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_hu_a_back",
+      "file": "assets/images/dog-collie-hu-a-back-970ec9f9.png",
+      "width": 158,
+      "height": 267,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_hu_b",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_hu_b",
+      "file": "assets/images/dog-collie-hu-b-ab276e0d.png",
+      "width": 161,
+      "height": 268,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_hu_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_hu_b_back",
+      "file": "assets/images/dog-collie-hu-b-back-ad148634.png",
+      "width": 164,
+      "height": 267,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_tail",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_tail",
+      "file": "assets/images/dog-collie-tail-790d7ecb.png",
+      "width": 213,
+      "height": 260,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_tail_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_tail_back",
+      "file": "assets/images/dog-collie-tail-back-4fbd598b.png",
+      "width": 216,
+      "height": 254,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_torso",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_torso",
+      "file": "assets/images/dog-collie-torso-4042fc85.png",
+      "width": 378,
+      "height": 248,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_torso_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_torso_back",
+      "file": "assets/images/dog-collie-torso-back-43e09c53.png",
+      "width": 382,
+      "height": 246,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    }
+  ],
+  "objects": [
+    {
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "id": "obj_zastavka",
+      "name": "Zastávka",
+      "assetId": "asset_image_zastavka_1f98cd11",
+      "x": 1595,
+      "y": 648.8,
+      "scale": 1.1483253588516746,
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": false,
+          "saturation": 0.88,
+          "contrast": 0.95,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": false,
+          "gain": 1
+        }
+      },
+      "footprint": [
+        {
+          "x": 37,
+          "y": -7
+        },
+        {
+          "x": 47,
+          "y": -7
+        },
+        {
+          "x": 47,
+          "y": 3
+        },
+        {
+          "x": 37,
+          "y": 3
+        }
+      ]
+    },
+    {
+      "layer": "foreground",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "id": "obj_popredi",
+      "name": "Popředí – lampa, lavička, zábradlí",
+      "assetId": "asset_image_popredi_702fe74e",
+      "x": 0,
+      "y": 0,
+      "scale": 1.1483253588516746
+    },
+    {
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "id": "obj_vyloha",
+      "name": "Výloha pekárny",
+      "assetId": "asset_image_neviditelny_ff9f5906",
+      "x": 484.6,
+      "y": 689,
+      "scale": 1,
+      "interaction": {
+        "kind": "viewpoint",
+        "points": [
+          {
+            "id": "view1",
+            "kind": "view",
+            "offset": {
+              "x": -34,
+              "y": 32
+            },
+            "facing": -1.5707963267948966,
+            "label": "U výlohy 1"
+          },
+          {
+            "id": "view2",
+            "kind": "view",
+            "offset": {
+              "x": 34,
+              "y": 28
+            },
+            "facing": -1.5707963267948966,
+            "label": "U výlohy 2"
+          }
+        ]
+      }
+    }
+  ],
+  "nav": {
+    "nodes": [
+      {
+        "id": "f0",
+        "x": -80.4,
+        "y": 721.1,
+        "name": "Vstup vlevo (chodník)",
+        "portal": true
+      },
+      {
+        "id": "f1",
+        "x": 137.8,
+        "y": 720,
+        "name": "Chodník u obchodů 1"
+      },
+      {
+        "id": "f2",
+        "x": 300.9,
+        "y": 722.3,
+        "name": "Před pekárnou"
+      },
+      {
+        "id": "f3",
+        "x": 597.1,
+        "y": 715.4,
+        "name": "Chodník u obchodů 3"
+      },
+      {
+        "id": "f4",
+        "x": 918.7,
+        "y": 689,
+        "name": "Chodník u obchodů 4"
+      },
+      {
+        "id": "f5",
+        "x": 1148.3,
+        "y": 652.2,
+        "name": "Chodník u obchodů 5"
+      },
+      {
+        "id": "f6",
+        "x": 1355,
+        "y": 628.1,
+        "name": "Chodník u obchodů 6"
+      },
+      {
+        "id": "f7",
+        "x": 1550.2,
+        "y": 607.5,
+        "name": "Chodník u obchodů 7"
+      },
+      {
+        "id": "f8",
+        "x": 1745.5,
+        "y": 592.5,
+        "name": "Chodník u obchodů 8"
+      },
+      {
+        "id": "f9",
+        "x": 1986.6,
+        "y": 586.8,
+        "name": "Vstup vpravo (chodník)",
+        "portal": true
+      },
+      {
+        "id": "n0",
+        "x": -91.9,
+        "y": 886.5,
+        "name": "Vstup vlevo (vpředu)",
+        "portal": true
+      },
+      {
+        "id": "n1",
+        "x": 344.5,
+        "y": 879.6,
+        "name": "Přední chodník 1"
+      },
+      {
+        "id": "n2",
+        "x": 746.4,
+        "y": 852.1,
+        "name": "Přední chodník 2"
+      },
+      {
+        "id": "n3",
+        "x": 1090.9,
+        "y": 803.8,
+        "name": "Přední chodník 3"
+      },
+      {
+        "id": "n4",
+        "x": 1378,
+        "y": 734.9,
+        "name": "Přední chodník 4"
+      },
+      {
+        "id": "n5",
+        "x": 1584.7,
+        "y": 685.6,
+        "name": "Přední chodník 5"
+      },
+      {
+        "id": "n6",
+        "x": 1676.6,
+        "y": 678.7,
+        "name": "Zastávka"
+      },
+      {
+        "id": "n7",
+        "x": 1837.3,
+        "y": 684.4,
+        "name": "Přední chodník 7"
+      },
+      {
+        "id": "n8",
+        "x": 2021.1,
+        "y": 695.9,
+        "name": "Vstup vpravo (vpředu)",
+        "portal": true
+      }
+    ],
+    "edges": [
+      {
+        "id": "e_f1",
+        "a": "f0",
+        "b": "f1",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_f2",
+        "a": "f1",
+        "b": "f2",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_f3",
+        "a": "f2",
+        "b": "f3",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_f4",
+        "a": "f3",
+        "b": "f4",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_f5",
+        "a": "f4",
+        "b": "f5",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_f6",
+        "a": "f5",
+        "b": "f6",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_f7",
+        "a": "f6",
+        "b": "f7",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_f8",
+        "a": "f7",
+        "b": "f8",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_f9",
+        "a": "f8",
+        "b": "f9",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_n1",
+        "a": "n0",
+        "b": "n1",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_n2",
+        "a": "n1",
+        "b": "n2",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_n3",
+        "a": "n2",
+        "b": "n3",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_n4",
+        "a": "n3",
+        "b": "n4",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_n5",
+        "a": "n4",
+        "b": "n5",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_n6",
+        "a": "n5",
+        "b": "n6",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_n7",
+        "a": "n6",
+        "b": "n7",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_n8",
+        "a": "n7",
+        "b": "n8",
+        "oneWay": false,
+        "narrow": false
+      }
+    ]
+  },
+  "areas": [
+    {
+      "id": "area_snih",
+      "name": "Zasněžená ulice",
+      "kind": "snow",
+      "polygon": [
+        {
+          "x": 0,
+          "y": 560
+        },
+        {
+          "x": 1920,
+          "y": 560
+        },
+        {
+          "x": 1920,
+          "y": 1080
+        },
+        {
+          "x": 0,
+          "y": 1080
+        }
+      ]
+    }
+  ],
+  "zones": [
+    {
+      "id": "zone_vyloha",
+      "name": "Zastavení u výlohy pekárny",
+      "activityType": "viewing",
+      "activityVersion": 1,
+      "enabled": true,
+      "bounds": [
+        {
+          "x": 0,
+          "y": 600
+        },
+        {
+          "x": 1920,
+          "y": 600
+        },
+        {
+          "x": 1920,
+          "y": 800
+        },
+        {
+          "x": 0,
+          "y": 800
+        }
+      ],
+      "objectRoles": {
+        "view": [
+          "obj_vyloha"
+        ]
+      },
+      "params": {
+        "lookMin": 4,
+        "lookMax": 12
+      }
+    }
+  ],
+  "characters": [
+    {
+      "id": "ch_1",
+      "name": "Adéla",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "f0",
+      "baseScale": 1,
+      "walkSpeed": 57.1,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1912605995,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_07_cg"
+        },
+        "colors": {
+          "jacket": "kremova",
+          "hat": "olivova",
+          "scarf": "tmave-seda",
+          "gloves": "tmave-seda",
+          "trousers": "tmave-seda",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 1.018,
+          "build": 0.99
+        },
+        "motion": {
+          "strideScale": 0.903,
+          "armSwing": 1.253,
+          "bob": 0.931,
+          "sway": 0.926,
+          "idleTempo": 1.106,
+          "lean": 1.282,
+          "speed": 0.951,
+          "phase": 0.646,
+          "armLag": 2.725,
+          "armLR": 1.116
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {}
+    },
+    {
+      "id": "ch_2",
+      "name": "Boris",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "f9",
+      "baseScale": 1,
+      "walkSpeed": 68.9,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1323733207,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_12_cg"
+        },
+        "colors": {
+          "jacket": "tmave-seda",
+          "hat": "olivova",
+          "scarf": "hneda",
+          "gloves": "hneda",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 0.956,
+          "build": 1.019
+        },
+        "motion": {
+          "strideScale": 0.968,
+          "armSwing": 0.938,
+          "bob": 1.087,
+          "sway": 0.76,
+          "idleTempo": 1.01,
+          "lean": 0.849,
+          "speed": 1.149,
+          "phase": 0.593,
+          "armLag": -1.066,
+          "armLR": 0.942
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {}
+    },
+    {
+      "id": "ch_3",
+      "name": "Cyril",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n0",
+      "baseScale": 1,
+      "walkSpeed": 56.6,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 71093870,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_puffer_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_hiking_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_03_cg"
+        },
+        "colors": {
+          "jacket": "petrolejova",
+          "hat": "olivova",
+          "scarf": "kremova",
+          "gloves": "olivova",
+          "trousers": "olivova",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 1.022,
+          "build": 0.999
+        },
+        "motion": {
+          "strideScale": 0.961,
+          "armSwing": 1.013,
+          "bob": 1.1,
+          "sway": 0.82,
+          "idleTempo": 1.129,
+          "lean": 0.441,
+          "speed": 0.943,
+          "phase": 0.882,
+          "armLag": 1.936,
+          "armLR": 1.007
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {},
+      "pet": "dog",
+      "petBreed": "dog_collie"
+    },
+    {
+      "id": "ch_4",
+      "name": "Dagmar",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n8",
+      "baseScale": 1,
+      "walkSpeed": 51.3,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1848075090,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_puffer_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_neckwarmer_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_hiking_cg",
+          "gloves": "gloves_cg",
+          "head": "head_12_cg"
+        },
+        "colors": {
+          "jacket": "tmave-seda",
+          "hat": "hneda",
+          "scarf": "petrolejova",
+          "gloves": "hneda",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 0.996,
+          "build": 1.026
+        },
+        "motion": {
+          "strideScale": 1.076,
+          "armSwing": 0.98,
+          "bob": 0.801,
+          "sway": 0.849,
+          "idleTempo": 1.066,
+          "lean": 1.308,
+          "speed": 0.855,
+          "phase": 0.993,
+          "armLag": 3.272,
+          "armLR": 0.977
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {}
+    },
+    {
+      "id": "ch_5",
+      "name": "Erik",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "f0",
+      "baseScale": 1,
+      "walkSpeed": 69.7,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 8219088,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_puffer_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_neckwarmer_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_05_cg"
+        },
+        "colors": {
+          "jacket": "hneda",
+          "hat": "vinova",
+          "scarf": "kremova",
+          "gloves": "vinova",
+          "trousers": "tmave-seda",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 1.019,
+          "build": 0.969
+        },
+        "motion": {
+          "strideScale": 1.02,
+          "armSwing": 1.156,
+          "bob": 0.899,
+          "sway": 0.983,
+          "idleTempo": 1.005,
+          "lean": 2.923,
+          "speed": 1.161,
+          "phase": 0.465,
+          "armLag": -1.339,
+          "armLR": 1.029
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {}
+    },
+    {
+      "id": "ch_6",
+      "name": "Fanny",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "f9",
+      "baseScale": 1,
+      "walkSpeed": 64.3,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 851518394,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_puffer_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_hiking_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_06_cg"
+        },
+        "colors": {
+          "jacket": "kremova",
+          "hat": "olivova",
+          "scarf": "petrolejova",
+          "gloves": "olivova",
+          "trousers": "tmave-seda",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 1.028,
+          "build": 1.004
+        },
+        "motion": {
+          "strideScale": 1.084,
+          "armSwing": 1.117,
+          "bob": 1.088,
+          "sway": 1.085,
+          "idleTempo": 1.093,
+          "lean": 1.525,
+          "speed": 1.072,
+          "phase": 0.516,
+          "armLag": 1.361,
+          "armLR": 1.024
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {}
+    },
+    {
+      "id": "ch_7",
+      "name": "Gerta",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n0",
+      "baseScale": 1,
+      "walkSpeed": 54.1,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 963694923,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_puffer_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_neckwarmer_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_hiking_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_05_cg"
+        },
+        "colors": {
+          "jacket": "okrova",
+          "hat": "olivova",
+          "scarf": "petrolejova",
+          "gloves": "petrolejova",
+          "trousers": "olivova",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 1.022,
+          "build": 1.041
+        },
+        "motion": {
+          "strideScale": 1.062,
+          "armSwing": 1.04,
+          "bob": 0.928,
+          "sway": 0.768,
+          "idleTempo": 0.991,
+          "lean": 0.512,
+          "speed": 0.902,
+          "phase": 0.048,
+          "armLag": -0.378,
+          "armLR": 1.098
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {}
+    },
+    {
+      "id": "ch_8",
+      "name": "Hugo",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n8",
+      "baseScale": 1,
+      "walkSpeed": 55.6,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1282877309,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_puffer_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_neckwarmer_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_01_cg"
+        },
+        "colors": {
+          "jacket": "olivova",
+          "hat": "hneda",
+          "scarf": "tmave-seda",
+          "gloves": "tmave-seda",
+          "trousers": "tmave-seda",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 1.012,
+          "build": 0.997
+        },
+        "motion": {
+          "strideScale": 0.908,
+          "armSwing": 0.778,
+          "bob": 1.044,
+          "sway": 1.121,
+          "idleTempo": 1.056,
+          "lean": 0.556,
+          "speed": 0.926,
+          "phase": 0.193,
+          "armLag": 2.789,
+          "armLR": 1.07
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {}
+    },
+    {
+      "id": "ch_9",
+      "name": "Ilona",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "f0",
+      "baseScale": 1,
+      "walkSpeed": 56.1,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 2025185796,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_neckwarmer_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_08_cg"
+        },
+        "colors": {
+          "jacket": "tmave-seda",
+          "hat": "vinova",
+          "scarf": "olivova",
+          "gloves": "olivova",
+          "trousers": "tmave-seda",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 0.993,
+          "build": 1.015
+        },
+        "motion": {
+          "strideScale": 1.061,
+          "armSwing": 0.924,
+          "bob": 0.926,
+          "sway": 0.908,
+          "idleTempo": 0.906,
+          "lean": 0.348,
+          "speed": 0.935,
+          "phase": 0.413,
+          "armLag": -1.809,
+          "armLR": 1.076
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {}
+    },
+    {
+      "id": "ch_10",
+      "name": "Jonáš",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "f9",
+      "baseScale": 1,
+      "walkSpeed": 70.9,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 705435983,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_puffer_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_neckwarmer_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_hiking_cg",
+          "gloves": "gloves_cg",
+          "head": "head_03_cg"
+        },
+        "colors": {
+          "jacket": "okrova",
+          "hat": "tmave-seda",
+          "scarf": "petrolejova",
+          "gloves": "tmave-seda",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 1,
+          "build": 1.048
+        },
+        "motion": {
+          "strideScale": 1.037,
+          "armSwing": 1.182,
+          "bob": 0.972,
+          "sway": 1.211,
+          "idleTempo": 1.047,
+          "lean": 2.306,
+          "speed": 1.182,
+          "phase": 0.868,
+          "armLag": -0.738,
+          "armLR": 0.985
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {}
+    },
+    {
+      "id": "ch_11",
+      "name": "Kamila",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n0",
+      "baseScale": 1,
+      "walkSpeed": 68.5,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 536371337,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_puffer_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_neckwarmer_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_08_cg"
+        },
+        "colors": {
+          "jacket": "petrolejova",
+          "hat": "kremova",
+          "scarf": "olivova",
+          "gloves": "olivova",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 1.042,
+          "build": 0.979
+        },
+        "motion": {
+          "strideScale": 0.957,
+          "armSwing": 1.116,
+          "bob": 0.942,
+          "sway": 1.028,
+          "idleTempo": 0.983,
+          "lean": 2.564,
+          "speed": 1.141,
+          "phase": 0.669,
+          "armLag": -0.449,
+          "armLR": 1.132
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {}
+    },
+    {
+      "id": "kid_1",
+      "name": "Toník",
+      "assetId": "builtin_postava_dite",
+      "startNodeId": "n8",
+      "baseScale": 1,
+      "walkSpeed": 51.3,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-dite-v1",
+        "seed": 1423974831,
+        "bodyTemplate": "child-cg",
+        "variants": {
+          "jacket": "jacket_coat_child",
+          "hat": "hat_beanie_child",
+          "scarf": "scarf_long_child",
+          "trousers": "trousers_child",
+          "boots": "boots_child",
+          "gloves": "gloves_child",
+          "head": "head_child"
+        },
+        "colors": {
+          "jacket": "hneda",
+          "hat": "olivova",
+          "scarf": "okrova",
+          "gloves": "olivova",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 1.028,
+          "build": 0.995
+        },
+        "motion": {
+          "strideScale": 0.955,
+          "armSwing": 0.747,
+          "bob": 1.027,
+          "sway": 0.846,
+          "idleTempo": 1.122,
+          "lean": 1.733,
+          "speed": 1.159,
+          "phase": 0.283,
+          "armLag": -1.869,
+          "armLR": 1.06
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {},
+      "companionId": "ch_4",
+      "companionSide": -1
+    },
+    {
+      "id": "kid_2",
+      "name": "Bára",
+      "assetId": "builtin_postava_dite",
+      "startNodeId": "n0",
+      "baseScale": 1,
+      "walkSpeed": 54.1,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-dite-v1",
+        "seed": 984092900,
+        "bodyTemplate": "child-cg",
+        "variants": {
+          "jacket": "jacket_coat_child",
+          "hat": "hat_beanie_child",
+          "scarf": "scarf_long_child",
+          "trousers": "trousers_child",
+          "boots": "boots_child",
+          "gloves": "gloves_child",
+          "head": "head_child"
+        },
+        "colors": {
+          "jacket": "okrova",
+          "hat": "kremova",
+          "scarf": "tmave-seda",
+          "gloves": "tmave-seda",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 0.953,
+          "build": 1.01
+        },
+        "motion": {
+          "strideScale": 0.93,
+          "armSwing": 1.087,
+          "bob": 1.056,
+          "sway": 0.916,
+          "idleTempo": 1.045,
+          "lean": 2.991,
+          "speed": 1.012,
+          "phase": 0.57,
+          "armLag": -0.82,
+          "armLR": 0.944
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {},
+      "companionId": "ch_7",
+      "companionSide": 1
+    },
+    {
+      "id": "ch_senior",
+      "name": "Pan Bohumil (senior)",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "f9",
+      "baseScale": 0.97,
+      "walkSpeed": 50,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1884465230,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_11_cg"
+        },
+        "colors": {
+          "jacket": "kremova",
+          "hat": "tmave-seda",
+          "scarf": "vinova",
+          "gloves": "vinova",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 0.986,
+          "build": 1.032
+        },
+        "motion": {
+          "strideScale": 1.066,
+          "armSwing": 1.215,
+          "bob": 0.958,
+          "sway": 1.063,
+          "idleTempo": 0.938,
+          "lean": 1.638,
+          "speed": 1.156,
+          "phase": 0.566,
+          "armLag": -0.516,
+          "armLR": 1.119
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {},
+      "gaitProfile": "elderA"
+    },
+    {
+      "id": "ch_pekar",
+      "name": "Pekař",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "f2",
+      "baseScale": 1,
+      "walkSpeed": 55,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": false,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 724473848,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_neckwarmer_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_03_cg"
+        },
+        "colors": {
+          "jacket": "okrova",
+          "hat": "hneda",
+          "scarf": "petrolejova",
+          "gloves": "hneda",
+          "trousers": "olivova",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 1.041,
+          "build": 0.962
+        },
+        "motion": {
+          "strideScale": 1.051,
+          "armSwing": 0.966,
+          "bob": 1.087,
+          "sway": 0.792,
+          "idleTempo": 0.91,
+          "lean": 2.964,
+          "speed": 1.15,
+          "phase": 0.208,
+          "armLag": 2.134,
+          "armLR": 1.086
+        },
+        "locks": []
+      },
+      "routine": "baker",
+      "activities": {}
+    }
+  ],
+  "schedule": [],
+  "export": {
+    "resolution": "1920x1080",
+    "fps": 30,
+    "durationMode": "manual",
+    "durationSec": 60,
+    "audioAssetId": null,
+    "audioWhenShorter": "silence",
+    "crf": 20,
+    "preset": "medium",
+    "chunkSec": 20,
+    "outputPath": null,
+    "diagnosticPngSequence": false
+  },
+  "tram": {
+    "track": [
+      {
+        "x": 6.9,
+        "y": 790.6
+      },
+      {
+        "x": 52.8,
+        "y": 788.3
+      },
+      {
+        "x": 98.8,
+        "y": 785.5
+      },
+      {
+        "x": 144.7,
+        "y": 783.2
+      },
+      {
+        "x": 190.6,
+        "y": 780.3
+      },
+      {
+        "x": 236.6,
+        "y": 777.4
+      },
+      {
+        "x": 282.5,
+        "y": 775.1
+      },
+      {
+        "x": 328.4,
+        "y": 772.2
+      },
+      {
+        "x": 374.4,
+        "y": 769.4
+      },
+      {
+        "x": 420.3,
+        "y": 767.1
+      },
+      {
+        "x": 466.2,
+        "y": 764.2
+      },
+      {
+        "x": 512.2,
+        "y": 761.3
+      },
+      {
+        "x": 558.1,
+        "y": 757.9
+      },
+      {
+        "x": 604,
+        "y": 754.4
+      },
+      {
+        "x": 650,
+        "y": 751.6
+      },
+      {
+        "x": 695.9,
+        "y": 747.6
+      },
+      {
+        "x": 741.8,
+        "y": 743.5
+      },
+      {
+        "x": 787.8,
+        "y": 739.5
+      },
+      {
+        "x": 833.7,
+        "y": 734.9
+      },
+      {
+        "x": 879.6,
+        "y": 730.3
+      },
+      {
+        "x": 925.6,
+        "y": 725.7
+      },
+      {
+        "x": 971.5,
+        "y": 721.1
+      },
+      {
+        "x": 1017.4,
+        "y": 714.8
+      },
+      {
+        "x": 1063.3,
+        "y": 709.1
+      },
+      {
+        "x": 1109.3,
+        "y": 703.3
+      },
+      {
+        "x": 1155.2,
+        "y": 697.6
+      },
+      {
+        "x": 1201.1,
+        "y": 691.3
+      },
+      {
+        "x": 1247.1,
+        "y": 684.4
+      },
+      {
+        "x": 1293,
+        "y": 679.2
+      },
+      {
+        "x": 1338.9,
+        "y": 671.2
+      },
+      {
+        "x": 1384.9,
+        "y": 663.7
+      },
+      {
+        "x": 1430.8,
+        "y": 656.3
+      },
+      {
+        "x": 1476.7,
+        "y": 648.2
+      },
+      {
+        "x": 1522.7,
+        "y": 638.5
+      },
+      {
+        "x": 1568.6,
+        "y": 629.3
+      },
+      {
+        "x": 1614.5,
+        "y": 619.5
+      },
+      {
+        "x": 1660.5,
+        "y": 611.5
+      },
+      {
+        "x": 1706.4,
+        "y": 601.7
+      },
+      {
+        "x": 1752.3,
+        "y": 597.1
+      },
+      {
+        "x": 1798.3,
+        "y": 590.2
+      },
+      {
+        "x": 1844.2,
+        "y": 586.8
+      }
+    ],
+    "stopX": 1730,
+    "sprite": {
+      "assetId": "tram_sprite",
+      "w": 1051,
+      "h": 913,
+      "bogieF": [
+        571,
+        903
+      ],
+      "bogieR": [
+        926,
+        829
+      ],
+      "door": [
+        398,
+        409,
+        506,
+        859
+      ],
+      "heightM": 3.4,
+      "heightPx": 682
+    },
+    "scale": {
+      "y0": 612,
+      "h0": 190,
+      "y1": 790,
+      "h1": 300
+    },
+    "interval": [
+      100,
+      180
+    ],
+    "alight": [
+      0,
+      3
+    ],
+    "board": [
+      0,
+      4
+    ],
+    "firstAt": 35,
+    "waitSpots": [
+      {
+        "x": 1678.9,
+        "y": 654.5
+      },
+      {
+        "x": 1728.2,
+        "y": 659.1
+      },
+      {
+        "x": 1777.6,
+        "y": 655.7
+      },
+      {
+        "x": 1630.6,
+        "y": 666
+      }
+    ]
+  },
+  "bakery": {
+    "bakerId": "ch_pekar",
+    "door": {
+      "x0": 251.5,
+      "y0": 505.3,
+      "x1": 322.7,
+      "y1": 679.8,
+      "hinge": "left"
+    },
+    "inside": {
+      "x": 287.1,
+      "y": 676.4
+    },
+    "outside": {
+      "x": 300.9,
+      "y": 718.9
+    },
+    "sweep": [
+      {
+        "x": 275.6,
+        "y": 724.6
+      },
+      {
+        "x": 597.1,
+        "y": 716.6
+      }
+    ],
+    "interval": [
+      180,
+      360
+    ],
+    "firstAt": 60
+  },
+  "crowd": {
+    "walkers": 0.75,
+    "skaters": 1
+  }
+}

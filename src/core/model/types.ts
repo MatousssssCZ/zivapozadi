@@ -216,7 +216,7 @@ export interface CharacterInstance {
    * Chování: `wander` = volná procházka po trasách (původní), `visitor` = návštěvník: přijde vstupem,
    * scénou buď jen projde, nebo si dojde na kávu, nebo se potká s přítelem a jdou na kávu spolu; pak odejde.
    */
-  routine?: 'wander' | 'visitor' | 'sled' | 'shovel';
+  routine?: 'wander' | 'visitor' | 'sled' | 'shovel' | 'baker';
   /** Postava venčí psa (Z01). */
   pet?: 'dog';
   /** Rasa psa (díly `animal_<rasa>_*`, např. `dog_collie`); chybí = původní pes. */
@@ -340,4 +340,8 @@ export interface ProjectFile {
   falls?: Partial<import('../sim/falls').FallsConfig>;
   /** Kluziště (bruslení): obrys ledu, branka, směr jízdy, události. */
   rink?: import('../sim/rink').RinkConfig;
+  /** tramvaj (scéna Vánoční tramvajová ulice) */
+  tram?: import('../sim/tram').TramConfig;
+  /** pekař a dveře pekařství */
+  bakery?: import('../sim/bakery').BakeryConfig;
 }

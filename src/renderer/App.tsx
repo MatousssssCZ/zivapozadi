@@ -17,6 +17,7 @@ function Welcome() {
       <p>Editor animovaných zimních scén s deterministickou simulací a exportem do MP4.</p>
       <div className="welcome-actions">
         <button className="primary big" onClick={() => doOpen('liberec')}>Otevřít „Liberec – živý trh“</button>
+        <button className="primary big" onClick={() => doOpen('tram')}>Otevřít „Vánoční tramvajová ulice“</button>
         <button className="primary big" onClick={() => doOpen('pastel')}>Otevřít „Pastelové vánoční kluziště“</button>
         <button className="big" onClick={() => doOpen('demo2')}>Demo „Náměstí s radnicí“ (vaše grafika)</button>
         <button className="big" onClick={() => doOpen('demo')}>Demo „Vánoční náměstí“ (testovací grafika)</button>
