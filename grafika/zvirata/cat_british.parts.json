@@ -1,0 +1,322 @@
+{
+ "ear_a": {
+  "texture": "cat_british_ear_a.png",
+  "pivot": {
+   "x": 51.5,
+   "y": 55.0
+  },
+  "attachments": {}
+ },
+ "ear_b": {
+  "texture": "cat_british_ear_b.png",
+  "pivot": {
+   "x": 48.0,
+   "y": 53.5
+  },
+  "attachments": {}
+ },
+ "torso": {
+  "texture": "cat_british_torso.png",
+  "pivot": {
+   "x": 268.0,
+   "y": 138.0
+  },
+  "attachments": {}
+ },
+ "head": {
+  "texture": "cat_british_head.png",
+  "pivot": {
+   "x": 149.0,
+   "y": 126.0
+  },
+  "attachments": {}
+ },
+ "tail_1": {
+  "texture": "cat_british_tail_1.png",
+  "pivot": {
+   "x": 162.5,
+   "y": 81.5
+  },
+  "attachments": {}
+ },
+ "tail_2": {
+  "texture": "cat_british_tail_2.png",
+  "pivot": {
+   "x": 97.0,
+   "y": 50.5
+  },
+  "attachments": {}
+ },
+ "tail_3": {
+  "texture": "cat_british_tail_3.png",
+  "pivot": {
+   "x": 77.5,
+   "y": 48.5
+  },
+  "attachments": {}
+ },
+ "fu_a": {
+  "texture": "cat_british_fu_a.png",
+  "pivot": {
+   "x": 88.0,
+   "y": 18.0
+  },
+  "attachments": {
+   "end": {
+    "x": 57.0,
+    "y": 144.0
+   }
+  }
+ },
+ "fu_b": {
+  "texture": "cat_british_fu_b.png",
+  "pivot": {
+   "x": 83.8,
+   "y": 17.9
+  },
+  "attachments": {
+   "end": {
+    "x": 54.2,
+    "y": 143.2
+   }
+  }
+ },
+ "hu_a": {
+  "texture": "cat_british_hu_a.png",
+  "pivot": {
+   "x": 81.0,
+   "y": 17.1
+  },
+  "attachments": {
+   "end": {
+    "x": 52.5,
+    "y": 136.8
+   }
+  }
+ },
+ "hu_b": {
+  "texture": "cat_british_hu_b.png",
+  "pivot": {
+   "x": 77.4,
+   "y": 17.6
+  },
+  "attachments": {
+   "end": {
+    "x": 50.2,
+    "y": 140.8
+   }
+  }
+ },
+ "fl_a": {
+  "texture": "cat_british_fl_a.png",
+  "pivot": {
+   "x": 56.6,
+   "y": 24.8
+  },
+  "attachments": {
+   "contact": {
+    "x": 80.5,
+    "y": 174.3
+   }
+  }
+ },
+ "fl_b": {
+  "texture": "cat_british_fl_b.png",
+  "pivot": {
+   "x": 54.5,
+   "y": 24.5
+  },
+  "attachments": {
+   "contact": {
+    "x": 77.5,
+    "y": 172.4
+   }
+  }
+ },
+ "hl_a": {
+  "texture": "cat_british_hl_a.png",
+  "pivot": {
+   "x": 55.6,
+   "y": 25.5
+  },
+  "attachments": {
+   "contact": {
+    "x": 70.6,
+    "y": 179.3
+   }
+  }
+ },
+ "hl_b": {
+  "texture": "cat_british_hl_b.png",
+  "pivot": {
+   "x": 55.6,
+   "y": 24.8
+  },
+  "attachments": {
+   "contact": {
+    "x": 70.6,
+    "y": 174.3
+   }
+  }
+ },
+ "ear_a_back": {
+  "texture": "cat_british_ear_a_back.png",
+  "pivot": {
+   "x": 51.0,
+   "y": 54.0
+  },
+  "attachments": {}
+ },
+ "ear_b_back": {
+  "texture": "cat_british_ear_b_back.png",
+  "pivot": {
+   "x": 51.0,
+   "y": 53.0
+  },
+  "attachments": {}
+ },
+ "torso_back": {
+  "texture": "cat_british_torso_back.png",
+  "pivot": {
+   "x": 247.0,
+   "y": 147.0
+  },
+  "attachments": {}
+ },
+ "head_back": {
+  "texture": "cat_british_head_back.png",
+  "pivot": {
+   "x": 149.0,
+   "y": 129.5
+  },
+  "attachments": {}
+ },
+ "tail_1_back": {
+  "texture": "cat_british_tail_1_back.png",
+  "pivot": {
+   "x": 164.5,
+   "y": 83.0
+  },
+  "attachments": {}
+ },
+ "tail_2_back": {
+  "texture": "cat_british_tail_2_back.png",
+  "pivot": {
+   "x": 97.0,
+   "y": 54.0
+  },
+  "attachments": {}
+ },
+ "tail_3_back": {
+  "texture": "cat_british_tail_3_back.png",
+  "pivot": {
+   "x": 77.5,
+   "y": 48.0
+  },
+  "attachments": {}
+ },
+ "fu_a_back": {
+  "texture": "cat_british_fu_a_back.png",
+  "pivot": {
+   "x": 86.5,
+   "y": 18.2
+  },
+  "attachments": {
+   "end": {
+    "x": 65.1,
+    "y": 145.6
+   }
+  }
+ },
+ "fu_b_back": {
+  "texture": "cat_british_fu_b_back.png",
+  "pivot": {
+   "x": 84.2,
+   "y": 18.0
+  },
+  "attachments": {
+   "end": {
+    "x": 63.3,
+    "y": 144.0
+   }
+  }
+ },
+ "hu_a_back": {
+  "texture": "cat_british_hu_a_back.png",
+  "pivot": {
+   "x": 94.5,
+   "y": 17.7
+  },
+  "attachments": {
+   "end": {
+    "x": 60.5,
+    "y": 141.6
+   }
+  }
+ },
+ "hu_b_back": {
+  "texture": "cat_british_hu_b_back.png",
+  "pivot": {
+   "x": 76.4,
+   "y": 17.6
+  },
+  "attachments": {
+   "end": {
+    "x": 48.9,
+    "y": 140.8
+   }
+  }
+ },
+ "fl_a_back": {
+  "texture": "cat_british_fl_a_back.png",
+  "pivot": {
+   "x": 55.5,
+   "y": 23.9
+  },
+  "attachments": {
+   "contact": {
+    "x": 65.5,
+    "y": 168.4
+   }
+  }
+ },
+ "fl_b_back": {
+  "texture": "cat_british_fl_b_back.png",
+  "pivot": {
+   "x": 62.0,
+   "y": 23.5
+  },
+  "attachments": {
+   "contact": {
+    "x": 73.2,
+    "y": 165.5
+   }
+  }
+ },
+ "hl_a_back": {
+  "texture": "cat_british_hl_a_back.png",
+  "pivot": {
+   "x": 55.9,
+   "y": 23.7
+  },
+  "attachments": {
+   "contact": {
+    "x": 71.9,
+    "y": 166.5
+   }
+  }
+ },
+ "hl_b_back": {
+  "texture": "cat_british_hl_b_back.png",
+  "pivot": {
+   "x": 58.2,
+   "y": 23.9
+  },
+  "attachments": {
+   "contact": {
+    "x": 74.8,
+    "y": 168.4
+   }
+  }
+ }
+}

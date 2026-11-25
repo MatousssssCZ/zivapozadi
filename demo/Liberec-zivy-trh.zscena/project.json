@@ -3,8 +3,8 @@
   "formatVersion": 1,
   "meta": {
     "name": "Liberec – živý vánoční trh",
-    "createdAt": "2026-11-25T21:12:46.605Z",
-    "modifiedAt": "2026-11-25T21:12:46.795Z",
+    "createdAt": "2026-11-25T22:23:47.680Z",
+    "modifiedAt": "2026-11-25T22:23:47.890Z",
     "appVersion": "0.1.0"
   },
   "seed": 2611,
@@ -1272,6 +1272,968 @@
       "file": "assets/images/cat-tail-3-82e5d55e.png",
       "width": 161,
       "height": 116,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_british_ear_a",
+      "kind": "image",
+      "name": "Zvíře – cat_british_ear_a",
+      "file": "assets/images/cat-british-ear-a-e080c2f6.png",
+      "width": 103,
+      "height": 110,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_british_ear_a_back",
+      "kind": "image",
+      "name": "Zvíře – cat_british_ear_a_back",
+      "file": "assets/images/cat-british-ear-a-back-6121df4a.png",
+      "width": 102,
+      "height": 108,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_british_ear_b",
+      "kind": "image",
+      "name": "Zvíře – cat_british_ear_b",
+      "file": "assets/images/cat-british-ear-b-02e22d6e.png",
+      "width": 96,
+      "height": 107,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_british_ear_b_back",
+      "kind": "image",
+      "name": "Zvíře – cat_british_ear_b_back",
+      "file": "assets/images/cat-british-ear-b-back-d210e9d9.png",
+      "width": 102,
+      "height": 106,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_british_fl_a",
+      "kind": "image",
+      "name": "Zvíře – cat_british_fl_a",
+      "file": "assets/images/cat-british-fl-a-35b4bbb2.png",
+      "width": 135,
+      "height": 177,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_british_fl_a_back",
+      "kind": "image",
+      "name": "Zvíře – cat_british_fl_a_back",
+      "file": "assets/images/cat-british-fl-a-back-13b19d32.png",
+      "width": 119,
+      "height": 171,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_british_fl_b",
+      "kind": "image",
+      "name": "Zvíře – cat_british_fl_b",
+      "file": "assets/images/cat-british-fl-b-4dc8f307.png",
+      "width": 130,
+      "height": 175,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_british_fl_b_back",
+      "kind": "image",
+      "name": "Zvíře – cat_british_fl_b_back",
+      "file": "assets/images/cat-british-fl-b-back-62619820.png",
+      "width": 133,
+      "height": 168,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_british_fu_a",
+      "kind": "image",
+      "name": "Zvíře – cat_british_fu_a",
+      "file": "assets/images/cat-british-fu-a-5195578b.png",
+      "width": 145,
+      "height": 180,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_british_fu_a_back",
+      "kind": "image",
+      "name": "Zvíře – cat_british_fu_a_back",
+      "file": "assets/images/cat-british-fu-a-back-82f09ed8.png",
+      "width": 152,
+      "height": 182,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_british_fu_b",
+      "kind": "image",
+      "name": "Zvíře – cat_british_fu_b",
+      "file": "assets/images/cat-british-fu-b-58ef543b.png",
+      "width": 138,
+      "height": 179,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_british_fu_b_back",
+      "kind": "image",
+      "name": "Zvíře – cat_british_fu_b_back",
+      "file": "assets/images/cat-british-fu-b-back-5ab74634.png",
+      "width": 148,
+      "height": 180,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_british_head",
+      "kind": "image",
+      "name": "Zvíře – cat_british_head",
+      "file": "assets/images/cat-british-head-6195493c.png",
+      "width": 298,
+      "height": 252,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_british_head_back",
+      "kind": "image",
+      "name": "Zvíře – cat_british_head_back",
+      "file": "assets/images/cat-british-head-back-36688986.png",
+      "width": 298,
+      "height": 259,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_british_hl_a",
+      "kind": "image",
+      "name": "Zvíře – cat_british_hl_a",
+      "file": "assets/images/cat-british-hl-a-bb780c31.png",
+      "width": 124,
+      "height": 182,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_british_hl_a_back",
+      "kind": "image",
+      "name": "Zvíře – cat_british_hl_a_back",
+      "file": "assets/images/cat-british-hl-a-back-07ccfa8d.png",
+      "width": 126,
+      "height": 169,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_british_hl_b",
+      "kind": "image",
+      "name": "Zvíře – cat_british_hl_b",
+      "file": "assets/images/cat-british-hl-b-03a15c0f.png",
+      "width": 124,
+      "height": 177,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_british_hl_b_back",
+      "kind": "image",
+      "name": "Zvíře – cat_british_hl_b_back",
+      "file": "assets/images/cat-british-hl-b-back-145f550f.png",
+      "width": 131,
+      "height": 171,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_british_hu_a",
+      "kind": "image",
+      "name": "Zvíře – cat_british_hu_a",
+      "file": "assets/images/cat-british-hu-a-77708f43.png",
+      "width": 137,
+      "height": 171,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_british_hu_a_back",
+      "kind": "image",
+      "name": "Zvíře – cat_british_hu_a_back",
+      "file": "assets/images/cat-british-hu-a-back-79a3686b.png",
+      "width": 156,
+      "height": 177,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_british_hu_b",
+      "kind": "image",
+      "name": "Zvíře – cat_british_hu_b",
+      "file": "assets/images/cat-british-hu-b-19e5eef0.png",
+      "width": 131,
+      "height": 176,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_british_hu_b_back",
+      "kind": "image",
+      "name": "Zvíře – cat_british_hu_b_back",
+      "file": "assets/images/cat-british-hu-b-back-19c08963.png",
+      "width": 126,
+      "height": 176,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_british_tail_1",
+      "kind": "image",
+      "name": "Zvíře – cat_british_tail_1",
+      "file": "assets/images/cat-british-tail-1-1fa9baa2.png",
+      "width": 325,
+      "height": 163,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_british_tail_1_back",
+      "kind": "image",
+      "name": "Zvíře – cat_british_tail_1_back",
+      "file": "assets/images/cat-british-tail-1-back-dfa79c42.png",
+      "width": 329,
+      "height": 166,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_british_tail_2",
+      "kind": "image",
+      "name": "Zvíře – cat_british_tail_2",
+      "file": "assets/images/cat-british-tail-2-20ae7563.png",
+      "width": 194,
+      "height": 101,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_british_tail_2_back",
+      "kind": "image",
+      "name": "Zvíře – cat_british_tail_2_back",
+      "file": "assets/images/cat-british-tail-2-back-369acd41.png",
+      "width": 194,
+      "height": 108,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_british_tail_3",
+      "kind": "image",
+      "name": "Zvíře – cat_british_tail_3",
+      "file": "assets/images/cat-british-tail-3-b82b2ed8.png",
+      "width": 155,
+      "height": 97,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_british_tail_3_back",
+      "kind": "image",
+      "name": "Zvíře – cat_british_tail_3_back",
+      "file": "assets/images/cat-british-tail-3-back-ee571309.png",
+      "width": 155,
+      "height": 96,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_british_torso",
+      "kind": "image",
+      "name": "Zvíře – cat_british_torso",
+      "file": "assets/images/cat-british-torso-723b963c.png",
+      "width": 536,
+      "height": 276,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_cat_british_torso_back",
+      "kind": "image",
+      "name": "Zvíře – cat_british_torso_back",
+      "file": "assets/images/cat-british-torso-back-09aad9de.png",
+      "width": 494,
+      "height": 294,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_fl_a",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_fl_a",
+      "file": "assets/images/dog-collie-fl-a-5435b082.png",
+      "width": 100,
+      "height": 193,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_fl_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_fl_a_back",
+      "file": "assets/images/dog-collie-fl-a-back-75234da3.png",
+      "width": 102,
+      "height": 194,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_fl_b",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_fl_b",
+      "file": "assets/images/dog-collie-fl-b-d37dd7eb.png",
+      "width": 107,
+      "height": 187,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_fl_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_fl_b_back",
+      "file": "assets/images/dog-collie-fl-b-back-61d142ee.png",
+      "width": 104,
+      "height": 188,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_fu_a",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_fu_a",
+      "file": "assets/images/dog-collie-fu-a-5f64d955.png",
+      "width": 120,
+      "height": 222,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_fu_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_fu_a_back",
+      "file": "assets/images/dog-collie-fu-a-back-6c245298.png",
+      "width": 122,
+      "height": 222,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_fu_b",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_fu_b",
+      "file": "assets/images/dog-collie-fu-b-24dc9ee3.png",
+      "width": 109,
+      "height": 221,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_fu_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_fu_b_back",
+      "file": "assets/images/dog-collie-fu-b-back-13e30766.png",
+      "width": 111,
+      "height": 221,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_head",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_head",
+      "file": "assets/images/dog-collie-head-9e2570dd.png",
+      "width": 221,
+      "height": 317,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_head_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_head_back",
+      "file": "assets/images/dog-collie-head-back-79a4e62f.png",
+      "width": 222,
+      "height": 316,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_hl_a",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_hl_a",
+      "file": "assets/images/dog-collie-hl-a-fc9eac34.png",
+      "width": 95,
+      "height": 197,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_hl_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_hl_a_back",
+      "file": "assets/images/dog-collie-hl-a-back-21207ab7.png",
+      "width": 105,
+      "height": 199,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_hl_b",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_hl_b",
+      "file": "assets/images/dog-collie-hl-b-023758f4.png",
+      "width": 102,
+      "height": 199,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_hl_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_hl_b_back",
+      "file": "assets/images/dog-collie-hl-b-back-2d68bb8d.png",
+      "width": 103,
+      "height": 198,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_hu_a",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_hu_a",
+      "file": "assets/images/dog-collie-hu-a-a57a1471.png",
+      "width": 159,
+      "height": 266,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_hu_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_hu_a_back",
+      "file": "assets/images/dog-collie-hu-a-back-970ec9f9.png",
+      "width": 158,
+      "height": 267,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_hu_b",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_hu_b",
+      "file": "assets/images/dog-collie-hu-b-ab276e0d.png",
+      "width": 161,
+      "height": 268,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_hu_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_hu_b_back",
+      "file": "assets/images/dog-collie-hu-b-back-ad148634.png",
+      "width": 164,
+      "height": 267,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_tail",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_tail",
+      "file": "assets/images/dog-collie-tail-790d7ecb.png",
+      "width": 213,
+      "height": 260,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_tail_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_tail_back",
+      "file": "assets/images/dog-collie-tail-back-4fbd598b.png",
+      "width": 216,
+      "height": 254,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_torso",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_torso",
+      "file": "assets/images/dog-collie-torso-4042fc85.png",
+      "width": 378,
+      "height": 248,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_torso_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_torso_back",
+      "file": "assets/images/dog-collie-torso-back-43e09c53.png",
+      "width": 382,
+      "height": 246,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_frenchie_fl_a",
+      "kind": "image",
+      "name": "Zvíře – dog_frenchie_fl_a",
+      "file": "assets/images/dog-frenchie-fl-a-8f25c23f.png",
+      "width": 102,
+      "height": 156,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_frenchie_fl_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_frenchie_fl_a_back",
+      "file": "assets/images/dog-frenchie-fl-a-back-2fb3e7a9.png",
+      "width": 103,
+      "height": 154,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_frenchie_fl_b",
+      "kind": "image",
+      "name": "Zvíře – dog_frenchie_fl_b",
+      "file": "assets/images/dog-frenchie-fl-b-358cdfa2.png",
+      "width": 102,
+      "height": 155,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_frenchie_fl_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_frenchie_fl_b_back",
+      "file": "assets/images/dog-frenchie-fl-b-back-67233725.png",
+      "width": 106,
+      "height": 152,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_frenchie_fu_a",
+      "kind": "image",
+      "name": "Zvíře – dog_frenchie_fu_a",
+      "file": "assets/images/dog-frenchie-fu-a-a47c3496.png",
+      "width": 124,
+      "height": 184,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_frenchie_fu_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_frenchie_fu_a_back",
+      "file": "assets/images/dog-frenchie-fu-a-back-9f7f7d61.png",
+      "width": 117,
+      "height": 178,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_frenchie_fu_b",
+      "kind": "image",
+      "name": "Zvíře – dog_frenchie_fu_b",
+      "file": "assets/images/dog-frenchie-fu-b-abcb7981.png",
+      "width": 119,
+      "height": 184,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_frenchie_fu_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_frenchie_fu_b_back",
+      "file": "assets/images/dog-frenchie-fu-b-back-372474e2.png",
+      "width": 123,
+      "height": 182,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_frenchie_head",
+      "kind": "image",
+      "name": "Zvíře – dog_frenchie_head",
+      "file": "assets/images/dog-frenchie-head-19d9e39d.png",
+      "width": 265,
+      "height": 373,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_frenchie_head_back",
+      "kind": "image",
+      "name": "Zvíře – dog_frenchie_head_back",
+      "file": "assets/images/dog-frenchie-head-back-a6fd10f1.png",
+      "width": 278,
+      "height": 362,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_frenchie_hl_a",
+      "kind": "image",
+      "name": "Zvíře – dog_frenchie_hl_a",
+      "file": "assets/images/dog-frenchie-hl-a-ca4b48f3.png",
+      "width": 97,
+      "height": 185,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_frenchie_hl_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_frenchie_hl_a_back",
+      "file": "assets/images/dog-frenchie-hl-a-back-375d5613.png",
+      "width": 106,
+      "height": 189,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_frenchie_hl_b",
+      "kind": "image",
+      "name": "Zvíře – dog_frenchie_hl_b",
+      "file": "assets/images/dog-frenchie-hl-b-55e04a6a.png",
+      "width": 107,
+      "height": 185,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_frenchie_hl_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_frenchie_hl_b_back",
+      "file": "assets/images/dog-frenchie-hl-b-back-76537121.png",
+      "width": 110,
+      "height": 185,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_frenchie_hu_a",
+      "kind": "image",
+      "name": "Zvíře – dog_frenchie_hu_a",
+      "file": "assets/images/dog-frenchie-hu-a-dfa4bcbc.png",
+      "width": 157,
+      "height": 260,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_frenchie_hu_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_frenchie_hu_a_back",
+      "file": "assets/images/dog-frenchie-hu-a-back-3e5ebd69.png",
+      "width": 168,
+      "height": 260,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_frenchie_hu_b",
+      "kind": "image",
+      "name": "Zvíře – dog_frenchie_hu_b",
+      "file": "assets/images/dog-frenchie-hu-b-9f5384b8.png",
+      "width": 157,
+      "height": 230,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_frenchie_hu_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_frenchie_hu_b_back",
+      "file": "assets/images/dog-frenchie-hu-b-back-14246e8c.png",
+      "width": 164,
+      "height": 230,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_frenchie_tail",
+      "kind": "image",
+      "name": "Zvíře – dog_frenchie_tail",
+      "file": "assets/images/dog-frenchie-tail-7d546d8b.png",
+      "width": 86,
+      "height": 84,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_frenchie_tail_back",
+      "kind": "image",
+      "name": "Zvíře – dog_frenchie_tail_back",
+      "file": "assets/images/dog-frenchie-tail-back-bdb6df05.png",
+      "width": 93,
+      "height": 75,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_frenchie_torso",
+      "kind": "image",
+      "name": "Zvíře – dog_frenchie_torso",
+      "file": "assets/images/dog-frenchie-torso-287435bb.png",
+      "width": 395,
+      "height": 243,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_frenchie_torso_back",
+      "kind": "image",
+      "name": "Zvíře – dog_frenchie_torso_back",
+      "file": "assets/images/dog-frenchie-torso-back-61579c41.png",
+      "width": 396,
+      "height": 243,
       "anchor": {
         "x": 0.5,
         "y": 0.5
@@ -4369,7 +5331,8 @@
           "intervalMax": 160
         }
       },
-      "pet": "dog"
+      "pet": "dog",
+      "petBreed": "dog_collie"
     },
     {
       "id": "ch_4",
@@ -4898,7 +5861,8 @@
           "intervalMax": 160
         }
       },
-      "pet": "dog"
+      "pet": "dog",
+      "petBreed": "dog_frenchie"
     },
     {
       "id": "ch_12",
@@ -6310,7 +7274,8 @@
   },
   "cats": [
     {
-      "firstDelay": 25
+      "firstDelay": 25,
+      "breed": "cat_british"
     }
   ],
   "catPerches": [

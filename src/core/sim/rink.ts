@@ -131,7 +131,7 @@ export function lanePoint(geo: IceGeo, lane: { cx: number; cz: number; k: number
   const r = ringR(geo, th) * lane.k; return { X: lane.cx + Math.cos(th) * r, Z: lane.cz + Math.sin(th) * r };
 }
 /** největší k, při kterém smyčka drží odstup `m` od okraje (s rezervou na posunutý střed) */
-export function laneKMax(geo: IceGeo, m = 1.1): number { let k = 0.95; for (let i = 0; i < 32; i++) { const r = ringR(geo, (i / 32) * 2 * Math.PI); k = Math.min(k, 1 - m / Math.max(r, m + 0.1)); } return Math.max(0.3, k); }
+export function laneKMax(geo: IceGeo, m = 1.8): number { let k = 0.95; for (let i = 0; i < 32; i++) { const r = ringR(geo, (i / 32) * 2 * Math.PI); k = Math.min(k, 1 - m / Math.max(r, m + 0.1)); } return Math.max(0.3, k); }
 export function insideW(p: World, poly: World[]): boolean { let ins = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const a = poly[j], b = poly[i]; if ((b.Z > p.Z) !== (a.Z > p.Z) && p.X < ((a.X - b.X) * (p.Z - b.Z)) / (a.Z - b.Z) + b.X) ins = !ins; } return ins; }
 /** nejbližší bod mantinelu (okraj ledu) a vzdálenost */
 export function railNearest(poly: World[], p: World): { q: World; d: number; n: World } {
@@ -161,7 +161,7 @@ export function createSkater(id: string, prof: SkateProfile, geo: IceGeo, rng: R
     vCruise: randRange(rng, P.v[0], P.v[1]) * (prof === 'beginnerKid' ? 1 : 0.9),
     push: { left: 0, int: 1, t: 0, foot: 0, on: false }, glideLeft: randRange(rng, 0, 1),
     feet: [{ c: 'glide', u: 0, lat: -P.stance, h: 0 }, { c: 'glide', u: 0, lat: P.stance, h: 0 }],
-    hipLat: 0, roll: 0, wob: 0, blocked: 0, restAt: randRange(rng, 45, 120), restUntil: 0, cautiousUntil: 0, lastFall: -1e9, lastTrick: -1e9, rng, seedPhase: rand(rng) * 100,
+    hipLat: 0, roll: 0, wob: 0, blocked: 0, restAt: randRange(rng, 90, 260), restUntil: 0, cautiousUntil: 0, lastFall: -1e9, lastTrick: -1e9, rng, seedPhase: rand(rng) * 100,
   };
   return s;
 }
@@ -249,12 +249,12 @@ export function stepSkater(s: Skater, c: RinkCtx): void {
     }
     case 'BRAKE': {
       vTarget = 0;
-      if (s.v < 0.03) { s.v = 0; s.st = 'REST'; s.tSt = 0; s.restUntil = t + randRange(s.rng, 5, 20); }
+      if (s.v < 0.03) { s.v = 0; s.st = 'REST'; s.tSt = 0; s.restUntil = t + randRange(s.rng, 4, 10); }
       break;
     }
     case 'REST': {
       vTarget = 0;
-      if (t > s.restUntil) { s.st = 'SKATE'; s.tSt = 0; s.restAt = t + randRange(s.rng, 45, 120); s.push.left = 0; s.glideLeft = 0; }
+      if (t > s.restUntil) { s.st = 'SKATE'; s.tSt = 0; s.restAt = t + randRange(s.rng, 150, 300); s.push.left = 0; s.glideLeft = 0; }
       break;
     }
     case 'MARCH': {
@@ -480,19 +480,21 @@ export function stepRinkEvents(c: RinkCtx): void {
   }
 }
 /** Ladění: hned spustí zaváhání s pádem / prvek u zadaného (nebo vhodného) bruslaře; vrací id nebo důvod. */
-export function forceRinkEvent(c: RinkCtx, kind: 'fall' | 'trick', id?: string | null, trick?: TrickKind): { ok: boolean; msg: string } {
+export function forceRinkEvent(c: RinkCtx, kind: 'fall' | 'trick', id?: string | null, trick?: TrickKind, near?: World | null): { ok: boolean; msg: string } {
   const st = c.st;
   if (st.event) return { ok: false, msg: 'Už probíhá jiná událost na ledě.' };
-  const pool = id ? c.all.filter((s) => s.id === id) : c.all;
+  let pool = id ? c.all.filter((s) => s.id === id) : [...c.all];
+  if (near) pool.sort((a, b) => Math.hypot(a.X - near.X, a.Z - near.Z) - Math.hypot(b.X - near.X, b.Z - near.Z)); // nejbližší k místu kliknutí
   if (kind === 'fall') {
     const s = pool.find((x) => (x.st === 'SKATE' || x.st === 'MARCH') && !x.holdHand);
     if (!s) return { ok: false, msg: 'Žádný vhodný bruslař (jede sám, bez události).' };
     s.st = 'WOBBLE'; s.tSt = 0; s.wob = 1; (s as Skater & { willFall?: boolean }).willFall = true; st.event = { kind: 'fall', id: s.id, t0: c.t }; st.stats.wobbles++;
     return { ok: true, msg: s.id };
   }
-  const s = pool.find((x) => x.st === 'SKATE' && (trick === 'backward' ? SKATE_PROFILES[x.prof].skills.backward : SKATE_PROFILES[x.prof].skills.oneFoot || SKATE_PROFILES[x.prof].skills.backward));
-  if (!s) return { ok: false, msg: 'Žádný bruslař s dovedností pro prvek.' };
-  const k: TrickKind = trick ?? (SKATE_PROFILES[s.prof].skills.backward && rand(st.rng) < 0.5 ? 'backward' : 'oneFoot');
+  const can = (x: Skater, k: TrickKind) => { const sk = SKATE_PROFILES[x.prof].skills; return k === 'hop' ? false : !!sk[k as 'oneFoot']; };
+  const s = pool.find((x) => x.st === 'SKATE' && (trick ? can(x, trick) : (['jump', 'arabesque', 'backward', 'oneFoot', 'spin'] as TrickKind[]).some((k) => can(x, k))));
+  if (!s) return { ok: false, msg: 'Žádný volný bruslař, který ten prvek umí.' };
+  const k: TrickKind = trick ?? (['jump', 'arabesque', 'backward', 'oneFoot'] as TrickKind[]).find((q) => can(s, q))!;
   s.st = 'TRICK_PREPARE'; s.tSt = 0; s.trick = { kind: k, t: 0, dur: k === 'jump' ? JUMP_AIR : k === 'spin' ? 2.5 : 4, phase: 'prep' }; st.event = { kind: 'trick', id: s.id, t0: c.t };
   st.stats.tricks++; st.stats.tricksByKind[k] = (st.stats.tricksByKind[k] ?? 0) + 1;
   return { ok: true, msg: s.id };

@@ -6,7 +6,7 @@ import { SimController } from './simController';
 import { ImageCache } from './images';
 import { zs, type OpenResult } from './api';
 
-export type Tool = 'select' | 'route' | 'obstacle' | 'snow' | 'zone' | 'character' | 'pan';
+export type Tool = 'select' | 'action' | 'smoke' | 'route' | 'obstacle' | 'snow' | 'zone' | 'character' | 'pan';
 export type Selection =
   | { kind: 'object' | 'node' | 'edge' | 'area' | 'zone' | 'character' | 'event'; id: string }
   | { kind: 'point'; id: string; pointId: string }
@@ -39,12 +39,14 @@ export interface EditorState {
   fallDebug: boolean;
   snowmanDebug: boolean;
   rinkDebug: boolean;
+  /** otevřená nabídka akcí na místě ve scéně */
+  actionMenu: import('./canvas/ActionMenu').ActionMenuState | null;
 }
 
 const initial: EditorState = {
   dir: null, project: null, manifests: {}, issues: [], missingAssets: [], selection: null, tool: 'select', routeActiveNode: null,
   drawing: [], zoneType: 'coffee', showMarkers: true, dirty: false, toasts: [], builtins: [], canUndo: false, canRedo: false,
-  exportOpen: false, exporting: false, rigDiagnostics: false, clearingDebug: false, gaitDebug: false, fallDebug: false, snowmanDebug: false, rinkDebug: false,
+  exportOpen: false, exporting: false, rigDiagnostics: false, clearingDebug: false, gaitDebug: false, fallDebug: false, snowmanDebug: false, rinkDebug: false, actionMenu: null,
 };
 
 const HISTORY_LIMIT = 200;
@@ -113,6 +115,15 @@ class Store {
     this.applyProject(next);
   }
 
+  /** Úprava bez přestavění simulace (hustota davu, zdroje kouře): historie zpět/vpřed, simulace dostane změnu za běhu. */
+  editLive(label: string, fn: (p: ProjectFile) => void) {
+    const cur = this.state.project; if (!cur) return;
+    const next = structuredClone(cur); fn(next);
+    this.undo.push({ project: cur, label }); if (this.undo.length > HISTORY_LIMIT) this.undo.shift();
+    this.redo = [];
+    this.applyProject(next, false);
+    this.sim.sim?.patchProject(fn);
+  }
   /** Průběžná změna během tažení (historie se zapíše až v `endGesture`). */
   beginGesture() { this.gestureBase = this.state.project; }
   live(fn: (p: ProjectFile) => void) {

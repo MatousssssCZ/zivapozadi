@@ -1,0 +1,258 @@
+{
+ "torso": {
+  "texture": "dog_dalmatian_torso.png",
+  "pivot": {
+   "x": 196.0,
+   "y": 119.0
+  },
+  "attachments": {}
+ },
+ "head": {
+  "texture": "dog_dalmatian_head.png",
+  "pivot": {
+   "x": 121.5,
+   "y": 142.0
+  },
+  "attachments": {}
+ },
+ "tail": {
+  "texture": "dog_dalmatian_tail.png",
+  "pivot": {
+   "x": 95.0,
+   "y": 106.5
+  },
+  "attachments": {}
+ },
+ "fu_a": {
+  "texture": "dog_dalmatian_fu_a.png",
+  "pivot": {
+   "x": 43.5,
+   "y": 23.5
+  },
+  "attachments": {
+   "end": {
+    "x": 52.5,
+    "y": 188.0
+   }
+  }
+ },
+ "fl_a": {
+  "texture": "dog_dalmatian_fl_a.png",
+  "pivot": {
+   "x": 34.0,
+   "y": 30.5
+  },
+  "attachments": {
+   "contact": {
+    "x": 60.5,
+    "y": 214.7
+   }
+  }
+ },
+ "fu_b": {
+  "texture": "dog_dalmatian_fu_b.png",
+  "pivot": {
+   "x": 39.9,
+   "y": 23.6
+  },
+  "attachments": {
+   "end": {
+    "x": 48.1,
+    "y": 188.8
+   }
+  }
+ },
+ "fl_b": {
+  "texture": "dog_dalmatian_fl_b.png",
+  "pivot": {
+   "x": 31.0,
+   "y": 29.7
+  },
+  "attachments": {
+   "contact": {
+    "x": 55.2,
+    "y": 208.8
+   }
+  }
+ },
+ "hu_a": {
+  "texture": "dog_dalmatian_hu_a.png",
+  "pivot": {
+   "x": 96.5,
+   "y": 23.2
+  },
+  "attachments": {
+   "end": {
+    "x": 45.0,
+    "y": 185.6
+   }
+  }
+ },
+ "hl_a": {
+  "texture": "dog_dalmatian_hl_a.png",
+  "pivot": {
+   "x": 66.5,
+   "y": 31.4
+  },
+  "attachments": {
+   "contact": {
+    "x": 60.5,
+    "y": 220.6
+   }
+  }
+ },
+ "hu_b": {
+  "texture": "dog_dalmatian_hu_b.png",
+  "pivot": {
+   "x": 77.0,
+   "y": 23.2
+  },
+  "attachments": {
+   "end": {
+    "x": 35.9,
+    "y": 185.6
+   }
+  }
+ },
+ "hl_b": {
+  "texture": "dog_dalmatian_hl_b.png",
+  "pivot": {
+   "x": 69.7,
+   "y": 29.4
+  },
+  "attachments": {
+   "contact": {
+    "x": 63.5,
+    "y": 206.8
+   }
+  }
+ },
+ "torso_back": {
+  "texture": "dog_dalmatian_torso_back.png",
+  "pivot": {
+   "x": 193.5,
+   "y": 116.5
+  },
+  "attachments": {}
+ },
+ "head_back": {
+  "texture": "dog_dalmatian_head_back.png",
+  "pivot": {
+   "x": 112.5,
+   "y": 145.0
+  },
+  "attachments": {}
+ },
+ "tail_back": {
+  "texture": "dog_dalmatian_tail_back.png",
+  "pivot": {
+   "x": 97.0,
+   "y": 107.5
+  },
+  "attachments": {}
+ },
+ "fu_a_back": {
+  "texture": "dog_dalmatian_fu_a_back.png",
+  "pivot": {
+   "x": 44.5,
+   "y": 24.0
+  },
+  "attachments": {
+   "end": {
+    "x": 61.0,
+    "y": 192.0
+   }
+  }
+ },
+ "fl_a_back": {
+  "texture": "dog_dalmatian_fl_a_back.png",
+  "pivot": {
+   "x": 37.0,
+   "y": 29.1
+  },
+  "attachments": {
+   "contact": {
+    "x": 60.0,
+    "y": 204.9
+   }
+  }
+ },
+ "fu_b_back": {
+  "texture": "dog_dalmatian_fu_b_back.png",
+  "pivot": {
+   "x": 41.3,
+   "y": 23.9
+  },
+  "attachments": {
+   "end": {
+    "x": 56.7,
+    "y": 191.2
+   }
+  }
+ },
+ "fl_b_back": {
+  "texture": "dog_dalmatian_fl_b_back.png",
+  "pivot": {
+   "x": 37.0,
+   "y": 28.4
+  },
+  "attachments": {
+   "contact": {
+    "x": 60.0,
+    "y": 200.0
+   }
+  }
+ },
+ "hu_a_back": {
+  "texture": "dog_dalmatian_hu_a_back.png",
+  "pivot": {
+   "x": 69.5,
+   "y": 22.9
+  },
+  "attachments": {
+   "end": {
+    "x": 42.1,
+    "y": 183.2
+   }
+  }
+ },
+ "hl_a_back": {
+  "texture": "dog_dalmatian_hl_a_back.png",
+  "pivot": {
+   "x": 64.0,
+   "y": 30.9
+  },
+  "attachments": {
+   "contact": {
+    "x": 55.5,
+    "y": 217.7
+   }
+  }
+ },
+ "hu_b_back": {
+  "texture": "dog_dalmatian_hu_b_back.png",
+  "pivot": {
+   "x": 67.9,
+   "y": 22.9
+  },
+  "attachments": {
+   "end": {
+    "x": 41.1,
+    "y": 183.2
+   }
+  }
+ },
+ "hl_b_back": {
+  "texture": "dog_dalmatian_hl_b_back.png",
+  "pivot": {
+   "x": 69.9,
+   "y": 28.6
+  },
+  "attachments": {
+   "contact": {
+    "x": 60.6,
+    "y": 200.9
+   }
+  }
+ }
+}

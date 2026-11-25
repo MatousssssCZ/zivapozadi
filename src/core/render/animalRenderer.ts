@@ -7,6 +7,7 @@ import type { AnimalState } from '../sim/animals';
 import { SPECIES } from '../sim/animals';
 import { Q } from '../scene/camera';
 import { getCanvasFactory } from './rigRenderer';
+import { BREEDS } from './animalBreeds';
 
 type Img = CanvasImageSource & { width: number; height: number };
 type Ctx = CanvasRenderingContext2D;
@@ -32,6 +33,19 @@ const LEG_ANCHORS: Record<'dog' | 'cat', Record<'fu' | 'fl' | 'hu' | 'hl', Ancho
   dog: { fu: { a: [0.56, 0.1], b: [0.27, 0.8] }, fl: { a: [0.5, 0.14], b: [0.5, 0.985] }, hu: { a: [0.56, 0.1], b: [0.36, 0.8] }, hl: { a: [0.53, 0.14], b: [0.58, 0.985] } },
   cat: { fu: { a: [0.55, 0.1], b: [0.36, 0.8] }, fl: { a: [0.51, 0.14], b: [0.49, 0.985] }, hu: { a: [0.59, 0.1], b: [0.43, 0.8] }, hl: { a: [0.62, 0.14], b: [0.52, 0.985] } },
 };
+/** Rasy: velikost vůči druhu, úchyty na trupu a hlavě, ocas (kořen v obrázku, zrcadlení, náklon). Bez záznamu = jako druh. */
+const BREED_RIG: Record<string, { scale: number; rig?: Partial<Rig>; tail?: { root: [number, number]; mirror: boolean; rot: number }; legk?: number }> = {
+  dog_bernese: { scale: 1.3, rig: { shoulder: [0.78, 0.7], hip: [0.2, 0.66], neck: [0.88, 0.22], tail: [0.06, 0.3], headAt: [0.36, 0.9], head: 0.26, tailLen: 0.32 }, tail: { root: [0.85, 0.08], mirror: false, rot: 0.3 }, legk: 0.62 },
+  dog_dalmatian: { scale: 1.2, rig: { shoulder: [0.8, 0.62], hip: [0.2, 0.58], neck: [0.9, 0.2], tail: [0.05, 0.25], headAt: [0.3, 0.92], head: 0.26, tailLen: 0.3 }, tail: { root: [0.04, 0.92], mirror: true, rot: -0.75 }, legk: 0.72 },
+  dog_frenchie: { scale: 0.72, rig: { shoulder: [0.82, 0.66], hip: [0.2, 0.62], neck: [0.9, 0.3], tail: [0.04, 0.3], headAt: [0.4, 0.88], head: 0.25, tailLen: 0.08 }, tail: { root: [0.2, 0.6], mirror: false, rot: 0 }, legk: 0.62 },
+  dog_husky: { scale: 1.18, rig: { shoulder: [0.82, 0.66], hip: [0.2, 0.62], neck: [0.92, 0.2], tail: [0.05, 0.3], headAt: [0.34, 0.9], head: 0.26, tailLen: 0.28 }, tail: { root: [0.06, 0.9], mirror: false, rot: -0.2 }, legk: 0.66 },
+  dog_dachshund: { scale: 0.95, rig: { shoulder: [0.84, 0.72], hip: [0.16, 0.66], neck: [0.92, 0.25], tail: [0.04, 0.2], headAt: [0.3, 0.92], head: 0.23, tailLen: 0.22 }, tail: { root: [0.02, 0.85], mirror: false, rot: -0.15 }, legk: 0.62 },
+  dog_collie: { scale: 1.12, rig: { shoulder: [0.8, 0.66], hip: [0.22, 0.62], neck: [0.86, 0.22], tail: [0.07, 0.38], headAt: [0.4, 0.9], head: 0.26, tailLen: 0.3 }, tail: { root: [0.8, 0.06], mirror: false, rot: 0.25 }, legk: 0.66 },
+  cat_british: { scale: 1.08, rig: { shoulder: [0.78, 0.68], hip: [0.22, 0.64], neck: [0.84, 0.2], tail: [0.06, 0.55], headAt: [0.42, 0.88], head: 0.17, tailLen: 0.27 }, legk: 0.62 },
+  cat_mainecoon: { scale: 1.2, rig: { shoulder: [0.8, 0.62], hip: [0.2, 0.6], neck: [0.9, 0.22], tail: [0.05, 0.42], headAt: [0.42, 0.9], head: 0.16, tailLen: 0.34 }, legk: 0.85 },
+};
+/** měřítko zvířete (rasa) vůči druhu – pro vykreslení i stín */
+export const breedScale = (a: AnimalState) => (a.breed ? BREED_RIG[a.breed]?.scale ?? 1 : 1);
 /** podíl cyklu, kdy je tlapka na zemi (chůze ≈ 0,6), a natažení nohy v klidu */
 const DUTY = 0.62, STAND = 0.96;
 /** měřítko nohou vůči trupu (malované díly mají nohy delší, než odpovídá plemeni) */
@@ -55,16 +69,21 @@ function darkened(im: Img): Img {
 }
 
 /** Vykreslí zvíře s chodidly v (0,0) – volající nastaví posun a měřítko (px na metr). */
-export function drawAnimal(ctx: Ctx, a: AnimalState, img: AnimalImages, pxPerM: number, t: number): void {
-  const sp = a.species, R = RIGS[sp], S = SPECIES[sp];
-  const pre = `${sp}_`;
+export function drawAnimal(ctx: Ctx, a: AnimalState, img0: AnimalImages, pxPerM0: number, t: number, debug = false): void {
+  const dbg: { x: number; y: number; c: string }[] = [];
+  const sp = a.species, BR = a.breed ? BREED_RIG[a.breed] : undefined, BI = a.breed ? BREEDS[a.breed] : undefined;
+  const R: Rig = { ...RIGS[sp], ...(BR?.rig ?? {}) }, S = SPECIES[sp];
+  const pre = `${a.breed && BI ? a.breed : sp}_`;
+  // rasa bez některého dílu (sed, sklopená hlava): nikdy díl jiné rasy – jiná póza místo něj
+  const img: AnimalImages = (n) => img0(n);
+  const pxPerM = pxPerM0 * (BR?.scale ?? 1);
   const mirror = Math.cos(a.facing) < -0.05;
   const away = Math.sin(a.facing) < -0.45; // jde od kamery → zadní pohled trupu
   const walk = a.mode === 'jump' || a.mode === 'jumpDown' || a.mode === 'prep' ? 0 : Math.min(1, a.speed / 0.25);
   ctx.save();
   if (mirror) ctx.scale(-1, 1);
   // ---- sed (samostatná malovaná póza)
-  if (a.sit > 0.5) {
+  if (a.sit > 0.5 && img(`${pre}sit`)) {
     const body = img(`${pre}sit`); const head = img(`${pre}head${away ? '_back' : ''}`);
     if (body) {
       const h = S.shoulder * 1.25 * pxPerM, w = (h * body.width) / body.height;
@@ -85,11 +104,12 @@ export function drawAnimal(ctx: Ctx, a: AnimalState, img: AnimalImages, pxPerM: 
   const torso = img(`${pre}torso${away ? '_back' : ''}`) ?? img(`${pre}torso`);
   if (!torso) { ctx.restore(); return; }
   const tw = S.length * pxPerM * (sp === 'dog' ? 0.9 : 1), th = (tw * torso.height) / torso.width;
-  const k = (tw / torso.width) * LEGK[sp];
-  const LA = LEG_ANCHORS[sp];
+  const k = (tw / torso.width) * (BR?.legk ?? LEGK[sp]);
+  const bk = away && BI?.legs_back ? '_back' : ''; // zadní pohled: vlastní díly nohou (ne zrcadlení předních)
+  const LA = (bk ? BI!.legs_back : BI?.legs) ?? LEG_ANCHORS[sp];
   const segLen = (kind: 'f' | 'h') => {
     const u = LA[`${kind}u`], l = LA[`${kind}l`];
-    const up = img(`${pre}${kind}u_a`), lo = img(`${pre}${kind}l_a`);
+    const up = img(`${pre}${kind}u_a${bk}`), lo = img(`${pre}${kind}l_a${bk}`);
     if (!up || !lo) return [0, 0];
     return [Math.hypot((u.b[0] - u.a[0]) * up.width, (u.b[1] - u.a[1]) * up.height) * k, Math.hypot((l.b[0] - l.a[0]) * lo.width, (l.b[1] - l.a[1]) * lo.height) * k];
   };
@@ -119,7 +139,7 @@ export function drawAnimal(ctx: Ctx, a: AnimalState, img: AnimalImages, pxPerM: 
   // ---- nohy: díly ve stejném měřítku jako trup (k = px obrazovky na px obrázku), dvoučlánková IK
   // s chodidly pevně na zemi ve fázi opory (stance) a obloukem ve švihu → tlapky neklouzají.
   const leg = (kind: 'f' | 'h', side: 'a' | 'b', off: number, far: boolean) => {
-    const up0 = img(`${pre}${kind}u_${side}`), lo0 = img(`${pre}${kind}l_${side}`);
+    const up0 = img(`${pre}${kind}u_${side}${bk}`) ?? img(`${pre}${kind}u_${side}`), lo0 = img(`${pre}${kind}l_${side}${bk}`) ?? img(`${pre}${kind}l_${side}`);
     if (!up0 || !lo0) return;
     const up = far ? darkened(up0) : up0, lo = far ? darkened(lo0) : lo0;
     const [L1, L2] = segLen(kind), u = LA[`${kind}u`], l = LA[`${kind}l`];
@@ -148,6 +168,7 @@ export function drawAnimal(ctx: Ctx, a: AnimalState, img: AnimalImages, pxPerM: 
     };
     seg(lo, l, kn, ft); // spodní článek pod horním (horní kryje kloub)
     seg(up, u, j, kn);
+    if (debug) dbg.push({ ...j, c: '#ff00e6' }, { ...kn, c: '#ffd400' }, { ...ft, c: '#00e5ff' });
   };
   // pořadí kroku: LH 0, LF 0.25, RH 0.5, RF 0.75 (vzdálená strana = levá)
   leg('h', 'b', 0, true); leg('f', 'b', 0.25, true);
@@ -155,13 +176,13 @@ export function drawAnimal(ctx: Ctx, a: AnimalState, img: AnimalImages, pxPerM: 
   const rotAbout = (r: number) => { if (!r) return; ctx.translate(tc.x, tc.y); ctx.rotate(r); ctx.translate(-tc.x, -tc.y); };
   // ocas za trupem
   ctx.save(); bodyTf(); rotAbout(shakeAt(0.09));
-  const tail = img(`${pre}tail`);
+  const tail = (away ? img(`${pre}tail_back`) : null) ?? img(`${pre}tail`), TB = BR?.tail;
   if (!tail && img(`${pre}tail_1`)) {
     // kočičí ocas ze tří článků (jedno společné měřítko archu): kořen každého článku je vpravo
     // (u článků 1–2 dutý konec), koncový článek je malovaný špičkou doprava → zrcadlit.
     // Řetěz od kořene: oblouk nahoru, pomalé vlnění se zpožděním; kreslí se od špičky ke kořeni,
     // aby každý bližší článek zakryl dutý konec následujícího.
-    const ims = [1, 2, 3].map((k) => img(`${pre}tail_${k}`));
+    const ims = [1, 2, 3].map((k) => (away ? img(`${pre}tail_${k}_back`) : null) ?? img(`${pre}tail_${k}`));
     if (ims.every(Boolean)) {
       const L = [ims[0]!.width * 0.86, ims[1]!.width * 0.86, ims[2]!.width * 0.8];
       const k = (R.tailLen * pxPerM) / (L[0] + L[1] + L[2]);
@@ -189,9 +210,10 @@ export function drawAnimal(ctx: Ctx, a: AnimalState, img: AnimalImages, pxPerM: 
     // kořen leží uvnitř obrysu trupu (trup se kreslí přes něj)
     const tj = J(R.tail), tl = R.tailLen * pxPerM;
     const wag = 0.22 * Math.sin(t * (walk > 0.3 || sh > 0 ? 9 : 4)) * (1 + sh);
-    ctx.save(); ctx.translate(tj.x, tj.y); ctx.rotate(wag - 0.15);
+    ctx.save(); ctx.translate(tj.x, tj.y);
     const w = tl, h = (w * tail.height) / tail.width;
-    ctx.scale(-1, 1); ctx.drawImage(tail, -w * 0.14, -h * 0.82, w, h);
+    if (TB) { ctx.rotate(wag * 0.5 + TB.rot); if (TB.mirror) ctx.scale(-1, 1); ctx.drawImage(tail, -w * TB.root[0], -h * TB.root[1], w, h); } // visící ocas (kolie)
+    else { ctx.rotate(wag - 0.15); ctx.scale(-1, 1); ctx.drawImage(tail, -w * 0.14, -h * 0.82, w, h); }
     ctx.restore();
   }
   ctx.restore();
@@ -201,19 +223,29 @@ export function drawAnimal(ctx: Ctx, a: AnimalState, img: AnimalImages, pxPerM: 
   ctx.restore();
   ctx.save(); bodyTf(); rotAbout(shakeAt(0) * 1.6);
   // hlava (u psa sklopená při očichávání)
-  const head = a.headDown > 0.5 && img(`${pre}head_down`) ? img(`${pre}head_down`)! : img(`${pre}head${away ? '_back' : ''}`);
+  const hdImg = img(`${pre}head_down`), down = a.headDown > 0.5 && !hdImg ? a.headDown : 0; // bez dílu: hlava se skloní natočením
+  const head = a.headDown > 0.5 && hdImg ? hdImg : img(`${pre}head${away ? '_back' : ''}`);
   if (head) {
     const nj = J(R.neck), hw = R.head * pxPerM, hh = (hw * head.height) / head.width;
-    ctx.save(); ctx.translate(nj.x, nj.y + a.headDown * 0.08 * pxPerM); ctx.rotate(0.03 * Math.sin(ph * Math.PI * 2) * walk);
+    ctx.save(); ctx.translate(nj.x, nj.y + a.headDown * 0.08 * pxPerM); ctx.rotate(0.03 * Math.sin(ph * Math.PI * 2) * walk + down * 0.55);
+    // kočičí uši (samostatné díly): za hlavou, spodní střed ucha na místě z archu
+    const ears = away ? BI?.ears_back : BI?.ears;
+    if (ears) for (const e of ears) { const ei = img(`${pre}${e.part}`); if (!ei) continue; const ew = e.w * hw, eh = (ew * ei.height) / ei.width; ctx.drawImage(ei, -hw * R.headAt[0] + e.u * hw - ew / 2, -hh * R.headAt[1] + e.v * hh - eh, ew, eh); }
     ctx.drawImage(head, -hw * R.headAt[0], -hh * R.headAt[1], hw, hh); ctx.restore();
   }
   ctx.restore();
+  if (debug) {
+    // kostra: rameno–kyčel–krk–kořen ocasu (bílé), klouby nohou (rameno/kyčel růžová, koleno žlutá, dotyk tlapky tyrkys), bod umístění (zem)
+    const P = [J(R.hip), J(R.shoulder), J(R.neck)], tl = J(R.tail);
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(tl.x, tl.y); for (const q of P) ctx.lineTo(q.x, q.y); ctx.stroke();
+    for (const q of [...P.map((x) => ({ ...x, c: '#fff' })), { ...tl, c: '#fff' }, ...dbg, { x: 0, y: 0, c: '#ff3030' }]) { ctx.fillStyle = q.c; ctx.beginPath(); ctx.arc(q.x, q.y, 3.5, 0, Math.PI * 2); ctx.fill(); }
+  }
   ctx.restore();
 }
 
 /** Kontaktní stín zvířete (malá měkká elipsa). */
 export function drawAnimalShadow(ctx: Ctx, a: AnimalState, pxPerM: number): void {
-  const L = SPECIES[a.species].length * pxPerM;
+  const L = SPECIES[a.species].length * pxPerM * breedScale(a);
   ctx.fillStyle = 'rgba(60,70,100,0.16)';
   ctx.beginPath(); ctx.ellipse(0, 0, L * 0.55, Math.max(1, L * 0.09), 0, 0, Math.PI * 2); ctx.fill();
 }

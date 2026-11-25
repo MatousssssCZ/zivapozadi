@@ -14,6 +14,7 @@ import type { Vec2 } from '../src/core/math/vec';
 import { addBuiltinAsset } from '../src/node/builtin';
 import type { PartLibrary } from '../src/core/anim/partLibrary';
 import { generateGroup } from '../src/core/anim/appearanceGenerator';
+import { importBreeds } from './generate-liberec-demo';
 import { createProjectDir, saveProject, importAssetFile } from '../src/node/projectIO';
 import { defaultIntegration, lantern } from '../src/core/render/integration';
 import { cameraFor, toScreen, toWorld } from '../src/core/scene/camera';
@@ -27,7 +28,7 @@ export const PASTEL = {
   depth: { yFar: 726, scaleFar: 0.51, yNear: 1080, scaleNear: 1.596 },
   /** bruslaři: počet a podíly schopností (věk je samostatně); nejistí a začátečníci vypnutí – místo nich jistější (dospělí i šikovné děti) */
   skaters: { count: 18, mix: { rec: 0.6, beginner: 0, good: 0.35, expert: 0.05 }, kidsAmongBeginners: 0, kidsAmongGood: 2, parentWithKid: false },
-  /** chodci */ visitors: 14, families: 3, seniors: 2, dogs: 2,
+  /** chodci */ visitors: 14, families: 3, seniors: 2, dogs: 3,
   /** výška objektů (m) – velikost se odvodí z perspektivy v místě paty */
   heights: { tree: 16, stall: 3.9, lamp: 3.6, lampArc: 3.7, bench: 0.95, bin: 0.95, leafyWide: 9.5, leafyNarrow: 10.5 },
   objects: {
@@ -221,7 +222,9 @@ export async function generatePastel(dir: string): Promise<ProjectFile> {
   }));
   // přední pás: jen dva chodci (velké postavy u kamery – střídmě)
   for (const id of ['ch_13', 'ch_14']) { const c = p.characters.find((x) => x.id === id); if (c) c.startNodeId = id === 'ch_13' ? 'fl' : 'fr'; }
-  for (const id of ['ch_3', 'ch_8'].slice(0, PASTEL.dogs)) p.characters.find((c) => c.id === id)!.pet = 'dog';
+  const breeds = ['dog_dalmatian', 'dog_husky', 'dog_collie', 'dog_bernese'];
+  ['ch_3', 'ch_8', 'ch_6', 'ch_12'].slice(0, PASTEL.dogs).forEach((id, i) => { const c = p.characters.find((x) => x.id === id)!; c.pet = 'dog'; c.petBreed = breeds[i]; });
+  await importBreeds(dir, p, breeds);
   // rodiny (dítě chodí po boku rodiče; staví sněhuláka, koulují se)
   const kids = generateGroup(childLib, PASTEL.families + 4, 3142).appearances;
   ['ch_2', 'ch_5', 'ch_10'].slice(0, PASTEL.families).forEach((pid, i) => {

@@ -1,0 +1,258 @@
+{
+ "torso": {
+  "texture": "dog_bernese_torso.png",
+  "pivot": {
+   "x": 194.0,
+   "y": 131.5
+  },
+  "attachments": {}
+ },
+ "head": {
+  "texture": "dog_bernese_head.png",
+  "pivot": {
+   "x": 110.0,
+   "y": 151.0
+  },
+  "attachments": {}
+ },
+ "tail": {
+  "texture": "dog_bernese_tail.png",
+  "pivot": {
+   "x": 102.0,
+   "y": 137.5
+  },
+  "attachments": {}
+ },
+ "fu_a": {
+  "texture": "dog_bernese_fu_a.png",
+  "pivot": {
+   "x": 73.0,
+   "y": 22.0
+  },
+  "attachments": {
+   "end": {
+    "x": 50.0,
+    "y": 176.0
+   }
+  }
+ },
+ "fl_a": {
+  "texture": "dog_bernese_fl_a.png",
+  "pivot": {
+   "x": 45.0,
+   "y": 30.7
+  },
+  "attachments": {
+   "contact": {
+    "x": 62.5,
+    "y": 215.7
+   }
+  }
+ },
+ "fu_b": {
+  "texture": "dog_bernese_fu_b.png",
+  "pivot": {
+   "x": 70.8,
+   "y": 21.5
+  },
+  "attachments": {
+   "end": {
+    "x": 48.5,
+    "y": 172.0
+   }
+  }
+ },
+ "fl_b": {
+  "texture": "dog_bernese_fl_b.png",
+  "pivot": {
+   "x": 46.8,
+   "y": 28.0
+  },
+  "attachments": {
+   "contact": {
+    "x": 65.0,
+    "y": 197.0
+   }
+  }
+ },
+ "hu_a": {
+  "texture": "dog_bernese_hu_a.png",
+  "pivot": {
+   "x": 100.4,
+   "y": 25.8
+  },
+  "attachments": {
+   "end": {
+    "x": 47.1,
+    "y": 206.4
+   }
+  }
+ },
+ "hl_a": {
+  "texture": "dog_bernese_hl_a.png",
+  "pivot": {
+   "x": 51.4,
+   "y": 31.6
+  },
+  "attachments": {
+   "contact": {
+    "x": 73.0,
+    "y": 222.6
+   }
+  }
+ },
+ "hu_b": {
+  "texture": "dog_bernese_hu_b.png",
+  "pivot": {
+   "x": 108.5,
+   "y": 25.6
+  },
+  "attachments": {
+   "end": {
+    "x": 50.8,
+    "y": 204.8
+   }
+  }
+ },
+ "hl_b": {
+  "texture": "dog_bernese_hl_b.png",
+  "pivot": {
+   "x": 51.0,
+   "y": 30.2
+  },
+  "attachments": {
+   "contact": {
+    "x": 72.4,
+    "y": 212.8
+   }
+  }
+ },
+ "torso_back": {
+  "texture": "dog_bernese_torso_back.png",
+  "pivot": {
+   "x": 200.0,
+   "y": 130.5
+  },
+  "attachments": {}
+ },
+ "head_back": {
+  "texture": "dog_bernese_head_back.png",
+  "pivot": {
+   "x": 112.0,
+   "y": 154.0
+  },
+  "attachments": {}
+ },
+ "tail_back": {
+  "texture": "dog_bernese_tail_back.png",
+  "pivot": {
+   "x": 111.0,
+   "y": 143.0
+  },
+  "attachments": {}
+ },
+ "fu_a_back": {
+  "texture": "dog_bernese_fu_a_back.png",
+  "pivot": {
+   "x": 72.4,
+   "y": 21.6
+  },
+  "attachments": {
+   "end": {
+    "x": 46.5,
+    "y": 172.8
+   }
+  }
+ },
+ "fl_a_back": {
+  "texture": "dog_bernese_fl_a_back.png",
+  "pivot": {
+   "x": 42.5,
+   "y": 28.7
+  },
+  "attachments": {
+   "contact": {
+    "x": 61.5,
+    "y": 201.9
+   }
+  }
+ },
+ "fu_b_back": {
+  "texture": "dog_bernese_fu_b_back.png",
+  "pivot": {
+   "x": 77.5,
+   "y": 21.1
+  },
+  "attachments": {
+   "end": {
+    "x": 49.7,
+    "y": 168.8
+   }
+  }
+ },
+ "fl_b_back": {
+  "texture": "dog_bernese_fl_b_back.png",
+  "pivot": {
+   "x": 44.2,
+   "y": 27.3
+  },
+  "attachments": {
+   "contact": {
+    "x": 63.9,
+    "y": 192.1
+   }
+  }
+ },
+ "hu_a_back": {
+  "texture": "dog_bernese_hu_a_back.png",
+  "pivot": {
+   "x": 94.5,
+   "y": 25.7
+  },
+  "attachments": {
+   "end": {
+    "x": 54.1,
+    "y": 205.6
+   }
+  }
+ },
+ "hl_a_back": {
+  "texture": "dog_bernese_hl_a_back.png",
+  "pivot": {
+   "x": 51.5,
+   "y": 31.6
+  },
+  "attachments": {
+   "contact": {
+    "x": 72.5,
+    "y": 222.6
+   }
+  }
+ },
+ "hu_b_back": {
+  "texture": "dog_bernese_hu_b_back.png",
+  "pivot": {
+   "x": 99.3,
+   "y": 25.5
+  },
+  "attachments": {
+   "end": {
+    "x": 56.8,
+    "y": 204.0
+   }
+  }
+ },
+ "hl_b_back": {
+  "texture": "dog_bernese_hl_b_back.png",
+  "pivot": {
+   "x": 53.7,
+   "y": 31.1
+  },
+  "attachments": {
+   "contact": {
+    "x": 75.6,
+    "y": 218.7
+   }
+  }
+ }
+}

@@ -6,6 +6,7 @@ import { hitTest, type Hit } from './hitTest';
 import type { Vec2 } from '../../core/math/vec';
 import { dist } from '../../core/math/vec';
 import { addArea, addCharacter, addNode, addZone, connectNodes, placeAsset } from '../ops';
+import { ActionMenu, actionsAt, addSource } from './ActionMenu';
 
 interface View { zoom: number; panX: number; panY: number }
 
@@ -97,8 +98,16 @@ export function EditorCanvas() {
     const m = toScene(e); const t = xf(); const px = t.dpr / t.s;
     const screen = { x: e.clientX, y: e.clientY };
     if (e.button === 1 || st.tool === 'pan' || (e.button === 0 && e.altKey)) { drag.current = { hit: { kind: 'pan' }, start: m, startScreen: screen, started: true, lastScreen: screen }; return; }
+    if (e.button === 2 || (e.button === 0 && st.tool === 'action')) { openActions(e, m, px); return; }
     if (e.button !== 0) return;
     const hit = hitTest(st.project, store.sim.sim, st.selection, m, px, st.showMarkers);
+    if (st.tool === 'smoke') {
+      // kouř / pára: klik na zdroj = posun tažením, jinam = nový komín
+      const srcs = st.project.scene.environment?.sources ?? [], i = srcs.findIndex((q) => dist(q, m) <= 14 * px);
+      if (i >= 0) drag.current = { hit: { kind: 'smoke', index: i } as never, start: m, startScreen: screen, started: true, lastScreen: screen };
+      else addSource(e.shiftKey ? 'steam' : 'smoke', m);
+      return;
+    }
     switch (st.tool) {
       case 'route': {
         if (hit?.kind === 'node') {
@@ -128,11 +137,20 @@ export function EditorCanvas() {
     drag.current = { hit, start: m, startScreen: screen, started: false, lastScreen: screen };
   };
 
+  const openActions = (e: React.MouseEvent, m: Vec2, px: number) => {
+    const st = store.state; if (!st.project) return;
+    const hit = hitTest(st.project, store.sim.sim, null, m, px, false);
+    const items = actionsAt(m, hit?.kind === 'character' ? hit.id : null);
+    const r = wrap.current!.getBoundingClientRect();
+    store.set({ actionMenu: { x: Math.min(e.clientX - r.left, r.width - 230), y: Math.min(e.clientY - r.top, r.height - 24 * items.length - 10), items } });
+  };
+
   const onMouseMove = (e: React.MouseEvent) => {
     const st = store.state; if (!st.project) return;
     const m = toScene(e); mouse.current = m;
     const t = xf(); const px = t.dpr / t.s;
     const d = drag.current;
+    if (d && (d.hit as { kind: string }).kind === 'smoke') { (d as { last?: Vec2 }).last = m; return; } // posun se zapíše po puštění (bez přestavění simulace)
     if (!d) { if (st.tool === 'select') hover.current = hitTest(st.project, store.sim.sim, st.selection, m, px, st.showMarkers); return; }
     const screen = { x: e.clientX, y: e.clientY };
     if (!d.started) {
@@ -178,9 +196,10 @@ export function EditorCanvas() {
   const onMouseUp = () => {
     const d = drag.current; drag.current = null;
     if (!d) return;
+    if ((d.hit as { kind: string }).kind === 'smoke') { const i = (d.hit as unknown as { index: number }).index, m = (d as { last?: Vec2 }).last; if (m) store.editLive('Přesun zdroje kouře', (p) => { const q = p.scene.environment!.sources[i]; q.x = Math.round(m.x); q.y = Math.round(m.y); }); return; }
     if (d.hit?.kind === 'zoneRect' && dragRect.current) { addZone(store.state.zoneType, dragRect.current.a, dragRect.current.b); dragRect.current = null; return; }
     if (d.started && d.hit && d.hit.kind !== 'pan') {
-      const labels: Record<string, string> = { object: 'Přesun objektu', scaleHandle: 'Změna měřítka', point: 'Úprava interakčního bodu', node: 'Přesun bodu trasy', vertex: 'Úprava tvaru', area: 'Přesun oblasti', zone: 'Přesun zóny', character: 'Změna počátečního bodu postavy' };
+      const labels: Record<string, string> = { smoke: 'Přesun zdroje kouře', object: 'Přesun objektu', scaleHandle: 'Změna měřítka', point: 'Úprava interakčního bodu', node: 'Přesun bodu trasy', vertex: 'Úprava tvaru', area: 'Přesun oblasti', zone: 'Přesun zóny', character: 'Změna počátečního bodu postavy' };
       store.endGesture(labels[d.hit.kind] ?? 'Úprava');
     }
   };
@@ -198,12 +217,13 @@ export function EditorCanvas() {
     if (asset) await placeAsset(asset, toScene(e).x, toScene(e).y);
   };
 
-  const cursor = tool === 'pan' ? 'grab' : tool === 'select' ? 'default' : 'crosshair';
+  const cursor = tool === 'pan' ? 'grab' : tool === 'select' ? 'default' : tool === 'action' ? 'pointer' : 'crosshair';
   return (
     <div className="canvas-wrap" ref={wrap} onDragOver={(e) => e.preventDefault()} onDrop={onDrop}>
       <canvas ref={ref} data-testid="scene-canvas" style={{ cursor }}
         onWheel={onWheel} onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseLeave={() => { mouse.current = null; onMouseUp(); }}
         onDoubleClick={onDoubleClick} onContextMenu={(e) => e.preventDefault()} />
+      <ActionMenu />
       <div className="canvas-hud">
         <span>Přiblížení {zoomPct} %</span>
         <button onClick={() => { view.current = { zoom: 1, panX: 0, panY: 0 }; setZoomPct(100); }}>Celý záběr</button>
@@ -223,6 +243,8 @@ function ToolHint() {
     snow: `Plocha sněhu: klikáním přidávejte body, uzavřete klikem na první bod nebo dvojklikem (Enter). Bodů: ${drawing.length}`,
     zone: 'Zóna činnosti: tažením vymezte celkový prostor činnosti. Objekty uvnitř se přiřadí automaticky.',
     character: 'Postava: klikněte poblíž bodu trasy – postava v něm začne.',
+    action: 'Akce: klikněte na postavu, bruslaře, kluziště nebo zónu – nabídka událostí, které se hned spustí. (Pravé tlačítko funguje v každém nástroji.)',
+    smoke: 'Kouř: klik = nový komín (Shift+klik = pára), tažením zdroj posunete. Úprava síly a smazání vpravo v panelu Scéna → Živé prostředí.',
   };
   if (!hints[tool]) return null;
   return <div className="tool-hint">{hints[tool]}</div>;

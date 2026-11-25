@@ -22,7 +22,7 @@ describe('bruslení', () => {
   it('kvóty profilů ve zkušební scéně a bruslaři jsou mimo dav chodců', () => {
     const n: Record<string, number> = {};
     for (const c of lp.project.characters) if (c.skate) n[c.skate] = (n[c.skate] ?? 0) + 1;
-    expect(n).toEqual({ rec: 8, unsure: 2, expert: 2, beginnerKid: 2, goodKid: 2 });
+    expect(n).toEqual({ rec: 8, good: 2, expert: 2, goodKid: 4 });
     const sim = Simulation.create(lp.project, lp.manifests); sim.advanceTo(1);
     expect(sim.state.agents.filter((a) => a.onIce).length).toBe(16);
   });

@@ -27,7 +27,7 @@ import { createAnimals, stepAnimals } from './animals';
 import { stepClearing, newClearingState, type ClearingHost } from './clearing';
 import { viewForDirection } from '../anim/skeleton';
 import { stepCoopSnowman, startCoopSnowman } from '../activities/coopSnowman';
-import { createSkater, stepSkater, stepRinkEvents, separate, addTrails, skatePose, SKATE_PROFILES, TRAIL_LIFE, FALL_TOTAL, type IceGeo, type RinkState, type RinkCtx , forceRinkEvent, makeIceGeo, RINK_FALL_T0, rinkFallLen, LIFE_LABEL, insideW, clampToIce } from './rink';
+import { createSkater, stepSkater, stepRinkEvents, separate, addTrails, skatePose, SKATE_PROFILES, TRAIL_LIFE, FALL_TOTAL, type IceGeo, type RinkState, type RinkCtx , forceRinkEvent, makeIceGeo, RINK_FALL_T0, rinkFallLen, LIFE_LABEL, insideW, clampToIce, type TrickKind } from './rink';
 import { stepFalls, startFall, newFallsState, DEFAULT_FALLS, type FallHost, type FallsState } from './falls';
 import { fallEndShift as fallEndShiftOf, type FallVariant } from '../anim/fallPoses';
 import { stepSled, sledObstacles, sledPathProblem, type SledHost } from './sled';
@@ -454,6 +454,29 @@ export class Simulation {
   }
 
   /** Ladění: rodina (rodič + dítě) hned začne stavět sněhuláka v první volné zóně. */
+  /** Hustota davu (0–1, podíl chodců a bruslařů ve scéně) – mění se za běhu bez přestavění simulace. */
+  setCrowd(c: { walkers?: number; skaters?: number }) { this.patchProject((p) => { p.crowd = { ...(p.crowd ?? {}), ...c }; }); }
+  /** Úprava nastavení, které nemění minulý průběh (hustota, zdroje kouře): bez přestavění simulace. */
+  patchProject(fn: (p: ProjectFile) => void) { const env = this.project.scene.environment; if (env) this.project.scene.environment = structuredClone(env); this.project.crowd = this.project.crowd ? { ...this.project.crowd } : undefined; fn(this.project); }
+  /** smí postava (podle pořadí ve své skupině a hustoty davu) do scény? */
+  private crowdAllows(a: AgentState, kind: 'walkers' | 'skaters'): boolean {
+    const k = this.project.crowd?.[kind] ?? 1; if (k >= 0.999) return true;
+    const pool = this.project.characters.filter((c) => (kind === 'skaters' ? !!c.skate && !c.skatePair : c.routine === 'visitor' && !c.skate && !c.companionId));
+    const i = pool.findIndex((c) => c.id === a.id); if (i < 0) return true;
+    return i < Math.round(pool.length * k);
+  }
+  /** Ladění: koulovačka hned (volná rodina, dětská sněhová kapsa). */
+  startFightNow(): { ok: boolean; msg: string } {
+    const h = this.sessionHost(), t = this.time();
+    const zone = this.project.zones.find((z) => z.activityType === 'snowballFight' && z.enabled && !fightZoneProblem(h, z, true));
+    if (!zone) return { ok: false, msg: 'Zóna koulovačky není volná.' };
+    for (const k of this.state.agents.filter((x) => !x.hidden && x.follow && this.isChild(x) && !x.activity)) {
+      const p = this.state.agents.find((x) => x.id === k.follow!.leaderId); if (!p || p.hidden || p.activity || p.holding) continue;
+      p.route = null; k.route = null;
+      if (this.startKidsFight(p, k, zone, t) || startFight(h, zone, k, p, true)) return { ok: true, msg: `${k.name} jde koulovat.` };
+    }
+    return { ok: false, msg: 'Ve scéně není volná rodina s dítětem.' };
+  }
   startCoopSnowmanNow(): { ok: boolean; msg: string } {
     const h = this.sessionHost();
     const zone = this.project.zones.find((z) => z.activityType === 'snowman' && !snowmanZoneFree(h, z));
@@ -556,6 +579,7 @@ export class Simulation {
     const life = st.life!;
     for (const s of Object.values(st.sk)) {
       const L = life[s.id]; if (!L || L.ph !== 'ice') continue;
+      const ch = this.chars.get(s.id); if (ch && !ch.skatePair && L.until > t + 15 && !this.crowdAllows(this.state.agents.find((x) => x.id === s.id)!, 'skaters')) L.until = t + 15; // nad hustotu: brzy odjede
       const mate = s.pair ? st.sk[s.pair] : undefined;
       const ready = (x: typeof s) => x.st === 'SKATE' || x.st === 'MARCH' || x.st === 'REST';
       if (t >= L.until && s.st !== 'EXIT' && s.st !== 'OUT' && ready(s) && (!mate || ready(mate)) && st.event?.id !== s.id) {
@@ -666,7 +690,7 @@ export class Simulation {
         a.hidden = true; a.status = 'Mimo scénu';
         // dítě přichází s rodičem
         if (isKid) { const ML = mateId ? st.life![mateId] : undefined; if (!ML || ML.ph !== 'arrive') return true; }
-        else if (t < L.until) return true;
+        else if (t < L.until || !this.crowdAllows(a, 'skaters')) return true;
         if (mateId && !isKid && st.life![mateId]?.ph !== 'away') return true; // počkat, až bude dítě také venku
         // jen vstupy, odkud vede trasa k lavičce; dítě přichází stejným vstupem jako rodič
         const seat0 = this.pointsOf(en.benchId).find((p) => p.point.kind === 'seat');
@@ -695,10 +719,10 @@ export class Simulation {
   }
 
   /** Ladění kluziště: ruční pád / prvek (u vybrané postavy, jinak u vhodného bruslaře). */
-  triggerRinkEvent(kind: 'fall' | 'trick', agentId?: string | null): { ok: boolean; msg: string } {
+  triggerRinkEvent(kind: 'fall' | 'trick', agentId?: string | null, trick?: TrickKind, near?: Vec2 | null): { ok: boolean; msg: string } {
     const st = this.state.rink; if (!st || !this.project.rink) return { ok: false, msg: 'Scéna nemá kluziště.' };
     const all = Object.values(st.sk);
-    const r = forceRinkEvent({ t: this.time(), dt: SIM_DT, geo: this.rinkGeometry(), all, st, cfg: this.project.rink }, kind, agentId && st.sk[agentId] ? agentId : null);
+    const r = forceRinkEvent({ t: this.time(), dt: SIM_DT, geo: this.rinkGeometry(), all, st, cfg: this.project.rink }, kind, agentId && st.sk[agentId] ? agentId : null, trick, near ? toWorld(this.cam(), near) : null);
     return r.ok ? { ok: true, msg: this.state.agents.find((a) => a.id === r.msg)?.name ?? r.msg } : r;
   }
   private rinkStatus(a: AgentState): string {
@@ -1550,6 +1574,7 @@ export class Simulation {
     switch (v.mode) {
       case 'offstage': {
         a.hidden = true; a.status = 'Mimo scénu';
+        if (t >= v.until && !this.crowdAllows(a, 'walkers')) { v.until = t + 4; return; } // hustota davu
         if (t >= v.until) this.enterScene(a, t);
         return;
       }

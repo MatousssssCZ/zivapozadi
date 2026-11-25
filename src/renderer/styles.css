@@ -106,3 +106,15 @@ code { color: var(--muted); }
 .preview { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
 .appearance { display: flex; flex-direction: column; gap: 5px; }
 .tabs button { font-size: 12px; }
+
+/* nabídka akcí na místě ve scéně */
+.action-backdrop { position: absolute; inset: 0; z-index: 30; }
+.action-menu { position: absolute; min-width: 220px; max-height: 80%; overflow: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; box-shadow: 0 6px 24px rgba(0,0,0,0.35); padding: 4px; display: flex; flex-direction: column; }
+.action-menu button { text-align: left; border: 0; background: transparent; padding: 5px 10px; border-radius: 4px; }
+.action-menu button:hover { background: var(--accent, #3b6cff); color: #fff; }
+.action-head { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.6; padding: 6px 10px 2px; }
+.density { display: flex; align-items: center; gap: 6px; }
+.density input[type=range] { width: 90px; }
+.debug-menu { position: relative; }
+.debug-menu summary { cursor: pointer; padding: 3px 8px; border: 1px solid var(--line); border-radius: 4px; list-style: none; }
+.debug-pop { position: absolute; z-index: 40; top: 110%; left: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 8px; display: flex; flex-direction: column; gap: 6px; min-width: 260px; box-shadow: 0 6px 24px rgba(0,0,0,0.35); }

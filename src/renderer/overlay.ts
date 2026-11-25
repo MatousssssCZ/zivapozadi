@@ -73,6 +73,12 @@ export function drawOverlay(ctx: Ctx, o: OverlayInput) {
   if (o.fallDebug && o.sim) drawFallDebug(ctx, o);
   if (o.snowmanDebug && o.sim) drawSnowmanDebug(ctx, o);
   if (o.rinkDebug && o.sim?.state.rink && o.project.rink) drawRinkDebug(ctx, o);
+  // zdroje kouře a páry (značky – posun tažením v nástroji Kouř)
+  for (const q of o.project.scene.environment?.sources ?? []) {
+    ctx.save(); ctx.strokeStyle = MARKER_ACCENT; ctx.lineWidth = 1.5 * o.px; ctx.fillStyle = q.kind === 'smoke' ? 'rgba(90,90,100,0.6)' : 'rgba(220,230,255,0.7)';
+    ctx.beginPath(); ctx.arc(q.x, q.y, 7 * o.px, 0, 7); ctx.fill(); ctx.stroke();
+    label(ctx, q.kind === 'smoke' ? 'kouř' : 'pára', q.x, q.y - 9 * o.px, o.px); ctx.restore();
+  }
   const { project: p, px, selection: sel } = o;
   const isSel = (kind: string, id: string) => sel?.kind === kind && sel.id === id;
   ctx.save();

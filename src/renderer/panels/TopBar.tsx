@@ -19,6 +19,8 @@ export async function doOpen(kind: 'new' | 'open' | 'demo' | 'demo2' | 'liberec'
 
 const TOOLS: { id: Tool; label: string; key: string }[] = [
   { id: 'select', label: 'Výběr', key: 'V' },
+  { id: 'action', label: '▶ Akce', key: 'A' },
+  { id: 'smoke', label: 'Kouř', key: 'K' },
   { id: 'route', label: 'Trasa', key: 'T' },
   { id: 'obstacle', label: 'Překážka', key: 'O' },
   { id: 'snow', label: 'Sníh', key: 'S' },
@@ -74,6 +76,10 @@ export function TopBar() {
         <button disabled={!canUndo} onClick={() => store.undoOp()} title="Ctrl+Z">↶ Zpět</button>
         <button disabled={!canRedo} onClick={() => store.redoOp()} title="Ctrl+Y / Ctrl+Shift+Z">↷ Vpřed</button>
         <label className="check"><input type="checkbox" checked={showMarkers} onChange={(e) => store.set({ showMarkers: e.target.checked })} /> Značky editoru</label>
+      </div>
+      {has && <Density />}
+      <div className="group">
+        <details className="debug-menu"><summary>Ladění ▾</summary><div className="debug-pop">
         <label className="check" title="Kostra, klouby, kotevní body a názvy dílů skládaných postav (jen v editoru)"><input type="checkbox" checked={rigDiag} onChange={(e) => store.set({ rigDiagnostics: e.target.checked, showMarkers: e.target.checked || store.state.showMarkers })} /> Kostra postav</label>
         {hasClearing && <label className="check" title="Mřížka sněhu, pracovní hrana, úchopy rukou, opěrné body chodidel, fáze a zásoby sněhu (jen v editoru)"><input type="checkbox" checked={clrDbg} onChange={(e) => store.set({ clearingDebug: e.target.checked, rigDiagnostics: e.target.checked || store.state.rigDiagnostics })} /> Ladění odklízení</label>}
         {hasElders && <label className="check" title="Senioři: opěrné body chodidel, hrot hole (zelená = opřený, oranžová = přenos), rukojeť, profil, délka kroku, kadence a rychlost (jen v editoru)"><input type="checkbox" checked={gaitDbg} onChange={(e) => store.set({ gaitDebug: e.target.checked })} /> Ladění chůze seniorů</label>}
@@ -92,8 +98,24 @@ export function TopBar() {
         </>}
         {hasClearing && clrDbg && <button onClick={() => clearingCommand('cycle')} title="Postava přijde a provede jeden pracovní cyklus (záběry až po odhoz / vytlačení), pak zůstane stát">Jeden cyklus</button>}
         {hasClearing && clrDbg && <button onClick={() => clearingCommand('reset')} title="Nová vrstva sněhu na celé ploše, hromada pryč, postava mimo scénu (explicitní reset)">Reset situace</button>}
+        </div></details>
         <button className="primary" disabled={!has} onClick={() => store.set({ exportOpen: true })}>Export videa…</button>
       </div>
+    </div>
+  );
+}
+
+/** Hustota davu: podíl chodců a bruslařů, kteří přicházejí (mění se za běhu, bez přestavění simulace). */
+function Density() {
+  const crowd = useEditor((s) => s.project?.crowd);
+  const hasRink = useEditor((s) => !!s.project?.rink);
+  const [w, setW] = useState<number | null>(null), [k, setK] = useState<number | null>(null);
+  const cw = w ?? Math.round((crowd?.walkers ?? 1) * 100), ck = k ?? Math.round((crowd?.skaters ?? 1) * 100);
+  const commit = (key: 'walkers' | 'skaters', v: number) => { store.editLive(key === 'walkers' ? 'Hustota chodců' : 'Hustota bruslařů', (p) => { p.crowd = { ...(p.crowd ?? {}), [key]: v / 100 }; }); setW(null); setK(null); };
+  return (
+    <div className="group density" title="Kolik lidí do scény přichází. Kdo je navíc, dokončí, co dělá, a odejde (bruslaři dojezdí a odejdou z ledu).">
+      <span>Chodci</span><input type="range" min={10} max={100} step={5} value={cw} onChange={(e) => setW(Number(e.target.value))} onPointerUp={() => commit('walkers', cw)} onKeyUp={() => commit('walkers', cw)} /><span className="muted">{cw} %</span>
+      {hasRink && <><span>Bruslaři</span><input type="range" min={10} max={100} step={5} value={ck} onChange={(e) => setK(Number(e.target.value))} onPointerUp={() => commit('skaters', ck)} onKeyUp={() => commit('skaters', ck)} /><span className="muted">{ck} %</span></>}
     </div>
   );
 }

@@ -3,8 +3,8 @@
   "formatVersion": 1,
   "meta": {
     "name": "Pastelové vánoční kluziště",
-    "createdAt": "2026-11-25T21:20:19.272Z",
-    "modifiedAt": "2026-11-25T21:20:19.408Z",
+    "createdAt": "2026-11-25T22:19:19.076Z",
+    "modifiedAt": "2026-11-25T22:19:19.259Z",
     "appVersion": "0.1.0"
   },
   "seed": 3141,
@@ -1136,6 +1136,1150 @@
       "file": "assets/images/pavement-0b42da51.png",
       "width": 1473,
       "height": 226,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_bernese_fl_a",
+      "kind": "image",
+      "name": "Zvíře – dog_bernese_fl_a",
+      "file": "assets/images/dog-bernese-fl-a-0576a763.png",
+      "width": 101,
+      "height": 219,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_bernese_fl_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_bernese_fl_a_back",
+      "file": "assets/images/dog-bernese-fl-a-back-f934ba10.png",
+      "width": 101,
+      "height": 205,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_bernese_fl_b",
+      "kind": "image",
+      "name": "Zvíře – dog_bernese_fl_b",
+      "file": "assets/images/dog-bernese-fl-b-ef28b692.png",
+      "width": 105,
+      "height": 200,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_bernese_fl_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_bernese_fl_b_back",
+      "file": "assets/images/dog-bernese-fl-b-back-21350cf6.png",
+      "width": 105,
+      "height": 195,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_bernese_fu_a",
+      "kind": "image",
+      "name": "Zvíře – dog_bernese_fu_a",
+      "file": "assets/images/dog-bernese-fu-a-966abcf8.png",
+      "width": 132,
+      "height": 220,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_bernese_fu_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_bernese_fu_a_back",
+      "file": "assets/images/dog-bernese-fu-a-back-2fe3719b.png",
+      "width": 128,
+      "height": 216,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_bernese_fu_b",
+      "kind": "image",
+      "name": "Zvíře – dog_bernese_fu_b",
+      "file": "assets/images/dog-bernese-fu-b-de9d625b.png",
+      "width": 128,
+      "height": 215,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_bernese_fu_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_bernese_fu_b_back",
+      "file": "assets/images/dog-bernese-fu-b-back-e1eb4ab6.png",
+      "width": 137,
+      "height": 211,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_bernese_head",
+      "kind": "image",
+      "name": "Zvíře – dog_bernese_head",
+      "file": "assets/images/dog-bernese-head-3f3f4dea.png",
+      "width": 220,
+      "height": 302,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_bernese_head_back",
+      "kind": "image",
+      "name": "Zvíře – dog_bernese_head_back",
+      "file": "assets/images/dog-bernese-head-back-7692b910.png",
+      "width": 224,
+      "height": 308,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_bernese_hl_a",
+      "kind": "image",
+      "name": "Zvíře – dog_bernese_hl_a",
+      "file": "assets/images/dog-bernese-hl-a-21b16929.png",
+      "width": 118,
+      "height": 226,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_bernese_hl_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_bernese_hl_a_back",
+      "file": "assets/images/dog-bernese-hl-a-back-8eba08c5.png",
+      "width": 116,
+      "height": 226,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_bernese_hl_b",
+      "kind": "image",
+      "name": "Zvíře – dog_bernese_hl_b",
+      "file": "assets/images/dog-bernese-hl-b-9d30a147.png",
+      "width": 117,
+      "height": 216,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_bernese_hl_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_bernese_hl_b_back",
+      "file": "assets/images/dog-bernese-hl-b-back-7db06c00.png",
+      "width": 121,
+      "height": 222,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_bernese_hu_a",
+      "kind": "image",
+      "name": "Zvíře – dog_bernese_hu_a",
+      "file": "assets/images/dog-bernese-hu-a-0ca6a502.png",
+      "width": 175,
+      "height": 258,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_bernese_hu_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_bernese_hu_a_back",
+      "file": "assets/images/dog-bernese-hu-a-back-4c7d104b.png",
+      "width": 179,
+      "height": 257,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_bernese_hu_b",
+      "kind": "image",
+      "name": "Zvíře – dog_bernese_hu_b",
+      "file": "assets/images/dog-bernese-hu-b-b3682cf3.png",
+      "width": 189,
+      "height": 256,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_bernese_hu_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_bernese_hu_b_back",
+      "file": "assets/images/dog-bernese-hu-b-back-496bb8a8.png",
+      "width": 188,
+      "height": 255,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_bernese_tail",
+      "kind": "image",
+      "name": "Zvíře – dog_bernese_tail",
+      "file": "assets/images/dog-bernese-tail-b7c2c3dc.png",
+      "width": 204,
+      "height": 275,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_bernese_tail_back",
+      "kind": "image",
+      "name": "Zvíře – dog_bernese_tail_back",
+      "file": "assets/images/dog-bernese-tail-back-676b62ee.png",
+      "width": 222,
+      "height": 286,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_bernese_torso",
+      "kind": "image",
+      "name": "Zvíře – dog_bernese_torso",
+      "file": "assets/images/dog-bernese-torso-622db4b9.png",
+      "width": 388,
+      "height": 263,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_bernese_torso_back",
+      "kind": "image",
+      "name": "Zvíře – dog_bernese_torso_back",
+      "file": "assets/images/dog-bernese-torso-back-fefed268.png",
+      "width": 400,
+      "height": 261,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_fl_a",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_fl_a",
+      "file": "assets/images/dog-collie-fl-a-5435b082.png",
+      "width": 100,
+      "height": 193,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_fl_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_fl_a_back",
+      "file": "assets/images/dog-collie-fl-a-back-75234da3.png",
+      "width": 102,
+      "height": 194,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_fl_b",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_fl_b",
+      "file": "assets/images/dog-collie-fl-b-d37dd7eb.png",
+      "width": 107,
+      "height": 187,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_fl_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_fl_b_back",
+      "file": "assets/images/dog-collie-fl-b-back-61d142ee.png",
+      "width": 104,
+      "height": 188,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_fu_a",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_fu_a",
+      "file": "assets/images/dog-collie-fu-a-5f64d955.png",
+      "width": 120,
+      "height": 222,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_fu_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_fu_a_back",
+      "file": "assets/images/dog-collie-fu-a-back-6c245298.png",
+      "width": 122,
+      "height": 222,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_fu_b",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_fu_b",
+      "file": "assets/images/dog-collie-fu-b-24dc9ee3.png",
+      "width": 109,
+      "height": 221,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_fu_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_fu_b_back",
+      "file": "assets/images/dog-collie-fu-b-back-13e30766.png",
+      "width": 111,
+      "height": 221,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_head",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_head",
+      "file": "assets/images/dog-collie-head-9e2570dd.png",
+      "width": 221,
+      "height": 317,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_head_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_head_back",
+      "file": "assets/images/dog-collie-head-back-79a4e62f.png",
+      "width": 222,
+      "height": 316,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_hl_a",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_hl_a",
+      "file": "assets/images/dog-collie-hl-a-fc9eac34.png",
+      "width": 95,
+      "height": 197,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_hl_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_hl_a_back",
+      "file": "assets/images/dog-collie-hl-a-back-21207ab7.png",
+      "width": 105,
+      "height": 199,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_hl_b",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_hl_b",
+      "file": "assets/images/dog-collie-hl-b-023758f4.png",
+      "width": 102,
+      "height": 199,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_hl_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_hl_b_back",
+      "file": "assets/images/dog-collie-hl-b-back-2d68bb8d.png",
+      "width": 103,
+      "height": 198,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_hu_a",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_hu_a",
+      "file": "assets/images/dog-collie-hu-a-a57a1471.png",
+      "width": 159,
+      "height": 266,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_hu_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_hu_a_back",
+      "file": "assets/images/dog-collie-hu-a-back-970ec9f9.png",
+      "width": 158,
+      "height": 267,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_hu_b",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_hu_b",
+      "file": "assets/images/dog-collie-hu-b-ab276e0d.png",
+      "width": 161,
+      "height": 268,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_hu_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_hu_b_back",
+      "file": "assets/images/dog-collie-hu-b-back-ad148634.png",
+      "width": 164,
+      "height": 267,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_tail",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_tail",
+      "file": "assets/images/dog-collie-tail-790d7ecb.png",
+      "width": 213,
+      "height": 260,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_tail_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_tail_back",
+      "file": "assets/images/dog-collie-tail-back-4fbd598b.png",
+      "width": 216,
+      "height": 254,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_torso",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_torso",
+      "file": "assets/images/dog-collie-torso-4042fc85.png",
+      "width": 378,
+      "height": 248,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_torso_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_torso_back",
+      "file": "assets/images/dog-collie-torso-back-43e09c53.png",
+      "width": 382,
+      "height": 246,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_fl_a",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_fl_a",
+      "file": "assets/images/dog-dalmatian-fl-a-e3f42e6f.png",
+      "width": 103,
+      "height": 218,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_fl_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_fl_a_back",
+      "file": "assets/images/dog-dalmatian-fl-a-back-cbbeaeb9.png",
+      "width": 101,
+      "height": 208,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_fl_b",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_fl_b",
+      "file": "assets/images/dog-dalmatian-fl-b-0ae55c35.png",
+      "width": 94,
+      "height": 212,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_fl_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_fl_b_back",
+      "file": "assets/images/dog-dalmatian-fl-b-back-69df4847.png",
+      "width": 101,
+      "height": 203,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_fu_a",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_fu_a",
+      "file": "assets/images/dog-dalmatian-fu-a-0325ea68.png",
+      "width": 108,
+      "height": 235,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_fu_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_fu_a_back",
+      "file": "assets/images/dog-dalmatian-fu-a-back-07213cd8.png",
+      "width": 114,
+      "height": 240,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_fu_b",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_fu_b",
+      "file": "assets/images/dog-dalmatian-fu-b-efa9fa84.png",
+      "width": 99,
+      "height": 236,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_fu_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_fu_b_back",
+      "file": "assets/images/dog-dalmatian-fu-b-back-fd69c535.png",
+      "width": 106,
+      "height": 239,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_head",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_head",
+      "file": "assets/images/dog-dalmatian-head-8bb623d0.png",
+      "width": 243,
+      "height": 284,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_head_back",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_head_back",
+      "file": "assets/images/dog-dalmatian-head-back-f3904a5d.png",
+      "width": 225,
+      "height": 290,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_hl_a",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_hl_a",
+      "file": "assets/images/dog-dalmatian-hl-a-50bf16cd.png",
+      "width": 101,
+      "height": 224,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_hl_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_hl_a_back",
+      "file": "assets/images/dog-dalmatian-hl-a-back-773a9f83.png",
+      "width": 98,
+      "height": 221,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_hl_b",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_hl_b",
+      "file": "assets/images/dog-dalmatian-hl-b-72429fbd.png",
+      "width": 106,
+      "height": 210,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_hl_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_hl_b_back",
+      "file": "assets/images/dog-dalmatian-hl-b-back-a974ca99.png",
+      "width": 107,
+      "height": 204,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_hu_a",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_hu_a",
+      "file": "assets/images/dog-dalmatian-hu-a-2d9e6776.png",
+      "width": 158,
+      "height": 232,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_hu_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_hu_a_back",
+      "file": "assets/images/dog-dalmatian-hu-a-back-7f3e249d.png",
+      "width": 137,
+      "height": 229,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_hu_b",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_hu_b",
+      "file": "assets/images/dog-dalmatian-hu-b-744a88ca.png",
+      "width": 126,
+      "height": 232,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_hu_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_hu_b_back",
+      "file": "assets/images/dog-dalmatian-hu-b-back-1928911d.png",
+      "width": 134,
+      "height": 229,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_tail",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_tail",
+      "file": "assets/images/dog-dalmatian-tail-062763a2.png",
+      "width": 190,
+      "height": 213,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_tail_back",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_tail_back",
+      "file": "assets/images/dog-dalmatian-tail-back-a701ed9e.png",
+      "width": 194,
+      "height": 215,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_torso",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_torso",
+      "file": "assets/images/dog-dalmatian-torso-f4432679.png",
+      "width": 392,
+      "height": 238,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_torso_back",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_torso_back",
+      "file": "assets/images/dog-dalmatian-torso-back-790f4753.png",
+      "width": 387,
+      "height": 233,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_husky_fl_a",
+      "kind": "image",
+      "name": "Zvíře – dog_husky_fl_a",
+      "file": "assets/images/dog-husky-fl-a-6412c0cf.png",
+      "width": 95,
+      "height": 194,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_husky_fl_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_husky_fl_a_back",
+      "file": "assets/images/dog-husky-fl-a-back-a18d125e.png",
+      "width": 105,
+      "height": 191,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_husky_fl_b",
+      "kind": "image",
+      "name": "Zvíře – dog_husky_fl_b",
+      "file": "assets/images/dog-husky-fl-b-d8fb2de1.png",
+      "width": 97,
+      "height": 193,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_husky_fl_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_husky_fl_b_back",
+      "file": "assets/images/dog-husky-fl-b-back-d7ec4d26.png",
+      "width": 97,
+      "height": 188,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_husky_fu_a",
+      "kind": "image",
+      "name": "Zvíře – dog_husky_fu_a",
+      "file": "assets/images/dog-husky-fu-a-cb537269.png",
+      "width": 122,
+      "height": 223,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_husky_fu_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_husky_fu_a_back",
+      "file": "assets/images/dog-husky-fu-a-back-579f94f2.png",
+      "width": 123,
+      "height": 229,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_husky_fu_b",
+      "kind": "image",
+      "name": "Zvíře – dog_husky_fu_b",
+      "file": "assets/images/dog-husky-fu-b-a13485bd.png",
+      "width": 108,
+      "height": 228,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_husky_fu_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_husky_fu_b_back",
+      "file": "assets/images/dog-husky-fu-b-back-cc0b18b7.png",
+      "width": 99,
+      "height": 229,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_husky_head",
+      "kind": "image",
+      "name": "Zvíře – dog_husky_head",
+      "file": "assets/images/dog-husky-head-9ba3cacc.png",
+      "width": 216,
+      "height": 322,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_husky_head_back",
+      "kind": "image",
+      "name": "Zvíře – dog_husky_head_back",
+      "file": "assets/images/dog-husky-head-back-afabb451.png",
+      "width": 207,
+      "height": 320,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_husky_hl_a",
+      "kind": "image",
+      "name": "Zvíře – dog_husky_hl_a",
+      "file": "assets/images/dog-husky-hl-a-0915e370.png",
+      "width": 112,
+      "height": 197,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_husky_hl_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_husky_hl_a_back",
+      "file": "assets/images/dog-husky-hl-a-back-8fd2c1c2.png",
+      "width": 103,
+      "height": 197,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_husky_hl_b",
+      "kind": "image",
+      "name": "Zvíře – dog_husky_hl_b",
+      "file": "assets/images/dog-husky-hl-b-67e8214c.png",
+      "width": 114,
+      "height": 195,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_husky_hl_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_husky_hl_b_back",
+      "file": "assets/images/dog-husky-hl-b-back-c49c6292.png",
+      "width": 115,
+      "height": 196,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_husky_hu_a",
+      "kind": "image",
+      "name": "Zvíře – dog_husky_hu_a",
+      "file": "assets/images/dog-husky-hu-a-74f09497.png",
+      "width": 151,
+      "height": 242,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_husky_hu_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_husky_hu_a_back",
+      "file": "assets/images/dog-husky-hu-a-back-33a0f2b8.png",
+      "width": 158,
+      "height": 243,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_husky_hu_b",
+      "kind": "image",
+      "name": "Zvíře – dog_husky_hu_b",
+      "file": "assets/images/dog-husky-hu-b-1918ba93.png",
+      "width": 158,
+      "height": 244,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_husky_hu_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_husky_hu_b_back",
+      "file": "assets/images/dog-husky-hu-b-back-b7662b47.png",
+      "width": 162,
+      "height": 245,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_husky_tail",
+      "kind": "image",
+      "name": "Zvíře – dog_husky_tail",
+      "file": "assets/images/dog-husky-tail-54681dc7.png",
+      "width": 205,
+      "height": 267,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_husky_tail_back",
+      "kind": "image",
+      "name": "Zvíře – dog_husky_tail_back",
+      "file": "assets/images/dog-husky-tail-back-f142a454.png",
+      "width": 204,
+      "height": 275,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_husky_torso",
+      "kind": "image",
+      "name": "Zvíře – dog_husky_torso",
+      "file": "assets/images/dog-husky-torso-90ec9ed6.png",
+      "width": 392,
+      "height": 215,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_husky_torso_back",
+      "kind": "image",
+      "name": "Zvíře – dog_husky_torso_back",
+      "file": "assets/images/dog-husky-torso-back-c26c7d7e.png",
+      "width": 406,
+      "height": 216,
       "anchor": {
         "x": 0.5,
         "y": 0.5
@@ -3035,7 +4179,8 @@
           "intervalMax": 260
         }
       },
-      "pet": "dog"
+      "pet": "dog",
+      "petBreed": "dog_dalmatian"
     },
     {
       "id": "ch_4",
@@ -3233,7 +4378,9 @@
           "intervalMin": 120,
           "intervalMax": 260
         }
-      }
+      },
+      "pet": "dog",
+      "petBreed": "dog_collie"
     },
     {
       "id": "ch_7",
@@ -3366,7 +4513,8 @@
           "intervalMax": 260
         }
       },
-      "pet": "dog"
+      "pet": "dog",
+      "petBreed": "dog_husky"
     },
     {
       "id": "ch_9",

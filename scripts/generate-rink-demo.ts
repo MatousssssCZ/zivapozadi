@@ -1,8 +1,8 @@
 /**
  * Testovací scéna „Kluziště“: logika a pohyb bruslení na podkladu Liberce. Konečný vzhled kluziště
  * (malované pozadí s ledem a mantinelem) dodá grafik – zde je led i mantinel jen vektorový zástupce.
- * 16 bruslařů podle kvót zadání (rekreační 8 vč. rodiče s dítětem poprvé, nejistí 2, děti poprvé 2,
- * zdatné děti 2, velmi dobří 2). Ostatní činnosti (sáňky, odklízení, pády chodců, zvířata) jsou vypnuté.
+ * 16 bruslařů podle kvót zadání (rekreační 8, jistější 2, šikovné děti 4, velmi dobří 2
+ * (nejistí a děti poprvé jsou vypnutí)). Ostatní činnosti (sáňky, odklízení, pády chodců, zvířata) jsou vypnuté.
  * Spuštění: npx tsx scripts/generate-rink-demo.ts [cílová složka]
  */
 import path from 'node:path';
@@ -42,11 +42,11 @@ export async function generateRink(dir: string): Promise<ProjectFile> {
     id, name, assetId: child ? 'builtin_postava_dite' : 'builtin_postava_cg', startNodeId: node, baseScale: 1, walkSpeed: 60, palette: pal,
     wander: false, appearance: app, routine: 'visitor', activities: {}, skate, ...(pair ? { skatePair: pair } : {}),
   });
-  const prof: SkateProfile[] = ['rec', 'rec', 'rec', 'rec', 'rec', 'rec', 'rec', 'rec', 'unsure', 'unsure', 'expert', 'expert'];
+  const prof: SkateProfile[] = ['rec', 'rec', 'rec', 'rec', 'rec', 'rec', 'rec', 'rec', 'good', 'good', 'expert', 'expert'];
   p.characters = adults.map((app, i) => mk(`sk_${i + 1}`, `Bruslař ${i + 1} (${prof[i]})`, app, false, prof[i]));
   p.characters.push(
-    mk('kid_b1', 'Dítě poprvé (s rodičem)', kids[0], true, 'beginnerKid', 'sk_1'),
-    mk('kid_b2', 'Dítě poprvé (u mantinelu)', kids[1], true, 'beginnerKid'),
+    mk('kid_b1', 'Šikovné dítě 3', kids[0], true, 'goodKid'),
+    mk('kid_b2', 'Šikovné dítě 4', kids[1], true, 'goodKid'),
     mk('kid_g1', 'Zdatné dítě 1', kids[2], true, 'goodKid'),
     mk('kid_g2', 'Zdatné dítě 2', kids[3], true, 'goodKid'),
   );

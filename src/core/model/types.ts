@@ -219,6 +219,8 @@ export interface CharacterInstance {
   routine?: 'wander' | 'visitor' | 'sled' | 'shovel';
   /** Postava venčí psa (Z01). */
   pet?: 'dog';
+  /** Rasa psa (díly `animal_<rasa>_*`, např. `dog_collie`); chybí = původní pes. */
+  petBreed?: string;
   /** Chůze seniora: A = pomalá chůze, B = s holí (rychlost a délka kroku z profilu). */
   gaitProfile?: 'elderA' | 'elderB';
   /** Ruka s holí u profilu B (výchozí pravá – podpírá levou nohu). */
@@ -301,7 +303,7 @@ export interface SceneSettings {
 }
 
 /** Kočka, která občas projde scénou (Z06/Z07). */
-export interface CatConfig { firstDelay?: number }
+export interface CatConfig { firstDelay?: number; /** rasa (díly `animal_<rasa>_*`, např. `cat_british`); chybí = původní kočka */ breed?: string }
 
 export interface ProjectFile {
   format: typeof PROJECT_FORMAT;
@@ -319,6 +321,8 @@ export interface ProjectFile {
   export: ExportSettings;
   /** Kočky (volitelné) a klidová místa, kde si sedají. */
   cats?: CatConfig[];
+  /** hustota davu: podíl chodců a bruslařů, kteří přicházejí (0–1, výchozí 1) */
+  crowd?: { walkers?: number; skaters?: number };
   catSpots?: Vec2[];
   /**
    * Z09: explicitně označené nízké sokly (0,25–0,55 m), kam kočka občas vyskočí: bod na zemi pod místem

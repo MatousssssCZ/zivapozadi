@@ -18,6 +18,7 @@ export type Species = 'dog' | 'cat';
 export interface AnimalState {
   /** pes: místo za okrajem, kam doběhne za majitelem, který už odešel */
   exitAt?: World | null;
+  /** rasa (díly `animal_<rasa>_*`); chybí = původní díly druhu */ breed?: string;
   id: string; species: Species;
   ownerId?: string | null;
   pos: Vec2; facing: number; speed: number;
@@ -61,10 +62,10 @@ export function createAnimals(project: ProjectFile): AnimalState[] {
   const out: AnimalState[] = [];
   for (const c of project.characters) {
     if (c.pet !== 'dog') continue;
-    out.push({ id: `dog_${c.id}`, species: 'dog', ownerId: c.id, pos: { x: -500, y: 1000 }, facing: 0, speed: 0, dist: 0, mode: 'follow', until: 0, walkLeft: 30, side: 1, hidden: true, headDown: 0, sit: 0, rng: seedRng(project.seed, `dog_${c.id}`) });
+    out.push({ id: `dog_${c.id}`, species: 'dog', ...(c.petBreed ? { breed: c.petBreed } : {}), ownerId: c.id, pos: { x: -500, y: 1000 }, facing: 0, speed: 0, dist: 0, mode: 'follow', until: 0, walkLeft: 30, side: 1, hidden: true, headDown: 0, sit: 0, rng: seedRng(project.seed, `dog_${c.id}`) });
   }
   for (const [i, cs] of (project.cats ?? []).entries()) {
-    out.push({ id: `cat_${i + 1}`, species: 'cat', pos: { x: -500, y: 1000 }, facing: 0, speed: 0, dist: 0, mode: 'offstage', until: cs.firstDelay ?? 30, walkLeft: 0, side: 1, hidden: true, headDown: 0, sit: 0, rng: seedRng(project.seed, `cat_${i + 1}`) });
+    out.push({ id: `cat_${i + 1}`, species: 'cat', ...(cs.breed ? { breed: cs.breed } : {}), pos: { x: -500, y: 1000 }, facing: 0, speed: 0, dist: 0, mode: 'offstage', until: cs.firstDelay ?? 30, walkLeft: 0, side: 1, hidden: true, headDown: 0, sit: 0, rng: seedRng(project.seed, `cat_${i + 1}`) });
   }
   return out;
 }

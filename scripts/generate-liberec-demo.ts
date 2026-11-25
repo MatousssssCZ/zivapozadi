@@ -37,6 +37,15 @@ const NAMES: Record<string, string> = {
   tree: 'Vánoční strom', lamp_tall: 'Lampa', bench: 'Lavička', table: 'Stolek na nápoje', fir: 'Smrček', nativity: 'Betlém', mailbox: 'Schránka Ježíškovi',
 };
 
+/** Díly ras zvířat (grafika/zvirata, viz scripts/process-animal-breeds.py) jako assety `animal_<rasa>_<díl>`. */
+export async function importBreeds(dir: string, p: ProjectFile, breeds: string[]) {
+  const files = await fs.readdir('grafika/zvirata');
+  for (const f of files) if (f.endsWith('.png') && breeds.some((b) => f.startsWith(b + '_'))) {
+    const a = await importAssetFile(dir, path.join('grafika/zvirata', f), 'image');
+    a.id = `animal_${f.slice(0, -4)}`; a.name = `Zvíře – ${f.slice(0, -4)}`; a.anchor = { x: 0.5, y: 0.5 }; a.pixelScale = 1; p.assets.push(a);
+  }
+}
+
 export async function generateLiberec(dir: string): Promise<ProjectFile> {
   await fs.rm(dir, { recursive: true, force: true }); // demo se vždy vytváří znovu
   await createProjectDir(dir);
@@ -220,8 +229,9 @@ export async function generateLiberec(dir: string): Promise<ProjectFile> {
     activities: { coffee: { enabled: true, firstDelayMin: 4 + i * 6, firstDelayMax: 10 + i * 6, intervalMin: 70, intervalMax: 160 } },
   }));
   // psi (Z01): dva majitelé bez dětí; kočka (Z06/Z07) si sedá u betléma nebo u lavičky
-  for (const id of ['ch_3', 'ch_11']) p.characters.find((c) => c.id === id)!.pet = 'dog';
-  p.cats = [{ firstDelay: 25 }];
+  // psi různých ras (bígl = původní díly), kočka britská
+  ([['ch_3', 'dog_collie'], ['ch_11', 'dog_frenchie']] as const).forEach(([id, br]) => { const c = p.characters.find((x) => x.id === id)!; c.pet = 'dog'; c.petBreed = br; });
+  p.cats = [{ firstDelay: 25, breed: 'cat_british' }];
   // Z09: sedák levé lavičky jako nízký sokl (0,44 m): odraz zpředu, kočka sedí na sedáku před opěradlem
   p.catPerches = [{ at: { x: 175, y: 993 }, height: 0.44, from: { x: 200, y: 1036 }, sortY: 1023.5 }];
   p.catSpots = [{ x: Math.round(0.585 * SW), y: Math.round(0.655 * SH) }, { x: 560, y: 1000 } /* (ne na dráze sání) */, { x: 1520, y: 985 } /* (ne v odklízeném pruhu) */];
@@ -231,6 +241,7 @@ export async function generateLiberec(dir: string): Promise<ProjectFile> {
     a.id = `animal_${n}`; a.name = `Zvíře – ${n}`; a.anchor = { x: 0.5, y: 0.5 }; a.pixelScale = 1;
     p.assets.push(a);
   }
+  await importBreeds(dir, p, ['dog_collie', 'dog_frenchie', 'cat_british']);
   // rodiny: 5 dětí chodí po boku rodiče (stálá dvojice – dítě následuje)
   const childLib = JSON.parse(await fs.readFile('resources/builtin/painted-parts-child/library.json', 'utf8')) as PartLibrary;
   const kids = generateGroup(childLib, 5, 777).appearances;

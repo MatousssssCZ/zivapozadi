@@ -1,0 +1,258 @@
+{
+ "torso": {
+  "texture": "dog_dachshund_torso.png",
+  "pivot": {
+   "x": 205.0,
+   "y": 96.0
+  },
+  "attachments": {}
+ },
+ "head": {
+  "texture": "dog_dachshund_head.png",
+  "pivot": {
+   "x": 139.5,
+   "y": 150.5
+  },
+  "attachments": {}
+ },
+ "tail": {
+  "texture": "dog_dachshund_tail.png",
+  "pivot": {
+   "x": 87.5,
+   "y": 62.5
+  },
+  "attachments": {}
+ },
+ "fu_a": {
+  "texture": "dog_dachshund_fu_a.png",
+  "pivot": {
+   "x": 63.0,
+   "y": 17.5
+  },
+  "attachments": {
+   "end": {
+    "x": 60.0,
+    "y": 140.0
+   }
+  }
+ },
+ "fl_a": {
+  "texture": "dog_dachshund_fl_a.png",
+  "pivot": {
+   "x": 35.0,
+   "y": 17.5
+  },
+  "attachments": {
+   "contact": {
+    "x": 48.0,
+    "y": 123.1
+   }
+  }
+ },
+ "fu_b": {
+  "texture": "dog_dachshund_fu_b.png",
+  "pivot": {
+   "x": 64.5,
+   "y": 17.5
+  },
+  "attachments": {
+   "end": {
+    "x": 61.5,
+    "y": 140.0
+   }
+  }
+ },
+ "fl_b": {
+  "texture": "dog_dachshund_fl_b.png",
+  "pivot": {
+   "x": 37.9,
+   "y": 16.4
+  },
+  "attachments": {
+   "contact": {
+    "x": 51.9,
+    "y": 115.2
+   }
+  }
+ },
+ "hu_a": {
+  "texture": "dog_dachshund_hu_a.png",
+  "pivot": {
+   "x": 80.9,
+   "y": 18.9
+  },
+  "attachments": {
+   "end": {
+    "x": 54.9,
+    "y": 151.2
+   }
+  }
+ },
+ "hl_a": {
+  "texture": "dog_dachshund_hl_a.png",
+  "pivot": {
+   "x": 42.0,
+   "y": 18.1
+  },
+  "attachments": {
+   "contact": {
+    "x": 53.0,
+    "y": 127.1
+   }
+  }
+ },
+ "hu_b": {
+  "texture": "dog_dachshund_hu_b.png",
+  "pivot": {
+   "x": 82.0,
+   "y": 18.6
+  },
+  "attachments": {
+   "end": {
+    "x": 55.6,
+    "y": 148.8
+   }
+  }
+ },
+ "hl_b": {
+  "texture": "dog_dachshund_hl_b.png",
+  "pivot": {
+   "x": 43.9,
+   "y": 17.6
+  },
+  "attachments": {
+   "contact": {
+    "x": 55.4,
+    "y": 124.1
+   }
+  }
+ },
+ "torso_back": {
+  "texture": "dog_dachshund_torso_back.png",
+  "pivot": {
+   "x": 212.5,
+   "y": 96.0
+  },
+  "attachments": {}
+ },
+ "head_back": {
+  "texture": "dog_dachshund_head_back.png",
+  "pivot": {
+   "x": 131.0,
+   "y": 148.5
+  },
+  "attachments": {}
+ },
+ "tail_back": {
+  "texture": "dog_dachshund_tail_back.png",
+  "pivot": {
+   "x": 86.5,
+   "y": 62.0
+  },
+  "attachments": {}
+ },
+ "fu_a_back": {
+  "texture": "dog_dachshund_fu_a_back.png",
+  "pivot": {
+   "x": 65.0,
+   "y": 17.2
+  },
+  "attachments": {
+   "end": {
+    "x": 60.5,
+    "y": 137.6
+   }
+  }
+ },
+ "fl_a_back": {
+  "texture": "dog_dachshund_fl_a_back.png",
+  "pivot": {
+   "x": 38.5,
+   "y": 17.1
+  },
+  "attachments": {
+   "contact": {
+    "x": 44.0,
+    "y": 120.2
+   }
+  }
+ },
+ "fu_b_back": {
+  "texture": "dog_dachshund_fu_b_back.png",
+  "pivot": {
+   "x": 67.6,
+   "y": 17.5
+  },
+  "attachments": {
+   "end": {
+    "x": 62.9,
+    "y": 140.0
+   }
+  }
+ },
+ "fl_b_back": {
+  "texture": "dog_dachshund_fl_b_back.png",
+  "pivot": {
+   "x": 41.3,
+   "y": 16.4
+  },
+  "attachments": {
+   "contact": {
+    "x": 47.2,
+    "y": 115.2
+   }
+  }
+ },
+ "hu_a_back": {
+  "texture": "dog_dachshund_hu_a_back.png",
+  "pivot": {
+   "x": 84.5,
+   "y": 19.0
+  },
+  "attachments": {
+   "end": {
+    "x": 57.0,
+    "y": 152.0
+   }
+  }
+ },
+ "hl_a_back": {
+  "texture": "dog_dachshund_hl_a_back.png",
+  "pivot": {
+   "x": 41.5,
+   "y": 17.5
+  },
+  "attachments": {
+   "contact": {
+    "x": 53.0,
+    "y": 123.1
+   }
+  }
+ },
+ "hu_b_back": {
+  "texture": "dog_dachshund_hu_b_back.png",
+  "pivot": {
+   "x": 84.5,
+   "y": 18.9
+  },
+  "attachments": {
+   "end": {
+    "x": 57.0,
+    "y": 151.2
+   }
+  }
+ },
+ "hl_b_back": {
+  "texture": "dog_dachshund_hl_b_back.png",
+  "pivot": {
+   "x": 42.0,
+   "y": 17.5
+  },
+  "attachments": {
+   "contact": {
+    "x": 53.5,
+    "y": 123.1
+   }
+  }
+ }
+}
