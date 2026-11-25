@@ -22,11 +22,12 @@ import { limitSlope } from '../nav/slope';
 import { pointInPolygon } from '../math/geom';
 import { planCrowd, solveCrowd, wantVelocity, comfortRadius, insidePoly, R_BODY, type CrowdItem, type ObstacleW } from './crowd';
 import { cameraFor, toWorld, toScreen, worldAngleOfScreen, screenAngleOfWorld, Q, type World } from '../scene/camera';
-import { viewForDirection } from '../anim/skeleton';
 import { emit, emitsNow, windIntegral } from './environment';
 import { createAnimals, stepAnimals } from './animals';
 import { stepClearing, newClearingState, type ClearingHost } from './clearing';
+import { viewForDirection } from '../anim/skeleton';
 import { stepCoopSnowman, startCoopSnowman } from '../activities/coopSnowman';
+import { createSkater, stepSkater, stepRinkEvents, separate, addTrails, skatePose, SKATE_PROFILES, TRAIL_LIFE, FALL_TOTAL, type IceGeo, type RinkState, type RinkCtx , forceRinkEvent } from './rink';
 import { stepFalls, startFall, newFallsState, DEFAULT_FALLS, type FallHost, type FallsState } from './falls';
 import { fallEndShift as fallEndShiftOf, type FallVariant } from '../anim/fallPoses';
 import { stepSled, sledObstacles, sledPathProblem, type SledHost } from './sled';
@@ -447,6 +448,7 @@ export class Simulation {
     if (this.project.clearing && this.project.characters.some((c) => c.id === this.project.clearing!.workerId)) stepClearing(this.clearingHost(), (this.state.clearing ??= newClearingState(this.project.clearing.firstDelay ?? 90)));
     if (this.state.mitten || this.state.agents.some((a) => a.holdingKind === 'mitten') || this.state.step % 60 === 0) stepMitten(this.mittenHost());
     if (this.project.falls || this.state.falls?.active.length) stepFalls(this.fallHost(), this.fallsState());
+    if (this.project.rink) this.stepRink(t);
     this.stepProps(t);
     this.state.step++;
   }
@@ -464,6 +466,81 @@ export class Simulation {
       if (startCoopSnowman(h, zone, p, k)) return { ok: true, msg: `${p.name} a ${k.name} staví sněhuláka.` };
     }
     return { ok: false, msg: 'Ve scéně není volná rodina (rodič s dítětem bez činnosti).' };
+  }
+
+  // ---------------------------------------------------------------- kluziště (bruslení)
+  private rinkGeo: IceGeo | null = null;
+  rinkGeometry(): IceGeo {
+    if (this.rinkGeo) return this.rinkGeo;
+    const cfg = this.project.rink!, cam = this.cam(), poly = cfg.ice.map((p) => toWorld(cam, p));
+    const xs = poly.map((p) => p.X), zs = poly.map((p) => p.Z);
+    return (this.rinkGeo = { poly, cx: (Math.min(...xs) + Math.max(...xs)) / 2, cz: (Math.min(...zs) + Math.max(...zs)) / 2, hx: (Math.max(...xs) - Math.min(...xs)) / 2, hz: (Math.max(...zs) - Math.min(...zs)) / 2, gate: toWorld(cam, cfg.gate) });
+  }
+  private stepRink(t: number) {
+    const cfg = this.project.rink!, geo = this.rinkGeometry(), cam = this.cam();
+    if (!this.state.rink) {
+      const rng = seedRng(this.project.seed, 'rink');
+      const st: RinkState = { sk: {}, trails: [], nextTrick: t + randRange(rng, ...(cfg.events?.trickEvery ?? [90, 150])), trickWindow: null, nextFall: t + randRange(rng, ...(cfg.events?.fallEvery ?? [100, 220])), event: null, lastTrickKind: null, lastTrickEnd: -1e9, lastFallEnd: -1e9, stats: { tricks: 0, tricksByKind: {}, falls: 0, wobbles: 0, deferred: 0, overlapEvents: 0, pushes: 0 }, rng };
+      const skaters = this.project.characters.filter((c) => c.skate);
+      skaters.forEach((c, k) => {
+        const s = createSkater(c.id, c.skate!, geo, seedRng(this.project.seed, 'skate:' + c.id), k, skaters.length);
+        st.sk[c.id] = s;
+      });
+      // dvojice rodič – dítě (ruka v ruce): rodič začne vedle dítěte
+      for (const c of skaters) if (c.skatePair && st.sk[c.skatePair]) {
+        const p = st.sk[c.id], k = st.sk[c.skatePair];
+        p.pair = k.id; k.pair = p.id; p.holdHand = true; k.holdHand = true;
+        p.X = k.X - Math.sin(k.psi) * 0.55; p.Z = k.Z + Math.cos(k.psi) * 0.55; p.psi = k.psi;
+      }
+      this.state.rink = st;
+      for (const a of this.state.agents) if (st.sk[a.id]) { a.onIce = true; a.hidden = false; a.route = null; a.visit = undefined; a.activity = null; a.pendingActivity = null; a.follow = null; }
+    }
+    const st = this.state.rink!, all = Object.values(st.sk);
+    const ctx: RinkCtx = { t, dt: SIM_DT, geo, all, st, cfg };
+    const prev = new Map(all.map((s) => [s.id, { X: s.X, Z: s.Z }]));
+    for (const s of all) stepSkater(s, ctx);
+    stepRinkEvents(ctx);
+    separate(all);
+    if (st.event && all.filter((s) => ['FALL', 'TRICK', 'TRICK_PREPARE', 'TRICK_EXIT'].includes(s.st)).length > 1) st.stats.overlapEvents++;
+    if (this.state.step % 3 === 0) for (const s of all) addTrails(st, s, t, prev.get(s.id)!);
+    if (st.trails.length && t - st.trails[0].t0 > TRAIL_LIFE) st.trails.splice(0, st.trails.findIndex((q) => t - q.t0 <= TRAIL_LIFE) < 0 ? st.trails.length : st.trails.findIndex((q) => t - q.t0 <= TRAIL_LIFE));
+    // agenti: poloha, natočení těla, pohled a póza z bruslaře
+    for (const a of this.state.agents) {
+      const s = st.sk[a.id]; if (!s) continue;
+      const back = s.trick?.kind === 'backward' && (s.st === 'TRICK' || s.st === 'TRICK_EXIT' || (s.st === 'TRICK_PREPARE' && s.trick.t > 0.5));
+      const body = back ? s.psi + Math.PI : s.psi;
+      a.pos = toScreen(cam, { X: s.X, Z: s.Z });
+      a.groundHeading = body; a.facing = screenAngleOfWorld(cam, a.pos, body);
+      a.speed = (s.v / Q) * this.scaleOf(a); a.vel = { X: Math.cos(s.psi) * s.v, Z: Math.sin(s.psi) * s.v };
+      // změna pohledu jen mimo odraz (aby brusle neposkočila uprostřed kroku)
+      const want = directionFromAngle(a.facing, a.anim.dir);
+      if (want !== a.anim.dir && (!s.push.on || s.push.t < 0.05)) a.anim.dir = want;
+      a.anim.walkBlend = 0; a.anim.settle = null; a.anim.idleTime += SIM_DT;
+      // partner (ruka v ruce): na které straně v obraze je
+      let partnerSide = 0;
+      if (s.holdHand && s.pair) {
+        const o = st.sk[s.pair]; if (o) {
+          const rx = o.X - s.X, rz = o.Z - s.Z, right = rx * Math.sin(body) - rz * Math.cos(body);
+          const mirror = viewForDirection(a.anim.dir).mirror; const rightNear = !mirror;
+          partnerSide = (right > 0) === rightNear ? 1 : -1;
+        }
+      }
+      a.anim.skate = skatePose(s, t, { kidArm: this.isChild(a), partnerSide, backwardBody: back });
+      if (s.st === 'FALL' || s.st === 'RECOVER') a.anim.fall = { v: 'back', s: 1, t: 0.25 + (s.fall?.t ?? FALL_TOTAL) + (s.st === 'RECOVER' ? s.tSt : 0) };
+      else a.anim.fall = null;
+    }
+  }
+  /** Ladění kluziště: ruční pád / prvek (u vybrané postavy, jinak u vhodného bruslaře). */
+  triggerRinkEvent(kind: 'fall' | 'trick', agentId?: string | null): { ok: boolean; msg: string } {
+    const st = this.state.rink; if (!st || !this.project.rink) return { ok: false, msg: 'Scéna nemá kluziště.' };
+    const all = Object.values(st.sk);
+    const r = forceRinkEvent({ t: this.time(), dt: SIM_DT, geo: this.rinkGeometry(), all, st, cfg: this.project.rink }, kind, agentId && st.sk[agentId] ? agentId : null);
+    return r.ok ? { ok: true, msg: this.state.agents.find((a) => a.id === r.msg)?.name ?? r.msg } : r;
+  }
+  private rinkStatus(a: AgentState): string {
+    const s = this.state.rink?.sk[a.id]; if (!s) return 'Na ledě';
+    const lab: Record<string, string> = { SKATE: 'Bruslí', BRAKE: 'Brzdí', REST: 'Odpočívá u mantinelu', MARCH: 'Přešlapuje u mantinelu', WOBBLE: 'Zavrávoral', FALL: 'Upadl na led', RECOVER: 'Vstává', TRICK_PREPARE: 'Nájezd na prvek', TRICK: 'Předvádí prvek', TRICK_EXIT: 'Výjezd z prvku', ENTER: 'Vstupuje na led', EXIT: 'Odchází z ledu' };
+    return `${SKATE_PROFILES[s.prof].label}: ${lab[s.st] ?? s.st}${s.trick && s.st.startsWith('TRICK') ? ` (${s.trick.kind === 'oneFoot' ? 'skluz na jedné noze' : 'jízda vzad'})` : ''}`;
   }
 
   // ---------------------------------------------------------------- pády
@@ -831,6 +908,7 @@ export class Simulation {
     for (const a of this.state.agents) {
       const mv = { arrived: false, waitingNarrow: false };
       this.motion.set(a.id, mv);
+      if (a.onIce) continue; // bruslaře řídí rink.ts
       a.off = undefined; a.speedCap = null;
       if (a.follow) {
         const leader = this.state.agents.find((x) => x.id === a.follow!.leaderId);
@@ -1052,6 +1130,7 @@ export class Simulation {
   }
 
   private stepAgent(a: AgentState, t: number) {
+    if (a.onIce) { a.status = this.rinkStatus(a); return; }
     const c = this.chars.get(a.id)!;
     const m = this.manifests[c.assetId];
     const mv = this.motion.get(a.id) ?? { arrived: false, waitingNarrow: false };

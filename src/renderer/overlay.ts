@@ -37,6 +37,8 @@ export interface OverlayInput {
   fallDebug?: boolean;
   /** Ladění sněhuláka (rodič + dítě): úkoly, rezervace, hmotnosti a velikosti koulí, kontakty, sněhové pole. */
   snowmanDebug?: boolean;
+  /** Ladění bruslení: stavy, profily, rychlosti, brusle, obrys ledu, plánovač událostí. */
+  rinkDebug?: boolean;
 }
 
 type Ctx = CanvasRenderingContext2D;
@@ -70,6 +72,7 @@ export function drawOverlay(ctx: Ctx, o: OverlayInput) {
   if (o.gaitDebug && o.sim) drawGaitDebug(ctx, o);
   if (o.fallDebug && o.sim) drawFallDebug(ctx, o);
   if (o.snowmanDebug && o.sim) drawSnowmanDebug(ctx, o);
+  if (o.rinkDebug && o.sim?.state.rink && o.project.rink) drawRinkDebug(ctx, o);
   const { project: p, px, selection: sel } = o;
   const isSel = (kind: string, id: string) => sel?.kind === kind && sel.id === id;
   ctx.save();
@@ -232,6 +235,39 @@ function drawPoint(ctx: Ctx, pos: Vec2, kind: string, facing: number | undefined
 }
 
 /** Ladicí náhled odklízení (jen editor, nikdy v exportu ani v živém pozadí). */
+function drawRinkDebug(ctx: Ctx, o: OverlayInput) {
+  const sim = o.sim!, st = sim.state.rink!, cfg = o.project.rink!, px = o.px, cam = cameraFor(o.project.scene), t = sim.time();
+  ctx.save();
+  ctx.strokeStyle = '#00e5ff'; ctx.lineWidth = 1.5 * px; ctx.setLineDash([6 * px, 4 * px]);
+  ctx.beginPath(); cfg.ice.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y))); ctx.closePath(); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = '#ff0'; ctx.beginPath(); ctx.arc(cfg.gate.x, cfg.gate.y, 4 * px, 0, 7); ctx.fill();
+  const colOf: Record<string, string> = { glide: '#22ff66', push: '#ff9800', light: '#9ecbff', return: '#888' };
+  for (const s of Object.values(st.sk)) {
+    const a = sim.state.agents.find((x) => x.id === s.id); if (!a) continue;
+    const g = toScreen(cam, { X: s.X, Z: s.Z });
+    // plánovaný směr (1 s dopředu) a odstup 0,6 m + v·1 s
+    const f = toScreen(cam, { X: s.X + Math.cos(s.psi) * Math.max(0.3, s.v), Z: s.Z + Math.sin(s.psi) * Math.max(0.3, s.v) });
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.2 * px; ctx.beginPath(); ctx.moveTo(g.x, g.y); ctx.lineTo(f.x, f.y); ctx.stroke();
+    const gap = 0.6 + s.v, ring = [...Array(17)].map((_, k) => toScreen(cam, { X: s.X + Math.cos((k / 16) * 6.283) * gap, Z: s.Z + Math.sin((k / 16) * 6.283) * gap }));
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.beginPath(); ring.forEach((q, k) => (k ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y))); ctx.stroke();
+    // brusle: barva podle stavu (zelená = zatížený skluz, oranžová = odraz)
+    [0, 1].forEach((i) => {
+      const b = s.feet[i], side = b.lat, q = toScreen(cam, { X: s.X + Math.cos(s.psi) * b.u * 0.9 - Math.sin(s.psi) * side * 0.9, Z: s.Z + Math.sin(s.psi) * b.u * 0.9 + Math.cos(s.psi) * side * 0.9 });
+      ctx.fillStyle = colOf[b.c]; ctx.beginPath(); ctx.arc(q.x, q.y, 3 * px, 0, 7); ctx.fill();
+    });
+    const ph = s.push.on ? `odraz ${Math.round((s.push.t / s.push.int) * 100)} % (${s.push.left})` : 'skluz';
+    label(ctx, `${s.prof} · ${s.st} · ${s.v.toFixed(2)} m/s · ${ph}${s.trick ? ' · ' + s.trick.kind : ''}`, g.x, g.y + 18 * px, px, '#fff', s.st === 'FALL' || s.st === 'WOBBLE' ? 'rgba(160,30,30,0.85)' : s.st.startsWith('TRICK') ? 'rgba(30,110,40,0.85)' : 'rgba(20,24,40,0.7)');
+  }
+  const S = st.stats;
+  const lines = [
+    `událost: ${st.event ? `${st.event.kind} – ${sim.state.agents.find((x) => x.id === st.event!.id)?.name}` : '—'}`,
+    `další pokus o pád za ${Math.max(0, st.nextFall - t).toFixed(0)} s · další prvek za ${Math.max(0, st.nextTrick - t).toFixed(0)} s${st.trickWindow !== null ? ' (hledá prostor)' : ''}`,
+    `prvky ${S.tricks} (${Object.entries(S.tricksByKind).map(([k, v]) => `${k} ${v}`).join(', ') || '—'}) · pády ${S.falls} · zaváhání ${S.wobbles} · odloženo ${S.deferred} · stop na ledě ${st.trails.length}`,
+  ];
+  lines.forEach((l, i) => label(ctx, l, o.project.scene.width / 2, 40 * px + i * 18 * px, px));
+  ctx.restore();
+}
+
 function drawSnowmanDebug(ctx: Ctx, o: OverlayInput) {
   const sim = o.sim!, px = o.px, cam = cameraFor(o.project.scene);
   ctx.save();

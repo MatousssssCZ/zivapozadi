@@ -13,6 +13,7 @@ import { assembleRig, scaledTemplate, type RigAssembly } from './rigRenderer';
 import type { Vec2 } from '../math/vec';
 import { hashString } from '../math/rng';
 import { ELDER_PROFILES } from '../anim/elderGait';
+import { BLADE_H } from '../sim/rink';
 import type { MotionParams } from '../anim/skeleton';
 
 export interface CharacterVisual {
@@ -57,6 +58,15 @@ export function characterVisual(agent: AgentState, m: CharacterManifest, look: C
     const pose = skeletonPose(stpl, rv.use, req.mirror, agent.anim, agent.holding !== null && agent.holdingKind !== 'bag' && agent.holdingKind !== 'mitten' && agent.holdingKind !== 'shovel', motionOf(agent, app.motion), hashString(agent.id), { ...groundOptions(agent, x, y, scale, req.mirror, cam), snowSink: (agent.snowDepth ?? 0) > 0 && agent.anim ? (agent.snowDepth ?? 0) / Q : 0 });
     const rig = assembleRig(lib, tpl, app, pose, rv.use);
     // závěj přes spodek zabořené boty (kreslí se hned po botě; barvu dodá vykreslování z pozadí)
+    // brusle: nůž pod podrážkou (pata → přednoží), výška držáku = BLADE_H délky nohy
+    if (agent.anim.skate) {
+      const g = footGeomOf(stpl), Lg = stpl.bones.thigh + stpl.bones.shin;
+      rig.blades = [0, 1].map((i) => {
+        const A = pose.legs[i].end, r = pose.feet[i], cs = Math.cos(r), sn = Math.sin(r);
+        const P = (x: number, y: number) => ({ x: A.x + x * cs - y * sn, y: A.y + x * sn + y * cs });
+        return { heel: P(-g.heel, g.AH), toe: P(g.toe, g.AH), drop: BLADE_H * Lg };
+      }) as RigAssembly['blades'];
+    }
     if (pose.snowSink) {
       const g = footGeomOf(stpl);
       rig.snowLips = [0, 1].map((i) => {

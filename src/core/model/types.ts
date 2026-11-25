@@ -221,6 +221,9 @@ export interface CharacterInstance {
   gaitProfile?: 'elderA' | 'elderB';
   /** Ruka s holí u profilu B (výchozí pravá – podpírá levou nohu). */
   caneSide?: 'R' | 'L';
+  /** Bruslař (profil dovednosti) a dítě, které drží za ruku (u rodiče). */
+  skate?: import('../sim/rink').SkateProfile;
+  skatePair?: string;
 }
 
 export type UnavailablePolicy = 'wait' | 'skip' | 'report';
@@ -329,4 +332,6 @@ export interface ProjectFile {
   clearing?: import('../sim/clearing').ClearingConfig;
   /** Pády chodců (vzácná událost) – chybí-li, náhodné pády se nespouštějí (ruční spuštění z ladění ano). */
   falls?: Partial<import('../sim/falls').FallsConfig>;
+  /** Kluziště (bruslení): obrys ledu, branka, směr jízdy, události. */
+  rink?: import('../sim/rink').RinkConfig;
 }

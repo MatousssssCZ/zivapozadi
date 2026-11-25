@@ -52,6 +52,8 @@ export interface AnimState {
   elder?: ElderState;
   /** Probíhající pád / zachycené uklouznutí: varianta, strana (±1), čas od začátku (s). */
   fall?: { v: import('./fallPoses').FallVariant; s: 1 | -1; t: number; du?: number } | null;
+  /** Bruslení: póza celého těla z cílů (rink.ts → skatePose), přebírá chůzi. */
+  skate?: import('./fallPoses').FallKey | null;
 }
 
 /** Údaje o postavě potřebné pro chůzi (délka nohy, geometrie boty, individuální délka kroku). */

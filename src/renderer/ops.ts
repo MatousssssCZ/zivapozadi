@@ -211,6 +211,14 @@ export function fallCommand(v: import('../core/anim/fallPoses').FallVariant, sid
   store.toast(ok ? 'info' : 'warn', ok ? `Pád: ${r}` : r, 2500);
 }
 
+/** Ladění kluziště: pád nebo prvek u vybraného bruslaře (jinak u vhodného). */
+export function rinkCommand(kind: 'fall' | 'trick') {
+  const sim = store.sim.sim; if (!sim) return;
+  const sel = store.state.selection;
+  const r = sim.triggerRinkEvent(kind, sel?.kind === 'character' ? sel.id : null);
+  store.toast(r.ok ? 'info' : 'warn', r.ok ? `${kind === 'fall' ? 'Pád' : 'Prvek'}: ${r.msg}` : r.msg, 2500);
+}
+
 /** Ladění: spustí stavbu sněhuláka rodičem a dítětem (nejbližší volná rodina) hned. */
 export function coopSnowmanCommand() {
   const sim = store.sim.sim; if (!sim) return;

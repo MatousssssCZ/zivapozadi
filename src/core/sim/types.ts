@@ -57,6 +57,8 @@ export interface VisitState {
 }
 
 export interface AgentState {
+  /** bruslař na ledě: pohyb a pózu řídí rink.ts (není v davu chodců) */
+  onIce?: boolean;
   id: string;
   name: string;
   rng: RngState;
@@ -185,6 +187,7 @@ export interface SimState {
   /** Odklízení sněhu (A11). */
   clearing?: import('./clearing').ClearingState;
   falls?: import('./falls').FallsState;
+  rink?: import('./rink').RinkState;
   /** Sáňky (B02): stav průchodu. */
   sled?: import('./sled').SledState;
   /** Upadlá rukavice (B03): stav jediné události ve scéně. */

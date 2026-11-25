@@ -1,6 +1,6 @@
 import { store, useEditor, type Tool } from '../store';
 import { zs } from '../api';
-import { importAssets, clearingCommand, fallCommand, coopSnowmanCommand } from '../ops';
+import { importAssets, clearingCommand, fallCommand, coopSnowmanCommand, rinkCommand } from '../ops';
 import { useState } from 'react';
 import type { FallVariant } from '../../core/anim/fallPoses';
 
@@ -39,6 +39,8 @@ export function TopBar() {
   const gaitDbg = useEditor((s) => s.gaitDebug);
   const fallDbg = useEditor((s) => s.fallDebug);
   const smDbg = useEditor((s) => s.snowmanDebug);
+  const rkDbg = useEditor((s) => s.rinkDebug);
+  const hasRink = useEditor((s) => !!s.project?.rink);
   const hasSnowman = useEditor((s) => !!s.project?.zones.some((z) => z.activityType === 'snowman'));
   const [fv, setFv] = useState<FallVariant>('back'), [fs, setFs] = useState<1 | -1>(1), [fslow, setFslow] = useState(false), [fhelp, setFhelp] = useState(true);
   const hasElders = useEditor((s) => !!s.project?.characters.some((c) => c.gaitProfile));
@@ -76,6 +78,9 @@ export function TopBar() {
         {hasElders && <label className="check" title="Senioři: opěrné body chodidel, hrot hole (zelená = opřený, oranžová = přenos), rukojeť, profil, délka kroku, kadence a rychlost (jen v editoru)"><input type="checkbox" checked={gaitDbg} onChange={(e) => store.set({ gaitDebug: e.target.checked })} /> Ladění chůze seniorů</label>}
         {hasSnowman && <label className="check" title="Sněhulák rodič + dítě: úkoly obou, rezervace, hmotnost a průměr koulí, předání hlavy, košík a bilance sněhu (jen v editoru)"><input type="checkbox" checked={smDbg} onChange={(e) => store.set({ snowmanDebug: e.target.checked })} /> Ladění sněhuláka</label>}
         {hasSnowman && smDbg && <button onClick={() => coopSnowmanCommand()} title="Nejbližší rodina (rodič + dítě) hned začne stavět; zpomalení a pauza ve spodním panelu">Postavit sněhuláka</button>}
+        {hasRink && <label className="check" title="Kluziště: stav a profil bruslařů, rychlost, fáze odrazu, opěrná brusle, kontakty, obrys ledu, plánovaný směr, globální plánovač pádů a prvků (jen v editoru)"><input type="checkbox" checked={rkDbg} onChange={(e) => store.set({ rinkDebug: e.target.checked })} /> Ladění bruslení</label>}
+        {hasRink && rkDbg && <button onClick={() => rinkCommand('fall')} title="Zaváhání zakončené pádem – u vybraného bruslaře, jinak u vhodného">Pád na ledě</button>}
+        {hasRink && rkDbg && <button onClick={() => rinkCommand('trick')} title="Skluz na jedné noze nebo jízda vzad – u vybraného bruslaře, jinak u zdatného">Prvek</button>}
         {has && <label className="check" title="Pády: kontakty (zelená = stojí, červená = klouže), fáze, pomocník; ruční spuštění varianty (jen v editoru)"><input type="checkbox" checked={fallDbg} onChange={(e) => store.set({ fallDebug: e.target.checked })} /> Ladění pádů</label>}
         {has && fallDbg && <>
           <select value={fv} onChange={(e) => setFv(e.target.value as FallVariant)} title="Varianta"><option value="back">dozadu do sedu</option><option value="forward">dopředu na ruce a kolena</option><option value="side">bokem při otáčení</option><option value="saved">zachycené uklouznutí</option></select>

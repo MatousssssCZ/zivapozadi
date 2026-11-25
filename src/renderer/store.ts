@@ -38,12 +38,13 @@ export interface EditorState {
   gaitDebug: boolean;
   fallDebug: boolean;
   snowmanDebug: boolean;
+  rinkDebug: boolean;
 }
 
 const initial: EditorState = {
   dir: null, project: null, manifests: {}, issues: [], missingAssets: [], selection: null, tool: 'select', routeActiveNode: null,
   drawing: [], zoneType: 'coffee', showMarkers: true, dirty: false, toasts: [], builtins: [], canUndo: false, canRedo: false,
-  exportOpen: false, exporting: false, rigDiagnostics: false, clearingDebug: false, gaitDebug: false, fallDebug: false, snowmanDebug: false,
+  exportOpen: false, exporting: false, rigDiagnostics: false, clearingDebug: false, gaitDebug: false, fallDebug: false, snowmanDebug: false, rinkDebug: false,
 };
 
 const HISTORY_LIMIT = 200;

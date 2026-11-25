@@ -448,6 +448,52 @@ function drawOrnament(ctx: Ctx, cam: ReturnType<typeof cameraFor>, kind: string,
   for (let i = 0; i < n; i++) { ctx.beginPath(); ctx.arc(x + (i - (n - 1) / 2) * px(0.035), y, Math.max(0.6, px(0.016)), 0, Math.PI * 2); ctx.fill(); }
 }
 
+/**
+ * Led kluziště (testovací vzhled – malované pozadí kluziště dodá grafik): plocha s jemným odleskem a
+ * stopy nožů (jen skutečný kontakt, omezený počet, postupně mizí).
+ */
+function drawRinkIce(ctx: Ctx, project: ProjectFile, sim: Simulation | null) {
+  const cfg = project.rink!, cam = cameraFor(project.scene);
+  ctx.save();
+  ctx.beginPath(); cfg.ice.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y))); ctx.closePath();
+  const ys = cfg.ice.map((p) => p.y), g = ctx.createLinearGradient(0, Math.min(...ys), 0, Math.max(...ys));
+  g.addColorStop(0, 'rgba(206,222,240,0.92)'); g.addColorStop(1, 'rgba(226,236,248,0.94)');
+  ctx.fillStyle = g; ctx.fill(); ctx.clip();
+  // tlumený odraz světel (pruhy)
+  ctx.fillStyle = 'rgba(255,255,255,0.18)';
+  for (let k = 0; k < 4; k++) { const x0 = Math.min(...cfg.ice.map((p) => p.x)) + k * 340; ctx.beginPath(); ctx.moveTo(x0, Math.min(...ys)); ctx.lineTo(x0 + 60, Math.min(...ys)); ctx.lineTo(x0 + 160, Math.max(...ys)); ctx.lineTo(x0 + 120, Math.max(...ys)); ctx.closePath(); ctx.fill(); }
+  const st = sim?.state.rink, t = sim?.time() ?? 0;
+  if (st) {
+    ctx.lineCap = 'round'; ctx.lineWidth = 0.8;
+    for (const q of st.trails) {
+      const age = t - q.t0, a = Math.max(0, 1 - age / 60) * 0.35; if (a <= 0.01) continue;
+      const A = toScreen(cam, { X: q.X, Z: q.Z }), B = toScreen(cam, { X: q.X2, Z: q.Z2 });
+      ctx.strokeStyle = `rgba(150,166,196,${a.toFixed(3)})`; ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(B.x, B.y); ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+/** Mantinel: krátké úseky řazené podle hloubky (postavy za ním i před ním), výška `boardH` (0,95 m). */
+function rinkBoardItems(ctx: Ctx, project: ProjectFile): { key: number; tie: number; draw: () => void }[] {
+  const cfg = project.rink!, cam = cameraFor(project.scene), W = cfg.ice.map((p) => toWorld(cam, p)), out: { key: number; tie: number; draw: () => void }[] = [];
+  const gate = toWorld(cam, cfg.gate), H = cfg.boardH ?? 0.95;
+  for (let i = 0; i < W.length; i++) {
+    const a = W[i], b = W[(i + 1) % W.length], L = Math.hypot(b.X - a.X, b.Z - a.Z), n = Math.max(1, Math.ceil(L / 0.5));
+    for (let k = 0; k < n; k++) {
+      const p = { X: a.X + ((b.X - a.X) * k) / n, Z: a.Z + ((b.Z - a.Z) * k) / n }, q = { X: a.X + ((b.X - a.X) * (k + 1)) / n, Z: a.Z + ((b.Z - a.Z) * (k + 1)) / n };
+      const mid = { X: (p.X + q.X) / 2, Z: (p.Z + q.Z) / 2 };
+      if (Math.hypot(mid.X - gate.X, mid.Z - gate.Z) < 0.45) continue; // branka
+      const p0 = toScreen(cam, p), q0 = toScreen(cam, q), p1 = toScreen(cam, p, H), q1 = toScreen(cam, q, H), pr = toScreen(cam, p, H - 0.12), qr = toScreen(cam, q, H - 0.12);
+      out.push({ key: Math.max(p0.y, q0.y) - 0.5, tie: 9000, draw: () => {
+        ctx.fillStyle = 'rgba(244,246,250,0.96)'; ctx.beginPath(); ctx.moveTo(p0.x, p0.y); ctx.lineTo(q0.x, q0.y); ctx.lineTo(q1.x, q1.y); ctx.lineTo(p1.x, p1.y); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#b8322f'; ctx.beginPath(); ctx.moveTo(pr.x, pr.y); ctx.lineTo(qr.x, qr.y); ctx.lineTo(q1.x, q1.y); ctx.lineTo(p1.x, p1.y); ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = 'rgba(120,130,160,0.5)'; ctx.lineWidth = 0.6; ctx.beginPath(); ctx.moveTo(p0.x, p0.y); ctx.lineTo(q0.x, q0.y); ctx.stroke();
+      } });
+    }
+  }
+  return out;
+}
+
 function drawFootprints(ctx: Ctx, project: ProjectFile, sim: Simulation, time: number) {
   const fps = sim.state.footprints;
   const snow = project.areas.filter((a) => a.kind === 'snow' && a.polygon.length >= 3);
@@ -567,6 +613,7 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
   if (sc.environment && (sc.environment.windows?.length || sc.environment.door)) drawFacade(ctx, project, (sc.backgroundAssetId ? images.get(sc.backgroundAssetId) : null) as never, (images.get('sprite_door_interior') ?? null) as never, sim?.state.doorPasses, opts.time);
   if (sim) drawFootprints(ctx, project, sim, sim.time());
   if (sim?.state.falls?.marks.length) drawFallMarks(ctx, project, sim, sim.time());
+  if (project.rink) drawRinkIce(ctx, project, sim);
   if (sim && (sim.state as { snowFields?: Record<string, SnowField> }).snowFields) drawSnowFieldTrails(ctx, project, sim);
   const worldObjs = visible.filter(({ o }) => o.layer === 'world').map(({ o }) => o);
   drawGroundIntegration(ctx, project, worldObjs, assets, opts.time);
@@ -689,6 +736,7 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
       const g = toScreen(cam, { X: q.X, Z: q.Z });
       items.push({ key: g.y, tie: 15200, draw: () => drawSnowBall(ctx, cam, q.X, q.Z, Math.max(0.03, q.H), p.radius ?? 0.045, opts.time * 9, 3, false) });
     }
+    if (project.rink && project.rink.boards !== false) rinkBoardItems(ctx, project).forEach((it) => items.push(it));
     coopBalls(sim.state).forEach((b, i) => { const g = toScreen(cam, { X: b.X, Z: b.Z }); items.push({ key: g.y, tie: 15050 + i, draw: () => drawSnowBall(ctx, cam, b.X, b.Z, b.H, b.r, b.rot, 11 + i, b.H < b.r * 1.5) }); });
     // košík s ozdobami (stavba rodič + dítě) a ozdoba nesená v ruce
     for (const ss of sim.state.sessions ?? []) {

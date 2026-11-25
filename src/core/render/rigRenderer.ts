@@ -69,6 +69,8 @@ export interface RigAssembly {
   heldOrder: number;
   /** Závěje přes zabořené boty (vzdálená, blízká) v lokálních souřadnicích. */
   snowLips?: [SnowLip | null, SnowLip | null];
+  /** nůž brusle pod botou (lokálně): pata, špička, výška držáku */
+  blades?: [{ heel: { x: number; y: number }; toe: { x: number; y: number }; drop: number }, { heel: { x: number; y: number }; toe: { x: number; y: number }; drop: number }];
 }
 
 const GROUP_OF: Record<PartSlot, GroupId> = { torso: 'jacket', upperArm: 'jacket', forearm: 'jacket', hat: 'hat', scarf: 'scarf', thigh: 'trousers', shin: 'trousers', foot: 'boots', hand: 'gloves', head: 'head' };
@@ -187,6 +189,22 @@ function drawSnowLip(ctx: CanvasRenderingContext2D, l: SnowLip, color: string) {
 export function rigImageKey(libDir: string, file: string) { return `rig:${libDir}/${file}`; }
 
 /** Vykreslí sestavu; kontext je posunut na chodidla, zmenšen a případně zrcadlen. */
+/** Nůž brusle (kreslený – malovaný podklad brusle zatím chybí): dva držáky a ocelová lišta s odleskem. */
+function drawBlade(ctx: CanvasRenderingContext2D, b: NonNullable<RigAssembly['blades']>[number], far: boolean) {
+  const { heel, toe, drop } = b, dx = toe.x - heel.x, dy = toe.y - heel.y, L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L; // normála dolů (lokálně y dolů)
+  const at = (k: number, d: number) => ({ x: heel.x + dx * k + nx * d, y: heel.y + dy * k + ny * d });
+  ctx.save(); ctx.lineCap = 'round';
+  // držáky (u paty a pod přednožím)
+  ctx.strokeStyle = far ? '#4d5058' : '#5d616b'; ctx.lineWidth = 1.3;
+  for (const k of [0.18, 0.78]) { const a = at(k, 0), q = at(k, drop * 0.85); ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(q.x, q.y); ctx.stroke(); }
+  // lišta: mírně prodloužená dopředu, zaoblená špička
+  const a = at(-0.04, drop), q = at(1.08, drop * 0.92), tip = at(1.12, drop * 0.55);
+  ctx.strokeStyle = far ? '#8a8f9b' : '#a9afbc'; ctx.lineWidth = 1.1;
+  ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(q.x, q.y); ctx.quadraticCurveTo(tip.x + nx * 0.3, tip.y + ny * 0.3, tip.x, tip.y); ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 0.35; ctx.beginPath(); ctx.moveTo(a.x, a.y - 0.35); ctx.lineTo(q.x, q.y - 0.35); ctx.stroke();
+  ctx.restore();
+}
+
 export function drawRig(ctx: CanvasRenderingContext2D, asm: RigAssembly, images: AssetImages, libDir: string, farShade: number, drawHeld?: () => void, snowColor?: string) {
   let heldDone = false;
   for (const it of asm.items) {
@@ -196,6 +214,8 @@ export function drawRig(ctx: CanvasRenderingContext2D, asm: RigAssembly, images:
     if (!tex) continue;
     const mask = p.mask ? images.get(rigImageKey(libDir, p.mask)) : null;
     const img = tinted(rigImageKey(libDir, p.texture), tex, mask, p.mask ? it.color : undefined, it.far ? farShade : 1);
+    // brusle: nůž a držák se kreslí pod botu (bota je přes ně)
+    if (p.slot === 'foot' && asm.blades) drawBlade(ctx, asm.blades[it.key === 'far.foot' ? 0 : 1], it.far);
     ctx.save();
     ctx.transform(it.m[0], it.m[1], it.m[2], it.m[3], it.m[4], it.m[5]);
     ctx.drawImage(img as CanvasImageSource, p.trim.x, p.trim.y, p.trim.w, p.trim.h);
