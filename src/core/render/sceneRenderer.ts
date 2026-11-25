@@ -755,7 +755,7 @@ function drawParticles(ctx: Ctx, project: ProjectFile, ps: NonNullable<Simulatio
   for (const p of ps) {
     const q = particleAt(p, t, project.scene.snowfall.wind, project.seed, env.gusts);
     if (!q || q.a < 0.004) continue;
-    const st = p.kind !== 'snowPuff' ? sprite(`steam_${(p.seed % 6) + 1}`) : null;
+    const st = p.kind !== 'snowPuff' && p.kind !== 'breath' ? sprite(`steam_${(p.seed % 6) + 1}`) : null;
     if (st) {
       // malovaný obláček páry: nízká celková průhlednost, pomalý růst (sprite nikdy nezesilovat)
       ctx.globalAlpha = Math.min(0.55, q.a * (p.kind === 'smoke' ? 1.4 : 1.8));

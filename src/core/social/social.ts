@@ -436,16 +436,29 @@ function listenerOpportunity(world: SocialWorld, c: Conversation, t: TurnPlan, e
     if (u < p) s.pending.push({ at: now + rangeR(s.rng, 0.12, 0.35), fam: 'nod', amp: tri(2, 3.5, 5, nextU01(s.rng)) / 3.5, sgn: s.traits.nodSign, second: nextU01(s.rng) < 0.2 });
     else if (u < p + 0.15 * (1 - p)) s.pending.push({ at: now + rangeR(s.rng, 0.2, 0.5), fam: 'tilt', sgn: s.traits.nodSign, amp: 1 });
   }
-  // společné pobavení na konci promluvy (p = 0,06, jen přátelé)
-  if (lastPhrase && c.kind === 'pair' && now >= c.amusedUntil && nextU01(c.rng) < 0.06) {
-    c.amusedUntil = now + 35;
+  // společné pobavení / smích na konci promluvy (jen přátelé): mluvčí dořekl vtip – nejdřív se zasměje
+  // posluchač (nakažlivě, s malým zpožděním), mluvčí se přidá; občas přátelský dotek paže
+  if (lastPhrase && c.kind === 'pair' && now >= c.amusedUntil && nextU01(c.rng) < 0.16) {
+    c.amusedUntil = now + rangeR(c.rng, 18, 35);
+    const laugh = nextU01(c.rng) < 0.6;
     const sp = env.agent(t.speaker);
-    if (sp?.social) sp.social.pending.push({ at: now, fam: 'amusement', sgn: 1, amp: rangeR(sp.social.rng, 0.8, 1.1) });
+    const freeArm = (a: SocialAgent, i: 0 | 1) => !usedRes(a).has(i === 0 ? 'arm0' : 'arm1') && !(i === 1 && a.holding);
+    let first = true;
     for (const m of c.members) {
       if (m === t.speaker || isVirtual(m)) continue;
       const a = env.agent(m);
-      if (a?.social && nextU01(c.rng) < 0.75 && a.anim.action?.requested !== 'drink') a.social.pending.push({ at: now + rangeR(c.rng, 0.15, 0.4), fam: 'amusement', sgn: -1, amp: rangeR(c.rng, 0.7, 1.0) * (a.holding ? 0.7 : 1) });
+      if (!a?.social || a.anim.action?.requested === 'drink' || nextU01(c.rng) >= 0.8) continue;
+      const at = now + rangeR(c.rng, 0.12, 0.45);
+      if (laugh) {
+        const hand: 0 | 1 = freeArm(a, 0) ? 0 : 1;
+        a.social.pending.push({ at, fam: 'laugh', sgn: 1, hand, both: freeArm(a, hand) && nextU01(c.rng) < 0.4, amp: rangeR(c.rng, 0.8, 1.1) });
+        // dotek paže partnera (jen ve dvojici, volnou paží, jednou za smích)
+        if (first && c.members.length === 2 && freeArm(a, 1) && nextU01(c.rng) < 0.3) a.social.pending.push({ at: at + rangeR(c.rng, 0.5, 0.9), fam: 'touchArm', hand: 1, sgn: 1, amp: 1 });
+      } else a.social.pending.push({ at, fam: 'amusement', sgn: -1, amp: rangeR(c.rng, 0.7, 1.0) * (a.holding ? 0.7 : 1) });
+      first = false;
     }
+    if (sp?.social) sp.social.pending.push({ at: now + rangeR(c.rng, 0.25, 0.6), fam: laugh ? 'laugh' : 'amusement', sgn: 1, amp: rangeR(sp.social.rng, 0.7, 1.0) });
+    world.stats.gestures[laugh ? 'laugh' : 'amusement'] = (world.stats.gestures[laugh ? 'laugh' : 'amusement'] ?? 0);
   }
   if (lastPhrase) c.lastSpeaker = t.speaker;
 }

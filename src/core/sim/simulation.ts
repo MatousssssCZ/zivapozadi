@@ -615,7 +615,23 @@ export class Simulation {
       if (a.activity?.phase === 'queue' && a.speed < 0.5) s.stillSince ??= t; else s.stillSince = undefined;
       stepAgentSocial(a, env, world, SIM_DT);
       if (a.anim.action?.requested === 'drink' && a.anim.speaking) world.stats.sipDuringSpeech++;
+      if (!a.hidden && this.project.scene.environment) this.breathe(a, t);
     }
+  }
+
+  /** Dechová pára v mrazu: při řeči obláček každé ~2–3,5 s, při smíchu s pulzy (hustěji). Deterministické. */
+  private breathe(a: AgentState, t: number) {
+    const laughing = a.anim.gestures?.find((g) => g.fam === 'laugh');
+    const speaking = !!a.anim.speaking;
+    if (!speaking && !laughing) return;
+    const period = laughing ? 0.42 : 2 + 1.5 * hashNoise(hashString(a.id), 31);
+    const ph = hashNoise(hashString(a.id), 32) * period;
+    if (Math.floor((t + ph) / period) === Math.floor((t - SIM_DT + ph) / period)) return;
+    const c = this.chars.get(a.id), m = c ? this.manifests[c.assetId] : undefined;
+    if (!c || !m) return;
+    const cv = characterVisual(a, m, c, this.project.scene), mouth = localToScene(cv, { x: cv.pose.head.x + 4.5, y: cv.pose.head.y + 3 });
+    const sc = depthScaleAt(this.project.scene.depth, a.pos.y);
+    emit((this.state.particles ??= []), { kind: 'breath', x: mouth.x, y: mouth.y, t0: t, life: laughing ? 0.9 : 1.3, w0: windIntegral(this.project.seed, t, !!this.project.scene.environment?.gusts), sc, seed: Math.floor(t * 997) % 100000, vx: cv.mirror ? -1 : 1 });
   }
 
   private stepSchedule(t: number) {

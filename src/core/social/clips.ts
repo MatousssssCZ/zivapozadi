@@ -34,7 +34,11 @@ export type Family =
   /** pohlazení psa: mírný předklon/přidřep, blízká ruka dolů k psovi, 1–2 tahy */
   | 'pet'
   /** B01 chytání vloček: obě ruce zvednuté dlaněmi nahoru, hlava vzhůru, drobné pohyby rukou */
-  | 'catch';
+  | 'catch'
+  /** smích: hlava mírně vzad, pulzy trupu (~4 Hz, doznívají), volitelně ruka k hrudi (both) */
+  | 'laugh'
+  /** přátelský dotek paže partnera (ruka vpřed k němu, krátké podržení) */
+  | 'touchArm';
 
 /** Spuštěný klip u postavy (čistá data – součást stavu simulace). */
 export interface GestureInst {
@@ -73,6 +77,8 @@ export function resourcesOf(g: Pick<GestureInst, 'fam' | 'hand' | 'both'>): Res[
     case 'shovel': return ['arm0', 'arm1', 'torso'];
     case 'pet': return ['arm1', 'torso', 'pelvis', 'head'];
     case 'catch': return ['arm0', 'arm1', 'head'];
+    case 'laugh': return g.both ? ['torso', 'head', h] : ['torso', 'head'];
+    case 'touchArm': return [h];
   }
 }
 
@@ -176,6 +182,21 @@ export function evalGesture(g: GestureInst): GestureOut {
       const e = env(u, 0, 0.2, 0.65, 1), f = 1.9;
       out.trunkDeg = 1.6 * amp * e * Math.sin(2 * Math.PI * f * g.t) * g.sgn;
       out.headDeg = 2.2 * amp * e * Math.sin(2 * Math.PI * f * (g.t - 0.06));
+      break;
+    }
+    case 'laugh': { // S02 – smích: nástup s nádechem, 4–6 pulzů trupu (~4 Hz) doznívajících, hlava vzad a s pulzy
+      const e = env(u, 0, 0.12, 0.55, 1), f = 3.6, decay = 1 - 0.55 * u;
+      const pulse = Math.max(0, Math.sin(2 * Math.PI * f * g.t)) * decay;
+      out.trunkDeg = -(1.2 + 2.2 * pulse) * amp * e * g.sgn; // mírný předklon v pulzech (smích „z břicha“)
+      out.headDeg = (3.4 + 2.5 * Math.max(0, Math.sin(2 * Math.PI * f * (g.t - 0.05))) * decay) * amp * e; // hlava vzad (+ = nahoru)
+      if (g.both) { const tr = track([[0, 'R'], [0.2, { x: 9, y: -22 }], [0.7, { x: 9, y: -22 }], [1, 'R']], u); if (tr.w > 0) out.arms[hand] = { w: tr.w, p: { x: tr.p.x + 0.6 * pulse, y: tr.p.y + 0.8 * pulse } }; } // ruka k hrudi
+      break;
+    }
+    case 'touchArm': { // S03 – dotek paže partnera: ruka vpřed k němu (výš na paži), krátce podržet, zpět
+      const tgt = { x: 30, y: -16 };
+      const tr = track([[0, 'R'], [0.3, tgt], [0.7, tgt], [1, 'R']], u);
+      if (tr.w > 0) out.arms[hand] = { ...tr, fwd: true, keep: true };
+      out.headDeg = 2 * env(u, 0.2, 0.35, 0.65, 0.85) * g.sgn;
       break;
     }
     case 'rubHands': { // W01 – tření palčáků před hrudí
@@ -328,5 +349,5 @@ export const CLIP_T: Record<Family, { T: [number, number, number]; cd: number }>
   thanks: { T: [0.7, 0.9, 1.3], cd: 3 }, waveFar: { T: [2.0, 2.5, 3.2], cd: 45 }, amusement: { T: [1.5, 2.2, 3.2], cd: 35 },
   rubHands: { T: [2.3, 3.0, 4.2], cd: 50 }, adjustScarf: { T: [1.9, 2.5, 3.3], cd: 75 }, adjustCap: { T: [2.1, 2.7, 3.6], cd: 90 },
   hunch: { T: [2.5, 3.2, 4.5], cd: 45 }, queuePeek: { T: [1.6, 2.2, 3.0], cd: 15 }, warmCup: { T: [6, 11, 21], cd: 10 },
-  push: { T: [3, 3, 3], cd: 0 }, scoop: { T: [1.6, 2.2, 3.2], cd: 0 }, photo: { T: [6, 8, 12], cd: 60 }, shovel: { T: [3, 4.5, 6], cd: 0 }, pet: { T: [4, 5.5, 8], cd: 0 }, catch: { T: [5, 7, 10], cd: 0 }, throw: { T: [0.65, 0.8, 0.95], cd: 0 }, lift: { T: [3.2, 4, 5], cd: 0 }, decorate: { T: [2, 2.6, 3.4], cd: 0 },
+  push: { T: [3, 3, 3], cd: 0 }, scoop: { T: [1.6, 2.2, 3.2], cd: 0 }, photo: { T: [6, 8, 12], cd: 60 }, shovel: { T: [3, 4.5, 6], cd: 0 }, pet: { T: [4, 5.5, 8], cd: 0 }, catch: { T: [5, 7, 10], cd: 0 }, laugh: { T: [1.6, 2.2, 3.0], cd: 12 }, touchArm: { T: [1.4, 1.8, 2.4], cd: 40 }, throw: { T: [0.65, 0.8, 0.95], cd: 0 }, lift: { T: [3.2, 4, 5], cd: 0 }, decorate: { T: [2, 2.6, 3.4], cd: 0 },
 };

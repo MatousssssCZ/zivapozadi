@@ -62,7 +62,8 @@ export function snowDensityFactor(seed: number, t: number, variable = true): num
 
 // ------------------------------------------------------------------ částice páry a kouře
 export interface Particle {
-  kind: 'cupSteam' | 'steam' | 'smoke' | 'snowPuff';
+  kind: 'cupSteam' | 'steam' | 'smoke' | 'snowPuff' | 'breath';
+  /** dech: směr výdechu v obraze (−1 vlevo / +1 vpravo) */ vx?: number;
   /** místo vzniku (px scény) a čas */ x: number; y: number; t0: number; life: number;
   /** integrál větru při vzniku */ w0: number;
   /** měřítko hloubky v místě vzniku */ sc: number;
@@ -78,6 +79,12 @@ export function particleAt(p: Particle, t: number, windBase: number, seed: numbe
     // dopad koule: drobné kousky sněhu se rozletí a spadnou
     const u = age / p.life, ang = hashNoise(p.seed, 3) * Math.PI * 2, sp = (6 + hashNoise(p.seed, 4) * 10) * p.sc;
     return { x: p.x + Math.cos(ang) * sp * age, y: p.y - Math.abs(Math.sin(ang)) * sp * age + 40 * p.sc * age * age, r: (0.9 + hashNoise(p.seed, 5)) * p.sc, a: 0.85 * (1 - u) };
+  }
+  if (p.kind === 'breath') {
+    // dechová pára: krátký obláček od úst ve směru pohledu, zpomaluje, stoupá, vítr ho unáší
+    const u = age / p.life, k = 1 - Math.exp(-age * 2.4);
+    const drift = (windIntegral(seed, t, gusts) - p.w0) * windBase * 22 * p.sc;
+    return { x: p.x + (p.vx ?? 1) * 9 * p.sc * k + drift, y: p.y - 3.5 * p.sc * age, r: (1.6 + 5.5 * Math.sqrt(u)) * p.sc, a: 0.34 * Math.min(1, u / 0.12) * (1 - u) ** 1.4 };
   }
   const u = age / p.life;
   const drift = (windIntegral(seed, t, gusts) - p.w0) * windBase * (p.kind === 'smoke' ? 60 : 28) * p.sc;
