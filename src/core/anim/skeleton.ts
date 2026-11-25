@@ -686,14 +686,18 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
   let toolOut: SkeletonPose['tool'];
   if (tool) {
     const gF = { x: gfx, y: gfy };
-    const sol = solveShovel(tool, gF, [backRoot, frontRoot], torsoAngle, fsg, B.upperArm + B.forearm);
-    const tg = [sol.grips[0], sol.grips[1]];
+    // D-držadlo (horní úchop) drží ruka, jejíž rameno je v obraze vzadu (proti směru vpřed); dolní
+    // úchop ta vpředu – paže se nikdy nekříží přes trup (v obou pohledech i se zrcadlením)
+    const rear: 0 | 1 = backRoot.x <= frontRoot.x ? 0 : 1, fore: 0 | 1 = rear === 0 ? 1 : 0;
+    const roots = [backRoot, frontRoot];
+    const sol0 = solveShovel(tool, gF, [roots[rear], roots[fore]], torsoAngle, fsg, B.upperArm + B.forearm);
+    const sol = { ...sol0, grips: (rear === 0 ? sol0.grips : [sol0.grips[1], sol0.grips[0]]) as [Vec2, Vec2] }; // úchopy podle paží
     const held: [boolean, boolean] = [false, false];
-    for (const i of [1, 0] as const) {
-      if (tool.oneHand && i === 0) continue;
-      const l = armIK3D(arms[i].root, tg[i], gF, B.upperArm, B.forearm, 1);
+    for (const i of [fore, rear]) {
+      if (tool.oneHand && i === rear) continue;
+      const l = armIK3D(arms[i].root, sol.grips[i], gF, B.upperArm, B.forearm, 1);
       // nedosažitelný horní úchop (postava bokem, přechod do nesení): lopatu drží jen dolní ruka
-      if (i === 0 && Math.hypot(l.end.x - tg[i].x, l.end.y - tg[i].y) > 0.5) continue;
+      if (i === rear && Math.hypot(l.end.x - sol.grips[i].x, l.end.y - sol.grips[i].y) > 0.5) continue;
       arms[i] = l; held[i] = true;
     }
     toolOut = { ...sol, held };

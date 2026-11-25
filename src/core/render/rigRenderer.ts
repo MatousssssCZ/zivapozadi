@@ -30,6 +30,9 @@ const tintCache = new Map<string, ImageLike>();
 /** Přebarvení POUZE oblasti masky (násobení – zachová stínování); vzdálené končetiny mírně ztmavené. */
 function tinted(key: string, tex: ImageLike, mask: ImageLike | null | undefined, color: string | undefined, shadeF: number): ImageLike {
   if ((!mask || !color) && shadeF >= 1) return tex;
+  // díl má být přebarvený, ale maska se ještě nenačetla (načítání po souborech): nic neukládat do
+  // mezipaměti – jinak by vzdálená ruka/noha zůstala natrvalo nepřebarvená (bílá)
+  const pending = !!color && !mask;
   const ck = `${key}|${color ?? ''}|${shadeF}`;
   const hit = tintCache.get(ck);
   if (hit) return hit;
@@ -48,7 +51,7 @@ function tinted(key: string, tex: ImageLike, mask: ImageLike | null | undefined,
   if (shadeF < 1) { ctx.globalCompositeOperation = 'source-atop'; ctx.fillStyle = `rgba(20,18,24,${(1 - shadeF).toFixed(3)})`; ctx.fillRect(0, 0, tex.width, tex.height); }
   ctx.globalCompositeOperation = 'source-over';
   if (tintCache.size > 2000) tintCache.clear();
-  tintCache.set(ck, c as unknown as ImageLike);
+  if (!pending) tintCache.set(ck, c as unknown as ImageLike);
   return c as unknown as ImageLike;
 }
 
