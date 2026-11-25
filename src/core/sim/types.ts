@@ -36,10 +36,12 @@ export interface ActivityRun {
   data: Record<string, unknown>;
 }
 
-export type VisitMode = 'offstage' | 'choose' | 'leave' | 'exit' | 'coffee' | 'meet-go' | 'meet-wait' | 'greet' | 'with';
+export type VisitMode = 'offstage' | 'choose' | 'leave' | 'exit' | 'coffee' | 'meet-go' | 'meet-wait' | 'greet' | 'with' | 'skate' | 'rest';
 export interface VisitState {
   mode: VisitMode;
   until: number;
+  /** odpočinek na lavičce: rezervované místo; po vstání odejde */
+  seat?: string | null; leaveNext?: boolean;
   /** Uzel, kam návštěvník odchází (vstup/výstup), nebo kde se setkává. */
   target?: string | null;
   friendId?: string | null;
@@ -116,6 +118,8 @@ export interface AgentState {
   hidden?: boolean;
   /** Návštěvník: co právě dělá. */
   visit?: VisitState | null;
+  /** cesta k lavičce stojí (s) – po chvíli postava plynule dosedne */
+  benchStall?: number;
   /** Po společné činnosti se postava znovu připojí k vůdci dvojice. */
   rejoin?: { leaderId: string; side: number; permanent: boolean } | null;
   /** Druh drženého předmětu (kelímek se drží u hrudi, taška visí v ruce). */

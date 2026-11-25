@@ -38,9 +38,9 @@ export function EditorCanvas() {
   useEffect(() => {
     let raf = 0, last = performance.now();
     const loop = (now: number) => {
-      const dt = (now - last) / 1000; last = now;
-      store.sim.tick(dt);
-      draw();
+      // skryté okno: prohlížeč smyčku pozastaví; po návratu žádné dohánění (krok nejvýš 0,25 s)
+      const dt = Math.min(0.25, (now - last) / 1000); last = now;
+      if (!document.hidden) { store.sim.tick(dt); draw(); }
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
@@ -53,6 +53,9 @@ export function EditorCanvas() {
     return () => { cancelAnimationFrame(raf); ro.disconnect(); };
   }, []);
 
+  /** prefers-reduced-motion: bez třpytu, bez ledové tříště, slabší sněžení */
+  function reducedMotion() { try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; } }
+
   function draw() {
     const c = ref.current; const st = store.state; if (!c || !st.project) return;
     const ctx = c.getContext('2d')!;
@@ -63,7 +66,7 @@ export function EditorCanvas() {
     ctx.save();
     ctx.beginPath(); ctx.rect(0, 0, p.scene.width, p.scene.height); ctx.clip();
     ctx.imageSmoothingEnabled = true;
-    drawScene(ctx, p, store.sim.sim, store.images, { time: store.sim.time() });
+    drawScene(ctx, p, store.sim.sim, store.images, { time: store.sim.time(), reducedMotion: reducedMotion() });
     ctx.restore();
     const px = t.dpr / t.s;
     if (st.showMarkers) {

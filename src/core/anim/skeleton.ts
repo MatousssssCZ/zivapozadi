@@ -11,7 +11,7 @@ import { hashNoise } from '../math/rng';
 import { meanPelvisHeight, sampleGait, strideLegLen, gaitEvents } from './gaitProfile';
 import { footAt, restFeet, heelAtContact, type FootGeom } from './gaitKinematics';
 import { ELDER_PROFILES, TIP_AHEAD } from './elderGait';
-import { sampleFall, fallDuration, fallEndShift, type FallPhase } from './fallPoses';
+import { sampleFall, fallDuration, fallEndShift, benchPose, type FallPhase } from './fallPoses';
 import { heelRelOf, type AnimState } from './animator';
 import type { Direction } from './manifest';
 import { evalAll } from '../social/clips';
@@ -808,6 +808,7 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
   const kc: KeyCtx = { B, v, L, AH, gfx, gfy, fsg, ns, front, side: opts.footSide ?? 1, sideX };
   // bruslení: póza z cílů; pád na ledě se z ní prolne (pád se počítá až po ní)
   if (a.skate) applyKey(out, a.skate, 1, { swap: false, latS: 1, du: 0, signedLat: true, end: 0 }, kc);
+  if (a.sit && a.sit.w > 0) applyKey(out, benchPose(a.sit.kind, a.sit.t, a.sit.dur), a.sit.w, { swap: false, latS: 1, du: 0, signedLat: true, end: 0 }, kc);
   if (a.fall) applyFall(out, a.fall, kc);
   return out;
 }

@@ -92,8 +92,8 @@ Hodnoty jsou včetně odpočinků. Simulace 20 minut trvá zhruba 9 s.
 ## Omezení a chybějící podklady
 - **Malované pozadí kluziště** zatím není. Po dodání se nastaví `ice` a `gate` podle kresby a `boards: false`. Přední mantinel pak bude muset být samostatná vrstva (překryv), aby zakrýval nohy postav za ním.
 - **Brusle** jsou kreslené vektorově (nůž pod existující botou), ne malované.
-- **Pirueta** je vypnutá: chybí pohledy pro otočení kolem svislé osy. **Skok** je vypnutý.
+- **Pirueta** je hotová (dvě otáčky přes dostupné 3/4 pohledy, zapnutá v pastelové scéně; ve výchozích vahách 0). **Skok** je vypnutý.
 - **Ruka v ruce** je přibližná: cíle rukou se nastavují gestem, ne přesným spojením dlaní.
-- **Pád** používá klíčové pózy pádu chodců „dozadu do sedu“ (bez oprášení).
-- **Vstup a odchod brankou** (ENTER/EXIT) zatím nejsou: bruslaři začínají na ledě a zůstávají na něm.
+- **Pád** používá klíčové pózy pádu chodců „dozadu do sedu“ nebo „bokem“ (vstávání přes klek), bez oprášení.
+- **Vstup a odchod brankou** s přezutím na lavičce jsou hotové (`rink.entry`, viz `docs/PASTELOVE_KLUZISTE.md`); bez `entry` (zkušební scéna) bruslaři začínají na ledě a zůstávají na něm.
 - **Zástupný mantinel je nízký** (0,55 m), aby byly ve zkušební scéně vidět brusle.

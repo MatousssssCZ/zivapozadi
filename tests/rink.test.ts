@@ -98,7 +98,9 @@ describe('bruslení', () => {
     const p = JSON.parse(JSON.stringify(lp.project)); for (const c of p.characters) if (c.skate === 'rec') c.skate = 'expert';
     const a = Simulation.create(lp.project, lp.manifests), b = Simulation.create(p, lp.manifests);
     a.advanceTo(600); b.advanceTo(600);
-    expect(b.state.rink!.stats.tricks).toBeLessThanOrEqual(a.state.rink!.stats.tricks + 1);
+    // strop daný globální prodlevou (≥ 90 s + prvek), nezávisle na počtu způsobilých
+    expect(b.state.rink!.stats.tricks).toBeLessThanOrEqual(Math.floor(600 / 95) + 1);
+    expect(a.state.rink!.stats.tricks).toBeGreaterThanOrEqual(2);
   }, 60000);
 
   it('stav nezávisí na FPS (60 vs. 30 s výpadky)', () => {

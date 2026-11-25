@@ -54,6 +54,10 @@ export interface AnimState {
   fall?: { v: import('./fallPoses').FallVariant; s: 1 | -1; t: number; du?: number } | null;
   /** Bruslení: póza celého těla z cílů (rink.ts → skatePose), přebírá chůzi. */
   skate?: import('./fallPoses').FallKey | null;
+  /** Sed na lavičce: odpočinek nebo přezouvání bruslí (čas, délka, váha prolnutí 0–1). */
+  sit?: { kind: 'rest' | 'change' | 'kneel' | 'bend'; t: number; dur: number; w: number; from?: { x: number; y: number }; to?: { x: number; y: number } } | null;
+  /** Na nohou jsou brusle (chůze po sněhu k brance / od ní) – kreslí se nůž. */
+  bladesOn?: boolean;
 }
 
 /** Údaje o postavě potřebné pro chůzi (délka nohy, geometrie boty, individuální délka kroku). */

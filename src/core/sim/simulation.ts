@@ -27,7 +27,7 @@ import { createAnimals, stepAnimals } from './animals';
 import { stepClearing, newClearingState, type ClearingHost } from './clearing';
 import { viewForDirection } from '../anim/skeleton';
 import { stepCoopSnowman, startCoopSnowman } from '../activities/coopSnowman';
-import { createSkater, stepSkater, stepRinkEvents, separate, addTrails, skatePose, SKATE_PROFILES, TRAIL_LIFE, FALL_TOTAL, type IceGeo, type RinkState, type RinkCtx , forceRinkEvent } from './rink';
+import { createSkater, stepSkater, stepRinkEvents, separate, addTrails, skatePose, SKATE_PROFILES, TRAIL_LIFE, FALL_TOTAL, type IceGeo, type RinkState, type RinkCtx , forceRinkEvent, makeIceGeo, RINK_FALL_T0, rinkFallLen, LIFE_LABEL, insideW } from './rink';
 import { stepFalls, startFall, newFallsState, DEFAULT_FALLS, type FallHost, type FallsState } from './falls';
 import { fallEndShift as fallEndShiftOf, type FallVariant } from '../anim/fallPoses';
 import { stepSled, sledObstacles, sledPathProblem, type SledHost } from './sled';
@@ -473,8 +473,8 @@ export class Simulation {
   rinkGeometry(): IceGeo {
     if (this.rinkGeo) return this.rinkGeo;
     const cfg = this.project.rink!, cam = this.cam(), poly = cfg.ice.map((p) => toWorld(cam, p));
-    const xs = poly.map((p) => p.X), zs = poly.map((p) => p.Z);
-    return (this.rinkGeo = { poly, cx: (Math.min(...xs) + Math.max(...xs)) / 2, cz: (Math.min(...zs) + Math.max(...zs)) / 2, hx: (Math.max(...xs) - Math.min(...xs)) / 2, hz: (Math.max(...zs) - Math.min(...zs)) / 2, gate: toWorld(cam, cfg.gate) });
+    const g = makeIceGeo(poly, toWorld(cam, cfg.gate)); if (cfg.entry) g.entryIce = toWorld(cam, cfg.entry.inIce);
+    return (this.rinkGeo = g);
   }
   private stepRink(t: number) {
     const cfg = this.project.rink!, geo = this.rinkGeometry(), cam = this.cam();
@@ -482,39 +482,50 @@ export class Simulation {
       const rng = seedRng(this.project.seed, 'rink');
       const st: RinkState = { sk: {}, trails: [], nextTrick: t + randRange(rng, ...(cfg.events?.trickEvery ?? [90, 150])), trickWindow: null, nextFall: t + randRange(rng, ...(cfg.events?.fallEvery ?? [100, 220])), event: null, lastTrickKind: null, lastTrickEnd: -1e9, lastFallEnd: -1e9, stats: { tricks: 0, tricksByKind: {}, falls: 0, wobbles: 0, deferred: 0, overlapEvents: 0, pushes: 0 }, rng };
       const skaters = this.project.characters.filter((c) => c.skate);
-      skaters.forEach((c, k) => {
-        const s = createSkater(c.id, c.skate!, geo, seedRng(this.project.seed, 'skate:' + c.id), k, skaters.length);
-        st.sk[c.id] = s;
+      // s nástupem: část bruslařů je na začátku na ledě (scéna začíná uprostřed dění), ostatní přijdou později
+      const en = cfg.entry, onIce = new Set<string>();
+      if (en) st.life = {};
+      skaters.forEach((c) => {
+        const lead = c.skatePair ? null : skaters.find((x) => x.skatePair === c.id); // dítě se řídí rodičem
+        if (lead) return;
+        const go = !en || rand(rng) < (en.startOnIce ?? 0.8);
+        for (const id of [c.id, ...(c.skatePair ? [c.skatePair] : [])]) if (go) onIce.add(id);
       });
-      // dvojice rodič – dítě (ruka v ruce): rodič začne vedle dítěte
-      for (const c of skaters) if (c.skatePair && st.sk[c.skatePair]) {
-        const p = st.sk[c.id], k = st.sk[c.skatePair];
-        p.pair = k.id; k.pair = p.id; p.holdHand = true; k.holdHand = true;
-        p.X = k.X - Math.sin(k.psi) * 0.55; p.Z = k.Z + Math.cos(k.psi) * 0.55; p.psi = k.psi;
-      }
+      const first = skaters.filter((c) => onIce.has(c.id));
+      first.forEach((c, k) => { st.sk[c.id] = createSkater(c.id, c.skate!, geo, seedRng(this.project.seed, 'skate:' + c.id), k, first.length); });
+      this.pairSkaters(st);
       this.state.rink = st;
-      for (const a of this.state.agents) if (st.sk[a.id]) { a.onIce = true; a.hidden = false; a.route = null; a.visit = undefined; a.activity = null; a.pendingActivity = null; a.follow = null; }
+      for (const a of this.state.agents) {
+        const c = this.chars.get(a.id); if (!c?.skate) continue;
+        a.route = null; a.activity = null; a.pendingActivity = null; a.follow = null;
+        if (st.sk[a.id]) { a.onIce = true; a.hidden = false; a.visit = undefined; }
+        else { a.onIce = false; a.hidden = true; a.visit = { mode: 'offstage', until: 1e12, since: t }; }
+        if (st.life) st.life[a.id] = st.sk[a.id] ? { ph: 'ice', until: t + randRange(rng, ...(en!.session ?? [240, 600])) * randRange(rng, 0.25, 1), seat: null, n: 0, since: t } : { ph: 'away', until: t + randRange(rng, 5, 90), seat: null, n: 0, since: t };
+      }
+      // dvojice odchází a přichází spolu (časy dítěte podle rodiče)
+      if (st.life) for (const c of skaters) if (c.skatePair && st.life[c.skatePair]) st.life[c.skatePair].until = st.life[c.id].until;
     }
     const st = this.state.rink!, all = Object.values(st.sk);
     const ctx: RinkCtx = { t, dt: SIM_DT, geo, all, st, cfg };
     const prev = new Map(all.map((s) => [s.id, { X: s.X, Z: s.Z }]));
     for (const s of all) stepSkater(s, ctx);
     stepRinkEvents(ctx);
-    separate(all);
+    if (st.life) this.rinkLifeOnIce(st, t);
+    separate(Object.values(st.sk));
     if (st.event && all.filter((s) => ['FALL', 'TRICK', 'TRICK_PREPARE', 'TRICK_EXIT'].includes(s.st)).length > 1) st.stats.overlapEvents++;
     if (this.state.step % 3 === 0) for (const s of all) addTrails(st, s, t, prev.get(s.id)!);
     if (st.trails.length && t - st.trails[0].t0 > TRAIL_LIFE) st.trails.splice(0, st.trails.findIndex((q) => t - q.t0 <= TRAIL_LIFE) < 0 ? st.trails.length : st.trails.findIndex((q) => t - q.t0 <= TRAIL_LIFE));
     // agenti: poloha, natočení těla, pohled a póza z bruslaře
     for (const a of this.state.agents) {
       const s = st.sk[a.id]; if (!s) continue;
-      const back = s.trick?.kind === 'backward' && (s.st === 'TRICK' || s.st === 'TRICK_EXIT' || (s.st === 'TRICK_PREPARE' && s.trick.t > 0.5));
-      const body = back ? s.psi + Math.PI : s.psi;
+      const back = s.trick?.kind === 'backward' && Math.abs(s.spin ?? 0) > Math.PI / 2;
+      const body = s.psi + (s.spin ?? 0), spinning = !!s.spin && s.trick?.kind === 'spin';
       a.pos = toScreen(cam, { X: s.X, Z: s.Z });
       a.groundHeading = body; a.facing = screenAngleOfWorld(cam, a.pos, body);
       a.speed = (s.v / Q) * this.scaleOf(a); a.vel = { X: Math.cos(s.psi) * s.v, Z: Math.sin(s.psi) * s.v };
       // změna pohledu jen mimo odraz (aby brusle neposkočila uprostřed kroku)
       const want = directionFromAngle(a.facing, a.anim.dir);
-      if (want !== a.anim.dir && (!s.push.on || s.push.t < 0.05)) a.anim.dir = want;
+      if (want !== a.anim.dir && (!s.push.on || s.push.t < 0.05 || spinning || s.trick?.kind === 'backward')) a.anim.dir = want;
       a.anim.walkBlend = 0; a.anim.settle = null; a.anim.idleTime += SIM_DT;
       // partner (ruka v ruce): na které straně v obraze je
       let partnerSide = 0;
@@ -526,10 +537,162 @@ export class Simulation {
         }
       }
       a.anim.skate = skatePose(s, t, { kidArm: this.isChild(a), partnerSide, backwardBody: back });
-      if (s.st === 'FALL' || s.st === 'RECOVER') a.anim.fall = { v: 'back', s: 1, t: 0.25 + (s.fall?.t ?? FALL_TOTAL) + (s.st === 'RECOVER' ? s.tSt : 0) };
+      if (s.st === 'FALL' || s.st === 'RECOVER') { const fv = s.fall?.v ?? 'back'; a.anim.fall = { v: fv, s: 1, t: RINK_FALL_T0 + (s.fall?.t ?? rinkFallLen(fv)) + (s.st === 'RECOVER' ? s.tSt : 0) }; }
       else a.anim.fall = null;
     }
   }
+  /** dvojice rodič – dítě na ledě (ruka v ruce): rodič vedle dítěte */
+  private pairSkaters(st: RinkState) {
+    for (const c of this.project.characters) if (c.skate && c.skatePair && st.sk[c.id] && st.sk[c.skatePair]) {
+      const p = st.sk[c.id], k = st.sk[c.skatePair];
+      if (p.pair === k.id) continue;
+      p.pair = k.id; k.pair = p.id; p.holdHand = true; k.holdHand = true;
+      p.X = k.X - Math.sin(k.psi) * 0.55; p.Z = k.Z + Math.cos(k.psi) * 0.55; p.psi = k.psi;
+    }
+  }
+  /** Na ledě: konec bruslení → odjezd ke vstupu; u vstupu sestoupí z ledu (dvojice až obě postavy spolu). */
+  private rinkLifeOnIce(st: RinkState, t: number) {
+    const life = st.life!;
+    for (const s of Object.values(st.sk)) {
+      const L = life[s.id]; if (!L || L.ph !== 'ice') continue;
+      const mate = s.pair ? st.sk[s.pair] : undefined;
+      const ready = (x: typeof s) => x.st === 'SKATE' || x.st === 'MARCH' || x.st === 'REST';
+      if (t >= L.until && s.st !== 'EXIT' && s.st !== 'OUT' && ready(s) && (!mate || ready(mate)) && st.event?.id !== s.id) {
+        s.st = 'EXIT'; s.tSt = 0; s.trick = null; s.spin = 0;
+        if (mate) { mate.st = 'EXIT'; mate.tSt = 0; }
+      }
+      const out = s.st === 'OUT' && (!mate || ((mate.st === 'OUT' || mate.st === 'EXIT') && Math.hypot(mate.X - s.X, mate.Z - s.Z) < 1.4));
+      if (out) for (const id of [s.id, ...(mate ? [mate.id] : [])]) this.stepOffIce(st, id, t);
+    }
+  }
+  /** Sestoupení z ledu: bruslař jde v bruslích k lavičce (rezervované místo), tam se přezuje. */
+  private stepOffIce(st: RinkState, id: string, t: number) {
+    const a = this.state.agents.find((x) => x.id === id)!, L = st.life![id];
+    delete st.sk[id];
+    if (st.event?.id === id) st.event = null;
+    a.onIce = false; a.anim.skate = null; a.anim.fall = null; a.anim.bladesOn = true; a.anim.walkBlend = 0; a.anim.settle = null; a.anim.anchors = undefined; a.anim.anchorsXY = undefined;
+    a.visit = { mode: 'skate', until: 0, since: t }; a.speed = 0; a.vel = { X: 0, Z: 0 };
+    L.ph = 'toBench'; L.since = t; L.seat = null;
+    this.goToBench(a, L, t);
+  }
+  /** místo na lavičce: rezervace + cesta (přes místo u vstupu, nebo po trasách), jinak čekání vedle */
+  private goToBench(a: AgentState, L: { seat: string | null }, t: number, via?: Vec2) {
+    const en = this.project.rink?.entry; if (!en) return false;
+    const seats = this.pointsOf(en.benchId).filter((p) => p.point.kind === 'seat');
+    const free = seats.find((p) => this.res.isFree(p.key, a.id));
+    if (!free) { if (via) { this.sessionHost().walkPath(a, [via], 'k lavičce'); a.speedFactor = 0.5; } return false; }
+    this.res.tryReserve(free.key, a.id); L.seat = free.key;
+    if (via || this.project.rink?.entry && Math.hypot(a.pos.x - en.gate.x, a.pos.y - en.gate.y) < 140) { this.sessionHost().walkPath(a, [...(via ? [via] : [{ ...en.gate }]), free.pos], 'k lavičce'); a.speedFactor = a.anim.bladesOn ? 0.45 : 0.8; }
+    else if (!this.sessionHost().goTo(a, free.pos, 'k lavičce')) { this.sessionHost().walkPath(a, [free.pos], 'k lavičce'); a.speedFactor = 0.8; }
+    void t; return true;
+  }
+  private sitDown(a: AgentState, kind: 'rest' | 'change', dur: number) {
+    const seat = this.state.rink?.life?.[a.id]?.seat ?? (a.visit?.seat ?? null), pt = seat ? this.pointsOf(seat.split('#')[0]).find((p) => p.key === seat) : undefined;
+    if (pt && pt.facing !== undefined) { a.facing = pt.facing; a.anim.dir = directionFromAngle(a.facing, a.anim.dir); }
+    a.anim.sit = { kind, t: 0, dur, w: 0, ...(pt ? { from: { ...a.pos }, to: { ...pt.pos } } : {}) }; a.anim.walkBlend = 0; a.anim.settle = null; a.speed = 0; a.vel = { X: 0, Z: 0 }; a.look = null;
+  }
+  /** po vstání: krok od lavičky na přístupový bod (cesta jinak vede přes lavičku) */
+  private standAway(a: AgentState, seatKey: string | null | undefined, then: Vec2[] = [], purpose = 'od lavičky') {
+    const pt = seatKey ? this.pointsOf(seatKey.split('#')[0]).find((p) => p.key === seatKey) : undefined;
+    const n = pt?.entryNode ? this.graph.nodes.get(pt.entryNode) : undefined;
+    if (n) { this.sessionHost().walkPath(a, [{ x: n.x, y: n.y }, ...then], purpose); a.loc = { kind: 'node', nodeId: n.id }; }
+    else if (then.length) this.sessionHost().walkPath(a, then, purpose);
+    a.speedFactor = a.anim.bladesOn ? 0.45 : 0.8;
+  }
+  /** průběh sedu: prolnutí sednutí (0,8 s) a vstávání (0,8 s); vrací true po skončení */
+  private stepSit(a: AgentState): boolean {
+    const s = a.anim.sit; if (!s) return true;
+    s.t += SIM_DT; s.w = Math.min(1, s.t / 0.8, Math.max(0, (s.dur - s.t) / 0.8));
+    if (s.from && s.to) { const k = Math.min(1, s.t / 0.8), e = k * k * (3 - 2 * k); a.pos = { x: s.from.x + (s.to.x - s.from.x) * e, y: s.from.y + (s.to.y - s.from.y) * e }; }
+    if (s.t >= s.dur) { a.anim.sit = null; return true; }
+    return false;
+  }
+  /** Mimo led: lavička, přezutí, nápoj / odchod, návrat, přezutí, vstup na led. */
+  private stepSkaterLife(a: AgentState, c: CharacterInstance, t: number): boolean {
+    const st = this.state.rink, L = st?.life?.[a.id], en = this.project.rink?.entry;
+    if (!st || !L || !en || L.ph === 'ice') return false;
+    const seatPt = () => (L.seat ? this.pointsOf(en.benchId).find((p) => p.key === L.seat) : undefined);
+    const atSeat = () => { const p = seatPt(); return !!p && Math.hypot(a.pos.x - p.pos.x, a.pos.y - p.pos.y) < 112 * depthScaleAt(this.project.scene.depth, a.pos.y); };
+    const mateId = c.skatePair ?? this.project.characters.find((x) => x.skatePair === a.id)?.id, isKid = !c.skatePair && !!mateId;
+    switch (L.ph) {
+      case 'toBench': case 'arrive': {
+        if (!L.seat) { if (!this.goToBench(a, L, t)) { a.status = 'Čeká na volné místo na lavičce'; } return true; }
+        if (!atSeat()) { const p = seatPt()!; this.sessionHost().walkPath(a, [p.pos], 'k lavičce'); a.speedFactor = 0.6; return true; }
+        const dur = randRange(a.rng, 11, 17) * (this.isChild(a) ? 1.2 : 1);
+        this.sitDown(a, 'change', dur); L.ph = L.ph === 'toBench' ? 'changeOff' : 'changeOn'; L.until = t + dur; L.since = t;
+        return true;
+      }
+      case 'changeOff': case 'changeOn': {
+        const done = this.stepSit(a);
+        if (a.anim.sit && a.anim.sit.t > a.anim.sit.dur * 0.5) a.anim.bladesOn = L.ph === 'changeOn'; // druhá bota přezutá
+        a.status = LIFE_LABEL[L.ph];
+        if (!done) return true;
+        const seatWas = L.seat;
+        if (L.seat) this.res.release(L.seat, a.id); L.seat = null;
+        if (L.ph === 'changeOn') {
+          a.anim.bladesOn = true; L.ph = 'toGate'; L.since = t;
+          this.standAway(a, seatWas, [{ ...en.gate }, { ...en.inIce }], 'ke vstupu na led');
+          return true;
+        }
+        a.anim.bladesOn = false; L.n++;
+        this.standAway(a, seatWas); L.ph = 'standUp'; L.since = t;
+        return true;
+      }
+      case 'standUp': {
+        // nápoj (jen dospělý bez dítěte), jinak odchod; děti a dvojice odcházejí spolu
+        const zone = !mateId ? this.coffeeZone(a, c) : null;
+        if (zone && rand(a.rng) < (en.drinkChance ?? 0.5)) {
+          a.pendingActivity = { type: 'coffee', zoneId: zone.id, source: 'auto', sourceId: null };
+          a.visit = { mode: 'coffee', until: 0, since: t }; L.ph = 'drink'; L.since = t; a.status = 'Jde si pro horký nápoj';
+        } else { L.ph = 'leaving'; L.since = t; this.leaveScene(a, t); }
+        return true;
+      }
+      case 'drink': {
+        if (a.activity || a.pendingActivity) return false; // činnost řídí obvyklá logika
+        L.ph = 'leaving'; L.since = t; this.leaveScene(a, t); return true;
+      }
+      case 'leaving': {
+        if (a.visit?.mode === 'offstage' && a.hidden) {
+          L.ph = 'away'; L.since = t; L.until = t + randRange(a.rng, ...(en.offIce ?? [60, 200]));
+          if (mateId && isKid) { const ML = st.life![mateId]; if (ML) L.until = ML.ph === 'away' ? ML.until : L.until; }
+          a.visit.until = 1e12;
+          return true;
+        }
+        if (a.visit?.mode === 'choose' || a.visit?.mode === 'coffee') { this.leaveScene(a, t); return true; }
+        return false; // odchod, cesta za okraj (obvyklá logika návštěvníka)
+      }
+      case 'away': {
+        a.hidden = true; a.status = 'Mimo scénu';
+        // dítě přichází s rodičem
+        if (isKid) { const ML = mateId ? st.life![mateId] : undefined; if (!ML || ML.ph !== 'arrive') return true; }
+        else if (t < L.until) return true;
+        if (mateId && !isKid && st.life![mateId]?.ph !== 'away') return true; // počkat, až bude dítě také venku
+        // jen vstupy, odkud vede trasa k lavičce; dítě přichází stejným vstupem jako rodič
+        const seat0 = this.pointsOf(en.benchId).find((p) => p.point.kind === 'seat');
+        const bn = seat0?.entryNode ?? (seat0 ? nearestAccessibleNode(this.graph, seat0.pos) : null);
+        const mateA = isKid && mateId ? this.state.agents.find((x) => x.id === mateId) : undefined;
+        const only = mateA && mateA.loc.kind === 'node' ? [mateA.loc.nodeId] : this.portals().filter((p) => !bn || this.reachable(p, bn));
+        this.enterScene(a, t, null, only.length ? only : undefined);
+        if (a.hidden) return true;
+        a.visit = { mode: 'skate', until: 0, since: t }; L.ph = 'arrive'; L.since = t; L.seat = null;
+        return true;
+      }
+      case 'toGate': {
+        // u vstupu: první krok na led (bruslař začne opatrně, dítě přešlapuje u mantinelu)
+        const n = Object.keys(st.sk).length, s = createSkater(a.id, c.skate!, this.rinkGeometry(), seedRng(this.project.seed, `skate:${a.id}:${L.n}`), n, n + 1);
+        const W = toWorld(this.cam(), a.pos), geo = this.rinkGeometry();
+        s.X = W.X; s.Z = W.Z; s.psi = Math.atan2(geo.cz - W.Z, geo.cx - W.X); s.v = 0; s.cautiousUntil = t + 6;
+        if (!insideW(W, geo.poly)) { const e = geo.entryIce ?? W; s.X = e.X; s.Z = e.Z; }
+        st.sk[a.id] = s; this.pairSkaters(st);
+        a.onIce = true; a.anim.bladesOn = false; a.route = null; a.visit = undefined; a.anim.sit = null;
+        L.ph = 'ice'; L.since = t; L.until = t + randRange(a.rng, ...(en.session ?? [240, 600]));
+        if (mateId && st.life![mateId]) st.life![mateId].until = isKid ? st.life![mateId].until : L.until;
+        return true;
+      }
+    }
+    return false;
+  }
+
   /** Ladění kluziště: ruční pád / prvek (u vybrané postavy, jinak u vhodného bruslaře). */
   triggerRinkEvent(kind: 'fall' | 'trick', agentId?: string | null): { ok: boolean; msg: string } {
     const st = this.state.rink; if (!st || !this.project.rink) return { ok: false, msg: 'Scéna nemá kluziště.' };
@@ -1166,10 +1329,17 @@ export class Simulation {
     }
     if (a.hidden && a.pendingActivity) this.enterScene(a, t); // plánovaná činnost: návštěvník přijde
     if (a.pendingActivity && !a.route) { this.tryStartPending(a); if (a.activity) return; }
+    // k lavičce: poslední kus (soused na lavičce, opěradlo) se dosedne plynule – žádné uvíznutí těsně u místa
+    if (a.route?.purpose === 'k lavičce') {
+      const w = a.route.wps[a.route.wps.length - 1], d = Math.hypot(a.pos.x - w.x, a.pos.y - w.y), k = depthScaleAt(this.project.scene.depth, a.pos.y);
+      a.benchStall = a.speed < 4 * k && d < 110 * k ? (a.benchStall ?? 0) + SIM_DT : 0;
+      if ((a.route.idx >= a.route.wps.length - 1 && d < 36 * k) || (a.benchStall ?? 0) > 1.2) { a.route = null; a.arrived = true; a.benchStall = 0; }
+    }
     if (a.route) { if (!mv.waitingNarrow) a.status = a.pendingActivity ? 'Jde k činnosti' : this.routeStatus(a); return; }
     if (c.routine === 'shovel') { if (a.hidden) a.status = 'Mimo scénu'; return; } // řídí stepClearing
     if (c.routine === 'sled') { a.status = a.hidden ? 'Mimo scénu' : 'Táhne sáňky s dítětem'; return; } // řídí stepSled
     if (mittenBusy(this.state, a)) return; // vrací se pro rukavici / zvedá ji
+    if (c.skate && this.project.rink?.entry && this.stepSkaterLife(a, c, t)) return;
     if (c.routine === 'visitor') { this.stepVisitor(a, c, t); return; }
     // automatické činnosti
     for (const [type, cfg] of Object.entries(c.activities)) {
@@ -1270,9 +1440,9 @@ export class Simulation {
   private portals(): string[] { return this.project.nav.nodes.filter((n) => n.portal && this.graph.nodes.has(n.id)).map((n) => n.id); }
 
   /** Návštěvník vstoupí do scény vstupem (z místa mimo obraz). */
-  private enterScene(a: AgentState, t: number, avoid?: string | null) {
+  private enterScene(a: AgentState, t: number, avoid?: string | null, only?: string[]) {
     // dveře budovy jen občas (událost s nízkou četností), jinak okraje scény
-    const all = this.portals().filter((p) => p !== avoid);
+    const all = this.portals().filter((p) => p !== avoid && (!only || only.includes(p)));
     const useDoor = all.some((p) => this.graph.nodes.get(p)?.door) ? rand(a.rng) < 0.12 : false; // bez dveří žádné losování navíc
     const ps = all.filter((p) => !!this.graph.nodes.get(p)?.door === useDoor).length ? all.filter((p) => !!this.graph.nodes.get(p)?.door === useDoor) : all;
     const pid = ps.length ? ps[Math.floor(rand(a.rng) * ps.length)] : (this.anchorOf(a));
@@ -1369,6 +1539,7 @@ export class Simulation {
       }
       case 'choose': {
         if (t < v.until) { a.status = 'Stojí'; return; }
+        if (v.leaveNext) { v.leaveNext = false; this.leaveScene(a, t); return; }
         const r = rand(a.rng);
         const zone = this.coffeeZone(a, c);
         // rodina s dítětem: občas si jdou na dětský sníh postavit sněhuláka nebo se koulovat
@@ -1411,6 +1582,18 @@ export class Simulation {
           a.status = 'Jde na kávu';
           return;
         }
+        // odpočinek na lavičce (jen když zůstanou volná místa pro přezouvání bruslařů)
+        const bench = this.project.rink?.entry?.benchId;
+        if (bench && !this.state.agents.some((x) => x.follow?.leaderId === a.id) && !this.isChild(a) && !a.anim.elder && rand(a.rng) < 0.12) {
+          const seats = this.pointsOf(bench).filter((q) => q.point.kind === 'seat' && this.res.isFree(q.key));
+          if (seats.length >= 2) {
+            const q = seats[seats.length - 1];
+            if (this.res.tryReserve(q.key, a.id) && (this.sessionHost().goTo(a, q.pos, 'k lavičce') || (this.sessionHost().walkPath(a, [q.pos], 'k lavičce'), true))) {
+              a.speedFactor = 1; a.visit = { mode: 'rest', until: 0, since: t, seat: q.key }; a.status = 'Jde si sednout na lavičku'; return;
+            }
+            this.res.release(q.key, a.id);
+          }
+        }
         // cestou se občas zastaví u stromu / výlohy a chvíli se dívá (A04)
         const view = r < 0.14 || (kid && r < 0.4) ? this.zoneFor(a, c, 'viewing') : null; // rodiny se u stromu zastaví častěji (A03)
         if (view) {
@@ -1420,6 +1603,17 @@ export class Simulation {
         }
         this.leaveScene(a, t); // jen projde scénou
         if (a.visit?.mode === 'leave') maybeCarryMitten(this.mittenHost(), a); // občas nese rezervní palčák (B03)
+        return;
+      }
+      case 'rest': {
+        const seat = v.seat ? this.pointsOf(v.seat.split('#')[0]).find((q) => q.key === v.seat) : undefined;
+        if (!seat) { this.leaveScene(a, t); return; }
+        if (!a.anim.sit) {
+          if (v.until > 0) { this.res.release(seat.key, a.id); v.seat = null; this.standAway(a, seat.key); v.mode = 'choose'; v.until = t + 0.1; v.leaveNext = true; return; } // vstal
+          if (Math.hypot(a.pos.x - seat.pos.x, a.pos.y - seat.pos.y) > 112 * depthScaleAt(this.project.scene.depth, a.pos.y)) { this.sessionHost().walkPath(a, [seat.pos], 'k lavičce'); a.speedFactor = 0.8; return; }
+          this.sitDown(a, 'rest', randRange(a.rng, 15, 45)); v.until = t; a.status = 'Odpočívá na lavičce'; return;
+        }
+        this.stepSit(a); a.status = 'Odpočívá na lavičce';
         return;
       }
       case 'leave': {

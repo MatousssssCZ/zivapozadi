@@ -106,3 +106,40 @@ export function sampleFall(v: FallVariant, t: number): FallKey {
 }
 /** Fáze v čase t (pro stav a reakce). */
 export const fallPhaseAt = (v: FallVariant, t: number): FallPhase => sampleFall(v, t).ph;
+
+/**
+ * Sed na lavičce (odpočinek) a přezouvání bruslí: pánev na sedáku, chodidla vpředu na zemi.
+ * `change`: předklon, jedna noha zvednutá, obě ruce u boty (šněrování), v polovině druhá noha.
+ * Klíč je vůči bodu na zemi pod pánví (místo k sezení); prolíná se vahou (sednutí / vstávání).
+ */
+export function benchPose(kind: 'rest' | 'change' | 'kneel' | 'bend', t: number, dur: number): FallKey {
+  if (kind === 'kneel' || kind === 'bend') return workPose(kind, t);
+  const SEAT = 0.56; // pánev na sedáku (0,45 m + stehna) v délkách nohy
+  const base: FallKey = { t: 0, ph: 'pause', hip: W(-0.12, SEAT), pitch: -4, head: 4, feet: [W(0.38, 0, -0.1), W(0.44, 0, 0.1)], hands: [W(0.22, 0.6, -0.15), W(0.26, 0.6, 0.15)], c: ['s', 'f0', 'f1'] };
+  if (kind === 'rest') { base.head = 4 + Math.sin(t * 0.4) * 3; return base; }
+  const half = dur / 2, i = t < half ? 0 : 1, tt = (t % half) / half, up = Math.sin(Math.PI * Math.min(1, Math.max(0, (tt - 0.05) / 0.9)));
+  const side = i === 0 ? -1 : 1, lace = Math.sin(t * 7) * 0.025 * up;
+  const feet: [P3, P3] = [W(0.38, 0, -0.1), W(0.44, 0, 0.1)];
+  feet[i] = W(0.3 - 0.06 * up, 0.24 * up, side * 0.08, -10 * up);
+  return { ...base, pitch: 8 + 22 * up, head: 14 * up, feet,
+    hands: [W(0.32 + lace, 0.3 + 0.32 * (1 - up), side * 0.08 - 0.06), W(0.36 - lace, 0.32 + 0.3 * (1 - up), side * 0.08 + 0.06)], c: i === 0 ? ['s', 'f1'] : ['s', 'f0'] };
+}
+
+/**
+ * Práce u země (tvoření koule sněhuláka): `kneel` – klečí na obou kolenou, předklon, ruce přihrnují
+ * a uplácávají sníh u spodní koule; `bend` – stojí v mírném předklonu s pokrčenými koleny, ruce u koule.
+ * Ruce se střídají (přihrnutí z boku → uplácání shora), hlava sleduje práci.
+ */
+export function workPose(kind: 'kneel' | 'bend', t: number): FallKey {
+  const ph = (t * 0.9) % 1, sw = Math.sin(t * 2 * Math.PI * 0.9), pat = Math.max(0, Math.sin(t * 2 * Math.PI * 1.8)) * 0.05;
+  if (kind === 'kneel') return {
+    t: 0, ph: 'pause', hip: W(-0.02, 0.5), pitch: 34 + 4 * sw, head: -12, roll: 3 * sw,
+    feet: [W(-0.46, 0.06, -0.12, -70), W(-0.48, 0.06, 0.12, -70)],
+    hands: [W(0.42 + 0.08 * sw, 0.16 + pat, -0.2 + 0.08 * Math.max(0, sw)), W(0.44 - 0.08 * sw, 0.18 + (ph > 0.5 ? pat : 0), 0.2 - 0.08 * Math.max(0, -sw))], c: ['k0', 'k1'],
+  };
+  return {
+    t: 0, ph: 'pause', hip: W(-0.06, 0.9), pitch: 30 + 4 * sw, head: -10, roll: 2 * sw,
+    feet: [W(-0.08, 0, -0.13), W(0.06, 0, 0.13)],
+    hands: [W(0.4 + 0.06 * sw, 0.42 + pat, -0.16), W(0.42 - 0.06 * sw, 0.44 + (ph > 0.5 ? pat : 0), 0.16)], c: ['f0', 'f1'],
+  };
+}

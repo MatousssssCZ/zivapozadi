@@ -7,8 +7,8 @@ Každý z dvojice má vlastní úkol. Kroky se posouvají podle stavu: dojití n
 
 | Rodič | Dítě souběžně |
 |---|---|
-| nabere sníh, uplácá a válí **spodní kouli** (50 cm) po pásech až na místo | nabere sníh, uplácá a uválí **hlavu** (24 cm) |
-| válí **prostřední kouli** (36 cm) | připraví ozdoby v košíku, nosí sníh, uhladí spodní kouli |
+| přijde na místo sněhuláka a **vkleče** (zády ke kameře) tvoří **spodní kouli** (50 cm) | v **předklonu** (zády ke kameře) tvoří **hlavu** (24 cm) |
+| v mírném **předklonu** tvoří vedle **prostřední kouli** (36 cm) | připraví ozdoby v košíku, nosí sníh, uhladí spodní kouli |
 | **zvedne prostřední**: přidřep → úchop → zvednutí k hrudi → nese ji → nad stavbu → položí → pustí → odstoupí | drží odstup mimo dráhu zvedání (prostor zvedání rezervuje rodič) |
 | čeká | **vyplní spoj** sněhem, který přinesl (hmotnost se připočte ke stavbě) |
 | **převezme hlavu**: dítě ji přinese, obě ruce na kouli, převzetí, dítě pustí; když rodič není volný, dítě hlavu položí a rodič ji zvedne sám | |
@@ -20,12 +20,13 @@ Každý z dvojice má vlastní úkol. Kroky se posouvají podle stavu: dojití n
 ## Materiál
 - **Vrstva sněhu:** 5 cm, 180 kg/m³ (9 kg/m²) v mřížce 5 cm. Stav zóny přetrvá i pro další stavby a ubraný sníh se už znovu nenabere.
 - **Vznik koule:** nabráním kotouče o poloměru 14 cm (≈ 0,55 kg).
-- **Růst koule:** jen ze sněhu v pásu pod sebou:
-  - šířka styku w = 2·√(2rh − h²),
+- **Tvoření na místě (koule se neválí):** postava přihrnuje sníh z okolí koule (kotouč 12 cm z mezikruží
+  0,45–1,3 m) a uplácává ho; tempo podle cílové doby (spodní 42 s, prostřední 28 s, hlava 22 s), růst jen
+  podle skutečně nabraného sněhu; v okolí bez sněhu koule zůstane menší (hmota nikdy nevzniká z ničeho).
   - poloměr r = ∛(3m / (4π·300 kg/m³)) (uplácaný sníh),
-  - natočení koule (textura se otáčí) += dráha / r.
-- **Stopa:** kde se sníh ubral, zůstane prošlapaný pás.
-- **Přehmátnutí:** po každé čtvrtotáčce koule se ruce znovu chytí.
+  - póza: spodní koule vkleče (předklon, ruce střídavě přihrnují a uplácávají), prostřední a hlava
+    v mírném předklonu s pokrčenými koleny; postava stojí/klečí šikmo před koulí (zády ke kameře, koule je vidět).
+- **Stopa:** kde se sníh ubral, zůstane prošlapané místo.
 - **Zachování hmoty:** sníh ubraný ze země = koule + spoj + sníh v náručí (chyba < 1·10⁻⁹ kg).
 
 ## Ladění

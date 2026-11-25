@@ -14,7 +14,7 @@ const isDev = !!process.env.ZIMNI_SCENA_DEV_URL;
 const appRoot = app.getAppPath();
 const resDir = app.isPackaged ? path.join(process.resourcesPath, 'builtin') : path.join(appRoot, 'resources', 'builtin');
 const demoRoot = app.isPackaged ? path.join(process.resourcesPath, 'demo') : path.join(appRoot, 'demo');
-const DEMOS: Record<string, string> = { namesti: 'Vanocni-namesti', radnice: 'Namesti-radnice', liberec: 'Liberec-zivy-trh' };
+const DEMOS: Record<string, string> = { namesti: 'Vanocni-namesti', radnice: 'Namesti-radnice', liberec: 'Liberec-zivy-trh', pastel: 'Pastelove-kluziste' };
 
 let win: BrowserWindow | null = null;
 let encoder: NodeEncoderHost | null = null;

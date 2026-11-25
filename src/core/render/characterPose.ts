@@ -59,7 +59,7 @@ export function characterVisual(agent: AgentState, m: CharacterManifest, look: C
     const rig = assembleRig(lib, tpl, app, pose, rv.use);
     // závěj přes spodek zabořené boty (kreslí se hned po botě; barvu dodá vykreslování z pozadí)
     // brusle: nůž pod podrážkou (pata → přednoží), výška držáku = BLADE_H délky nohy
-    if (agent.anim.skate) {
+    if (agent.anim.skate || agent.anim.bladesOn) {
       const g = footGeomOf(stpl), Lg = stpl.bones.thigh + stpl.bones.shin;
       rig.blades = [0, 1].map((i) => {
         const A = pose.legs[i].end, r = pose.feet[i], cs = Math.cos(r), sn = Math.sin(r);

@@ -16,6 +16,8 @@ import { rand, randRange, seedRng, type RngState } from '../math/rng';
 
 export type Species = 'dog' | 'cat';
 export interface AnimalState {
+  /** pes: místo za okrajem, kam doběhne za majitelem, který už odešel */
+  exitAt?: World | null;
   id: string; species: Species;
   ownerId?: string | null;
   pos: Vec2; facing: number; speed: number;
@@ -153,12 +155,15 @@ function stepDog(a: AnimalState, agents: AgentState[], cam: ReturnType<typeof ca
   const o = agents.find((x) => x.id === a.ownerId);
   if (o && o.hidden && !a.hidden) {
     // majitel už odešel za okraj: pes za ním doběhne a zmizí až tam (ne uprostřed obrazu)
-    const T = toWorld(cam, o.pos), P = toWorld(cam, a.pos);
+    // (cíl o 1 m dál za místem, kde majitel zmizel – majitel mizí těsně za okrajem, pes je menší)
+    const T0 = toWorld(cam, o.pos), P = toWorld(cam, a.pos);
+    a.exitAt ??= (() => { const dx = T0.X - P.X, dz = T0.Z - P.Z, d = Math.hypot(dx, dz) || 1; return { X: T0.X + (dx / d) * 1.0, Z: T0.Z + (dz / d) * 1.0 }; })();
+    const T = a.exitAt;
     if (Math.hypot(T.X - P.X, T.Z - P.Z) > 0.35) { a.pos = toScreen(cam, moveToward(a, cam, P, T, 1.4, dt)); a.mode = 'follow'; return; }
   }
   if (!o || o.hidden) {
     // majitel mimo scénu: pes je s ním
-    a.hidden = true; a.speed = 0; a.mode = 'follow';
+    a.hidden = true; a.speed = 0; a.mode = 'follow'; a.exitAt = null;
     if (o) o.speedFactor = o.speedFactor === 0 ? 1 : o.speedFactor;
     return;
   }

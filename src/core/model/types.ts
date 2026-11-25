@@ -38,6 +38,8 @@ export interface AssetEntry {
   lid?: { x: number; y: number; w: number; h: number; color: string; snow?: boolean; hinge: 'left' | 'right'; maxAngle: number };
   /** Tvar pro zapuštění do scény: kontaktní šířka těla (u0..u1 obrázku), hloubka půdorysu, světla. */
   shape?: AssetShape;
+  /** Body třpytu (světýlka, 0..1 v obrázku) – pomalé nepravidelné záblesky. */
+  sparkle?: [number, number][];
   /** Výchozí kolizní stopa (vůči kotvě, v logických jednotkách při měřítku 1). */
   defaultFootprint?: Vec2[];
   /** Označení provizorního testovacího assetu. */

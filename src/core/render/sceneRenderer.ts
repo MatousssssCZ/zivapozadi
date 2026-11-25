@@ -35,6 +35,8 @@ type Ctx = CanvasRenderingContext2D;
 export interface DrawOptions {
   /** Čas v sekundách (pro sněžení). */
   time: number;
+  /** Omezený pohyb (prefers-reduced-motion): bez třpytu, bez částic ledu, slabší sněžení. */
+  reducedMotion?: boolean;
   /** Zvýrazněné ID (jen editor – předává se dál overlayi, renderer ho ignoruje). */
 }
 
@@ -452,16 +454,18 @@ function drawOrnament(ctx: Ctx, cam: ReturnType<typeof cameraFor>, kind: string,
  * Led kluziště (testovací vzhled – malované pozadí kluziště dodá grafik): plocha s jemným odleskem a
  * stopy nožů (jen skutečný kontakt, omezený počet, postupně mizí).
  */
-function drawRinkIce(ctx: Ctx, project: ProjectFile, sim: Simulation | null) {
+function drawRinkIce(ctx: Ctx, project: ProjectFile, sim: Simulation | null, images: AssetImages, reduced = false) {
   const cfg = project.rink!, cam = cameraFor(project.scene);
   ctx.save();
   ctx.beginPath(); cfg.ice.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y))); ctx.closePath();
+  if (cfg.paintedIce) ctx.clip(); else {
   const ys = cfg.ice.map((p) => p.y), g = ctx.createLinearGradient(0, Math.min(...ys), 0, Math.max(...ys));
   g.addColorStop(0, 'rgba(206,222,240,0.92)'); g.addColorStop(1, 'rgba(226,236,248,0.94)');
   ctx.fillStyle = g; ctx.fill(); ctx.clip();
   // tlumený odraz světel (pruhy)
   ctx.fillStyle = 'rgba(255,255,255,0.18)';
   for (let k = 0; k < 4; k++) { const x0 = Math.min(...cfg.ice.map((p) => p.x)) + k * 340; ctx.beginPath(); ctx.moveTo(x0, Math.min(...ys)); ctx.lineTo(x0 + 60, Math.min(...ys)); ctx.lineTo(x0 + 160, Math.max(...ys)); ctx.lineTo(x0 + 120, Math.max(...ys)); ctx.closePath(); ctx.fill(); }
+  }
   const st = sim?.state.rink, t = sim?.time() ?? 0;
   if (st) {
     ctx.lineCap = 'round'; ctx.lineWidth = 0.8;
@@ -470,7 +474,63 @@ function drawRinkIce(ctx: Ctx, project: ProjectFile, sim: Simulation | null) {
       const A = toScreen(cam, { X: q.X, Z: q.Z }), B = toScreen(cam, { X: q.X2, Z: q.Z2 });
       ctx.strokeStyle = `rgba(150,166,196,${a.toFixed(3)})`; ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(B.x, B.y); ctx.stroke();
     }
+    if (sim && cfg.reflections !== false) drawIceReflections(ctx, project, sim, images, cfg.reflections ?? { alpha: 0.18, len: 0.4 });
+    if (sim && cfg.particles && !reduced) drawIceSpray(ctx, project, sim, cam, t);
   }
+  ctx.restore();
+}
+/**
+ * Odrazy bruslařů v ledu: převrácené, zkrácené (len × výška), slabé a rozostřené (vykreslené v 1/3
+ * rozlišení a zvětšené zpět), omezené maskou ledu (volající ořezává obrysem). Odrazy domů už v kresbě jsou.
+ */
+let reflCanvas: { c: ReturnType<NonNullable<ReturnType<typeof getCanvasFactory>>>; w: number; h: number } | null = null;
+function drawIceReflections(ctx: Ctx, project: ProjectFile, sim: Simulation, images: AssetImages, R: { alpha: number; len: number }) {
+  const fac = getCanvasFactory(); if (!fac) return;
+  const W = project.scene.width, H = project.scene.height, D = 3, w = Math.ceil(W / D), h = Math.ceil(H / D);
+  if (!reflCanvas || reflCanvas.w !== w || reflCanvas.h !== h) reflCanvas = { c: fac(w, h), w, h };
+  const rc = reflCanvas.c.getContext('2d') as unknown as Ctx;
+  rc.setTransform(1, 0, 0, 1, 0, 0); rc.clearRect(0, 0, w, h); rc.setTransform(1 / D, 0, 0, 1 / D, 0, 0);
+  let any = false;
+  for (const a of sim.state.agents) {
+    if (!a.onIce || a.hidden) continue;
+    const c = sim.characterOf(a.id), m = c ? sim.manifests[c.assetId] : undefined; if (!c || !m) continue;
+    const cv = characterVisual(a, m, c, project.scene);
+    rc.save(); rc.translate(cv.x, cv.y); rc.scale(1, -R.len); rc.translate(-cv.x, -cv.y);
+    drawAgentBody(rc, project, sim, a, cv, m, images); rc.restore(); any = true;
+  }
+  if (!any) return;
+  // dál od chodidel slábne (zeslabení směrem dolů v rámci každého odrazu nahrazuje krátká délka)
+  ctx.save(); ctx.globalAlpha = R.alpha; ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(reflCanvas.c as unknown as CanvasImageSource, 0, 0, W, H); ctx.restore();
+}
+/** Ledová tříšť: drobné částice u bruslí při prudším brzdění (deterministické z času a id, počet omezený). */
+function drawIceSpray(ctx: Ctx, project: ProjectFile, sim: Simulation, cam: ReturnType<typeof cameraFor>, t: number) {
+  const st = sim.state.rink!; let budget = 60;
+  for (const s of Object.values(st.sk)) {
+    const hard = (s.st === 'BRAKE' && s.v > 0.35) || (s.st === 'FALL' && (s.fall?.t ?? 9) < 0.8 && s.v > 0.3);
+    if (!hard || budget <= 0) continue;
+    const seed = s.id.length * 131 + s.id.charCodeAt(s.id.length - 1), fx = Math.cos(s.psi), fz = Math.sin(s.psi), px = toScreen(cam, { X: s.X, Z: s.Z }), k = depthScaleAt(project.scene.depth, px.y);
+    for (let i = 0; i < 8 && budget > 0; i++, budget--) {
+      const ph = (t * 3 + hashNoise(seed, i, 1)) % 1, side = i % 2 ? 1 : -1; // každá částice žije 1/3 s
+      const out = 0.15 + ph * 0.45 * (0.6 + hashNoise(seed, i, Math.floor(t * 3 + hashNoise(seed, i, 1))) * 0.8);
+      const P = toScreen(cam, { X: s.X + fx * 0.25 * ph - fz * side * out, Z: s.Z + fz * 0.25 * ph + fx * side * out }, 0.02 + Math.sin(Math.PI * ph) * 0.12);
+      ctx.fillStyle = `rgba(250,252,255,${(0.75 * (1 - ph)).toFixed(3)})`;
+      ctx.beginPath(); ctx.arc(P.x, P.y, Math.max(0.6, 1.6 * k), 0, Math.PI * 2); ctx.fill();
+    }
+  }
+}
+/** Pomalé nepravidelné třpytění světýlek stromu (jen malé záblesky nad kresbou, průhlednost stromu se nemění). */
+function drawSparkles(ctx: Ctx, o: SceneObject, a: AssetEntry, t: number) {
+  const r = objectImageRect(o, a), pts = a.sparkle ?? [];
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  pts.forEach(([u, v], i) => {
+    const w = 0.35 + hashNoise(7, i, 1) * 0.7, ph = hashNoise(7, i, 2) * 6.283, s0 = Math.sin(t * w + ph) * 0.5 + Math.sin(t * w * 0.37 + ph * 1.7) * 0.5;
+    const I = Math.pow(Math.max(0, s0), 6); if (I < 0.03) return;
+    const x = r.x + (o.flipX ? 1 - u : u) * r.w, y = r.y + v * r.h, R = Math.max(1.5, r.w * 0.012);
+    const g = ctx.createRadialGradient(x, y, 0, x, y, R * 2.2);
+    g.addColorStop(0, `rgba(255,246,214,${(0.85 * I).toFixed(3)})`); g.addColorStop(0.35, `rgba(255,220,150,${(0.35 * I).toFixed(3)})`); g.addColorStop(1, 'rgba(255,210,140,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, R * 2.2, 0, Math.PI * 2); ctx.fill();
+  });
   ctx.restore();
 }
 /** Mantinel: krátké úseky řazené podle hloubky (postavy za ním i před ním), výška `boardH` (0,95 m). */
@@ -613,7 +673,7 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
   if (sc.environment && (sc.environment.windows?.length || sc.environment.door)) drawFacade(ctx, project, (sc.backgroundAssetId ? images.get(sc.backgroundAssetId) : null) as never, (images.get('sprite_door_interior') ?? null) as never, sim?.state.doorPasses, opts.time);
   if (sim) drawFootprints(ctx, project, sim, sim.time());
   if (sim?.state.falls?.marks.length) drawFallMarks(ctx, project, sim, sim.time());
-  if (project.rink) drawRinkIce(ctx, project, sim);
+  if (project.rink) drawRinkIce(ctx, project, sim, images, !!opts.reducedMotion);
   if (sim && (sim.state as { snowFields?: Record<string, SnowField> }).snowFields) drawSnowFieldTrails(ctx, project, sim);
   const worldObjs = visible.filter(({ o }) => o.layer === 'world').map(({ o }) => o);
   drawGroundIntegration(ctx, project, worldObjs, assets, opts.time);
@@ -629,6 +689,7 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
     items.push({ key, tie: i, draw: () => {
       const as = assets.get(o.assetId), im = images.get(o.assetId);
       drawObject(ctx, o, as, (o.integration && as ? gradedImage(o, as, im, project) : im) as typeof im, sim ? lidOpenness(sim.state, o.id, sim.time()) : 0);
+      if (as?.sparkle?.length && !opts.reducedMotion) drawSparkles(ctx, o, as, opts.time);
       if (o.seller && sim) drawSeller(ctx, project, sim, o, images);
       if (o.integration && as) drawObjectIntegration(ctx, project, o, as, opts.time, backgroundColorAt(project, images, o.x, o.y + 6));
     } });
@@ -757,7 +818,7 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
   if (sim && sc.environment && sim.state.particles?.length) drawParticles(ctx, project, sim.state.particles, opts.time);
 
   for (const { o } of fixed('foreground')) drawObject(ctx, o, assets.get(o.assetId), images.get(o.assetId));
-  if (sc.snowfall.enabled) drawSnowfall(ctx, project, opts.time);
+  if (sc.snowfall.enabled) drawSnowfall(ctx, project, opts.time, opts.reducedMotion ? 0.4 : 1);
 }
 
 /**
@@ -902,12 +963,12 @@ function propY(p: PropState): number {
 }
 
 /** Deterministické sněžení: poloha vločky je čistá funkce (seed, index, čas). */
-export function drawSnowfall(ctx: Ctx, project: ProjectFile, t: number) {
+export function drawSnowfall(ctx: Ctx, project: ProjectFile, t: number, densityK = 1) {
   const { width: W, height: H } = project.scene;
   const env = project.scene.environment;
   const df = snowDensityFactor(project.seed, t, !!env?.variableSnow);
   // stabilní ID vloček: při změně hustoty se jednotlivé vločky jen plynule zjeví / zmizí
-  const n = Math.round(project.scene.snowfall.density * 420 * (env?.variableSnow ? 1.15 : 1));
+  const n = Math.round(project.scene.snowfall.density * 420 * (env?.variableSnow ? 1.15 : 1) * densityK);
   const wind = project.scene.snowfall.wind;
   const WI = windIntegral(project.seed, t, !!env?.gusts); // integrál – poryv nezpůsobí skok
   const seed = project.seed;

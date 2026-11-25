@@ -279,8 +279,11 @@ export function insidePoly(p: World, poly: World[]): boolean {
   return inside;
 }
 function segHitsPoly(a: World, b: World, poly: World[]): boolean {
+  // rychlé odmítnutí hran mimo obálku úsečky (výsledek shodný: bez překryvu obálek není ani průsečík)
+  const x0 = Math.min(a.X, b.X), x1 = Math.max(a.X, b.X), z0 = Math.min(a.Z, b.Z), z1 = Math.max(a.Z, b.Z);
   for (let i = 0; i < poly.length; i++) {
     const p = poly[i], q = poly[(i + 1) % poly.length];
+    if ((p.X < x0 && q.X < x0) || (p.X > x1 && q.X > x1) || (p.Z < z0 && q.Z < z0) || (p.Z > z1 && q.Z > z1)) continue;
     if (segX(a, b, p, q)) return true;
   }
   return false;

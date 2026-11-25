@@ -9,10 +9,10 @@ async function guardDirty(): Promise<boolean> {
   return window.confirm('Projekt má neuložené změny. Opravdu pokračovat bez uložení?');
 }
 
-export async function doOpen(kind: 'new' | 'open' | 'demo' | 'demo2' | 'liberec', dir?: string) {
+export async function doOpen(kind: 'new' | 'open' | 'demo' | 'demo2' | 'liberec' | 'pastel', dir?: string) {
   if (!(await guardDirty())) return;
   try {
-    const r = kind === 'new' ? await zs().newProject() : kind === 'demo' ? await zs().openDemo() : kind === 'demo2' ? await zs().openDemo('radnice') : kind === 'liberec' ? await zs().openDemo('liberec') : await zs().openProject(dir);
+    const r = kind === 'new' ? await zs().newProject() : kind === 'demo' ? await zs().openDemo() : kind === 'demo2' ? await zs().openDemo('radnice') : kind === 'liberec' ? await zs().openDemo('liberec') : kind === 'pastel' ? await zs().openDemo('pastel') : await zs().openProject(dir);
     if (r) { await store.load(r); store.toast('info', `Otevřen projekt „${r.project.meta.name}“.`, 2500); }
   } catch (e) { store.toast('error', (e as Error).message, 12000); }
 }
@@ -53,6 +53,7 @@ export function TopBar() {
         <button onClick={() => doOpen('open')}>Otevřít…</button>
         <button onClick={() => doOpen('demo')}>Demo: náměstí</button>
         <button onClick={() => doOpen('demo2')}>Demo: radnice</button>
+        <button onClick={() => doOpen('pastel')} title="Pastelové vánoční kluziště: bruslení, nástup přes lavičku, stánek s nápoji">Demo: kluziště</button>
         <button disabled={!has} onClick={() => store.save()} title="Ctrl+S">Uložit{dirty ? ' •' : ''}</button>
         <button disabled={!has} onClick={async () => {
           const s = store.state; if (!s.dir || !s.project) return;

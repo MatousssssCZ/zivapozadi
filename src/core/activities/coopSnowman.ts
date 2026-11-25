@@ -134,29 +134,23 @@ export function rollLengthFor(m0: number, target: number): number {
   return L;
 }
 
-// ---------------------------------------------------------------- dráhy válení („had“ po pásech)
-/** Dráha agenta: pásy v ose X (vodorovně v obraze) od vzdáleného k blízkému, konec u cíle koule. */
+// ---------------------------------------------------------------- místa tvoření koulí
+/**
+ * Koule se tvoří na místě (žádné válení po sněhu): [místo postavy, místo koule]. Postava stojí / klečí
+ * na straně ke kameře a pracuje zády k obrazu. Spodní koule vzniká přímo na místě sněhuláka, prostřední
+ * vedle vpravo, hlavu dělá dítě vlevo vpředu.
+ */
 function lanePath(h: SessionHost, d: CoopData, k: 0 | 1 | 2, zone: ActivityZone): Vec2[] {
-  const S = S2W(h, d.spot), W = zone.bounds.map((p) => S2W(h, p));
-  const xMin = Math.min(...W.map((w) => w.X)) + 0.1, xMax = Math.max(...W.map((w) => w.X)) - 0.1;
-  const rF = COOP_DIAM[k] / 2, L = rollLengthFor(scoopMass(), massOfR(rF)) * 1.04;
-  const sp = 0.48; // rozestup pásů (> šířka styku)
-  const span = Math.max(1.2, Math.min(xMax - xMin, k === 2 ? 1.4 : 3.0));
-  // cíl koule: spodní na místě, prostřední vpravo vedle, hlava vlevo vpředu (u dítěte)
+  void zone;
+  const S = S2W(h, d.spot), rF = COOP_DIAM[k] / 2;
   const goal: World = k === 0 ? S : k === 1 ? { X: S.X + 0.85, Z: S.Z + 0.15 } : { X: S.X - 0.9, Z: S.Z - 0.85 };
-  const zNear = k === 0 ? S.Z + 0.6 : k === 1 ? S.Z + 0.6 + 3 * sp + 0.35 : S.Z - 1.35;
-  const n = Math.max(1, Math.ceil(L / span));
-  const xa = Math.max(xMin, Math.min(goal.X - span / 2, xMax - span)), xb = xa + span;
-  const pts: World[] = [];
-  for (let i = n - 1; i >= 0; i--) {
-    const z = zNear + (k === 2 ? -1 : 1) * i * sp, even = (n - 1 - i) % 2 === 0;
-    pts.push({ X: even ? xa : xb, Z: z }, { X: even ? xb : xa, Z: z });
-  }
-  // dojezd k cíli: agent stojí za koulí (koule je 0,3 m + r před ním)
-  const last = pts[pts.length - 1], dirIn = norm({ X: goal.X - last.X, Z: goal.Z - last.Z });
-  pts.push({ X: goal.X - dirIn.X * (0.3 + rF), Z: goal.Z - dirIn.Z * (0.3 + rF) });
-  return pts.map((w) => W2S(h, w));
+  // blíž ke kameře a kousek stranou: zády (3/4) k obrazu, koule zůstane vidět vedle postavy
+  const side = k === 2 ? -1 : 1, work: World = { X: goal.X + side * (rF * 0.8 + 0.06), Z: goal.Z - (rF + (k === 0 ? 0.32 : 0.28)) };
+  return [W2S(h, work), W2S(h, goal)];
 }
+/** doba tvoření koule (s) a sběr sněhu z okolí (kotouč 12 cm, mezikruží 0,45–1,3 m kolem koule) */
+const FORM_T: [number, number, number] = [42, 28, 22];
+const GATHER_R = 0.12;
 const scoopMass = () => Math.PI * SCOOP_R * SCOOP_R * SNOW.depth * SNOW.density;
 
 // ---------------------------------------------------------------- založení
@@ -242,50 +236,54 @@ function startScoop(h: SessionHost, s: ActivitySession, a: AgentState, k: 0 | 1 
   reserve(d, `ball:${k}`, a.id);
   const path = lanePath(h, d, k, zone);
   const A = S2W(h, path[0]), B = S2W(h, path[1]), dir = norm({ X: B.X - A.X, Z: B.Z - A.Z });
-  const X = A.X + dir.X * 0.36, Z = A.Z + dir.Z * 0.36;
-  const m = takeDisc(f, X, Z, SCOOP_R); // uplácaná malá koule z nabraného sněhu
+  const X = B.X, Z = B.Z;
+  const m = takeDisc(f, X, Z, SCOOP_R); // základ: uplácaná malá koule z nabraného sněhu
   d.balls = d.balls.filter((b) => b.k !== k);
   d.balls.push({ k, X, Z, H: rOfMass(m), r: rOfMass(m), m, rot: 0, dir, state: 'roll', owner: a.id, target: massOfR(COOP_DIAM[k] / 2), path: path.slice(1) });
   h.gesture(a, 'scoop', { dur: 1.9 });
   d.task[a.id].until = h.time() + 1.9; d.task[a.id].step = 'scoop'; d.task[a.id].ball = k;
-  say(h, d, `${a.name}: nabírá sníh na ${['spodní kouli', 'prostřední kouli', 'hlavu'][k]}`);
+  say(h, d, `${a.name}: začíná tvořit ${['spodní kouli', 'prostřední kouli', 'hlavu'][k]}`);
 }
 
-/** Válení: tlačí kouli po dráze, dokud nemá cílovou hmotnost a není u cíle (podmínky, ne čas). */
+/**
+ * Tvoření koule na místě: postava (zády ke kameře) klečí u spodní koule, u prostřední a hlavy stojí
+ * v mírném předklonu; rukama přihrnuje a uplácává sníh z okolí. Koule roste podle skutečně
+ * nabraného sněhu (podmínka hmotnosti, čas jen určuje tempo nabírání).
+ */
 function stepRoll(h: SessionHost, s: ActivitySession, a: AgentState, t: CTask): boolean {
   const d = D(s), f = fieldOf(h, s), b = d.balls.find((x) => x.k === t.ball)!;
-  const now = h.time();
+  const now = h.time(), dt = 1 / 60;
+  // zády k obrazu: natočení od kamery, s mírným pootočením ke kouli (v obraze pak zadní pohled)
+  const face = () => { const P = S2W(h, a.pos), g = Math.atan2(b.Z - P.Z, b.X - P.X); a.turnTo = Math.PI / 2 + 0.3 * Math.sin(g - Math.PI / 2); a.look = null; };
   if (t.step === 'scoop') {
     if (now < t.until!) return false;
-    t.step = 'push'; t.n = 0;
-    h.gesture(a, 'push', { dur: 600 });
-    h.walkPath(a, b.path!, 'válí kouli');
+    t.step = 'push'; t.n = 0; t.until = now;
+    a.anim.sit = { kind: b.k === 0 ? 'kneel' : 'bend', t: 0, dur: 1e6, w: 0 };
     return false;
   }
   if (t.step === 'push') {
-    const r0 = b.rot;
-    pushBall(h, f, b, a);
-    // přehmátnutí: po čtvrt otáčky ruce posunout zpět na kouli (krátké uvolnění a nový záběr)
-    if (Math.floor(b.rot / (Math.PI / 2)) !== Math.floor(r0 / (Math.PI / 2))) { h.releaseWork(a); h.gesture(a, 'push', { dur: 600 }); t.n = (t.n ?? 0) + 1; }
-    // prostřední koule a hlava: hotovo, jakmile mají cílovou hmotnost (dál by rostly) – odkud je rodič
-    // zvedne, nezáleží; spodní musí dojet na místo sněhuláka
-    if (b.k !== 0 && b.m >= b.target && a.route) { for (const e of a.route.heldEdges) void e; a.route = null; a.speed = 0; }
-    if (h.moving(a)) return false;
-    // hlava (dítě): dokud nemá cílovou hmotnost, dováleje ji kousek dál po čerstvém sněhu (podmínka, ne čas)
-    // koule nemá cílovou hmotnost (na dráze už někdo dřív válel): dováleje ji po čerstvém sněhu – podmínka,
-    // ne čas; spodní a prostřední se pak vrátí po vlastní stopě (tam už sníh není) na své místo
-    if (b.m < 0.96 * b.target && (t.n2 ?? 0) < 4) {
-      t.n2 = (t.n2 ?? 0) + 1;
-      const L = rollLengthFor(b.m, b.target) * 1.15 + 0.1, A = S2W(h, a.pos);
-      const best = [b.dir, { X: -b.dir.Z, Z: b.dir.X }, { X: b.dir.Z, Z: -b.dir.X }, { X: -b.dir.X, Z: -b.dir.Z }]
-        .map((u) => ({ u, fresh: freshAlong(f, { X: b.X, Z: b.Z }, u, L) })).sort((p, q) => q.fresh - p.fresh)[0];
-      const out = W2S(h, { X: A.X + best.u.X * L, Z: A.Z + best.u.Z * L });
-      // zpět: postava jde proti směru u, koule je před ní → postava skončí za původním místem koule
-      const back = W2S(h, { X: b.X + best.u.X * (0.3 + b.r * 1.05), Z: b.Z + best.u.Z * (0.3 + b.r * 1.05) });
-      h.walkPath(a, b.k === 2 ? [out] : [out, back], b.k === 2 ? 'dováleje hlavu' : 'dováleje kouli');
+    face();
+    const w = a.anim.sit;
+    if (w) { w.t += dt; w.w = Math.min(1, w.t / 0.9, Math.max(0, (w.dur - w.t) / 0.9)); }
+    if (b.m < b.target) {
+      // přihrnutí sněhu: jeden kotouč z okolí za takt (rychlost podle cílové doby), sníh ubraný ze země
+      const per = Math.PI * GATHER_R * GATHER_R * SNOW.depth * SNOW.density, every = FORM_T[b.k] / Math.max(1, b.target / per);
+      if (now - t.until! >= every) {
+        t.until = now; t.n = (t.n ?? 0) + 1;
+        let got = 0;
+        for (let k = 0; k < 10 && got < 1e-4; k++) {
+          const ang = (t.n * 2.399 + k * 1.1) % (2 * Math.PI), rr = 0.45 + ((t.n * 0.37 + k * 0.29) % 1) * (0.85 + k * 0.1);
+          got = takeDisc(f, b.X + Math.cos(ang) * rr, b.Z + Math.sin(ang) * rr, GATHER_R);
+        }
+        if (got < 1e-4) b.target = b.m; // v okolí už sníh není: koule zůstane menší (hmota se nikdy nevytváří)
+        b.m += got; b.r = rOfMass(b.m); b.H = b.r; b.rot += 0.04;
+      }
       return false;
     }
-    h.releaseWork(a);
+    // hotovo: postava se zvedne (prolnutí 0,9 s), koule leží
+    if (w && w.dur > w.t + 0.9) w.dur = w.t + 0.9;
+    if (w && w.t < w.dur) return false;
+    a.anim.sit = null; a.turnTo = null;
     b.state = 'ground'; b.H = b.r;
     return true;
   }
