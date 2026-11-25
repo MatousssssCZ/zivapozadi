@@ -13,7 +13,8 @@ import { Reservations } from './reservations';
 import { directionFromAngle, edgeKey } from './movement';
 import type { SimContext, ResolvedPoint, CharacterControl } from './context';
 import { ALL_VIEWS } from '../anim/skeleton';
-import { gaitEvents } from '../anim/gaitProfile';
+import { gaitEvents, LEG_PHYS_M } from '../anim/gaitProfile';
+import { elderState, elderSpeedOf } from '../anim/elderGait';
 import { FOOTPRINT_LIFE, FOOTPRINT_POOL } from './types';
 import { SIM_DT, SIM_STATE_VERSION, type AgentState, type SimState, type Waypoint, type PropState, type LogEntry } from './types';
 import { dist, approachAngle, wrapAngle, type Vec2 } from '../math/vec';
@@ -171,6 +172,7 @@ export class Simulation {
       wander: { waitUntil: 0, prevNode: null, atStop: false }, cooldowns: {}, status: 'Stojí',
     };
     a.pace = randRange(a.rng, 0.9, 1.1);
+    if (c.gaitProfile) { a.anim.elder = elderState(c.gaitProfile, c.caneSide ?? 'R', hashString(c.id)); a.pace = 1; }
     a.lane = (rand(a.rng) < 0.5 ? -1 : 1) * randRange(a.rng, 3, 7);
     a.anim.idleTime = randRange(a.rng, 0, 3);
     a.wander.waitUntil = randRange(a.rng, 0.3, 2.5);
@@ -375,6 +377,16 @@ export class Simulation {
         if (hp) { const p = localToScene(cv, hp); xy[i] = { x: p.x, y: p.y, key: an[i]!, h: a.groundHeading ?? a.facing }; }
       }
       if (xy[i]) this.addFootprint(a, c, xy[i]!, i);
+    }
+    // hrot hole: při došlapu uložit polohu ve scéně (pak stojí, i když postava zatáčí)
+    const e = a.anim.elder;
+    if (e) {
+      if (e.tip == null) e.tipXY = null;
+      else if (e.tipXY?.key !== e.tip) {
+        e.tipXY = null;
+        const cv = characterVisual(a, m, c, this.project.scene), cn = cv.pose.cane;
+        if (cn) { const p = localToScene(cv, cn.tip); e.tipXY = { x: p.x, y: p.y, key: e.tip }; }
+      }
     }
   }
 
@@ -673,7 +685,16 @@ export class Simulation {
 
   private vmaxOwn(a: AgentState): number {
     const c = this.chars.get(a.id)!;
-    return c.walkSpeed * a.pace * (a.speedFactor ?? 1) * depthScaleAt(this.project.scene.depth, a.pos.y) * c.baseScale;
+    return this.walkSpeedOf(a) * a.pace * (a.speedFactor ?? 1) * depthScaleAt(this.project.scene.depth, a.pos.y) * c.baseScale;
+  }
+
+  /** Základní rychlost chůze (j/s). Senior: z profilu (krok × kadence) převedená stejně jako v animátoru,
+   *  aby délka kroku a kadence odpovídaly zadání; ve sněhu o 15 % pomaleji (kratší kroky dopočítá animátor). */
+  private walkSpeedOf(a: AgentState): number {
+    const c = this.chars.get(a.id)!, e = a.anim.elder;
+    if (!e) return c.walkSpeed;
+    const m = this.manifests[c.assetId], L = gaitContextFor(m, c).legLen;
+    return (elderSpeedOf(e) * L) / LEG_PHYS_M * ((a.snowDepth ?? 0) > 0 ? 0.85 : 1);
   }
 
   private scaleOf(a: AgentState): number {
@@ -701,7 +722,7 @@ export class Simulation {
 
   /** Rychlost chůze postavy v m/s (dvojice jde tempem pomalejšího). */
   private vmaxMps(a: AgentState): number {
-    const own = (x: AgentState) => { const c = this.chars.get(x.id)!; return c.walkSpeed * x.pace * (x.speedFactor ?? 1) * Q * c.baseScale; };
+    const own = (x: AgentState) => { const c = this.chars.get(x.id)!; return this.walkSpeedOf(x) * x.pace * (x.speedFactor ?? 1) * Q * c.baseScale; };
     const f = this.state.agents.find((x) => x.follow?.leaderId === a.id && !x.hidden);
     return f ? Math.min(own(a), own(f) * 0.97) : own(a);
   }

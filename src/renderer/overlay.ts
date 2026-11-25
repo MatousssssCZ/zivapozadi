@@ -9,7 +9,9 @@ import { objectImageRect } from '../core/render/sceneRenderer';
 import { objectFootprintWorld } from '../core/scene/geometry';
 import { getActivity } from '../core/activities/registry';
 import { polygonsOverlap } from '../core/math/geom';
-import { characterVisual, localToScene } from '../core/render/characterPose';
+import { characterVisual, localToScene, gaitContextFor } from '../core/render/characterPose';
+import { ELDER_PROFILES } from '../core/anim/elderGait';
+import { LEG_PHYS_M } from '../core/anim/gaitProfile';
 import { cameraFor, toScreen } from '../core/scene/camera';
 import { baseMass, cellMass, cellCenter, stocks } from '../core/sim/snowMaterial';
 import type { Vec2 } from '../core/math/vec';
@@ -27,6 +29,8 @@ export interface OverlayInput {
   rigDiagnostics?: boolean;
   /** Ladění odklízení: mřížka sněhu, hrana, úchopy, chodidla, fáze a zásoby. */
   clearingDebug?: boolean;
+  /** Ladění chůze seniorů: opěrné body chodidel, hrot hole (kotva / švih), rukojeť, profil, krok, kadence. */
+  gaitDebug?: boolean;
 }
 
 type Ctx = CanvasRenderingContext2D;
@@ -57,6 +61,7 @@ function facingTick(ctx: Ctx, p: Vec2, facing: number | undefined, px: number, c
 
 export function drawOverlay(ctx: Ctx, o: OverlayInput) {
   if (o.clearingDebug && o.sim) drawClearingDebug(ctx, o);
+  if (o.gaitDebug && o.sim) drawGaitDebug(ctx, o);
   const { project: p, px, selection: sel } = o;
   const isSel = (kind: string, id: string) => sel?.kind === kind && sel.id === id;
   ctx.save();
@@ -219,6 +224,29 @@ function drawPoint(ctx: Ctx, pos: Vec2, kind: string, facing: number | undefined
 }
 
 /** Ladicí náhled odklízení (jen editor, nikdy v exportu ani v živém pozadí). */
+function drawGaitDebug(ctx: Ctx, o: OverlayInput) {
+  const sim = o.sim!, px = o.px;
+  ctx.save();
+  for (const a of sim.state.agents) {
+    const e = a.anim.elder; if (!e || a.hidden) continue;
+    const c = sim.characterOf(a.id), m = c ? sim.manifests[c.assetId] : undefined; if (!c || !m) continue;
+    const cv = characterVisual(a, m, c, o.project.scene);
+    for (const an of a.anim.anchorsXY ?? []) if (an) { ctx.fillStyle = '#00e5ff'; ctx.fillRect(an.x - 3 * px, an.y - 3 * px, 6 * px, 6 * px); }
+    const cn = cv.pose.cane;
+    if (cn) {
+      const t = localToScene(cv, cn.tip), g = localToScene(cv, cn.grip), w = localToScene(cv, cv.pose.arms[cn.hand].end);
+      const planted = cn.tipLift === 0 && e.tip != null;
+      ctx.fillStyle = planted ? '#22ff66' : '#ff9f1a'; ctx.beginPath(); ctx.arc(t.x, t.y, 4 * px, 0, 7); ctx.fill();
+      ctx.strokeStyle = '#ff0'; ctx.lineWidth = 1.5 * px; ctx.beginPath(); ctx.arc(g.x, g.y, 4 * px, 0, 7); ctx.stroke();
+      ctx.fillStyle = '#0f0'; ctx.beginPath(); ctx.arc(w.x, w.y, 2 * px, 0, 7); ctx.fill();
+    }
+    const L = gaitContextFor(m, c).legLen, stepM = ((a.anim.stride ?? 0) / 2) * (LEG_PHYS_M / L), v = a.anim.speedMps ?? 0;
+    const txt = `${ELDER_PROFILES[e.p].label} · krok ${stepM.toFixed(2)} m · ${(stepM > 0 ? (v / stepM) * 60 : 0).toFixed(0)}/min · ${v.toFixed(2)} m/s${cn ? ` · hůl ${cn.hand ? 'blízká' : 'vzdálená'} ruka, ${cn.tipLift === 0 && e.tip != null ? 'opřena' : 'přenos'}` : ''}`;
+    label(ctx, txt, cv.x, cv.y - 150 * cv.scale, px);
+  }
+  ctx.restore();
+}
+
 function drawClearingDebug(ctx: Ctx, o: OverlayInput) {
   const sim = o.sim!, st = sim.state.clearing, cfg = o.project.clearing, px = o.px;
   if (!st?.snow || !cfg) return;

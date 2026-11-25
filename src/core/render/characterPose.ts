@@ -12,6 +12,8 @@ import { depthScaleAt } from '../scene/geometry';
 import { assembleRig, scaledTemplate, type RigAssembly } from './rigRenderer';
 import type { Vec2 } from '../math/vec';
 import { hashString } from '../math/rng';
+import { ELDER_PROFILES } from '../anim/elderGait';
+import type { MotionParams } from '../anim/skeleton';
 
 export interface CharacterVisual {
   x: number; y: number; scale: number; mirror: boolean;
@@ -23,6 +25,13 @@ export interface CharacterVisual {
   /** Požadovaný a skutečně použitý pohled (náhrada je explicitní). */
   view?: { requested: ViewId; used: ViewId; substituted: boolean };
   warning?: string;
+}
+
+/** Pohybové parametry upravené profilem seniora (předklon, menší švih paží a pohupování). */
+export function motionOf(agent: AgentState, m: MotionParams): MotionParams {
+  const e = agent.anim.elder; if (!e) return m;
+  const p = ELDER_PROFILES[e.p];
+  return { ...m, lean: m.lean + p.leanDeg + e.dLean, armSwing: m.armSwing * p.armSwing, bob: m.bob * p.bob, sway: m.sway * 1.15 };
 }
 
 export interface CharacterLook { baseScale: number; appearance?: CharacterAppearance }
@@ -45,7 +54,7 @@ export function characterVisual(agent: AgentState, m: CharacterManifest, look: C
     const req = viewForDirection(agent.anim.dir);
     const rv = resolveView(tpl, req.view);
     const stpl = scaledTemplate(tpl, app.proportions);
-    const pose = skeletonPose(stpl, rv.use, req.mirror, agent.anim, agent.holding !== null && agent.holdingKind !== 'bag' && agent.holdingKind !== 'mitten' && agent.holdingKind !== 'shovel', app.motion, hashString(agent.id), { ...groundOptions(agent, x, y, scale, req.mirror, cam), snowSink: (agent.snowDepth ?? 0) > 0 && agent.anim ? (agent.snowDepth ?? 0) / Q : 0 });
+    const pose = skeletonPose(stpl, rv.use, req.mirror, agent.anim, agent.holding !== null && agent.holdingKind !== 'bag' && agent.holdingKind !== 'mitten' && agent.holdingKind !== 'shovel', motionOf(agent, app.motion), hashString(agent.id), { ...groundOptions(agent, x, y, scale, req.mirror, cam), snowSink: (agent.snowDepth ?? 0) > 0 && agent.anim ? (agent.snowDepth ?? 0) / Q : 0 });
     const rig = assembleRig(lib, tpl, app, pose, rv.use);
     // závěj přes spodek zabořené boty (kreslí se hned po botě; barvu dodá vykreslování z pozadí)
     if (pose.snowSink) {
@@ -94,7 +103,8 @@ function groundOptions(agent: AgentState, x: number, y: number, scale: number, m
     if (p.h !== undefined) { const g = groundVec(cam, p, p.h, sx); out.gx = g.x; out.gy = g.y; }
     return out;
   }) as [Anchor | null, Anchor | null];
-  return { ground, anchors, footSide: Math.abs(Math.cos(gh)) };
+  const e = agent.anim.elder, ct = e?.tipXY && e.tip != null && e.tipXY.key === e.tip ? { x: sx * (e.tipXY.x - x) / scale, y: (e.tipXY.y - y) / scale } : null;
+  return { ground, anchors, footSide: Math.abs(Math.cos(gh)), caneTip: ct };
 }
 
 /** Údaje pro chůzi postavy (délka nohy, bota, individuální délka kroku) – stejné pro simulaci i náhled. */

@@ -9,7 +9,8 @@ import type { Vec2 } from '../math/vec';
 import { clamp, smoothstep } from '../math/vec';
 import { hashNoise } from '../math/rng';
 import { meanPelvisHeight, sampleGait, strideLegLen, gaitEvents } from './gaitProfile';
-import { footAt, restFeet, type FootGeom } from './gaitKinematics';
+import { footAt, restFeet, heelAtContact, type FootGeom } from './gaitKinematics';
+import { ELDER_PROFILES, TIP_AHEAD } from './elderGait';
 import { heelRelOf, type AnimState } from './animator';
 import type { Direction } from './manifest';
 import { evalAll } from '../social/clips';
@@ -129,6 +130,8 @@ export interface SkeletonPose {
   /** body paty obou bot (lokálně) – kotva při došlapu */ heelPts?: [Vec2, Vec2];
   /** naklonění drženého kelímku (rad, záporně = okrajem k ústům) */ cupTilt?: number;
   /** aktuální zaboření obou bot do sněhu (lokální jednotky) */ snowSink?: [number, number];
+  /** hůl (senior B): hrot na zemi, úchop v ruce, horní konec rukojeti; ruka (index paže), směr vpřed */
+  cane?: { tip: Vec2; grip: Vec2; top: Vec2; hand: 0 | 1; fwd: number; len: number; tipLift: number };
 }
 
 export function ik(root: Vec2, target: Vec2, l1: number, l2: number, bendSign: number): Limb {
@@ -314,6 +317,8 @@ export interface PoseOptions {
   anchors?: [Anchor | null, Anchor | null];
   /** Zaboření boty do sněhu (lokální jednotky postavy; 0 = mimo sníh). */
   snowSink?: number;
+  /** Hrot hole ve světě (lokálně) z kotvy při došlapu. */
+  caneTip?: Vec2 | null;
 }
 /** Kotva paty: poloha a směr chodidla na zemi (lokálně), uložené při došlapu. */
 export interface Anchor { x: number; y: number; gx?: number; gy?: number }
@@ -682,6 +687,55 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
     const b = bend + (pref - bend) * g.w;
     arms[i] = ikRot(l.root, l.end, B.upperArm, B.forearm, b);
   }
+  // hůl (senior B): hrot se pohybuje s podpíranou nohou (opora = noha na zemi, švih = švih nohy),
+  // během opory stojí ve světě (kotva z animátoru). Délka hole je pevná, ruka drží rukojeť; náklon
+  // hole vyplývá z polohy hrotu a ruky (ta jde s tělem) – žádné natahování paže ani hole.
+  let caneOut: SkeletonPose['cane'];
+  const el = a.elder;
+  if (el && ELDER_PROFILES[el.p].cane && !tool) {
+    const hI: 0 | 1 = (el.side === 'R') === !mirror ? 1 : 0, lI = 1 - hI;
+    const ev = gaitEvents(w), qL = qs[lI], dNow = a.dist ?? 0;
+    const hc = heelAtContact(S, w, geom) + geom.heel + TIP_AHEAD * L; // hrot při došlapu (vůči pánvi)
+    const lat = sideX(hI) * Math.max(v.hipSpread * 1.8, v.shoulderSpread * 1.2);
+    const at = (u: number, h = 0) => ({ x: lat + gfx * u, y: -h + gfy * u });
+    // kotva hrotu ve scéně (přesná i v zatáčce); pojistka: kotva daleko od odhadu z dráhy (přesun
+    // postavy mimo scénu, prudká otočka) se nepoužije
+    // (měřeno od chodidel, ne od odhadu – ten se při přepnutí pohledu mění, kotva ve scéně ne)
+    const ct0 = opts.caneTip ?? null, ct = ct0 && Math.abs(ct0.x) < 1.1 * L && Math.abs(ct0.y) < 0.6 * L ? ct0 : null;
+    let tipW: Vec2, hW = 0;
+    if (qL < ev.toeOff) tipW = ct ?? at(el.tip != null ? el.tip - dNow : hc - qL * S);
+    else {
+      const sw = (qL - ev.toeOff) / (1 - ev.toeOff), k = smoothstep(sw);
+      const p0 = ct ?? at(el.tip != null ? el.tip - dNow : hc - qL * S); // start ve světě
+      const p1 = at(hc + (1 - qL) * S); // kde hrot dopadne (současně s patou)
+      hW = Math.sin(Math.PI * sw) * 0.06 * L;
+      tipW = { x: p0.x + (p1.x - p0.x) * k, y: p0.y + (p1.y - p0.y) * k - hW };
+    }
+    const uIdle = (feet[0].u + feet[1].u) / 2 + 0.2 * L;
+    const bb = a.settle ? 1 - smoothstep(a.settle.t) : b;
+    const pI = at(uIdle);
+    // opřený hrot s kotvou stojí i během rozejití a dokročení (prolíná se jen hrot ve vzduchu)
+    const plantedXY = ct && qL < ev.toeOff ? ct : null;
+    const tip = plantedXY ?? { x: pI.x + (tipW.x - pI.x) * bb, y: pI.y + (tipW.y - pI.y) * bb };
+    const hT = plantedXY ? 0 : hW * bb, u = gfx ? (tip.x - lat) / gfx : uIdle;
+    const shoulderH = AH + 0.99 * L + B.torso - B.shoulderDrop;
+    const Lc = shoulderH - 0.86 * (B.upperArm + B.forearm); // pevná délka hole (≈ výška zápěstí)
+    const root = arms[hI].root, armL = B.upperArm + B.forearm;
+    const gripAt = (al: number) => ({ x: tip.x + gfx * Lc * Math.sin(al), y: tip.y - Lc * Math.cos(al) + gfy * Lc * Math.sin(al) });
+    const HAND = 3.2; // zápěstí nad úchopem (pěst kolem rukojeti)
+    const reachOf = (al: number) => { const g = gripAt(al); return Math.hypot(g.x - root.x, g.y - HAND - root.y); };
+    // ruka jde s tělem kousek před pánví → náklon; když by na úchop nedosáhla, náklon se upraví
+    const uHand = hip.x * gfx + 0.07 * L;
+    let al = Math.asin(clamp((uHand - u) / Lc, -0.38, 0.5));
+    if (reachOf(al) > armL * 0.97) {
+      let best = al, bc = Infinity;
+      for (let k = 0; k <= 60; k++) { const t = -0.7 + (1.4 * k) / 60, r = reachOf(t), c = Math.max(0, r - armL * 0.97) * 10 + Math.abs(t - al); if (c < bc) { bc = c; best = t; } }
+      al = best;
+    }
+    const grip = gripAt(al), top = gripAt(al + 0.0); top.y -= 2.2;
+    arms[hI] = ik(root, { x: grip.x, y: grip.y - HAND }, B.upperArm, B.forearm, 1);
+    caneOut = { tip, grip, top, hand: hI, fwd: Math.sign(gfx || fx || 1), len: Lc, tipLift: hT };
+  }
   // nástroj (lopata): tuhý sprite, úchopy z něj, ruce na úchopy (3D IK); hlava míří k listu
   let toolOut: SkeletonPose['tool'];
   if (tool) {
@@ -703,7 +757,7 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
     toolOut = { ...sol, held };
     headTilt += -0.05 * fsg * (tool.h < 0.2 ? 1 : 0);
   }
-  return { view, mirror, root: { x: 0, y: 0 }, hip, neck, shoulder, head, headTilt, torsoAngle, legs, arms, feet: [footAng[0], footAng[1]], feetK: [footProj[0].k, footProj[1].k], handR: arms[1].end, heelPts, cupTilt, snowSink: [sink[0], sink[1]], tool: toolOut };
+  return { view, mirror, root: { x: 0, y: 0 }, hip, neck, shoulder, head, headTilt, torsoAngle, legs, arms, feet: [footAng[0], footAng[1]], feetK: [footProj[0].k, footProj[1].k], handR: arms[1].end, heelPts, cupTilt, snowSink: [sink[0], sink[1]], tool: toolOut, cane: caneOut };
 }
 
 /** Geometrie chůze ze šablony (výchozí bota podle zadání: pata 0,042 L, přednoží 0,113 L). */

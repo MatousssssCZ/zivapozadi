@@ -3,8 +3,8 @@
   "formatVersion": 1,
   "meta": {
     "name": "Liberec – živý vánoční trh",
-    "createdAt": "2026-11-25T07:52:03.187Z",
-    "modifiedAt": "2026-11-25T07:52:03.341Z",
+    "createdAt": "2026-11-25T09:10:56.083Z",
+    "modifiedAt": "2026-11-25T09:10:56.238Z",
     "appVersion": "0.1.0"
   },
   "seed": 2611,
@@ -6173,6 +6173,125 @@
       },
       "routine": "shovel",
       "activities": {}
+    },
+    {
+      "id": "ch_senior_a",
+      "name": "Paní Věra (senior A)",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n5",
+      "baseScale": 0.97,
+      "walkSpeed": 57,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1305003117,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
+        },
+        "colors": {
+          "jacket": "petrolejova",
+          "hat": "olivova",
+          "scarf": "hneda",
+          "gloves": "olivova",
+          "trousers": "olivova",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 0.977,
+          "build": 0.986
+        },
+        "motion": {
+          "strideScale": 0.989,
+          "armSwing": 1.343,
+          "bob": 1.16,
+          "sway": 0.826,
+          "idleTempo": 0.955,
+          "lean": 1.534,
+          "speed": 0.861,
+          "phase": 0.261,
+          "armLag": -1.102,
+          "armLR": 1.084
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {},
+      "gaitProfile": "elderA"
+    },
+    {
+      "id": "ch_senior_b",
+      "name": "Pan Josef (senior B, hůl)",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n12",
+      "baseScale": 0.98,
+      "walkSpeed": 36,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 193239693,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_cg"
+        },
+        "colors": {
+          "jacket": "okrova",
+          "hat": "hneda",
+          "scarf": "olivova",
+          "gloves": "olivova",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 1.044,
+          "build": 0.994
+        },
+        "motion": {
+          "strideScale": 1.094,
+          "armSwing": 0.709,
+          "bob": 1.008,
+          "sway": 0.793,
+          "idleTempo": 1.043,
+          "lean": 0.075,
+          "speed": 1.194,
+          "phase": 0.234,
+          "armLag": -0.697,
+          "armLR": 1.032
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {},
+      "gaitProfile": "elderB",
+      "caneSide": "R"
     }
   ],
   "schedule": [],

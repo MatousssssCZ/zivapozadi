@@ -5,6 +5,7 @@ import { LEG_PHYS_M, speedBlend, strideLegLen } from './gaitProfile';
 import { restFeet, startPhase, heelAtContact, footAt, type FootGeom } from './gaitKinematics';
 import { gaitEvents } from './gaitProfile';
 import type { GestureInst } from '../social/clips';
+import { caneIndices, elderStepM, elderSpeedOf, TIP_AHEAD, type ElderState } from './elderGait';
 
 /** Poloha opěrných pat vůči pánvi ze světových kotev (null = noha bez kotvy). */
 export function heelRelOf(a: AnimState): [number | null, number | null] {
@@ -47,6 +48,8 @@ export interface AnimState {
   gestures?: GestureInst[];
   /** Postava právě „mluví“ (vizuální promluva bez zvuku). */
   speaking?: boolean;
+  /** Senior (profil A/B, hůl) – viz elderGait.ts. */
+  elder?: ElderState;
 }
 
 /** Údaje o postavě potřebné pro chůzi (délka nohy, geometrie boty, individuální délka kroku). */
@@ -92,6 +95,8 @@ export function playAction(
   return r.warning;
 }
 
+const ELDER_CANE = (e: ElderState) => e.p === 'elderB';
+
 export function stopAction(a: AnimState): void { a.action = null; }
 
 /**
@@ -105,8 +110,15 @@ export function stepAnimator(a: AnimState, m: CharacterManifest, dt: number, spe
     const vLocal = speed / Math.max(1e-6, scale);
     const vMps = (vLocal * LEG_PHYS_M) / gait.legLen;
     a.speedMps = vMps;
-    const targetS = strideLegLen(vMps) * gait.legLen * gait.strideScale;
-    const targetW = speedBlend(vMps);
+    const el = a.elder;
+    // senior: pevná délka kroku podle profilu (při pomalejší chůzi – rozejití, sníh – kratší kroky), pomalý profil
+    const targetS = el ? ((2 * elderStepM(el)) / LEG_PHYS_M) * gait.legLen * Math.pow(clamp(vMps / (0.93 * elderSpeedOf(el)), 0.45, 1), 0.6) : strideLegLen(vMps) * gait.legLen * gait.strideScale;
+    const targetW = el ? 0 : speedBlend(vMps);
+    if (el && ELDER_CANE(el)) {
+      // hůl: při změně ruky v obraze (otočka) se hrot znovu usadí při dalším došlapu
+      const ci = caneIndices(el, a.dir);
+      if (el.h !== ci.hand) { el.h = ci.hand; el.tip = null; }
+    }
     if (speed > 0.5) {
       if (a.stride === undefined || a.walkBlend < 0.02 || a.settle) {
         // rozejití z místa: vpředu stojící noha zůstane, zadní vykročí; první krok je kratší (nízká rychlost).
@@ -136,7 +148,11 @@ export function stepAnimator(a: AnimState, m: CharacterManifest, dt: number, spe
       a.anchors ??= [null, null];
       for (let i = 0; i < 2; i++) {
         const qp = (prev + i * 0.5) % 1, qn = (a.walkPhase + i * 0.5) % 1;
-        if (qn < qp) a.anchors[i] = a.dist + heelAtContact(a.stride, a.gaitW ?? 0, gait.foot) - qn * a.stride;
+        if (qn < qp) {
+          a.anchors[i] = a.dist + heelAtContact(a.stride, a.gaitW ?? 0, gait.foot) - qn * a.stride;
+          // hůl došlapuje současně s podpíranou nohou, kousek před její patou
+          if (el && ELDER_CANE(el) && el.h !== undefined && i === 1 - el.h) { el.tip = a.anchors[i]! + gait.foot.heel + TIP_AHEAD * gait.legLen; el.plants = (el.plants ?? 0) + 1; }
+        }
       }
       const target = clamp(speed / Math.max(1e-6, refSpeed * 0.3), 0, 1);
       a.walkBlend += clamp(target - a.walkBlend, -dt * 3, dt * 3);

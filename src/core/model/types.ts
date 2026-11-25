@@ -217,6 +217,10 @@ export interface CharacterInstance {
   routine?: 'wander' | 'visitor' | 'sled' | 'shovel';
   /** Postava venčí psa (Z01). */
   pet?: 'dog';
+  /** Chůze seniora: A = pomalá chůze, B = s holí (rychlost a délka kroku z profilu). */
+  gaitProfile?: 'elderA' | 'elderB';
+  /** Ruka s holí u profilu B (výchozí pravá – podpírá levou nohu). */
+  caneSide?: 'R' | 'L';
 }
 
 export type UnavailablePolicy = 'wait' | 'skip' | 'report';

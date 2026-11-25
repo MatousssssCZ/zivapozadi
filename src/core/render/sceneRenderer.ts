@@ -242,6 +242,26 @@ function drawHeld(ctx: Ctx, held: PropState, cv: ReturnType<typeof characterVisu
   drawCup(ctx, g.x, g.y + 6, 1, held.sips, cv.pose.cupTilt ?? 0);
 }
 
+/** Vycházková hůl (vektorově – malovaný podklad zatím chybí): dřevěná násada, zahnutá rukojeť vpřed, gumová patka. */
+export function drawCane(ctx: Ctx, c: NonNullable<ReturnType<typeof characterVisual>['pose']['cane']>) {
+  const { tip, grip, top, fwd } = c;
+  const dx = grip.x - tip.x, dy = grip.y - tip.y, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L;
+  ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  // násada (tmavší obrys + světlejší dřevo)
+  ctx.strokeStyle = '#3b2516'; ctx.lineWidth = 2.3;
+  ctx.beginPath(); ctx.moveTo(tip.x, tip.y); ctx.lineTo(top.x, top.y);
+  // rukojeť: oblouk nahoře a krátký vodorovný konec vpřed
+  const r = 2.6, cx = top.x + fwd * r, cy = top.y;
+  ctx.arc(cx, cy, r, fwd > 0 ? Math.PI : 0, fwd > 0 ? Math.PI * 2 : Math.PI, fwd < 0);
+  ctx.lineTo(cx + fwd * (r + 3.2), cy + 0.6);
+  ctx.stroke();
+  ctx.strokeStyle = '#7a4f2e'; ctx.lineWidth = 1.2; ctx.stroke();
+  // gumová patka
+  ctx.strokeStyle = '#1d1d22'; ctx.lineWidth = 2.6;
+  ctx.beginPath(); ctx.moveTo(tip.x, tip.y); ctx.lineTo(tip.x + ux * 2.2, tip.y + uy * 2.2); ctx.stroke();
+  ctx.restore();
+}
+
 function drawShadow(ctx: Ctx, x: number, y: number, s: number) {
   ctx.fillStyle = 'rgba(60,70,100,0.18)';
   ctx.beginPath(); ctx.ellipse(x, y, 17 * s, 5 * s, 0, 0, Math.PI * 2); ctx.fill();
@@ -299,7 +319,12 @@ function drawAgentBody(ctx: Ctx, project: ProjectFile, sim: Simulation, a: Agent
   if (m.backend === 'skeleton' && cv.rig && m.rigLibrary) {
     const top = held?.kind === 'phone' && /back/.test(cv.view?.used ?? '');
     const snowColor = cv.rig.snowLips ? backgroundColorAt(project, images, cv.x, cv.y + 3 * cv.scale) : undefined;
-    drawRig(ctx, cv.rig, images, m.rigLibraryDir ?? '', softFar(m.rigLibrary.bodyTemplates[0]?.farShade ?? 0.8), held && !top ? () => drawHeld(ctx, held, cv, a) : undefined, snowColor);
+    // hůl seniora: ve vzdálené ruce za tělem, v blízké se kreslí s předměty v ruce (pod dlaní)
+    const cane = cv.pose.cane;
+    if (cane && cane.hand === 0) drawCane(ctx, cane);
+    const heldFn = held && !top ? () => drawHeld(ctx, held, cv, a) : undefined;
+    const nearCane = cane && cane.hand === 1 ? () => drawCane(ctx, cane) : undefined;
+    drawRig(ctx, cv.rig, images, m.rigLibraryDir ?? '', softFar(m.rigLibrary.bodyTemplates[0]?.farShade ?? 0.8), heldFn || nearCane ? () => { nearCane?.(); heldFn?.(); } : undefined, snowColor);
     // telefon při pohledu zezadu: displej před hlavou je vidět přes rameno → kreslit navrch
     if (held && top) drawHeld(ctx, held, cv);
   } else if (m.backend === 'procedural-test-figure') {

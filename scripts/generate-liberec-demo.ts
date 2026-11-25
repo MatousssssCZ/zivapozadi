@@ -263,6 +263,12 @@ export async function generateLiberec(dir: string): Promise<ProjectFile> {
     id: 'ch_lopata', name: 'Pracovník údržby', assetId: 'builtin_postava_cg', startNodeId: portals[0], baseScale: 1,
     walkSpeed: 55, palette: testPal, wander: false, appearance: worker, routine: 'shovel', activities: {},
   });
+  // senioři: A – pomalá chůze, B – s holí v pravé ruce (návštěvníci; rychlost a krok z profilu)
+  const elders = generateGroup(lib, 2, 6180).appearances;
+  p.characters.push(
+    { id: 'ch_senior_a', name: 'Paní Věra (senior A)', assetId: 'builtin_postava_cg', startNodeId: inner[3], baseScale: 0.97, walkSpeed: 57, palette: testPal, wander: true, appearance: elders[0], routine: 'visitor', activities: {}, gaitProfile: 'elderA' },
+    { id: 'ch_senior_b', name: 'Pan Josef (senior B, hůl)', assetId: 'builtin_postava_cg', startNodeId: inner[8], baseScale: 0.98, walkSpeed: 36, palette: testPal, wander: true, appearance: elders[1], routine: 'visitor', activities: {}, gaitProfile: 'elderB', caneSide: 'R' },
+  );
   p.clearing = { workerId: 'ch_lopata', work: { x0: 2.9, x1: 4.9, z0: 11.75, z1: 12.51 }, pileAt: { X: 5.25, Z: 11.62 }, enter: { x: 2080, y: 1074 }, approach: [{ x: 1640, y: 1078 }], firstDelay: 70 };
   p.export = { ...p.export, durationSec: 60, chunkSec: 20 };
   await saveProject(dir, p);
