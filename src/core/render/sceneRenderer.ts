@@ -3,6 +3,7 @@
  * Neobsahuje editorové značky ani nekontrolovanou náhodu. Používá ji náhled i export.
  */
 import { sessionBalls } from '../activities/snowman';
+import { coopBalls, SNOW, type CoopData, type SnowField } from '../activities/coopSnowman';
 import { drawAnimal, drawAnimalShadow } from './animalRenderer';
 import { drawFacade } from './facade';
 import { SPECIES } from '../sim/animals';
@@ -315,6 +316,8 @@ function drawAgentBody(ctx: Ctx, project: ProjectFile, sim: Simulation, a: Agent
   ctx.save();
   ctx.translate(cv.x, cv.y);
   ctx.scale(cv.mirror ? -cv.scale : cv.scale, cv.scale);
+  // pád: malovaný kabát visí podél trupu – v sedu/na zemi se ořízne na úrovni země (nic pod dlažbu)
+  if (a.anim.fall) { ctx.beginPath(); ctx.rect(-400, -400, 800, 401.5); ctx.clip(); }
   const held = a.holding ? sim.state.props.find((p) => p.id === a.holding) : undefined;
   if (m.backend === 'skeleton' && cv.rig && m.rigLibrary) {
     const top = held?.kind === 'phone' && /back/.test(cv.view?.used ?? '');
@@ -388,6 +391,63 @@ const SOLE: { u: number; v: number }[] = (() => {
  * Stopy ve sněhu: otisky na zemi promítnuté kamerou (do hloubky se zkrátí), jen v oblastech sněhu,
  * pod všemi objekty a postavami. Na konci životnosti plynule slábnou.
  */
+/** Otisky pádu ve sněhu (sed, dlaně, kolena) – jednou při dopadu, slábnou jako stopy. */
+function drawFallMarks(ctx: Ctx, project: ProjectFile, sim: Simulation, time: number) {
+  const cam = cameraFor(project.scene);
+  ctx.save();
+  for (const m of sim.state.falls!.marks) {
+    const age = time - m.t0; if (age < 0) continue;
+    const fade = Math.min(1, age / 0.2) * Math.min(1, Math.max(0, (FOOTPRINT_LIFE * 2 - age) / FOOTPRINT_FADE));
+    if (fade <= 0) continue;
+    const ex = m.kind === 's' ? 1.25 : 1, j = ((m.seed % 13) / 13) * 0.5;
+    const pts = Array.from({ length: 16 }, (_, k) => { const a = (k / 16) * Math.PI * 2, rr = m.r * (1 + 0.08 * Math.sin(3 * a + j * 7)); return toScreen(cam, { X: m.X + Math.cos(a + j) * rr * ex, Z: m.Z + Math.sin(a + j) * rr }); });
+    const path = (dy: number) => { ctx.beginPath(); pts.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y + dy) : ctx.moveTo(p.x, p.y + dy))); ctx.closePath(); };
+    ctx.fillStyle = `rgba(255,255,255,${(0.16 * fade).toFixed(3)})`; path(-0.8); ctx.fill();
+    ctx.fillStyle = `rgba(46,62,104,${(0.24 * fade).toFixed(3)})`; path(0); ctx.fill();
+  }
+  ctx.restore();
+}
+
+/** Stopy válení: z buněk sněhového pole, odkud koule sníh nabraly, prosvítá uhlazený podklad. */
+function drawSnowFieldTrails(ctx: Ctx, project: ProjectFile, sim: Simulation) {
+  const cam = cameraFor(project.scene), fields = (sim.state as { snowFields?: Record<string, SnowField> }).snowFields!;
+  const full = SNOW.depth * SNOW.density * SNOW.cell * SNOW.cell;
+  ctx.save();
+  for (const f of Object.values(fields)) {
+    if (!f.removed) continue;
+    for (let j = 0; j < f.nz; j++) for (let i = 0; i < f.nx; i++) {
+      const m = f.m[j * f.nx + i]; if (m < 0 || m > full * 0.5) continue; // −1 = mimo sníh
+      const X = f.gx + (i + 0.5) * SNOW.cell, Z = f.gz + (j + 0.5) * SNOW.cell;
+      const a = toScreen(cam, { X: X - SNOW.cell * 0.55, Z: Z - SNOW.cell * 0.55 }), b = toScreen(cam, { X: X + SNOW.cell * 0.55, Z: Z + SNOW.cell * 0.55 });
+      ctx.fillStyle = `rgba(118,128,168,${(0.5 * (1 - m / full)).toFixed(3)})`; // uhlazený, prošlapaný pás
+      ctx.fillRect(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x) + 0.6, Math.abs(b.y - a.y) + 0.6);
+    }
+  }
+  ctx.restore();
+}
+
+/** Proutěný košík s ozdobami (vektorově – malovaný podklad chybí). */
+function drawBasket(ctx: Ctx, cam: ReturnType<typeof cameraFor>, d: CoopData) {
+  const c = toScreen(cam, { X: d.basket.X, Z: d.basket.Z }), px = (m: number) => (m * cam.f) / d.basket.Z;
+  const w = px(0.34), h = px(0.16);
+  ctx.save();
+  ctx.fillStyle = 'rgba(98,113,150,0.22)'; ctx.beginPath(); ctx.ellipse(c.x, c.y, w * 0.6, Math.max(0.8, h * 0.25), 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#8a5a32'; ctx.beginPath(); ctx.moveTo(c.x - w / 2, c.y - h); ctx.lineTo(c.x + w / 2, c.y - h); ctx.lineTo(c.x + w * 0.4, c.y); ctx.lineTo(c.x - w * 0.4, c.y); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = '#6b4224'; ctx.lineWidth = Math.max(0.5, px(0.012));
+  for (let k = 1; k < 4; k++) { const y = c.y - h + (h * k) / 4; ctx.beginPath(); ctx.moveTo(c.x - w * (0.5 - 0.1 * k / 4), y); ctx.lineTo(c.x + w * (0.5 - 0.1 * k / 4), y); ctx.stroke(); }
+  ctx.beginPath(); ctx.ellipse(c.x, c.y - h, w / 2, Math.max(0.6, h * 0.22), 0, 0, Math.PI * 2); ctx.stroke();
+  let k = 0;
+  for (const it of d.basket.items) if (it.state === 'basket') { drawOrnament(ctx, cam, it.kind, c.x - w * 0.25 + k * w * 0.17, c.y - h * 1.05, d.basket.Z); k++; }
+  ctx.restore();
+}
+function drawOrnament(ctx: Ctx, cam: ReturnType<typeof cameraFor>, kind: string, x: number, y: number, Z: number) {
+  const px = (m: number) => (m * cam.f) / Z;
+  if (kind === 'nose') { const c = sprite('carrot'); const w = px(0.12); if (c) ctx.drawImage(c, x - w / 2, y - (w * c.height) / c.width / 2, w, (w * c.height) / c.width); else { ctx.fillStyle = '#e0782f'; ctx.fillRect(x - w / 2, y - 1, w, 2); } return; }
+  if (kind === 'scarf') { ctx.fillStyle = '#a3322f'; ctx.beginPath(); ctx.ellipse(x, y, px(0.08), Math.max(0.8, px(0.03)), 0.2, 0, Math.PI * 2); ctx.fill(); return; }
+  const n = kind === 'eyes' ? 2 : 3; ctx.fillStyle = '#26262e';
+  for (let i = 0; i < n; i++) { ctx.beginPath(); ctx.arc(x + (i - (n - 1) / 2) * px(0.035), y, Math.max(0.6, px(0.016)), 0, Math.PI * 2); ctx.fill(); }
+}
+
 function drawFootprints(ctx: Ctx, project: ProjectFile, sim: Simulation, time: number) {
   const fps = sim.state.footprints;
   const snow = project.areas.filter((a) => a.kind === 'snow' && a.polygon.length >= 3);
@@ -506,6 +566,8 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
   if (sim?.state.clearing?.snow) drawSnowSurface(ctx, project, sim.state.clearing.snow, sprite('pavement'));
   if (sc.environment && (sc.environment.windows?.length || sc.environment.door)) drawFacade(ctx, project, (sc.backgroundAssetId ? images.get(sc.backgroundAssetId) : null) as never, (images.get('sprite_door_interior') ?? null) as never, sim?.state.doorPasses, opts.time);
   if (sim) drawFootprints(ctx, project, sim, sim.time());
+  if (sim?.state.falls?.marks.length) drawFallMarks(ctx, project, sim, sim.time());
+  if (sim && (sim.state as { snowFields?: Record<string, SnowField> }).snowFields) drawSnowFieldTrails(ctx, project, sim);
   const worldObjs = visible.filter(({ o }) => o.layer === 'world').map(({ o }) => o);
   drawGroundIntegration(ctx, project, worldObjs, assets, opts.time);
   litCtx = { objects: worldObjs.filter((o) => o.integration), assets, t: opts.time };
@@ -626,6 +688,19 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
       const q = ballAt(p.place, opts.time); if (!q) continue;
       const g = toScreen(cam, { X: q.X, Z: q.Z });
       items.push({ key: g.y, tie: 15200, draw: () => drawSnowBall(ctx, cam, q.X, q.Z, Math.max(0.03, q.H), p.radius ?? 0.045, opts.time * 9, 3, false) });
+    }
+    coopBalls(sim.state).forEach((b, i) => { const g = toScreen(cam, { X: b.X, Z: b.Z }); items.push({ key: g.y, tie: 15050 + i, draw: () => drawSnowBall(ctx, cam, b.X, b.Z, b.H, b.r, b.rot, 11 + i, b.H < b.r * 1.5) }); });
+    // košík s ozdobami (stavba rodič + dítě) a ozdoba nesená v ruce
+    for (const ss of sim.state.sessions ?? []) {
+      const d = ss.data as unknown as CoopData; if (!d?.coop) continue;
+      const g = toScreen(cam, { X: d.basket.X, Z: d.basket.Z });
+      items.push({ key: g.y, tie: 15000, draw: () => drawBasket(ctx, cam, d) });
+      for (const it of d.basket.items) if (it.state === 'carried' && it.owner) {
+        const a = sim.state.agents.find((x) => x.id === it.owner); if (!a || a.hidden) continue;
+        const P = toWorld(cam, a.pos), hd = a.groundHeading ?? 0, Q = { X: P.X + Math.cos(hd) * 0.3, Z: P.Z + Math.sin(hd) * 0.3 };
+        const q = toScreen(cam, Q, sim.isChild(a) ? 0.6 : 0.85);
+        items.push({ key: toScreen(cam, Q).y + 0.5, tie: 15400, draw: () => drawOrnament(ctx, cam, it.kind, q.x, q.y, P.Z) });
+      }
     }
     sessionBalls(sim.state).forEach((b, i) => { const g = toScreen(cam, { X: b.X, Z: b.Z }); items.push({ key: g.y, tie: 15100 + i, draw: () => drawSnowBall(ctx, cam, b.X, b.Z, b.H, b.r, b.rot, 7 + i, true) }); });
   }

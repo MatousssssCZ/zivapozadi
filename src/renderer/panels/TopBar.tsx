@@ -1,6 +1,8 @@
 import { store, useEditor, type Tool } from '../store';
 import { zs } from '../api';
-import { importAssets, clearingCommand } from '../ops';
+import { importAssets, clearingCommand, fallCommand, coopSnowmanCommand } from '../ops';
+import { useState } from 'react';
+import type { FallVariant } from '../../core/anim/fallPoses';
 
 async function guardDirty(): Promise<boolean> {
   if (!store.state.dirty) return true;
@@ -35,6 +37,10 @@ export function TopBar() {
   const clrDbg = useEditor((s) => s.clearingDebug);
   const hasClearing = useEditor((s) => !!s.project?.clearing);
   const gaitDbg = useEditor((s) => s.gaitDebug);
+  const fallDbg = useEditor((s) => s.fallDebug);
+  const smDbg = useEditor((s) => s.snowmanDebug);
+  const hasSnowman = useEditor((s) => !!s.project?.zones.some((z) => z.activityType === 'snowman'));
+  const [fv, setFv] = useState<FallVariant>('back'), [fs, setFs] = useState<1 | -1>(1), [fslow, setFslow] = useState(false), [fhelp, setFhelp] = useState(true);
   const hasElders = useEditor((s) => !!s.project?.characters.some((c) => c.gaitProfile));
   const has = !!project;
   return (
@@ -68,6 +74,16 @@ export function TopBar() {
         <label className="check" title="Kostra, klouby, kotevní body a názvy dílů skládaných postav (jen v editoru)"><input type="checkbox" checked={rigDiag} onChange={(e) => store.set({ rigDiagnostics: e.target.checked, showMarkers: e.target.checked || store.state.showMarkers })} /> Kostra postav</label>
         {hasClearing && <label className="check" title="Mřížka sněhu, pracovní hrana, úchopy rukou, opěrné body chodidel, fáze a zásoby sněhu (jen v editoru)"><input type="checkbox" checked={clrDbg} onChange={(e) => store.set({ clearingDebug: e.target.checked, rigDiagnostics: e.target.checked || store.state.rigDiagnostics })} /> Ladění odklízení</label>}
         {hasElders && <label className="check" title="Senioři: opěrné body chodidel, hrot hole (zelená = opřený, oranžová = přenos), rukojeť, profil, délka kroku, kadence a rychlost (jen v editoru)"><input type="checkbox" checked={gaitDbg} onChange={(e) => store.set({ gaitDebug: e.target.checked })} /> Ladění chůze seniorů</label>}
+        {hasSnowman && <label className="check" title="Sněhulák rodič + dítě: úkoly obou, rezervace, hmotnost a průměr koulí, předání hlavy, košík a bilance sněhu (jen v editoru)"><input type="checkbox" checked={smDbg} onChange={(e) => store.set({ snowmanDebug: e.target.checked })} /> Ladění sněhuláka</label>}
+        {hasSnowman && smDbg && <button onClick={() => coopSnowmanCommand()} title="Nejbližší rodina (rodič + dítě) hned začne stavět; zpomalení a pauza ve spodním panelu">Postavit sněhuláka</button>}
+        {has && <label className="check" title="Pády: kontakty (zelená = stojí, červená = klouže), fáze, pomocník; ruční spuštění varianty (jen v editoru)"><input type="checkbox" checked={fallDbg} onChange={(e) => store.set({ fallDebug: e.target.checked })} /> Ladění pádů</label>}
+        {has && fallDbg && <>
+          <select value={fv} onChange={(e) => setFv(e.target.value as FallVariant)} title="Varianta"><option value="back">dozadu do sedu</option><option value="forward">dopředu na ruce a kolena</option><option value="side">bokem při otáčení</option><option value="saved">zachycené uklouznutí</option></select>
+          <select value={fs} onChange={(e) => setFs(Number(e.target.value) as 1 | -1)} title="Strana"><option value={1}>pravá</option><option value={-1}>levá</option></select>
+          <label className="check"><input type="checkbox" checked={fslow} onChange={(e) => setFslow(e.target.checked)} /> zpomalit 4×</label>
+          <label className="check"><input type="checkbox" checked={fhelp} onChange={(e) => setFhelp(e.target.checked)} /> pomocník</label>
+          <button onClick={() => fallCommand(fv, fs, { slow: fslow, helper: fhelp })} title="U vybrané postavy, jinak u vhodné postavy u středu obrazu">Spustit pád</button>
+        </>}
         {hasClearing && clrDbg && <button onClick={() => clearingCommand('cycle')} title="Postava přijde a provede jeden pracovní cyklus (záběry až po odhoz / vytlačení), pak zůstane stát">Jeden cyklus</button>}
         {hasClearing && clrDbg && <button onClick={() => clearingCommand('reset')} title="Nová vrstva sněhu na celé ploše, hromada pryč, postava mimo scénu (explicitní reset)">Reset situace</button>}
         <button className="primary" disabled={!has} onClick={() => store.set({ exportOpen: true })}>Export videa…</button>

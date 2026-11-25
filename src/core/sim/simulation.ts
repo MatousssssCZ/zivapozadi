@@ -26,6 +26,9 @@ import { viewForDirection } from '../anim/skeleton';
 import { emit, emitsNow, windIntegral } from './environment';
 import { createAnimals, stepAnimals } from './animals';
 import { stepClearing, newClearingState, type ClearingHost } from './clearing';
+import { stepCoopSnowman, startCoopSnowman } from '../activities/coopSnowman';
+import { stepFalls, startFall, newFallsState, DEFAULT_FALLS, type FallHost, type FallsState } from './falls';
+import { fallEndShift as fallEndShiftOf, type FallVariant } from '../anim/fallPoses';
 import { stepSled, sledObstacles, sledPathProblem, type SledHost } from './sled';
 import { maybeCarryMitten, mittenBusy, stepMitten, type MittenHost } from './mitten';
 import { stepSnowman, startSnowman, abortSnowman, finishSession, snowmanZoneFree, type SessionHost } from '../activities/snowman';
@@ -172,6 +175,7 @@ export class Simulation {
       wander: { waitUntil: 0, prevNode: null, atStop: false }, cooldowns: {}, status: 'Stojí',
     };
     a.pace = randRange(a.rng, 0.9, 1.1);
+    if (c.routine === 'sled' || c.routine === 'shovel') a.hidden = true; // přijdou později zpoza okraje (nikdy nestojí u vstupu v prvním snímku)
     if (c.gaitProfile) { a.anim.elder = elderState(c.gaitProfile, c.caneSide ?? 'R', hashString(c.id)); a.pace = 1; }
     a.lane = (rand(a.rng) < 0.5 ? -1 : 1) * randRange(a.rng, 3, 7);
     a.anim.idleTime = randRange(a.rng, 0, 3);
@@ -442,8 +446,91 @@ export class Simulation {
     if (this.project.sled && !this.sledBlocked) stepSled(this.sledHost(), (this.state.sled ??= { phase: 'offstage', until: this.project.sled.firstDelay ?? 40, dir: 1, n: 0, hist: [] }));
     if (this.project.clearing && this.project.characters.some((c) => c.id === this.project.clearing!.workerId)) stepClearing(this.clearingHost(), (this.state.clearing ??= newClearingState(this.project.clearing.firstDelay ?? 90)));
     if (this.state.mitten || this.state.agents.some((a) => a.holdingKind === 'mitten') || this.state.step % 60 === 0) stepMitten(this.mittenHost());
+    if (this.project.falls || this.state.falls?.active.length) stepFalls(this.fallHost(), this.fallsState());
     this.stepProps(t);
     this.state.step++;
+  }
+
+  /** Ladění: rodina (rodič + dítě) hned začne stavět sněhuláka v první volné zóně. */
+  startCoopSnowmanNow(): { ok: boolean; msg: string } {
+    const h = this.sessionHost();
+    const zone = this.project.zones.find((z) => z.activityType === 'snowman' && !snowmanZoneFree(h, z));
+    if (!zone) return { ok: false, msg: 'Žádná volná zóna pro sněhuláka (sníh, volné místo, nikdo nestaví).' };
+    const kids = this.state.agents.filter((k) => !k.hidden && k.follow && this.isChild(k) && !k.activity);
+    for (const k of kids) {
+      const p = this.state.agents.find((x) => x.id === k.follow!.leaderId);
+      if (!p || p.hidden || p.activity || p.holding) continue;
+      p.route = null; k.route = null;
+      if (startCoopSnowman(h, zone, p, k)) return { ok: true, msg: `${p.name} a ${k.name} staví sněhuláka.` };
+    }
+    return { ok: false, msg: 'Ve scéně není volná rodina (rodič s dítětem bez činnosti).' };
+  }
+
+  // ---------------------------------------------------------------- pády
+  private fallsState(): FallsState { return (this.state.falls ??= newFallsState(seedRng(this.project.seed, 'falls'), this.time(), this.fallHost().cfg)); }
+  /**
+   * Ladění: spustí pád u zadané postavy (nebo u vhodné postavy nejblíž středu obrazu). Vrací jméno
+   * postavy, nebo popis, proč to nejde.
+   */
+  triggerFall(v: FallVariant, s: 1 | -1, opts: { agentId?: string | null; slow?: number; helper?: boolean; preferSnow?: boolean } = {}): string {
+    const h = this.fallHost(), st = this.fallsState();
+    if (st.active.length) return 'Už probíhá jiný pád.';
+    let a = opts.agentId ? this.state.agents.find((x) => x.id === opts.agentId) : undefined;
+    if (opts.agentId && (!a || a.hidden || a.anim.fall)) return 'Postava není ve scéně.';
+    if (!a) {
+      const W = this.project.scene.width, el = this.state.agents.filter((x) => h.eligible(x) || this.fallLoose(x));
+      const snowPen = (x: AgentState) => (opts.preferSnow && !h.onSnow(x) ? 5000 : 0);
+      el.sort((p, q) => Math.abs(p.pos.x - W / 2) + Math.abs(p.pos.y - 900) + snowPen(p) - (Math.abs(q.pos.x - W / 2) + Math.abs(q.pos.y - 900) + snowPen(q)));
+      a = (opts.preferSnow ? el.find((x) => h.eligible(x) && h.onSnow(x)) ?? el.find((x) => h.onSnow(x)) : undefined) ?? el.find((x) => h.eligible(x)) ?? el[0];
+    }
+    if (!a) return 'Žádná vhodná postava (sama, volné ruce, bez činnosti).';
+    startFall(h, st, a, v, s, { slow: opts.slow, helper: opts.helper });
+    return a.name;
+  }
+  /** volnější podmínka pro ruční spuštění: viditelný dospělý bez činnosti a věcí v rukou */
+  private fallLoose(a: AgentState): boolean {
+    return !a.hidden && !a.activity && !a.holding && !a.follow && !a.anim.fall && !this.isChild(a) && !a.anim.elder && this.chars.get(a.id)?.routine !== 'shovel' && this.chars.get(a.id)?.routine !== 'sled' && !(a.anim.gestures ?? []).length;
+  }
+  private fallCache: FallHost | null = null;
+  private fallHost(): FallHost {
+    const self = this, cam = () => self.cam();
+    const solo = (a: AgentState) => !a.follow && !a.rejoin && !self.state.agents.some((x) => x.follow?.leaderId === a.id || x.rejoin?.leaderId === a.id) && !self.chars.get(a.id)?.pet;
+    const w = (p: Vec2) => toWorld(cam(), p);
+    const spaceFree = (a: AgentState) => {
+      const P = w(a.pos);
+      if (self.state.agents.some((o) => o !== a && !o.hidden && Math.hypot(w(o.pos).X - P.X, w(o.pos).Z - P.Z) < 1.6)) return false;
+      for (let k = 0; k < 8; k++) { const q = toScreen(cam(), { X: P.X + Math.cos((k * Math.PI) / 4) * 1.0, Z: P.Z + Math.sin((k * Math.PI) / 4) * 1.0 }); if (self.graph.obstacles.some((o) => pointInPolygon(q, o.polygon))) return false; }
+      return true;
+    };
+    return (this.fallCache ??= {
+      time: () => self.time(), dt: SIM_DT, agents: () => self.state.agents,
+      get cfg() { return { ...DEFAULT_FALLS, ...(self.project.falls ?? {}), weights: { ...DEFAULT_FALLS.weights, ...(self.project.falls?.weights ?? {}) } }; },
+      eligible: (a) => {
+        const c = self.chars.get(a.id);
+        return !!c && c.routine === 'visitor' && a.visit?.mode === 'leave' && !!a.route && self.fallLoose(a) && solo(a) && a.anim.walkBlend > 0.95 && a.speed > 0
+          && a.pos.x > 120 && a.pos.x < self.project.scene.width - 120 && spaceFree(a);
+      },
+      canHelpLoose: (x) => self.fallLoose(x) && !x.route?.purpose?.startsWith('pomoc') && self.chars.get(x.id)?.routine === 'visitor' && !x.follow && !self.state.agents.some((q) => q.follow?.leaderId === x.id),
+      canHelp: (x) => { const c = self.chars.get(x.id); return !!c && c.routine === 'visitor' && x.visit?.mode === 'leave' && self.fallLoose(x) && solo(x); },
+      distM: (p, q) => { const A = w(p), B = w(q); return Math.hypot(A.X - B.X, A.Z - B.Z); },
+      contactsWorld: (a) => {
+        const c = self.chars.get(a.id)!, cv = characterVisual(a, self.manifests[c.assetId], c, self.project.scene);
+        return (cv.pose.fall?.contacts ?? []).filter((x) => !x.slide).map((x) => { const p = w(localToScene(cv, x.p)); return { X: p.X, Z: p.Z, kind: x.kind }; });
+      },
+      onSnow: (a) => (a.snowDepth ?? 0) > 0 || self.sessionHost().isSnow(a.pos),
+      applyEndShift: (a) => {
+        const c = self.chars.get(a.id)!, cv = characterVisual(a, self.manifests[c.assetId], c, self.project.scene), e = cv.pose.fall?.end;
+        if (!e || !a.anim.fall) return;
+        a.pos = { x: a.pos.x + (cv.mirror ? -e.x : e.x) * cv.scale, y: a.pos.y + e.y * cv.scale };
+        a.anim.fall.du = fallEndShiftOf(a.anim.fall.v);
+        a.anim.anchors = undefined; a.anim.anchorsXY = undefined; a.anim.settle = null; a.anim.walkBlend = 0; a.anim.startRest = null;
+      },
+      helperSpot: (f, hp) => { const P = w(f.pos), H = w(hp.pos), d = Math.hypot(H.X - P.X, H.Z - P.Z) || 1; return toScreen(cam(), { X: P.X + ((H.X - P.X) / d) * 0.85, Z: P.Z + ((H.Z - P.Z) / d) * 0.85 }); },
+      walkTo: (a, p) => { self.sessionHost().walkPath(a, [p], 'pomoc'); a.speedFactor = 1; },
+      offerHand: (a, f, dur) => { a.look = { x: f.pos.x, y: f.pos.y - 20 }; self.sessionHost().gesture(a, 'open', { dur, hand: 1 }); },
+      resume: (a) => { a.speedFactor = 1; a.look = null; self.leaveScene(a, self.time()); },
+      log: (m, id) => self.log('info', m, id),
+    });
   }
 
   private sledBlocked = false;
@@ -541,9 +628,10 @@ export class Simulation {
     if (!this.state.sessions?.length) return;
     const h = this.sessionHost();
     for (const s of [...this.state.sessions]) {
-      const r = s.type === 'snowman' ? stepSnowman(h, s) : s.type === 'snowballFight' ? stepFight(h, s) : 'running';
+      const coop = s.type === 'snowman' && (s.data as { coop?: boolean }).coop;
+      const r = coop ? stepCoopSnowman(h, s, this.zones.get(s.zoneId!)!) : s.type === 'snowman' ? stepSnowman(h, s) : s.type === 'snowballFight' ? stepFight(h, s) : 'running';
       if (r === 'running') continue;
-      if (s.type === 'snowman' && r === 'aborted') { this.log('info', 'Stavba sněhuláka se přerušila.'); abortSnowman(h, s); }
+      if (s.type === 'snowman' && r === 'aborted' && !coop) { this.log('info', 'Stavba sněhuláka se přerušila.'); abortSnowman(h, s); }
       else { this.log('info', s.type === 'snowman' ? 'Sněhulák je hotový.' : r === 'aborted' ? 'Koulovačka se přerušila.' : 'Koulovačka skončila.'); finishSession(h, s); }
       // dítě (stálá dvojice) se po hře znovu připojí k rodiči
       for (const id of s.participantIds) {
@@ -724,7 +812,11 @@ export class Simulation {
   private vmaxMps(a: AgentState): number {
     const own = (x: AgentState) => { const c = this.chars.get(x.id)!; return this.walkSpeedOf(x) * x.pace * (x.speedFactor ?? 1) * Q * c.baseScale; };
     const f = this.state.agents.find((x) => x.follow?.leaderId === a.id && !x.hidden);
-    return f ? Math.min(own(a), own(f) * 0.97) : own(a);
+    if (!f) return own(a);
+    // druhý z dvojice zaostává (někdo mu vstoupil do cesty): vůdce zpomalí a počká
+    const cam = this.cam(), A = toWorld(cam, a.pos), F = toWorld(cam, f.pos), lag = Math.hypot(A.X - F.X, A.Z - F.Z);
+    const k = lag > 1.3 ? Math.max(0.35, 1 - (lag - 1.3) * 1.5) : 1;
+    return Math.min(own(a), own(f) * 0.97) * k;
   }
 
   /**
@@ -743,7 +835,8 @@ export class Simulation {
       if (a.follow) {
         const leader = this.state.agents.find((x) => x.id === a.follow!.leaderId);
         if (!leader) { a.follow = null; }
-        else if (leader.hidden) { a.hidden = true; a.pos = { ...leader.pos }; a.speed = 0; a.vel = { X: 0, Z: 0 }; a.visPrev = undefined; continue; }
+        // vůdce už odešel za okraj: druhý z dvojice dojde za ním a zmizí až mimo obraz (ne uprostřed záběru)
+        else if (leader.hidden && (a.hidden || this.isOffscreen(a.pos, this.chars.get(a.id)?.baseScale ?? 1))) { a.hidden = true; a.pos = { ...leader.pos }; a.speed = 0; a.vel = { X: 0, Z: 0 }; a.visPrev = undefined; continue; }
         else if (a.hidden) {
           // vstup do scény se stálým vůdcem: vedle něj (ne do stejného bodu)
           a.hidden = false; a.visPrev = undefined;
@@ -758,7 +851,7 @@ export class Simulation {
       if (a.follow) {
         // daleko od vůdce (překážka mezi nimi): dojít k němu po trase, ne přímo
         const L = this.state.agents.find((x) => x.id === a.follow!.leaderId)!;
-        const LP = toWorld(cam, L.pos), far = Math.hypot(LP.X - P.X, LP.Z - P.Z) > 2.5;
+        const LP = toWorld(cam, L.pos), dL = Math.hypot(LP.X - P.X, LP.Z - P.Z), far = dL > 1.8; // zaostává (třeba za překážkou): dojít po trase, ne přímo
         if (far && (!a.route || this.state.step % 60 === 0)) {
           const near = nearestAccessibleNode(this.graph, a.pos), target = nearestAccessibleNode(this.graph, L.pos);
           if (near && target) { a.loc = { kind: 'node', nodeId: near }; a.route = null; const wps = this.buildRoute(a, target, { x: L.pos.x, y: L.pos.y, key: 'follow' }); if (wps?.length) this.startRoute(a, wps, 'za vůdcem', null, target); }
@@ -935,6 +1028,9 @@ export class Simulation {
           passed = t > 0 && Math.hypot(P.X - qx, P.Z - qz) < 1.2;
         }
       }
+      // mezilehlý bod, ke kterému se postava přes dav nedostane (zablokovaná > 3 s): přeskočit ho –
+      // jinak trasa „o kus zpět a pak dopředu“ přes stojící frontu postavu zasekla natrvalo
+      if (!passed && !last && (a.blockedT ?? 0) > 3) { passed = true; a.blockedT = 0; }
       // cíl obsazený někým jiným (např. přítel na místě setkání): stačí dojít co nejblíž
       if (!passed && last) {
         a.stuckT = d < 1.5 && sp < 0.05 ? (a.stuckT ?? 0) + SIM_DT : 0;
@@ -976,7 +1072,8 @@ export class Simulation {
       const cv = characterVisual(a, m, c, this.project.scene);
       heelsNow = [0, 1].map((i) => (cv.pose.heelPts ? localToScene(cv, cv.pose.heelPts[i]) : null));
     }
-    const events = stepAnimator(a.anim, m, SIM_DT, visSpeed, (this.vmaxMps(a) / Q) * scale, scale, gaitContextFor(m, c));
+    // pád: animátor stojí (základní póza zůstane zmrazená – pád se z ní plynule prolne; žádné dokročení)
+    const events = a.anim.fall ? [] : stepAnimator(a.anim, m, SIM_DT, visSpeed, (this.vmaxMps(a) / Q) * scale, scale, gaitContextFor(m, c));
     this.latchFootAnchors(a, c, m, heelsNow);
     if (mv.waitingNarrow) a.status = 'Čeká před úzkým průchodem';
     // 3) rozhodování + účast v činnosti
@@ -1061,6 +1158,36 @@ export class Simulation {
   }
 
   // ---------------------------------------------------------------- návštěvníci
+  /** Je postava v daném místě celá mimo obraz (obrys ~ ±32 j. do šířky, 155 j. nad chodidly)? */
+  isOffscreen(p: Vec2, baseScale = 1): boolean {
+    const sc = depthScaleAt(this.project.scene.depth, p.y) * baseScale, W = this.project.scene.width, H = this.project.scene.height;
+    return p.x + 32 * sc < 0 || p.x - 32 * sc > W || p.y - 155 * sc > H || p.y + 10 * sc < 0;
+  }
+  /**
+   * Místo mimo obraz za vstupem (ve směru ven ze scény): postava se tam objeví a ke vstupu dojde,
+   * při odchodu tam dojde a teprve pak zmizí. Dveře budovy: null (objeví se / zmizí ve dveřích).
+   */
+  private offscreenBeyond(pid: string, a: AgentState): World | null {
+    const n = this.graph.nodes.get(pid); if (!n || n.door) return null;
+    const cam = this.cam();
+    // směr ven v obraze (od sousedního uzlu ke vstupu), nejvýš 40° od vodorovné: malované pohledy jsou
+    // šikmé – kolmý příchod zespodu / odchod nahoru by byl „strmá“ chůze
+    const nb = (this.graph.out.get(pid) ?? []).map((l) => this.graph.nodes.get(l.to)).find(Boolean);
+    let dx = nb ? n.x - nb.x : n.x - this.project.scene.width / 2, dy = nb ? n.y - nb.y : n.y - this.project.scene.height * 0.8;
+    const L = Math.hypot(dx, dy) || 1; dx /= L; dy /= L;
+    const maxA = (40 * Math.PI) / 180;
+    if (Math.abs(dy) > Math.sin(maxA)) {
+      const sx = Math.abs(dx) > 0.05 ? Math.sign(dx) : n.x < this.project.scene.width / 2 ? -1 : 1;
+      dx = sx * Math.cos(maxA); dy = Math.sign(dy) * Math.sin(maxA);
+    }
+    const bs = this.chars.get(a.id)?.baseScale ?? 1;
+    for (let k = 10; k <= 3000; k += 10) {
+      const q = { x: n.x + dx * k, y: n.y + dy * k };
+      if (this.isOffscreen(q, bs * 1.1)) { const w = toWorld(cam, { x: q.x + dx * 170, y: q.y + dy * 170 }); return { X: w.X, Z: w.Z }; } // rezerva: pes na vodítku jde kus za majitelem
+    }
+    return toWorld(cam, { x: n.x + dx * 3000, y: n.y + dy * 3000 });
+  }
+
   private portals(): string[] { return this.project.nav.nodes.filter((n) => n.portal && this.graph.nodes.has(n.id)).map((n) => n.id); }
 
   /** Návštěvník vstoupí do scény vstupem (z místa mimo obraz). */
@@ -1072,14 +1199,21 @@ export class Simulation {
     const pid = ps.length ? ps[Math.floor(rand(a.rng) * ps.length)] : (this.anchorOf(a));
     const n = this.graph.nodes.get(pid)!;
     // volné místo u vstupu (nikdy na jiné postavě); jinak ještě chvíli počkat mimo scénu
-    const cam = this.cam(), P0 = toWorld(cam, { x: n.x, y: n.y });
-    const spot = this.freeSpot(a, [P0, ...[0.7, 1.4, 2.1].flatMap((r) => [{ X: P0.X, Z: P0.Z + r }, { X: P0.X, Z: P0.Z - r }, { X: P0.X - Math.sign(P0.X || 1) * r, Z: P0.Z }])]);
+    const cam = this.cam(), Pn = toWorld(cam, { x: n.x, y: n.y });
+    // příchod vždy z místa mimo obraz (za vstupem); jen dveřmi budovy přímo ve dveřích
+    const P0 = this.offscreenBeyond(pid, a) ?? Pn;
+    const out = { X: P0.X - Pn.X, Z: P0.Z - Pn.Z }, oL = Math.hypot(out.X, out.Z) || 1, ou = { X: out.X / oL, Z: out.Z / oL };
+    const spot = this.freeSpot(a, n.door
+      ? [P0, ...[0.7, 1.4, 2.1].flatMap((r) => [{ X: P0.X, Z: P0.Z + r }, { X: P0.X, Z: P0.Z - r }, { X: P0.X - Math.sign(P0.X || 1) * r, Z: P0.Z }])]
+      : [0, 0.7, 1.4, 2.1].flatMap((r) => [{ X: P0.X + ou.X * r, Z: P0.Z + ou.Z * r }, { X: P0.X + ou.X * r - ou.Z * 0.7, Z: P0.Z + ou.Z * r + ou.X * 0.7 }, { X: P0.X + ou.X * r + ou.Z * 0.7, Z: P0.Z + ou.Z * r - ou.X * 0.7 }]));
     if (!spot) { a.hidden = true; a.visit = { mode: 'offstage', until: t + 1.5, since: t }; return; }
     a.pos = toScreen(cam, spot); a.loc = { kind: 'node', nodeId: pid }; a.route = null; a.arrived = false;
     if (n.door) this.passDoor(t);
     a.hidden = false; a.visPrev = undefined; a.off = { x: 0, y: 0 }; a.look = null;
     a.anim.walkBlend = 0; a.anim.settle = null; a.anim.anchors = undefined; a.anim.anchorsXY = undefined;
     a.visit = { mode: 'choose', until: t, since: t };
+    // z místa mimo obraz nejdřív dojít ke vstupu (pak se rozhodne, kam dál – trasa naváže)
+    if (!n.door) { this.sessionHost().walkPath(a, [{ x: n.x, y: n.y }], 'příchod'); a.speedFactor = 1; a.visit = { mode: 'choose', until: t + 0.05, since: t }; }
     // stálý druhý z dvojice přichází s ním
     const f = this.state.agents.find((x) => x.follow?.leaderId === a.id);
     if (f) {
@@ -1119,7 +1253,13 @@ export class Simulation {
     for (const f of this.state.agents.filter((x) => x.follow?.leaderId === a.id)) {
       const fc = this.chars.get(f.id)!;
       if (fc.companionId === a.id) continue; // stálá dvojice zůstává spolu (skryje se s vůdcem)
-      f.follow = null; f.hidden = true; f.speed = 0;
+      f.follow = null;
+      if (!f.hidden && !this.isOffscreen(f.pos, this.chars.get(f.id)?.baseScale ?? 1)) {
+        // přítel jde za ním ven a zmizí až za okrajem
+        f.visit = { mode: 'exit', until: 0, since: t }; this.sessionHost().walkPath(f, [{ ...a.pos }], 'odchod ze scény'); f.speedFactor = 1;
+        continue;
+      }
+      f.hidden = true; f.speed = 0;
       f.visit = { mode: 'offstage', until: t + randRange(f.rng, 10, 40), since: t };
       f.status = 'Mimo scénu';
     }
@@ -1160,7 +1300,7 @@ export class Simulation {
           const z = zs.length ? zs[Math.floor(rand(a.rng) * zs.length)] : null;
           // děti spolu: další volné rodiny ve scéně → koulují se jen děti (2–3), rodiče se dívají z kraje
           if (z?.activityType === 'snowballFight' && this.startKidsFight(a, kid, z, t)) return;
-          if (z && (z.activityType === 'snowman' ? startSnowman(h, z, a, kid) : startFight(h, z, kid, a, true))) {
+          if (z && (z.activityType === 'snowman' ? (this.isChild(kid) ? startCoopSnowman(h, z, a, kid) : startSnowman(h, z, a, kid)) : startFight(h, z, kid, a, true))) {
             a.visit = { mode: 'coffee', until: 0, since: t };
             this.log('info', `${a.name} jde s dítětem (${kid.name}) ${z.activityType === 'snowman' ? 'stavět sněhuláka' : 'koulovat'}.`, a.id);
             return;
@@ -1205,8 +1345,26 @@ export class Simulation {
       }
       case 'leave': {
         if (a.route) return;
-        if (v.target && this.anchorOf(a) === v.target) { if (this.graph.nodes.get(v.target)?.door) this.passDoor(t); this.goOffstage(a, t); return; }
+        if (v.target && this.anchorOf(a) === v.target) {
+          if (this.graph.nodes.get(v.target)?.door) { this.passDoor(t); this.goOffstage(a, t); return; }
+          // od výstupu dojít za okraj obrazu, teprve tam zmizet
+          const Q = this.offscreenBeyond(v.target, a);
+          const dogV = this.state.animals?.find((x) => x.ownerId === a.id && !x.hidden);
+          if (Q && (!this.isOffscreen(a.pos, this.chars.get(a.id)?.baseScale ?? 1) || (dogV && !this.isOffscreen(dogV.pos, 0.5)))) { v.mode = 'exit'; this.sessionHost().walkPath(a, [toScreen(this.cam(), Q)], 'odchod ze scény'); a.speedFactor = 1; return; }
+          this.goOffstage(a, t); return;
+        }
         this.leaveScene(a, t);
+        return;
+      }
+      case 'exit': {
+        if (a.route) { a.status = 'Odchází ze scény'; return; }
+        // zastavil se dřív (někdo v cestě): ještě kus dál, dokud není celý mimo obraz (i se psem)
+        const dog = this.state.animals?.find((x) => x.ownerId === a.id && !x.hidden);
+        if (!this.isOffscreen(a.pos, this.chars.get(a.id)?.baseScale ?? 1) || (dog && !this.isOffscreen(dog.pos, 0.5))) {
+          const W = this.project.scene.width, dx = a.pos.x < W / 2 ? -1 : 1;
+          this.sessionHost().walkPath(a, [{ x: a.pos.x + dx * 160, y: a.pos.y + 25 }], 'odchod ze scény'); a.speedFactor = 1; return;
+        }
+        this.goOffstage(a, t);
         return;
       }
       case 'coffee': {
@@ -1540,7 +1698,9 @@ export class Simulation {
 
   private stepProps(t: number) {
     const fps = this.state.footprints;
-    if (fps && fps.length && t - fps[0].t0 > FOOTPRINT_LIFE) { let k = 0; while (k < fps.length && t - fps[k].t0 > FOOTPRINT_LIFE) k++; fps.splice(0, k); }
+    // (čas na konci kroku – po kroku nesmí zůstat stopa starší než životnost)
+    const tEnd = t + SIM_DT;
+    if (fps && fps.length && tEnd - fps[0].t0 > FOOTPRINT_LIFE) { let k = 0; while (k < fps.length && tEnd - fps[k].t0 > FOOTPRINT_LIFE) k++; fps.splice(0, k); }
     const keep: PropState[] = [];
     for (const p of this.state.props) {
       if (p.place.kind === 'falling' && t >= p.place.t1) {

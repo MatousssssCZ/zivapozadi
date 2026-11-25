@@ -32,6 +32,9 @@ const BONES = CHILD
 /** Rozměry dílů v jednotkách: výška hlavy (temeno–brada), palčák, bota, šířka šály, kabát pod pánví. */
 const DIM = CHILD ? { head: 15.5, hand: 7.5, foot: 7.4, scarf: 15, coatTail: 9 } : { head: 18, hand: 11, foot: 9.8, scarf: 21, coatTail: 18 };
 
+/** Rozměry pro dodatečné sady (péřová bunda: krátký trup, užší nákrčník). */
+let OVR: { coatTail?: number; scarf?: number; width?: Partial<Record<PartSlot, number>>; chroma?: number } = {};
+
 interface Cut { name: string; slot: PartSlot; box: [number, number, number, number]; view?: SheetView; /** zrcadlit (díl nakreslený obráceně) */ flip?: boolean }
 const CUTS_BACK: Cut[] = [
   { name: 'hlava', slot: 'head', box: [70, 118, 267, 384] },
@@ -90,7 +93,7 @@ function extract(sheet: Canvas, cut: Cut, margin = 8): Part {
   keepLargest(id.data, w, h);
   if (cut.slot === 'hat' && cut.view !== 'back3q') removeHatInterior(id.data, w, h);
   let hole: Part['hole'];
-  if (cut.slot === 'scarf' && cut.view !== 'back3q') { hole = holeCenter({ cut, c, d: id.data, w, h }); fillScarfHole(id.data, w, h); }
+  if (cut.slot === 'scarf' && cut.view !== 'back3q') { try { hole = holeCenter({ cut, c, d: id.data, w, h }); fillScarfHole(id.data, w, h); } catch { hole = undefined; /* nákrčník: otvor je namalovaný, ne průhledný */ } }
   ctx.putImageData(id, 0, 0);
   return { cut, c, d: id.data, w, h, hole };
 }
@@ -154,24 +157,24 @@ function measure(p: Part, ctx: { headWidthU?: number; neckWidthU?: number; front
       const k = ((BONES.upperArm + 2.5) * P) / (end.y - r.top);
       const pivot = { x: t10(0.05, 0.15), y: r.top + (2.5 * P) / k };
       void rt;
-      return { k, kx: (WIDTH.upperArm! * P) / wAvg(0.3, 0.7), pivot, anchors: { end }, boneDir: Math.PI / 2, info: `šířka ${(wAvg(0.3, 0.7) * k / P).toFixed(1)} j.` };
+      return { k, kx: ((OVR.width?.upperArm ?? WIDTH.upperArm!) * P) / wAvg(0.3, 0.7), pivot, anchors: { end }, boneDir: Math.PI / 2, info: `šířka ${(wAvg(0.3, 0.7) * k / P).toFixed(1)} j.` };
     }
     case 'forearm': {
       const k = ((BONES.forearm + 1.5 + 1) * P) / H;
       const pivot = { x: t10(0, 0.1), y: r.top + (1.5 * P) / k }, end = { x: t10(0.9, 1), y: r.bottom - (1 * P) / k };
-      return { k, kx: (WIDTH.forearm! * P) / wAvg(0.3, 0.7), pivot, anchors: { end }, boneDir: Math.PI / 2, info: `šířka ${(wAvg(0.3, 0.7) * k / P).toFixed(1)} j.` };
+      return { k, kx: ((OVR.width?.forearm ?? WIDTH.forearm!) * P) / wAvg(0.3, 0.7), pivot, anchors: { end }, boneDir: Math.PI / 2, info: `šířka ${(wAvg(0.3, 0.7) * k / P).toFixed(1)} j.` };
     }
     case 'thigh': {
       const rb = wAvg(0.85, 0.92) / 2;
       const k = ((BONES.thigh + 3) * P) / (r.bottom - rb - r.top);
       const pivot = { x: t10(0, 0.1), y: r.top + (3 * P) / k }, end = { x: t10(0.85, 0.95), y: r.bottom - rb };
-      return { k, kx: (WIDTH.thigh! * P) / wAvg(0.2, 0.5), pivot, anchors: { end }, boneDir: Math.PI / 2, info: `šířka ${(wAvg(0.2, 0.5) * k / P).toFixed(1)} j.` };
+      return { k, kx: ((OVR.width?.thigh ?? WIDTH.thigh!) * P) / wAvg(0.2, 0.5), pivot, anchors: { end }, boneDir: Math.PI / 2, info: `šířka ${(wAvg(0.2, 0.5) * k / P).toFixed(1)} j.` };
     }
     case 'shin': {
       // lem nohavice končí 3 j. nad kotníkem (překrývá svršek boty) ⇒ kotník leží pod dílem
       const k = ((BONES.shin + 1.5 - 3) * P) / H;
       const pivot = { x: t10(0, 0.1), y: r.top + (1.5 * P) / k }, end = { x: t10(0.9, 1), y: r.bottom + (3 * P) / k };
-      return { k, kx: (WIDTH.shin! * P) / wAvg(0.3, 0.7), pivot, anchors: { end }, boneDir: Math.PI / 2, info: `šířka ${(wAvg(0.3, 0.7) * k / P).toFixed(1)} j.` };
+      return { k, kx: ((OVR.width?.shin ?? WIDTH.shin!) * P) / wAvg(0.3, 0.7), pivot, anchors: { end }, boneDir: Math.PI / 2, info: `šířka ${(wAvg(0.3, 0.7) * k / P).toFixed(1)} j.` };
     }
     case 'hand': {
       const k = (DIM.hand * P) / H;
@@ -192,7 +195,7 @@ function measure(p: Part, ctx: { headWidthU?: number; neckWidthU?: number; front
     }
     case 'torso': {
       const neckY = r.top + H * 0.07;
-      const pelvisY = neckY + (r.bottom - neckY) * (BONES.torso / (BONES.torso + DIM.coatTail));
+      const pelvisY = neckY + (r.bottom - neckY) * (BONES.torso / (BONES.torso + (OVR.coatTail ?? DIM.coatTail)));
       const k = (BONES.torso * P) / (pelvisY - neckY);
       const neckX = t10(0, 0.06);
       const pivot = { x: r.cx(Math.round(pelvisY)), y: pelvisY };
@@ -222,11 +225,11 @@ function measure(p: Part, ctx: { headWidthU?: number; neckWidthU?: number; front
     case 'scarf': {
       if (!p.hole) {
         // zezadu: smyčka bez otvoru – krk prochází asi ve 40 % výšky smyčky
-        const k = (DIM.scarf * P) / p.w;
+        const k = ((OVR.scarf ?? DIM.scarf) * P) / p.w;
         return { k, pivot: { x: avgOver(r.cx, r.top, r.top + H * 0.5), y: r.top + H * 0.4 }, anchors: {}, boneDir: -Math.PI / 2, info: `smyčka zezadu, šířka ${(p.w * k / P).toFixed(1)} j.` };
       }
       const hole = p.hole!;
-      const k = (DIM.scarf * P) / p.w; // šířka šály podle reference (krk prosvítá otvorem)
+      const k = ((OVR.scarf ?? DIM.scarf) * P) / p.w; // šířka šály podle reference (krk prosvítá otvorem)
       return { k, pivot: { x: hole.x, y: hole.y }, anchors: {}, boneDir: -Math.PI / 2, info: `otvor ${(hole.w * k / P).toFixed(1)} j., šířka ${(p.w * k / P).toFixed(1)} j.` };
     }
   }
@@ -263,7 +266,7 @@ function makeMask(c: Canvas, slot: PartSlot): { mask: Canvas | null; brighten: n
     const chroma = mx - mn;
     const dark = l < 0.36 && !(slot === 'scarf' && chroma < 12); // knoflíky, podrážky, otvory
     // dětský arch je krémový (teplejší) – látka má vyšší chroma než šedý arch dospělého
-    if (chroma < (CHILD ? 46 : 24) && !dark) { md.data[i] = md.data[i + 1] = md.data[i + 2] = 255; md.data[i + 3] = d[i + 3]; sumL += l; n++; }
+    if (chroma < (OVR.chroma ?? (CHILD ? 46 : 24)) && !dark) { md.data[i] = md.data[i + 1] = md.data[i + 2] = 255; md.data[i + 3] = d[i + 3]; sumL += l; n++; }
   }
   mctx.putImageData(md, 0, 0);
   // Podklad pro násobení barvou: střední jas ~0,84 a poloviční kontrast (jinak světlé tahy po obarvení
@@ -360,6 +363,68 @@ function trimBox(cv: Canvas) {
 function crop(cv: Canvas, t: { x: number; y: number; w: number; h: number }) { const o = createCanvas(t.w, t.h); o.getContext('2d').drawImage(cv, t.x, t.y, t.w, t.h, 0, 0, t.w, t.h); return o; }
 const r2 = (x: number) => Math.round(x * 100) / 100;
 
+/** Jeden díl: výřez, změření, měřítko, vyhlazení kloubu, maska, zápis PNG → definice dílu. */
+async function doPart(sheet: Canvas, cut: Cut, VIEW: SheetView, ctx: { headWidthU?: number; neckWidthU?: number; frontHeadWidthU?: number; frontSoleU?: number }, variantId: string, pal: string[], artFixes: { ref: string; issue: string }[], fileName?: string) {
+  const slot = cut.slot;
+  const p = extract(sheet, cut);
+  const meas = measure(p, ctx);
+  const pad = slot === 'shin' || slot === 'forearm' ? 28 : 4; // místo pro zaoblenou čéšku / loket
+  const kx = meas.kx ?? meas.k;
+  const sc = scaled(p.c, kx, meas.k, pad);
+  const toS = (q: V) => ({ x: q.x * kx + pad, y: q.y * meas.k + pad });
+  smoothJoint(sc, slot, toS(meas.pivot), meas.anchors.end ? toS(meas.anchors.end) : null);
+  if (Math.abs(kx / meas.k - 1) > 0.12) artFixes.push({ ref: `${variantId}/${slot}/${VIEW}`, issue: `Poměr stran neodpovídá referenci – šířka upravena ×${(kx / meas.k).toFixed(2)} vůči délce. Přemalovat ${kx < meas.k ? 'užší a delší' : 'širší a kratší'} (cílová šířka ${WIDTH[slot]} j. při délce kosti).` });
+  const { mask, brighten } = makeMask(sc, slot);
+  const trim = trimBox(sc);
+  const file = fileName ?? `${cut.name}-${VIEW}.png`;
+  await fs.writeFile(path.join(OUT, file), crop(sc, trim).toBuffer('image/png'));
+  if (mask) await fs.writeFile(path.join(OUT, file.replace('.png', '.maska.png')), crop(mask, trim).toBuffer('image/png'));
+  const tp = (q: V) => ({ x: r2(q.x * kx + pad), y: r2(q.y * meas.k + pad) });
+  const part: PartDef = {
+    id: `${variantId}.${slot}.${VIEW}`, slot, variantId, view: VIEW, texture: file, mask: mask ? file.replace('.png', '.maska.png') : undefined,
+    sourceSize: { w: sc.width, h: sc.height }, trim, pivot: tp(meas.pivot),
+    anchors: Object.fromEntries(Object.entries(meas.anchors).map(([k, v]) => [k, tp(v)])),
+    boneDir: meas.boneDir, layerOrder: 0, compatibleBodyTypes: [CHILD ? 'child-cg' : 'adult-cg'], compatibilityTags: [], paletteOptions: mask ? pal : [],
+    mirrorSafe: true, provisional: false,
+  };
+  const line = `${slot.padEnd(9)} měřítko ×${meas.k.toFixed(3)}${kx !== meas.k ? ` (šířka ×${kx.toFixed(3)})` : ''}  ${meas.info}${mask ? `  maska (zesvětlení ×${brighten.toFixed(2)})` : ''}`;
+  return { part, meas, line, canvas: sc, trim };
+}
+
+/** Barva vlasů z hlavy zepředu: medián neprůhledných pixelů horních 18 % (temeno). */
+function hairColor(c: Canvas): string {
+  const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+  let top = c.height; for (let y = 0; y < c.height && top === c.height; y++) for (let x = 0; x < c.width; x++) if (d[(y * c.width + x) * 4 + 3] > 200) { top = y; break; }
+  const px: [number, number, number][] = [];
+  // vlasy, ne pleť (pleš u starších mužů): vynechat teplé pleťové odstíny
+  const skinish = (r: number, g: number, b: number) => r > 170 && r - b > 45 && r - g > 18;
+  for (let y = top; y < top + c.height * 0.3; y++) for (let x = 0; x < c.width; x++) { const i = (y * c.width + x) * 4; if (d[i + 3] > 220 && !skinish(d[i], d[i + 1], d[i + 2])) px.push([d[i], d[i + 1], d[i + 2]]); }
+  const med = (k: number) => { const v = px.map((p) => p[k]).sort((a, b) => a - b); return v[v.length >> 1] ?? 100; };
+  const h = (n: number) => n.toString(16).padStart(2, '0');
+  return `#${h(med(0))}${h(med(1))}${h(med(2))}`;
+}
+/** Přebarvení vlasů na zadní hlavě: vlasy = nepletové pixely; zachová se kresba (poměr jasu). */
+function recolorHair(img: { width: number; height: number }, hex: string): Canvas {
+  const c = createCanvas(img.width, img.height), x = c.getContext('2d'); x.drawImage(img as never, 0, 0);
+  const id = x.getImageData(0, 0, c.width, c.height), d = id.data;
+  const tr = parseInt(hex.slice(1, 3), 16), tg = parseInt(hex.slice(3, 5), 16), tb = parseInt(hex.slice(5, 7), 16);
+  // pleť (krk, uši) jen ve spodní části hlavy zezadu – nahoře jsou světlé odlesky vlasů, ne pleť
+  const skin0 = (r: number, g: number, b: number) => r > 150 && r - b > 40 && g > 105 && r - g < 75;
+  let pix = 0; const skin = (r: number, g: number, b: number) => skin0(r, g, b) && Math.floor(pix / 4 / c.width) > c.height * 0.5;
+  let sum = 0, n = 0;
+  for (let i = 0; i < d.length; i += 4) if ((pix = i) >= 0 && d[i + 3] > 30 && !skin(d[i], d[i + 1], d[i + 2])) { sum += 0.3 * d[i] + 0.59 * d[i + 1] + 0.11 * d[i + 2]; n++; }
+  const Lm = sum / Math.max(1, n);
+  for (let i = 0; i < d.length; i += 4) {
+    pix = i;
+    if (d[i + 3] <= 30 || skin(d[i], d[i + 1], d[i + 2])) continue;
+    // kresba vlasů s tlumeným kontrastem (u světlých/šedých vlasů by plný poměr jasu dal bílé a tmavé pruhy)
+    const k0 = (0.3 * d[i] + 0.59 * d[i + 1] + 0.11 * d[i + 2]) / Lm, tl = (0.3 * tr + 0.59 * tg + 0.11 * tb) / 255, k = 1 + (k0 - 1) * (tl > 0.5 ? 0.4 : 0.75);
+    d[i] = Math.min(255, tr * k); d[i + 1] = Math.min(255, tg * k); d[i + 2] = Math.min(255, tb * k);
+  }
+  x.putImageData(id, 0, 0);
+  return c;
+}
+
 async function main() {
   await fs.rm(OUT, { recursive: true, force: true }); await fs.mkdir(OUT, { recursive: true });
   const ctx: { headWidthU?: number; neckWidthU?: number; frontHeadWidthU?: number; frontSoleU?: number } = {};
@@ -370,6 +435,7 @@ async function main() {
   const variantOf: Record<GroupId, string> = { head: 'head' + SUF, jacket: 'jacket_coat' + SUF, gloves: 'gloves' + SUF, trousers: 'trousers' + SUF, boots: 'boots' + SUF, hat: 'hat_beanie' + SUF, scarf: 'scarf_long' + SUF };
   const palOf: Record<GroupId, string[]> = { head: [], jacket: ALL_PAL, gloves: ALL_PAL, trousers: ['tmave-seda', 'hneda', 'olivova'], boots: ['hneda', 'tmave-seda'], hat: ALL_PAL, scarf: ALL_PAL };
   const report: string[] = [];
+  const V0 = (id: string, group: GroupId, label: string, extra: Partial<VariantDef> = {}): VariantDef => ({ id, group, label, compatibleBodyTypes: [CHILD ? 'child-cg' : 'adult-cg'], tags: [], excludesTags: [], requiresAnchors: [], paletteOptions: palOf[group], provisional: false, ...extra });
   const artFixes: { ref: string; issue: string }[] = [];
   const viewGeom: Partial<Record<SheetView, { hipSpread: number; shoulderSpread: number; shoulderOffsetX: number }>> = {};
   for (const sh of SHEETS) {
@@ -379,30 +445,10 @@ async function main() {
   report.push(`--- ${VIEW} (${sh.src})`);
   for (const slot of order) {
     const cut = { ...sh.cuts().find((c) => c.slot === slot)!, view: VIEW };
-    const p = extract(sheet, cut);
-    const meas = measure(p, ctx);
-    const pad = slot === 'shin' || slot === 'forearm' ? 28 : 4; // místo pro zaoblenou čéšku / loket
-    const kx = meas.kx ?? meas.k;
-    const sc = scaled(p.c, kx, meas.k, pad);
-    const toS = (q: V) => ({ x: q.x * kx + pad, y: q.y * meas.k + pad });
-    smoothJoint(sc, slot, toS(meas.pivot), meas.anchors.end ? toS(meas.anchors.end) : null);
-    if (Math.abs(kx / meas.k - 1) > 0.12) artFixes.push({ ref: `${slot}/${VIEW}`, issue: `Poměr stran neodpovídá referenci – šířka upravena ×${(kx / meas.k).toFixed(2)} vůči délce. Přemalovat ${kx < meas.k ? 'užší a delší' : 'širší a kratší'} (cílová šířka ${WIDTH[slot]} j. při délce kosti).` });
-    const { mask, brighten } = makeMask(sc, slot);
-    const trim = trimBox(sc);
-    const file = `${cut.name}-${VIEW}.png`;
-    await fs.writeFile(path.join(OUT, file), crop(sc, trim).toBuffer('image/png'));
-    if (mask) await fs.writeFile(path.join(OUT, file.replace('.png', '.maska.png')), crop(mask, trim).toBuffer('image/png'));
-    const tp = (q: V) => ({ x: r2(q.x * kx + pad), y: r2(q.y * meas.k + pad) });
     const g = groupOf[slot];
-    const part: PartDef = {
-      id: `${variantOf[g]}.${slot}.${VIEW}`, slot, variantId: variantOf[g], view: VIEW, texture: file, mask: mask ? file.replace('.png', '.maska.png') : undefined,
-      sourceSize: { w: sc.width, h: sc.height }, trim, pivot: tp(meas.pivot),
-      anchors: Object.fromEntries(Object.entries(meas.anchors).map(([k, v]) => [k, tp(v)])),
-      boneDir: meas.boneDir, layerOrder: 0, compatibleBodyTypes: [BODY], compatibilityTags: [], paletteOptions: mask ? palOf[g] : [],
-      mirrorSafe: true, provisional: false,
-    };
+    const { part, meas, line } = await doPart(sheet, cut, VIEW, ctx, variantOf[g], palOf[g], artFixes);
     measured.set(`${VIEW}|${slot}`, { part, meas });
-    report.push(`${slot.padEnd(9)} měřítko ×${meas.k.toFixed(3)}${kx !== meas.k ? ` (šířka ×${kx.toFixed(3)})` : ''}  ${meas.info}${mask ? `  maska (zesvětlení ×${brighten.toFixed(2)})` : ''}`);
+    report.push(line);
   }
   // rozestupy ramen a kyčlí z trupu
   const torso = measured.get(`${VIEW}|torso`)!.part;
@@ -414,6 +460,60 @@ async function main() {
     hipSpread: r2(u((a.hipR.x - a.hipL.x) / 2) * 0.42),
   };
   for (const k of ['shoulderL', 'shoulderR', 'hipL', 'hipR']) delete a[k];
+  }
+  // ---- dodatečné sady (jen dospělý): péřová bunda s doplňky (zepředu + zezadu) a 12 hlav (jen zepředu)
+  const extraParts: PartDef[] = [], extraVariants: VariantDef[] = [];
+  const headInfo: { id: string; label: string; tags: string[] }[] = [];
+  if (!CHILD) {
+    const PUF = 'grafika/zdroje/postava-dily-perova-vesta-v1.webp', HEADS = 'grafika/zdroje/hlavy-3q-zepredu-v1.webp';
+    const pimg = await loadImage(PUF); const psheet = createCanvas(pimg.width, pimg.height); psheet.getContext('2d').drawImage(pimg, 0, 0);
+    const PV: Record<string, string> = { torso: 'jacket_puffer_cg', upperArm: 'jacket_puffer_cg', forearm: 'jacket_puffer_cg', hand: 'gloves_puffer_cg', thigh: 'trousers_slim_cg', shin: 'trousers_slim_cg', foot: 'boots_hiking_cg', hat: 'hat_rib_cg', scarf: 'scarf_neckwarmer_cg' };
+    const PBOX: Record<SheetView, Record<string, [number, number, number, number]>> = {
+      front3q: { torso: [250, 18, 458, 339], upperArm: [487, 52, 605, 303], forearm: [650, 90, 758, 307], hand: [800, 97, 945, 313], thigh: [45, 374, 176, 646], shin: [218, 374, 335, 646], foot: [360, 441, 575, 624], hat: [588, 394, 785, 568], scarf: [804, 455, 958, 580] },
+      back3q: { torso: [1235, 18, 1440, 339], upperArm: [1484, 52, 1605, 308], forearm: [1652, 90, 1760, 308], hand: [1793, 100, 1938, 314], thigh: [1054, 373, 1183, 646], shin: [1220, 374, 1339, 646], foot: [1372, 437, 1565, 626], hat: [1589, 392, 1784, 560], scarf: [1806, 449, 1963, 578] },
+    };
+    const NAME: Record<string, string> = { torso: 'perova-vesta', upperArm: 'perovy-rukav', forearm: 'perove-predlokti', hand: 'palcak-manzeta', thigh: 'uzke-kalhoty-stehno', shin: 'uzke-kalhoty-lytko', foot: 'snerovaci-bota', hat: 'zebrovany-kulich', scarf: 'nakrcnik' };
+    OVR = { coatTail: 3, scarf: 15, width: { upperArm: 11.5, forearm: 9.8 }, chroma: 48 }; // béžový arch: teplejší látka // krátká bunda končí u boků, nákrčník je užší než šála
+    report.push('--- péřová bunda a doplňky (' + PUF + ')');
+    const pctx = { headWidthU: ctx.frontHeadWidthU, frontHeadWidthU: ctx.frontHeadWidthU, neckWidthU: ctx.neckWidthU } as typeof ctx;
+    for (const VIEW of ['front3q', 'back3q'] as SheetView[]) for (const slot of ['torso', 'upperArm', 'forearm', 'hand', 'thigh', 'shin', 'foot', 'hat', 'scarf'] as PartSlot[]) {
+      const cut: Cut = { name: NAME[slot], slot, box: PBOX[VIEW][slot], view: VIEW };
+      const g = groupOf[slot];
+      const r = await doPart(psheet, cut, VIEW, pctx, PV[slot], palOf[g], artFixes);
+      extraParts.push(r.part); report.push(`${VIEW} ${r.line}`);
+    }
+    OVR = {};
+    extraVariants.push(
+      V0('jacket_puffer_cg', 'jacket', 'Péřová bunda (vesta + prošívané rukávy)'), V0('gloves_puffer_cg', 'gloves', 'Palčáky s pletenou manžetou'),
+      V0('trousers_slim_cg', 'trousers', 'Úzké kalhoty'), V0('boots_hiking_cg', 'boots', 'Šněrovací boty'),
+      V0('hat_rib_cg', 'hat', 'Žebrovaný kulich', { requiresAnchors: [{ slot: 'head', anchor: 'hat' }] }), V0('scarf_neckwarmer_cg', 'scarf', 'Nákrčník', { requiresAnchors: [{ slot: 'torso', anchor: 'scarf' }] }),
+    );
+    // hlavy: arch jen šikmo zepředu; zezadu hlava 1 z archu bundy, ostatní = základní zadní hlava s přebarvenými vlasy
+    const himg = await loadImage(HEADS); const hsheet = createCanvas(himg.width, himg.height); hsheet.getContext('2d').drawImage(himg, 0, 0);
+    const HB: [number, number, number, number][] = [[98, 23, 357, 336], [458, 23, 699, 334], [805, 42, 1082, 334], [1172, 41, 1420, 334], [101, 349, 339, 662], [457, 347, 716, 661], [791, 358, 1098, 662], [1188, 351, 1428, 660], [97, 671, 339, 991], [447, 672, 712, 991], [795, 684, 1069, 991], [1177, 673, 1457, 991]];
+    const HL: [string, string[]][] = [['Mladý muž, hnědé kudrnaté vlasy', []], ['Muž, tmavé kudrny, strniště', []], ['Žena, hnědé mikádo', []], ['Žena, blond drdol', []], ['Muž s plnovousem', []], ['Muž, prošedivělý, brýle', ['middle']], ['Žena, tmavé vlnité vlasy', []], ['Žena, krátké zrzavé vlasy', []], ['Starší muž, šedé vlasy, pleš', ['senior']], ['Starší muž, bílý vous, brýle', ['senior']], ['Starší žena, šedý drdol', ['senior']], ['Starší žena, šedé vlny, brýle', ['senior']]];
+    const baseBack = measured.get('back3q|head')!.part;
+    const backImg = await loadImage(path.join(OUT, baseBack.texture));
+    report.push('--- hlavy (' + HEADS + ')');
+    for (let i = 0; i < HB.length; i++) {
+      const id = `head_${String(i + 1).padStart(2, '0')}_cg`, nm = `hlava-${String(i + 1).padStart(2, '0')}`;
+      const hctx = {} as typeof ctx;
+      const fr = await doPart(hsheet, { name: nm, slot: 'head', box: HB[i], view: 'front3q' }, 'front3q', hctx, id, [], artFixes);
+      extraParts.push(fr.part); report.push(`hlava ${i + 1}: ${fr.line}`);
+      if (i === 0) {
+        const bk = await doPart(psheet, { name: nm, slot: 'head', box: [1050, 60, 1210, 282], view: 'back3q' }, 'back3q', hctx, id, [], artFixes);
+        extraParts.push(bk.part);
+      } else {
+        const hair = hairColor(fr.canvas);
+        const c = recolorHair(backImg, hair);
+        const file = `${nm}-back3q.png`;
+        await fs.writeFile(path.join(OUT, file), c.toBuffer('image/png'));
+        extraParts.push({ ...baseBack, id: `${id}.head.back3q`, variantId: id, texture: file, provisional: true });
+        artFixes.push({ ref: `${id}.head.back3q`, issue: `Zadní pohled chybí – použita základní zadní hlava s vlasy přebarvenými na ${hair} (tvar účesu neodpovídá: ${HL[i][0].toLowerCase()}). Dodat hlavu šikmo zezadu.` });
+      }
+      headInfo.push({ id, label: HL[i][0], tags: HL[i][1] });
+      extraVariants.push(V0(id, 'head', HL[i][0], { tags: HL[i][1] }));
+    }
   }
   const { hipSpread, shoulderSpread, shoulderOffsetX } = viewGeom.front3q!;
   const gb = viewGeom.back3q!;
@@ -463,8 +563,9 @@ async function main() {
       V(variantOf.jacket, 'jacket', CHILD ? 'Dětský kabátek' : 'Dlouhý kabát'), V(variantOf.hat, 'hat', 'Kulich s bambulí', { requiresAnchors: [{ slot: 'head', anchor: 'hat' }] }),
       V(variantOf.scarf, 'scarf', 'Pletená šála', { requiresAnchors: [{ slot: 'torso', anchor: 'scarf' }] }),
       V(variantOf.trousers, 'trousers', 'Kalhoty'), V(variantOf.boots, 'boots', 'Zimní boty'), V(variantOf.gloves, 'gloves', 'Palčáky'), V(variantOf.head, 'head', CHILD ? 'Hlava (dítě)' : 'Hlava (dospělý)'),
+      ...extraVariants,
     ],
-    parts: [...measured.values()].map((m) => m.part),
+    parts: [...[...measured.values()].map((m) => m.part), ...extraParts],
     artIssues: [
       { ref: 'pohledy', issue: 'Dodány pohledy šikmo zepředu a šikmo zezadu. Bok, zepředu a zezadu chybí – při chůzi se nepoužívají (chůze je vždy šikmá), v klidu explicitní náhrada nejbližším šikmým pohledem.' },
       { ref: 'scarf_long_cg.scarf.back3q', issue: 'Šála zezadu je bez krémových proužků (konce nejsou vidět) – v pořádku, jen pro úplnost.' },
@@ -482,7 +583,7 @@ async function main() {
     directions: ['SE', 'NE'], directionFallbacks: { E: { use: 'SE', mirror: false }, S: { use: 'SE', mirror: false }, N: { use: 'NE', mirror: false }, W: { use: 'SE', mirror: true }, SW: { use: 'SE', mirror: true }, NW: { use: 'NE', mirror: true } },
     attachPoints: {}, rig: { library: CHILD ? 'painted-parts-child/library.json' : 'painted-parts-cg/library.json', bodyTemplate: BODY },
   };
-  await fs.writeFile(path.resolve(CHILD ? 'resources/builtin/malovana-postava-dite.json' : 'resources/builtin/malovana-postava-cg.json'), JSON.stringify(manifest, null, 2));
+  await fs.writeFile(path.resolve(CHILD ? 'resources/builtin/malovana-postava-dite.json' : 'resources/builtin/malovana-postava-cg.json'), JSON.stringify(manifest, null, 2) + '\n');
   const bj = JSON.parse(await fs.readFile('resources/builtin/builtin.json', 'utf8'));
   const AID = CHILD ? 'builtin_postava_dite' : 'builtin_postava_cg';
   bj.assets = bj.assets.filter((x: { id: string }) => x.id !== AID);

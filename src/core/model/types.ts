@@ -327,4 +327,6 @@ export interface ProjectFile {
    * odstup pracovníka za lopatou (px), počet pásů; postava pracovníka má routine 'shovel'.
    */
   clearing?: import('../sim/clearing').ClearingConfig;
+  /** Pády chodců (vzácná událost) – chybí-li, náhodné pády se nespouštějí (ruční spuštění z ladění ano). */
+  falls?: Partial<import('../sim/falls').FallsConfig>;
 }

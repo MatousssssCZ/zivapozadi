@@ -36,7 +36,7 @@ export interface ActivityRun {
   data: Record<string, unknown>;
 }
 
-export type VisitMode = 'offstage' | 'choose' | 'leave' | 'coffee' | 'meet-go' | 'meet-wait' | 'greet' | 'with';
+export type VisitMode = 'offstage' | 'choose' | 'leave' | 'exit' | 'coffee' | 'meet-go' | 'meet-wait' | 'greet' | 'with';
 export interface VisitState {
   mode: VisitMode;
   until: number;
@@ -184,6 +184,7 @@ export interface SimState {
   flakes?: { next: number; n: number; kidId?: string; parentId?: string; started?: boolean; until?: number; dur?: number };
   /** Odklízení sněhu (A11). */
   clearing?: import('./clearing').ClearingState;
+  falls?: import('./falls').FallsState;
   /** Sáňky (B02): stav průchodu. */
   sled?: import('./sled').SledState;
   /** Upadlá rukavice (B03): stav jediné události ve scéně. */

@@ -265,11 +265,15 @@ export async function generateLiberec(dir: string): Promise<ProjectFile> {
   });
   // senioři: A – pomalá chůze, B – s holí v pravé ruce (návštěvníci; rychlost a krok z profilu)
   const elders = generateGroup(lib, 2, 6180).appearances;
+  // šedivé hlavy z archu hlav (11 = šedý drdol, 10 = bílý vous a brýle)
+  if (lib.variants.some((v) => v.id === 'head_11_cg')) { elders[0].variants.head = 'head_11_cg'; elders[1].variants.head = 'head_10_cg'; }
   p.characters.push(
     { id: 'ch_senior_a', name: 'Paní Věra (senior A)', assetId: 'builtin_postava_cg', startNodeId: inner[3], baseScale: 0.97, walkSpeed: 57, palette: testPal, wander: true, appearance: elders[0], routine: 'visitor', activities: {}, gaitProfile: 'elderA' },
     { id: 'ch_senior_b', name: 'Pan Josef (senior B, hůl)', assetId: 'builtin_postava_cg', startNodeId: inner[8], baseScale: 0.98, walkSpeed: 36, palette: testPal, wander: true, appearance: elders[1], routine: 'visitor', activities: {}, gaitProfile: 'elderB', caneSide: 'R' },
   );
   p.clearing = { workerId: 'ch_lopata', work: { x0: 2.9, x1: 4.9, z0: 11.75, z1: 12.51 }, pileAt: { X: 5.25, Z: 11.62 }, enter: { x: 2080, y: 1074 }, approach: [{ x: 1640, y: 1078 }], firstDelay: 70 };
+  // pády chodců: vzácné (střední interval 3,5 min, nejvýš jeden najednou), polovina zachycených uklouznutí
+  p.falls = { enabled: true, meanIntervalSec: 210, minGapSec: 120 };
   p.export = { ...p.export, durationSec: 60, chunkSec: 20 };
   await saveProject(dir, p);
   return p;

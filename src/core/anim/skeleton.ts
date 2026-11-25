@@ -11,6 +11,7 @@ import { hashNoise } from '../math/rng';
 import { meanPelvisHeight, sampleGait, strideLegLen, gaitEvents } from './gaitProfile';
 import { footAt, restFeet, heelAtContact, type FootGeom } from './gaitKinematics';
 import { ELDER_PROFILES, TIP_AHEAD } from './elderGait';
+import { sampleFall, fallDuration, fallEndShift, type FallPhase } from './fallPoses';
 import { heelRelOf, type AnimState } from './animator';
 import type { Direction } from './manifest';
 import { evalAll } from '../social/clips';
@@ -132,6 +133,8 @@ export interface SkeletonPose {
   /** aktuální zaboření obou bot do sněhu (lokální jednotky) */ snowSink?: [number, number];
   /** hůl (senior B): hrot na zemi, úchop v ruce, horní konec rukojeti; ruka (index paže), směr vpřed */
   cane?: { tip: Vec2; grip: Vec2; top: Vec2; hand: 0 | 1; fwd: number; len: number; tipLift: number };
+  /** pád: fáze a kontaktní body (lokálně; slide = klouže) */
+  fall?: { ph: FallPhase; contacts: { p: Vec2; slide: boolean; kind: string }[]; /** posun pánve na konci (lokálně) */ end: Vec2 };
 }
 
 export function ik(root: Vec2, target: Vec2, l1: number, l2: number, bendSign: number): Limb {
@@ -487,7 +490,18 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
   const ankles: Vec2[] = feet.map((f, i) => { const p = ankleXY(f, i); return { x: p.x + swingShift[i].x + settleShift[i].x, y: p.y + swingShift[i].y + settleShift[i].y + sink[i] }; });
   if (sinkMax > 0) { const avg = (sink[0] + sink[1]) / 2; hip.y += avg; for (const r of hipRoots) r.y += avg; }
   // dopředná složka nohy (jednotky, vodorovně ve směru chůze) – pro 3D řešení kolena
-  const legU = (i: number) => { const g = gOf(i), dx = ankles[i].x - hipRoots[i].x; return Math.abs(g.x) > 0.45 ? dx / g.x : feet[i].u; };
+  // dopředná složka nohy v rovině kotvy: opřená noha i noha v prvních snímcích švihu (ještě „nese“ pánev)
+  // počítá ve směru, ve kterém došlápla – po odrazu se rovina nemění skokem (jinak pánev na pár snímků
+  // poklesla), švih pak přechází do aktuálního směru plynule s váhou swingCarry
+  const gLeg = (i: number): Vec2 => {
+    const o = opts.anchors?.[i];
+    if (!o || o.gx === undefined || !anchored[i]) return gOf(i);
+    if (isAnch(i)) return { x: o.gx, y: o.gy! };
+    const k = swingCarry[i]; return k > 0 ? { x: gfx + (o.gx - gfx) * k, y: gfy + (o.gy! - gfy) * k } : gOf(i);
+  };
+  const legU = (i: number) => { const g = gLeg(i), dx = ankles[i].x - hipRoots[i].x; return Math.abs(g.x) > 0.45 ? dx / g.x : feet[i].u; };
+
+
   let lower = 0;
   for (let i = 0; i < 2; i++) {
     const inContact = a.settle || b < 1 || gaitFeet[i].contact !== 'swing';
@@ -497,12 +511,12 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
     const dx = fa.x - hipRoots[i].x, dy = fa.y - hipRoots[i].y; // dy > 0: kotník pod kyčlí
     if (dx * dx + dy * dy > maxD * maxD) lower = Math.max(lower, w8 * (dy - Math.sqrt(Math.max(0, maxD * maxD - dx * dx))));
     // skutečná (3D) délka nohy: vodorovná složka u se v šikmém pohledu v obraze zkracuje
-    const u = legU(i), vv = dy - gOf(i).y * u;
+    const u = legU(i), vv = dy - gLeg(i).y * u;
     if (u * u + vv * vv > maxD * maxD) lower = Math.max(lower, w8 * (vv - Math.sqrt(Math.max(0, maxD * maxD - u * u))));
   }
   if (lower > 0) { hip.y += lower; for (const r of hipRoots) r.y += lower; }
   const legs = [0, 1].map((i) => {
-    if (!shear) return legIK3D(hipRoots[i], ankles[i], legU(i), gOf(i), T, Sh);
+    if (!shear) return legIK3D(hipRoots[i], ankles[i], legU(i), gLeg(i), T, Sh);
     // posun z hloubky rozložit podél nohy podle polohy CHODIDLA (ne kolena): ohnuté koleno tak
     // neklesá k zemi a obě části nohy se zkrátí/prodlouží stejným dílem. Zkrácení nejvýš ±15 %
     // (jinak „gumové“ nohy) – zbytek vyrovná ohnutí kolena.
@@ -732,9 +746,14 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
       for (let k = 0; k <= 60; k++) { const t = -0.7 + (1.4 * k) / 60, r = reachOf(t), c = Math.max(0, r - armL * 0.97) * 10 + Math.abs(t - al); if (c < bc) { bc = c; best = t; } }
       al = best;
     }
+    let liftedBy = 0;
+    // ani tak nedosáhne (krajní poloha při otočce): hůl se nadzvedne a přisune k ruce (hrot ve vzduchu),
+    // nikdy mezera mezi rukou a rukojetí
+    { const g = gripAt(al), w = { x: g.x, y: g.y - HAND }, dx = w.x - root.x, dy = w.y - root.y, dd = Math.hypot(dx, dy), lim = armL * 0.97;
+      if (dd > lim) { const k = (dd - lim) / dd; tip.x -= dx * k; tip.y -= dy * k; liftedBy = Math.hypot(dx * k, dy * k); } }
     const grip = gripAt(al), top = gripAt(al + 0.0); top.y -= 2.2;
     arms[hI] = ik(root, { x: grip.x, y: grip.y - HAND }, B.upperArm, B.forearm, 1);
-    caneOut = { tip, grip, top, hand: hI, fwd: Math.sign(gfx || fx || 1), len: Lc, tipLift: hT };
+    caneOut = { tip, grip, top, hand: hI, fwd: Math.sign(gfx || fx || 1), len: Lc, tipLift: hT + liftedBy };
   }
   // nástroj (lopata): tuhý sprite, úchopy z něj, ruce na úchopy (3D IK); hlava míří k listu
   let toolOut: SkeletonPose['tool'];
@@ -757,7 +776,55 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
     toolOut = { ...sol, held };
     headTilt += -0.05 * fsg * (tool.h < 0.2 ? 1 : 0);
   }
-  return { view, mirror, root: { x: 0, y: 0 }, hip, neck, shoulder, head, headTilt, torsoAngle, legs, arms, feet: [footAng[0], footAng[1]], feetK: [footProj[0].k, footProj[1].k], handR: arms[1].end, heelPts, cupTilt, snowSink: [sink[0], sink[1]], tool: toolOut, cane: caneOut };
+  const out: SkeletonPose = { view, mirror, root: { x: 0, y: 0 }, hip, neck, shoulder, head, headTilt, torsoAngle, legs, arms, feet: [footAng[0], footAng[1]], feetK: [footProj[0].k, footProj[1].k], handR: arms[1].end, heelPts, cupTilt, snowSink: [sink[0], sink[1]], tool: toolOut, cane: caneOut };
+  if (a.fall) applyFall(out, a.fall, { B, v, L, AH, gfx, gfy, fsg, ns, front, side: opts.footSide ?? 1, sideX });
+  return out;
+}
+
+/**
+ * Pád: póza celého těla z klíčů (fallPoses.ts) – pánev, trup, hlava, chodidla a ruce jako cíle,
+ * končetiny IK (koleno ve 3D jako při chůzi). Na začátku se z běžné pózy prolne (0,2 s), na konci
+ * zpět (0,35 s). Boční složka (lat) se promítá podle pohledu: zepředu/zezadu do šířky, z boku do hloubky.
+ */
+function applyFall(o: SkeletonPose, f: { v: import('./fallPoses').FallVariant; s: 1 | -1; t: number; du?: number }, c: { B: SkeletonTemplate['bones']; v: SkeletonViewDef; L: number; AH: number; gfx: number; gfy: number; fsg: number; ns: number; front: boolean; side: number; sideX: (i: number) => number }) {
+  const { B, v, L, AH, gfx, gfy, fsg, ns, front } = c;
+  const DEG = Math.PI / 180, dur = fallDuration(f.v);
+  const k = sampleFall(f.v, f.t);
+  const w = smoothstep(f.t / 0.2) * (1 - smoothstep((f.t - (dur - 0.35)) / 0.35));
+  const swap = f.s < 0, ix = (i: number) => (swap ? 1 - i : i);
+  const latS = f.v === 'side' ? f.s : 1;
+  const kx = front ? ns * 0.75 : 0, ky = front ? 0.1 : 0.3; // boční osa v obraze
+  const du = f.du ?? 0;
+  const P = (q: { u: number; h: number; lat?: number }, base = 0) => { const lat = (q.lat ?? 0) * latS, qu = q.u - du; return { x: gfx * qu * L + lat * L * kx, y: gfy * qu * L - base - q.h * L + Math.abs(lat) * L * ky * Math.sign(latS) }; };
+  const mix = (a: Vec2, b: Vec2) => ({ x: a.x + (b.x - a.x) * w, y: a.y + (b.y - a.y) * w });
+  const hip = mix(o.hip, P(k.hip));
+  const ta = -Math.PI / 2 + k.pitch * DEG * fsg + (k.roll ?? 0) * DEG * (front ? ns * latS : 0);
+  const torsoAngle = o.torsoAngle + (ta - o.torsoAngle) * w;
+  const rot = (x: number, y: number) => { const r = torsoAngle + Math.PI / 2, cs = Math.cos(r), sn = Math.sin(r); return { x: x * cs - y * sn, y: x * sn + y * cs }; };
+  const neck = { x: hip.x + Math.cos(torsoAngle) * B.torso, y: hip.y + Math.sin(torsoAngle) * B.torso };
+  const ho = rot(v.headOffsetX, -B.neck), so = rot(v.shoulderOffsetX, B.shoulderDrop);
+  const head = { x: neck.x + ho.x, y: neck.y + ho.y }, shoulder = { x: neck.x + so.x, y: neck.y + so.y };
+  const g = { x: gfx, y: gfy };
+  const legs = [0, 1].map((i) => {
+    const q = k.feet[ix(i)], root = { x: hip.x + c.sideX(i) * v.hipSpread, y: hip.y };
+    const A = mix(o.legs[i].end, P(q, AH));
+    const u = Math.abs(gfx) > 0.45 ? (A.x - root.x) / gfx : (q.u - k.hip.u) * L;
+    return legIK3D(root, A, u, g, B.thigh, B.shin);
+  }) as [Limb, Limb];
+  const arms = [0, 1].map((i) => {
+    const root = { x: shoulder.x + c.sideX(i) * v.shoulderSpread, y: shoulder.y };
+    return ik(root, mix(o.arms[i].end, P(k.hands[ix(i)])), B.upperArm, B.forearm, 1);
+  }) as [Limb, Limb];
+  const fa = [0, 1].map((i) => o.feet[i] + (-(k.feet[ix(i)].th ?? 0) * DEG * clamp(c.side, 0.25, 1) * fsg - o.feet[i]) * w) as [number, number];
+  // kontakty (ladění): chodidla, ruce, kolena, sed; „~“ = klouže
+  const contacts: { p: Vec2; slide: boolean; kind: string }[] = [];
+  for (const fl of k.c) {
+    const slide = fl.endsWith('~'), id = fl.replace('~', ''), n = Number(id[1]);
+    const j = id === 's' ? -1 : swap ? 1 - n : n;
+    const p = id === 's' ? { x: hip.x, y: hip.y + 0.1 * L } : id[0] === 'f' ? legs[j].end : id[0] === 'h' ? arms[j].end : legs[j].joint;
+    contacts.push({ p, slide, kind: id[0] });
+  }
+  Object.assign(o, { hip, neck, head, shoulder, torsoAngle, legs, arms, feet: fa, handR: arms[1].end, headTilt: o.headTilt + (-k.head * DEG * fsg - o.headTilt) * w, cane: undefined, fall: { ph: k.ph, contacts, end: { x: gfx * (fallEndShift(f.v) - du) * L, y: gfy * (fallEndShift(f.v) - du) * L } } });
 }
 
 /** Geometrie chůze ze šablony (výchozí bota podle zadání: pata 0,042 L, přednoží 0,113 L). */

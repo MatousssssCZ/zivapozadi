@@ -11,6 +11,8 @@ import { getActivity } from '../core/activities/registry';
 import { polygonsOverlap } from '../core/math/geom';
 import { characterVisual, localToScene, gaitContextFor } from '../core/render/characterPose';
 import { ELDER_PROFILES } from '../core/anim/elderGait';
+import { FALL_LABEL, FALL_PHASE_LABEL } from '../core/anim/fallPoses';
+import { coopMassBalance, type CoopData } from '../core/activities/coopSnowman';
 import { LEG_PHYS_M } from '../core/anim/gaitProfile';
 import { cameraFor, toScreen } from '../core/scene/camera';
 import { baseMass, cellMass, cellCenter, stocks } from '../core/sim/snowMaterial';
@@ -31,6 +33,10 @@ export interface OverlayInput {
   clearingDebug?: boolean;
   /** Ladění chůze seniorů: opěrné body chodidel, hrot hole (kotva / švih), rukojeť, profil, krok, kadence. */
   gaitDebug?: boolean;
+  /** Ladění pádů: kontakty (zelená = stojí, červená = klouže), fáze, pomocník. */
+  fallDebug?: boolean;
+  /** Ladění sněhuláka (rodič + dítě): úkoly, rezervace, hmotnosti a velikosti koulí, kontakty, sněhové pole. */
+  snowmanDebug?: boolean;
 }
 
 type Ctx = CanvasRenderingContext2D;
@@ -62,6 +68,8 @@ function facingTick(ctx: Ctx, p: Vec2, facing: number | undefined, px: number, c
 export function drawOverlay(ctx: Ctx, o: OverlayInput) {
   if (o.clearingDebug && o.sim) drawClearingDebug(ctx, o);
   if (o.gaitDebug && o.sim) drawGaitDebug(ctx, o);
+  if (o.fallDebug && o.sim) drawFallDebug(ctx, o);
+  if (o.snowmanDebug && o.sim) drawSnowmanDebug(ctx, o);
   const { project: p, px, selection: sel } = o;
   const isSel = (kind: string, id: string) => sel?.kind === kind && sel.id === id;
   ctx.save();
@@ -224,6 +232,61 @@ function drawPoint(ctx: Ctx, pos: Vec2, kind: string, facing: number | undefined
 }
 
 /** Ladicí náhled odklízení (jen editor, nikdy v exportu ani v živém pozadí). */
+function drawSnowmanDebug(ctx: Ctx, o: OverlayInput) {
+  const sim = o.sim!, px = o.px, cam = cameraFor(o.project.scene);
+  ctx.save();
+  for (const s of sim.state.sessions ?? []) {
+    const d = s.data as unknown as CoopData; if (!d?.coop) continue;
+    // koule: obrys, hmotnost, průměr, vlastník
+    for (const b of d.balls) {
+      const g = toScreen(cam, { X: b.X, Z: b.Z }, b.H), R = (b.r * cam.f) / b.Z;
+      ctx.strokeStyle = b.state === 'carried' ? '#ff0' : b.state === 'placed' ? '#22ff66' : '#00e5ff'; ctx.lineWidth = 1.5 * px;
+      ctx.beginPath(); ctx.arc(g.x, g.y, R, 0, 7); ctx.stroke();
+      const own = b.owner ? sim.state.agents.find((x) => x.id === b.owner)?.name : '—';
+      label(ctx, `${['spodní', 'prostřední', 'hlava'][b.k]} ⌀${(b.r * 200).toFixed(0)} cm · ${b.m.toFixed(2)} kg · ${b.state} · ${own}`, g.x, g.y - R - 4 * px, px);
+    }
+    // úkoly účastníků
+    for (const id of [d.parent, d.child]) {
+      const a = sim.state.agents.find((x) => x.id === id); if (!a || a.hidden) continue;
+      const t = d.task[id]; const c = sim.characterOf(a.id), m = c ? sim.manifests[c.assetId] : undefined;
+      const top = c && m ? characterVisual(a, m, c, o.project.scene) : null;
+      label(ctx, `${a.name}: ${t?.name}/${t?.step}`, a.pos.x, a.pos.y - (top ? 150 * top.scale : 120), px, '#fff', id === d.parent ? 'rgba(40,60,140,0.85)' : 'rgba(140,60,40,0.85)');
+    }
+    // košík, rezervace, předání, bilance
+    const bq = toScreen(cam, { X: d.basket.X, Z: d.basket.Z });
+    const bal = coopMassBalance(sim.state, s);
+    const lines = [
+      `fáze ${s.phase}${d.handover ? ` · předání: ${d.handover.stage}` : ''}`,
+      `rezervace: ${Object.entries(d.res).map(([k, v]) => `${k}→${sim.state.agents.find((x) => x.id === v)?.name ?? v}`).join(', ') || '—'}`,
+      `sníh ze země ${bal.removed.toFixed(2)} kg = koule ${bal.inBalls.toFixed(2)} + spoj ${bal.joint.toFixed(2)} + v náručí ${bal.carried.toFixed(2)}`,
+      `košík: ${d.basket.items.map((it) => `${it.kind}:${it.state}`).join(' ') || 'nepřipraven'}`,
+    ];
+    lines.forEach((l, i) => label(ctx, l, bq.x, bq.y + 26 * px + i * 18 * px, px));
+    if (d.handover && ['contact', 'transfer'].includes(d.handover.stage)) {
+      const P = sim.state.agents.find((x) => x.id === d.parent)!, C = sim.state.agents.find((x) => x.id === d.child)!;
+      ctx.strokeStyle = '#ffd400'; ctx.lineWidth = 2 * px; ctx.beginPath(); ctx.moveTo(P.pos.x, P.pos.y - 60); ctx.lineTo(C.pos.x, C.pos.y - 40); ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+function drawFallDebug(ctx: Ctx, o: OverlayInput) {
+  const sim = o.sim!, px = o.px, st = sim.state.falls;
+  if (!st) return;
+  ctx.save();
+  for (const e of st.active) {
+    const a = sim.state.agents.find((x) => x.id === e.agentId); if (!a || !a.anim.fall) continue;
+    const c = sim.characterOf(a.id), m = c ? sim.manifests[c.assetId] : undefined; if (!c || !m) continue;
+    const cv = characterVisual(a, m, c, o.project.scene);
+    for (const k of cv.pose.fall?.contacts ?? []) { const p = localToScene(cv, k.p); ctx.fillStyle = k.slide ? '#ff2d2d' : '#22ff66'; ctx.beginPath(); ctx.arc(p.x, p.y, 4 * px, 0, 7); ctx.fill(); }
+    const hp = e.helperId ? sim.state.agents.find((x) => x.id === e.helperId) : null;
+    if (hp) { ctx.strokeStyle = '#ffd400'; ctx.setLineDash([5 * px, 4 * px]); ctx.lineWidth = 1.5 * px; ctx.beginPath(); ctx.moveTo(hp.pos.x, hp.pos.y); ctx.lineTo(a.pos.x, a.pos.y); ctx.stroke(); ctx.setLineDash([]); }
+    label(ctx, `${FALL_LABEL[a.anim.fall.v]} · ${FALL_PHASE_LABEL[cv.pose.fall?.ph ?? 'loss']} · ${a.anim.fall.t.toFixed(2)} s${e.slow !== 1 ? ` (zpomaleno ${e.slow}×)` : ''}${hp ? ` · pomáhá ${hp.name}` : ''}`, cv.x, cv.y - 140 * cv.scale, px);
+  }
+  for (const mk of st.marks) { const p = toScreen(cameraFor(o.project.scene), { X: mk.X, Z: mk.Z }); ctx.strokeStyle = '#00e5ff'; ctx.lineWidth = 1 * px; ctx.beginPath(); ctx.arc(p.x, p.y, 3 * px, 0, 7); ctx.stroke(); }
+  ctx.restore();
+}
+
 function drawGaitDebug(ctx: Ctx, o: OverlayInput) {
   const sim = o.sim!, px = o.px;
   ctx.save();

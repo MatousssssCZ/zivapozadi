@@ -200,3 +200,20 @@ export function clearingCommand(kind: 'cycle' | 'reset') {
   else if (st.phase === 'offstage' || st.phase === 'hold') { st.single = true; st.until = now; }
   store.toast('info', kind === 'reset' ? 'Sníh obnoven, postava mimo scénu.' : 'Spuštěn jeden pracovní cyklus.', 2000);
 }
+
+/** Ladění pádů: spustí variantu u vybrané postavy (nebo u vhodné postavy u středu obrazu). */
+export function fallCommand(v: import('../core/anim/fallPoses').FallVariant, side: 1 | -1, opts: { slow: boolean; helper: boolean }) {
+  const sim = store.sim.sim;
+  if (!sim) return;
+  const sel = store.state.selection;
+  const r = sim.triggerFall(v, side, { agentId: sel?.kind === 'character' ? sel.id : null, slow: opts.slow ? 4 : 1, helper: opts.helper });
+  const ok = sim.state.agents.some((a) => a.name === r);
+  store.toast(ok ? 'info' : 'warn', ok ? `Pád: ${r}` : r, 2500);
+}
+
+/** Ladění: spustí stavbu sněhuláka rodičem a dítětem (nejbližší volná rodina) hned. */
+export function coopSnowmanCommand() {
+  const sim = store.sim.sim; if (!sim) return;
+  const r = sim.startCoopSnowmanNow();
+  store.toast(r.ok ? 'info' : 'warn', r.msg, 3000);
+}

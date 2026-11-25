@@ -50,6 +50,8 @@ export interface AnimState {
   speaking?: boolean;
   /** Senior (profil A/B, hůl) – viz elderGait.ts. */
   elder?: ElderState;
+  /** Probíhající pád / zachycené uklouznutí: varianta, strana (±1), čas od začátku (s). */
+  fall?: { v: import('./fallPoses').FallVariant; s: 1 | -1; t: number; du?: number } | null;
 }
 
 /** Údaje o postavě potřebné pro chůzi (délka nohy, geometrie boty, individuální délka kroku). */
@@ -157,6 +159,11 @@ export function stepAnimator(a: AnimState, m: CharacterManifest, dt: number, spe
       const target = clamp(speed / Math.max(1e-6, refSpeed * 0.3), 0, 1);
       a.walkBlend += clamp(target - a.walkBlend, -dt * 3, dt * 3);
       if (a.walkBlend >= 0.999) a.startRest = null;
+    } else if (a.walkBlend > 0 && !a.settle && a.startRest) {
+      // zastavení hned po rozejití (chůze ještě nenaběhla): plynule zpět do klidového postoje, ze kterého
+      // vyšla – dokročení z plné chůze by tu skočilo (póza je zatím skoro klidová)
+      a.walkBlend = Math.max(0, a.walkBlend - dt * 3);
+      if (a.walkBlend === 0) { a.startRest = null; a.stride = undefined; }
     } else if (a.walkBlend > 0) {
       // zastavení: opřená noha zůstává, švihová dokročí; pak klid
       if (!a.settle) a.settle = { phase: a.walkPhase, stride: a.stride ?? targetS, w: a.gaitW ?? targetW, t: 0, heelRel: heelRelOf(a) };

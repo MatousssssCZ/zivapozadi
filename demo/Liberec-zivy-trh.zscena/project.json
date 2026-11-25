@@ -3,8 +3,8 @@
   "formatVersion": 1,
   "meta": {
     "name": "Liberec – živý vánoční trh",
-    "createdAt": "2026-11-25T09:10:56.083Z",
-    "modifiedAt": "2026-11-25T09:10:56.238Z",
+    "createdAt": "2026-11-25T13:39:39.353Z",
+    "modifiedAt": "2026-11-25T13:39:39.539Z",
     "appVersion": "0.1.0"
   },
   "seed": 2611,
@@ -1510,13 +1510,13 @@
           "seed": 1721889013,
           "bodyTemplate": "adult-cg",
           "variants": {
-            "jacket": "jacket_coat_cg",
-            "hat": "hat_beanie_cg",
+            "jacket": "jacket_puffer_cg",
+            "hat": "hat_rib_cg",
             "scarf": "scarf_long_cg",
             "trousers": "trousers_cg",
-            "boots": "boots_cg",
+            "boots": "boots_hiking_cg",
             "gloves": "gloves_cg",
-            "head": "head_cg"
+            "head": "head_03_cg"
           },
           "colors": {
             "jacket": "kremova",
@@ -1673,13 +1673,13 @@
           "seed": 106512160,
           "bodyTemplate": "adult-cg",
           "variants": {
-            "jacket": "jacket_coat_cg",
-            "hat": "hat_beanie_cg",
-            "scarf": "scarf_long_cg",
+            "jacket": "jacket_puffer_cg",
+            "hat": "hat_rib_cg",
+            "scarf": "scarf_neckwarmer_cg",
             "trousers": "trousers_cg",
             "boots": "boots_cg",
-            "gloves": "gloves_cg",
-            "head": "head_cg"
+            "gloves": "gloves_puffer_cg",
+            "head": "head_08_cg"
           },
           "colors": {
             "jacket": "okrova",
@@ -1837,12 +1837,12 @@
           "bodyTemplate": "adult-cg",
           "variants": {
             "jacket": "jacket_coat_cg",
-            "hat": "hat_beanie_cg",
-            "scarf": "scarf_long_cg",
+            "hat": "hat_rib_cg",
+            "scarf": "scarf_neckwarmer_cg",
             "trousers": "trousers_cg",
-            "boots": "boots_cg",
-            "gloves": "gloves_cg",
-            "head": "head_cg"
+            "boots": "boots_hiking_cg",
+            "gloves": "gloves_puffer_cg",
+            "head": "head_04_cg"
           },
           "colors": {
             "jacket": "tmave-seda",
@@ -1999,13 +1999,13 @@
           "seed": 1074754881,
           "bodyTemplate": "adult-cg",
           "variants": {
-            "jacket": "jacket_coat_cg",
+            "jacket": "jacket_puffer_cg",
             "hat": "hat_beanie_cg",
             "scarf": "scarf_long_cg",
             "trousers": "trousers_cg",
-            "boots": "boots_cg",
-            "gloves": "gloves_cg",
-            "head": "head_cg"
+            "boots": "boots_hiking_cg",
+            "gloves": "gloves_puffer_cg",
+            "head": "head_08_cg"
           },
           "colors": {
             "jacket": "olivova",
@@ -2159,40 +2159,40 @@
         "appearance": {
           "generator": "parts",
           "libraryId": "malovane-cg-v1",
-          "seed": 1384460308,
+          "seed": 1401237927,
           "bodyTemplate": "adult-cg",
           "variants": {
             "jacket": "jacket_coat_cg",
             "hat": "hat_beanie_cg",
             "scarf": "scarf_long_cg",
-            "trousers": "trousers_cg",
+            "trousers": "trousers_slim_cg",
             "boots": "boots_cg",
-            "gloves": "gloves_cg",
-            "head": "head_cg"
+            "gloves": "gloves_puffer_cg",
+            "head": "head_09_cg"
           },
           "colors": {
-            "jacket": "vinova",
-            "hat": "tmave-seda",
-            "scarf": "kremova",
-            "gloves": "tmave-seda",
-            "trousers": "olivova",
+            "jacket": "kremova",
+            "hat": "olivova",
+            "scarf": "vinova",
+            "gloves": "olivova",
+            "trousers": "hneda",
             "boots": "tmave-seda"
           },
           "proportions": {
-            "height": 0.951,
-            "build": 0.969
+            "height": 1.016,
+            "build": 1.025
           },
           "motion": {
-            "strideScale": 0.947,
-            "armSwing": 0.793,
-            "bob": 1.063,
-            "sway": 0.948,
-            "idleTempo": 0.906,
-            "lean": 0.895,
-            "speed": 1.101,
-            "phase": 0.671,
-            "armLag": -0.722,
-            "armLR": 1.032
+            "strideScale": 0.946,
+            "armSwing": 1.005,
+            "bob": 1.11,
+            "sway": 1.224,
+            "idleTempo": 0.988,
+            "lean": 2.947,
+            "speed": 1.058,
+            "phase": 0.578,
+            "armLag": -0.744,
+            "armLR": 1.042
           },
           "locks": []
         },
@@ -2325,13 +2325,13 @@
           "seed": 1115610779,
           "bodyTemplate": "adult-cg",
           "variants": {
-            "jacket": "jacket_coat_cg",
+            "jacket": "jacket_puffer_cg",
             "hat": "hat_beanie_cg",
-            "scarf": "scarf_long_cg",
-            "trousers": "trousers_cg",
-            "boots": "boots_cg",
-            "gloves": "gloves_cg",
-            "head": "head_cg"
+            "scarf": "scarf_neckwarmer_cg",
+            "trousers": "trousers_slim_cg",
+            "boots": "boots_hiking_cg",
+            "gloves": "gloves_puffer_cg",
+            "head": "head_06_cg"
           },
           "colors": {
             "jacket": "petrolejova",
@@ -4193,13 +4193,13 @@
         "seed": 509904246,
         "bodyTemplate": "adult-cg",
         "variants": {
-          "jacket": "jacket_coat_cg",
-          "hat": "hat_beanie_cg",
-          "scarf": "scarf_long_cg",
-          "trousers": "trousers_cg",
-          "boots": "boots_cg",
-          "gloves": "gloves_cg",
-          "head": "head_cg"
+          "jacket": "jacket_puffer_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_neckwarmer_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_hiking_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_06_cg"
         },
         "colors": {
           "jacket": "hneda",
@@ -4261,11 +4261,11 @@
         "variants": {
           "jacket": "jacket_coat_cg",
           "hat": "hat_beanie_cg",
-          "scarf": "scarf_long_cg",
-          "trousers": "trousers_cg",
-          "boots": "boots_cg",
-          "gloves": "gloves_cg",
-          "head": "head_cg"
+          "scarf": "scarf_neckwarmer_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_hiking_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_02_cg"
         },
         "colors": {
           "jacket": "okrova",
@@ -4327,11 +4327,11 @@
         "variants": {
           "jacket": "jacket_coat_cg",
           "hat": "hat_beanie_cg",
-          "scarf": "scarf_long_cg",
-          "trousers": "trousers_cg",
-          "boots": "boots_cg",
+          "scarf": "scarf_neckwarmer_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_hiking_cg",
           "gloves": "gloves_cg",
-          "head": "head_cg"
+          "head": "head_08_cg"
         },
         "colors": {
           "jacket": "hneda",
@@ -4393,12 +4393,12 @@
         "bodyTemplate": "adult-cg",
         "variants": {
           "jacket": "jacket_coat_cg",
-          "hat": "hat_beanie_cg",
-          "scarf": "scarf_long_cg",
-          "trousers": "trousers_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_neckwarmer_cg",
+          "trousers": "trousers_slim_cg",
           "boots": "boots_cg",
-          "gloves": "gloves_cg",
-          "head": "head_cg"
+          "gloves": "gloves_puffer_cg",
+          "head": "head_10_cg"
         },
         "colors": {
           "jacket": "olivova",
@@ -4458,13 +4458,13 @@
         "seed": 446312324,
         "bodyTemplate": "adult-cg",
         "variants": {
-          "jacket": "jacket_coat_cg",
+          "jacket": "jacket_puffer_cg",
           "hat": "hat_beanie_cg",
-          "scarf": "scarf_long_cg",
+          "scarf": "scarf_neckwarmer_cg",
           "trousers": "trousers_cg",
           "boots": "boots_cg",
-          "gloves": "gloves_cg",
-          "head": "head_cg"
+          "gloves": "gloves_puffer_cg",
+          "head": "head_12_cg"
         },
         "colors": {
           "jacket": "vinova",
@@ -4524,13 +4524,13 @@
         "seed": 1766062137,
         "bodyTemplate": "adult-cg",
         "variants": {
-          "jacket": "jacket_coat_cg",
-          "hat": "hat_beanie_cg",
+          "jacket": "jacket_puffer_cg",
+          "hat": "hat_rib_cg",
           "scarf": "scarf_long_cg",
           "trousers": "trousers_cg",
           "boots": "boots_cg",
-          "gloves": "gloves_cg",
-          "head": "head_cg"
+          "gloves": "gloves_puffer_cg",
+          "head": "head_04_cg"
         },
         "colors": {
           "jacket": "okrova",
@@ -4590,13 +4590,13 @@
         "seed": 2119786947,
         "bodyTemplate": "adult-cg",
         "variants": {
-          "jacket": "jacket_coat_cg",
+          "jacket": "jacket_puffer_cg",
           "hat": "hat_beanie_cg",
           "scarf": "scarf_long_cg",
           "trousers": "trousers_cg",
           "boots": "boots_cg",
-          "gloves": "gloves_cg",
-          "head": "head_cg"
+          "gloves": "gloves_puffer_cg",
+          "head": "head_10_cg"
         },
         "colors": {
           "jacket": "tmave-seda",
@@ -4656,13 +4656,13 @@
         "seed": 1828936919,
         "bodyTemplate": "adult-cg",
         "variants": {
-          "jacket": "jacket_coat_cg",
-          "hat": "hat_beanie_cg",
-          "scarf": "scarf_long_cg",
+          "jacket": "jacket_puffer_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_neckwarmer_cg",
           "trousers": "trousers_cg",
           "boots": "boots_cg",
           "gloves": "gloves_cg",
-          "head": "head_cg"
+          "head": "head_01_cg"
         },
         "colors": {
           "jacket": "vinova",
@@ -4723,12 +4723,12 @@
         "bodyTemplate": "adult-cg",
         "variants": {
           "jacket": "jacket_coat_cg",
-          "hat": "hat_beanie_cg",
-          "scarf": "scarf_long_cg",
-          "trousers": "trousers_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_neckwarmer_cg",
+          "trousers": "trousers_slim_cg",
           "boots": "boots_cg",
-          "gloves": "gloves_cg",
-          "head": "head_cg"
+          "gloves": "gloves_puffer_cg",
+          "head": "head_04_cg"
         },
         "colors": {
           "jacket": "tmave-seda",
@@ -4788,13 +4788,13 @@
         "seed": 1788081021,
         "bodyTemplate": "adult-cg",
         "variants": {
-          "jacket": "jacket_coat_cg",
+          "jacket": "jacket_puffer_cg",
           "hat": "hat_beanie_cg",
-          "scarf": "scarf_long_cg",
-          "trousers": "trousers_cg",
-          "boots": "boots_cg",
+          "scarf": "scarf_neckwarmer_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_hiking_cg",
           "gloves": "gloves_cg",
-          "head": "head_cg"
+          "head": "head_05_cg"
         },
         "colors": {
           "jacket": "hneda",
@@ -4855,12 +4855,12 @@
         "bodyTemplate": "adult-cg",
         "variants": {
           "jacket": "jacket_coat_cg",
-          "hat": "hat_beanie_cg",
-          "scarf": "scarf_long_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_neckwarmer_cg",
           "trousers": "trousers_cg",
           "boots": "boots_cg",
-          "gloves": "gloves_cg",
-          "head": "head_cg"
+          "gloves": "gloves_puffer_cg",
+          "head": "head_05_cg"
         },
         "colors": {
           "jacket": "okrova",
@@ -4921,13 +4921,13 @@
         "seed": 1942459444,
         "bodyTemplate": "adult-cg",
         "variants": {
-          "jacket": "jacket_coat_cg",
+          "jacket": "jacket_puffer_cg",
           "hat": "hat_beanie_cg",
           "scarf": "scarf_long_cg",
           "trousers": "trousers_cg",
-          "boots": "boots_cg",
-          "gloves": "gloves_cg",
-          "head": "head_cg"
+          "boots": "boots_hiking_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_08_cg"
         },
         "colors": {
           "jacket": "tmave-seda",
@@ -4987,13 +4987,13 @@
         "seed": 1156812040,
         "bodyTemplate": "adult-cg",
         "variants": {
-          "jacket": "jacket_coat_cg",
+          "jacket": "jacket_puffer_cg",
           "hat": "hat_beanie_cg",
           "scarf": "scarf_long_cg",
           "trousers": "trousers_cg",
-          "boots": "boots_cg",
-          "gloves": "gloves_cg",
-          "head": "head_cg"
+          "boots": "boots_hiking_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_04_cg"
         },
         "colors": {
           "jacket": "olivova",
@@ -5054,12 +5054,12 @@
         "bodyTemplate": "adult-cg",
         "variants": {
           "jacket": "jacket_coat_cg",
-          "hat": "hat_beanie_cg",
+          "hat": "hat_rib_cg",
           "scarf": "scarf_long_cg",
           "trousers": "trousers_cg",
-          "boots": "boots_cg",
+          "boots": "boots_hiking_cg",
           "gloves": "gloves_cg",
-          "head": "head_cg"
+          "head": "head_12_cg"
         },
         "colors": {
           "jacket": "vinova",
@@ -5121,11 +5121,11 @@
         "variants": {
           "jacket": "jacket_coat_cg",
           "hat": "hat_beanie_cg",
-          "scarf": "scarf_long_cg",
+          "scarf": "scarf_neckwarmer_cg",
           "trousers": "trousers_cg",
           "boots": "boots_cg",
-          "gloves": "gloves_cg",
-          "head": "head_cg"
+          "gloves": "gloves_puffer_cg",
+          "head": "head_11_cg"
         },
         "colors": {
           "jacket": "tmave-seda",
@@ -5185,13 +5185,13 @@
         "seed": 479419345,
         "bodyTemplate": "adult-cg",
         "variants": {
-          "jacket": "jacket_coat_cg",
+          "jacket": "jacket_puffer_cg",
           "hat": "hat_beanie_cg",
-          "scarf": "scarf_long_cg",
-          "trousers": "trousers_cg",
+          "scarf": "scarf_neckwarmer_cg",
+          "trousers": "trousers_slim_cg",
           "boots": "boots_cg",
-          "gloves": "gloves_cg",
-          "head": "head_cg"
+          "gloves": "gloves_puffer_cg",
+          "head": "head_07_cg"
         },
         "colors": {
           "jacket": "vinova",
@@ -5251,13 +5251,13 @@
         "seed": 1155581508,
         "bodyTemplate": "adult-cg",
         "variants": {
-          "jacket": "jacket_coat_cg",
+          "jacket": "jacket_puffer_cg",
           "hat": "hat_beanie_cg",
-          "scarf": "scarf_long_cg",
+          "scarf": "scarf_neckwarmer_cg",
           "trousers": "trousers_cg",
-          "boots": "boots_cg",
+          "boots": "boots_hiking_cg",
           "gloves": "gloves_cg",
-          "head": "head_cg"
+          "head": "head_05_cg"
         },
         "colors": {
           "jacket": "petrolejova",
@@ -5317,13 +5317,13 @@
         "seed": 1983315342,
         "bodyTemplate": "adult-cg",
         "variants": {
-          "jacket": "jacket_coat_cg",
+          "jacket": "jacket_puffer_cg",
           "hat": "hat_beanie_cg",
           "scarf": "scarf_long_cg",
           "trousers": "trousers_cg",
           "boots": "boots_cg",
-          "gloves": "gloves_cg",
-          "head": "head_cg"
+          "gloves": "gloves_puffer_cg",
+          "head": "head_06_cg"
         },
         "colors": {
           "jacket": "hneda",
@@ -5383,13 +5383,13 @@
         "seed": 127645873,
         "bodyTemplate": "adult-cg",
         "variants": {
-          "jacket": "jacket_coat_cg",
-          "hat": "hat_beanie_cg",
-          "scarf": "scarf_long_cg",
-          "trousers": "trousers_cg",
-          "boots": "boots_cg",
-          "gloves": "gloves_cg",
-          "head": "head_cg"
+          "jacket": "jacket_puffer_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_neckwarmer_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_hiking_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_12_cg"
         },
         "colors": {
           "jacket": "kremova",
@@ -5434,7 +5434,7 @@
       "assetId": "builtin_postava_cg",
       "startNodeId": "n18",
       "baseScale": 1,
-      "walkSpeed": 70.9,
+      "walkSpeed": 61.6,
       "palette": {
         "coat": "#c8553d",
         "hat": "#f2c14e",
@@ -5446,40 +5446,40 @@
       "appearance": {
         "generator": "parts",
         "libraryId": "malovane-cg-v1",
-        "seed": 463605878,
+        "seed": 413273021,
         "bodyTemplate": "adult-cg",
         "variants": {
           "jacket": "jacket_coat_cg",
           "hat": "hat_beanie_cg",
-          "scarf": "scarf_long_cg",
-          "trousers": "trousers_cg",
-          "boots": "boots_cg",
+          "scarf": "scarf_neckwarmer_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_hiking_cg",
           "gloves": "gloves_cg",
-          "head": "head_cg"
+          "head": "head_05_cg"
         },
         "colors": {
-          "jacket": "hneda",
-          "hat": "vinova",
-          "scarf": "petrolejova",
-          "gloves": "vinova",
-          "trousers": "hneda",
+          "jacket": "vinova",
+          "hat": "hneda",
+          "scarf": "okrova",
+          "gloves": "hneda",
+          "trousers": "olivova",
           "boots": "tmave-seda"
         },
         "proportions": {
-          "height": 0.968,
-          "build": 0.98
+          "height": 0.997,
+          "build": 0.977
         },
         "motion": {
-          "strideScale": 0.955,
-          "armSwing": 0.925,
-          "bob": 0.957,
-          "sway": 1.236,
-          "idleTempo": 1,
-          "lean": 2.164,
-          "speed": 1.181,
-          "phase": 0.689,
-          "armLag": -1.708,
-          "armLR": 0.927
+          "strideScale": 0.909,
+          "armSwing": 1.159,
+          "bob": 1.198,
+          "sway": 1.043,
+          "idleTempo": 0.934,
+          "lean": 0.303,
+          "speed": 1.027,
+          "phase": 0.393,
+          "armLag": 2.298,
+          "armLR": 0.896
         },
         "locks": []
       },
@@ -5516,12 +5516,12 @@
         "bodyTemplate": "adult-cg",
         "variants": {
           "jacket": "jacket_coat_cg",
-          "hat": "hat_beanie_cg",
-          "scarf": "scarf_long_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_neckwarmer_cg",
           "trousers": "trousers_cg",
           "boots": "boots_cg",
-          "gloves": "gloves_cg",
-          "head": "head_cg"
+          "gloves": "gloves_puffer_cg",
+          "head": "head_03_cg"
         },
         "colors": {
           "jacket": "olivova",
@@ -5586,8 +5586,8 @@
           "scarf": "scarf_long_cg",
           "trousers": "trousers_cg",
           "boots": "boots_cg",
-          "gloves": "gloves_cg",
-          "head": "head_cg"
+          "gloves": "gloves_puffer_cg",
+          "head": "head_05_cg"
         },
         "colors": {
           "jacket": "hneda",
@@ -5647,13 +5647,13 @@
         "seed": 1656845438,
         "bodyTemplate": "adult-cg",
         "variants": {
-          "jacket": "jacket_coat_cg",
-          "hat": "hat_beanie_cg",
-          "scarf": "scarf_long_cg",
+          "jacket": "jacket_puffer_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_neckwarmer_cg",
           "trousers": "trousers_cg",
           "boots": "boots_cg",
           "gloves": "gloves_cg",
-          "head": "head_cg"
+          "head": "head_11_cg"
         },
         "colors": {
           "jacket": "okrova",
@@ -5713,13 +5713,13 @@
         "seed": 1041391924,
         "bodyTemplate": "adult-cg",
         "variants": {
-          "jacket": "jacket_coat_cg",
+          "jacket": "jacket_puffer_cg",
           "hat": "hat_beanie_cg",
-          "scarf": "scarf_long_cg",
+          "scarf": "scarf_neckwarmer_cg",
           "trousers": "trousers_cg",
           "boots": "boots_cg",
           "gloves": "gloves_cg",
-          "head": "head_cg"
+          "head": "head_07_cg"
         },
         "colors": {
           "jacket": "vinova",
@@ -6004,7 +6004,7 @@
       "assetId": "builtin_postava_dite",
       "startNodeId": "n18",
       "baseScale": 1,
-      "walkSpeed": 70.9,
+      "walkSpeed": 61.6,
       "palette": {
         "coat": "#c8553d",
         "hat": "#f2c14e",
@@ -6080,12 +6080,12 @@
         "bodyTemplate": "adult-cg",
         "variants": {
           "jacket": "jacket_coat_cg",
-          "hat": "hat_beanie_cg",
-          "scarf": "scarf_long_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_neckwarmer_cg",
           "trousers": "trousers_cg",
           "boots": "boots_cg",
           "gloves": "gloves_cg",
-          "head": "head_cg"
+          "head": "head_11_cg"
         },
         "colors": {
           "jacket": "kremova",
@@ -6137,10 +6137,10 @@
         "seed": 226174647,
         "bodyTemplate": "adult-cg",
         "variants": {
-          "jacket": "jacket_coat_cg",
-          "hat": "hat_beanie_cg",
+          "jacket": "jacket_puffer_cg",
+          "hat": "hat_rib_cg",
           "scarf": "scarf_long_cg",
-          "trousers": "trousers_cg",
+          "trousers": "trousers_slim_cg",
           "boots": "boots_cg",
           "gloves": "gloves_cg",
           "head": "head_cg"
@@ -6196,12 +6196,12 @@
         "bodyTemplate": "adult-cg",
         "variants": {
           "jacket": "jacket_coat_cg",
-          "hat": "hat_beanie_cg",
-          "scarf": "scarf_long_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_neckwarmer_cg",
           "trousers": "trousers_cg",
-          "boots": "boots_cg",
+          "boots": "boots_hiking_cg",
           "gloves": "gloves_cg",
-          "head": "head_cg"
+          "head": "head_11_cg"
         },
         "colors": {
           "jacket": "petrolejova",
@@ -6255,12 +6255,12 @@
         "bodyTemplate": "adult-cg",
         "variants": {
           "jacket": "jacket_coat_cg",
-          "hat": "hat_beanie_cg",
-          "scarf": "scarf_long_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_neckwarmer_cg",
           "trousers": "trousers_cg",
           "boots": "boots_cg",
           "gloves": "gloves_cg",
-          "head": "head_cg"
+          "head": "head_10_cg"
         },
         "colors": {
           "jacket": "okrova",
@@ -6418,5 +6418,10 @@
       }
     ],
     "firstDelay": 70
+  },
+  "falls": {
+    "enabled": true,
+    "meanIntervalSec": 210,
+    "minGapSec": 120
   }
 }

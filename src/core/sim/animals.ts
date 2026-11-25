@@ -151,8 +151,13 @@ function moveToward(a: AnimalState, cam: ReturnType<typeof cameraFor>, P: World,
 
 function stepDog(a: AnimalState, agents: AgentState[], cam: ReturnType<typeof cameraFor>, t: number, dt: number, env?: AnimalEnv) {
   const o = agents.find((x) => x.id === a.ownerId);
+  if (o && o.hidden && !a.hidden) {
+    // majitel už odešel za okraj: pes za ním doběhne a zmizí až tam (ne uprostřed obrazu)
+    const T = toWorld(cam, o.pos), P = toWorld(cam, a.pos);
+    if (Math.hypot(T.X - P.X, T.Z - P.Z) > 0.35) { a.pos = toScreen(cam, moveToward(a, cam, P, T, 1.4, dt)); a.mode = 'follow'; return; }
+  }
   if (!o || o.hidden) {
-    // majitel mimo scénu: pes je s ním (zmizí u portálu spolu s ním)
+    // majitel mimo scénu: pes je s ním
     a.hidden = true; a.speed = 0; a.mode = 'follow';
     if (o) o.speedFactor = o.speedFactor === 0 ? 1 : o.speedFactor;
     return;
@@ -272,8 +277,8 @@ function stepCat(a: AnimalState, project: ProjectFile, cam: ReturnType<typeof ca
     const usePerch = pi >= 0 && rand(a.rng) < 0.4;
     const spot = usePerch ? perches[pi].from : spots[Math.floor(rand(a.rng) * spots.length)];
     const left = rand(a.rng) < 0.5, W = project.scene.width;
-    const enter = { x: left ? -40 : W + 40, y: spot.y + randRange(a.rng, -20, 40) };
-    const exit = { x: left ? W + 40 : -40, y: spot.y + randRange(a.rng, -20, 60) };
+    const enter = { x: left ? -90 : W + 90, y: spot.y + randRange(a.rng, -20, 40) }; // celá kočka za okrajem
+    const exit = { x: left ? W + 90 : -90, y: spot.y + randRange(a.rng, -20, 60) };
     a.pos = enter; a.path = [{ x: spot.x, y: spot.y }, exit]; a.hidden = false; a.mode = 'walk'; a.speed = 0; a.stretchDone = false;
     a.perch = usePerch ? pi : null;
     if (usePerch && env) pn[pi] = t + 1e6; // obsazeno do seskoku
