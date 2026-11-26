@@ -19,7 +19,23 @@ import type { Vec2 } from '../math/vec';
 import { hashString } from '../math/rng';
 import { ELDER_PROFILES } from '../anim/elderGait';
 import { BLADE_H } from '../sim/rink';
-import type { MotionParams } from '../anim/skeleton';
+import type { MotionParams, SkeletonTemplate } from '../anim/skeleton';
+import { bodyOf, templateFor, type BodyProfile } from '../vector/body';
+import { outfitFor, type Outfit } from '../vector/outfit';
+import { figureGeo } from '../vector/figure';
+import type { FootGeom } from '../anim/gaitKinematics';
+
+/** Vektorové postavy (tělo, oděv, hlava bez rastrových dílů) – kostra, činnosti a kontakty zůstávají společné. */
+let vectorFigures = false;
+export function setVectorFigures(on: boolean) { vectorFigures = on; }
+export function vectorFiguresOn() { return vectorFigures; }
+/** Vektorový plán postavy: tělesný profil, outfit (stabilní ze seedu) a kostra podle profilu. */
+export function vectorPlan(tpl: SkeletonTemplate & { id: string }, app: CharacterAppearance, routine?: string): { body: BodyProfile; outfit: Outfit; tpl: SkeletonTemplate } {
+  const child = /child/.test(tpl.id), age = child ? 'child' : app.seed % 7 === 0 ? 'senior' : 'adult';
+  const body = bodyOf(app.seed, age);
+  void routine;
+  return { body, outfit: outfitFor(app.seed >> 3, age), tpl: templateFor(tpl, body) };
+}
 
 export interface CharacterVisual {
   x: number; y: number; scale: number; mirror: boolean;
@@ -31,6 +47,8 @@ export interface CharacterVisual {
   /** Požadovaný a skutečně použitý pohled (náhrada je explicitní). */
   view?: { requested: ViewId; used: ViewId; substituted: boolean };
   warning?: string;
+  /** Vektorová postava: tělo, outfit, geometrie chodidla. */
+  vec?: { body: BodyProfile; outfit: Outfit; foot: FootGeom };
 }
 
 /** Pohybové parametry upravené profilem seniora (předklon, menší švih paží a pohupování). */
@@ -59,7 +77,8 @@ export function characterVisual(agent: AgentState, m: CharacterManifest, look: C
     const tpl = lib.bodyTemplates.find((t) => t.id === app.bodyTemplate) ?? lib.bodyTemplates[0];
     const req = viewForDirection(agent.anim.dir);
     const rv = resolveView(tpl, req.view);
-    const stpl = scaledTemplate(tpl, app.proportions);
+    const vp = vectorFigures && look.routine !== 'baker' ? vectorPlan(scaledTemplate(tpl, app.proportions) as SkeletonTemplate & { id: string }, app, look.routine) : null;
+    const stpl = vp ? vp.tpl : scaledTemplate(tpl, app.proportions);
     const pose = skeletonPose(stpl, rv.use, req.mirror, agent.anim, agent.holding !== null && agent.holdingKind !== 'bag' && agent.holdingKind !== 'mitten' && agent.holdingKind !== 'shovel', motionOf(agent, app.motion), hashString(agent.id), { ...groundOptions(agent, x, y, scale, req.mirror, cam), snowSink: (agent.snowDepth ?? 0) > 0 && agent.anim ? (agent.snowDepth ?? 0) / Q : 0 });
     const rig = assembleRig(lib, tpl, app, pose, rv.use, vectorAccessories && look.routine !== 'baker' ? accessoriesOf(app, /child/.test(tpl.id)) : null);
     // závěj přes spodek zabořené boty (kreslí se hned po botě; barvu dodá vykreslování z pozadí)
@@ -82,8 +101,18 @@ export function characterVisual(agent: AgentState, m: CharacterManifest, look: C
         return { x: A.x + (g.toe - g.heel) / 2, y: A.y + g.AH - sk, w: (g.heel + g.toe) * 1.12, h: Math.max(0.5, sk * 0.9), px: A.x, py: A.y, rot: pose.feet[i] };
       }) as RigAssembly['snowLips'];
     }
+    if (vp) {
+      // úchop: dlaň blízké ruky (vektorová ruka navazuje na předloktí)
+      const a1 = pose.arms[1], d = { x: a1.end.x - a1.joint.x, y: a1.end.y - a1.joint.y }, dl = Math.hypot(d.x, d.y) || 1;
+      rig.grip = { x: a1.end.x + (d.x / dl) * vp.body.hand * 0.55, y: a1.end.y + (d.y / dl) * vp.body.hand * 0.55 };
+      // doplňky z outfitu (sladěné barvy), geometrie z vektorové hlavy a krku
+      const of = vp.outfit, c = of.colors;
+      rig.acc = { spec: { hat: of.hat === 'fitted' ? 'beanie' : of.hat, hatColor: of.hat === 'fitted' ? c.support : c.accent, hatColor2: c.support, hatStripes: (app.seed & 3) === 1, slouch: of.hat === 'fitted' ? 0 : ((app.seed >> 4) % 5) * 0.05,
+        scarf: of.scarf, scarfColor: of.scarf === 'tube' ? c.support : c.accent, scarfColor2: c.support, scarfStripes: (app.seed & 4) === 4, tailLen: 0.9 + ((app.seed >> 6) % 4) * 0.1, mittens: false, mittenColor: c.accent, mittenCuff: c.support },
+        geo: figureGeo(pose, vp.body, rv.use), order: rig.acc?.order ?? { hat: 0, scarf: 0, mitten: [0, 0] } };
+    }
     return { x, y, scale, mirror: req.mirror, pose, rig, grip: rig.grip, view: { requested: req.view, used: rv.use, substituted: rv.substituted },
-      warning: rig.missing.length ? `Chybí díly: ${rig.missing.join(', ')}` : undefined };
+      warning: rig.missing.length ? `Chybí díly: ${rig.missing.join(', ')}` : undefined, vec: vp ? { body: vp.body, outfit: vp.outfit, foot: footGeomOf(stpl) } : undefined };
   }
   const rd = resolveDirection(m, agent.anim.dir);
   const base: BaseDir = rd.use === 'E' ? 'E' : rd.use === 'NE' ? 'NE' : 'SE';
@@ -127,7 +156,8 @@ export function gaitContextFor(m: CharacterManifest, look: CharacterLook): GaitC
   const lib = m.rigLibrary, app = look.appearance;
   if (m.backend === 'skeleton' && lib && app) {
     const tpl = lib.bodyTemplates.find((t) => t.id === app.bodyTemplate) ?? lib.bodyTemplates[0];
-    const st = scaledTemplate(tpl, app.proportions);
+    const st0 = scaledTemplate(tpl, app.proportions);
+    const st = vectorFigures && look.routine !== 'baker' ? vectorPlan(st0 as SkeletonTemplate & { id: string }, app, look.routine).tpl : st0;
     return { legLen: st.bones.thigh + st.bones.shin, strideScale: app.motion.strideScale, foot: footGeomOf(st) };
   }
   const L = TEST_FIGURE_TEMPLATE.bones.thigh + TEST_FIGURE_TEMPLATE.bones.shin;

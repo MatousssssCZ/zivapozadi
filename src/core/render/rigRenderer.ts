@@ -329,3 +329,7 @@ export function drawRig(ctx: CanvasRenderingContext2D, asm: RigAssembly, images:
   if (!heldDone && drawHeld) drawHeld();
 }
 
+
+/** Pro vektorové postavy: nůž brusle a závěj u boty (stejné jako u malovaných). */
+export const drawBladeVec = (ctx: CanvasRenderingContext2D, b: NonNullable<RigAssembly['blades']>[number]) => drawBlade(ctx, b, false);
+export const drawSnowLipVec = (ctx: CanvasRenderingContext2D, l: SnowLip, color: string) => drawSnowLip(ctx, l, color);

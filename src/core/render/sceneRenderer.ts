@@ -25,6 +25,8 @@ import type { SimState } from '../sim/types';
 import { lidOpenness } from '../sim/simulation';
 import { FOOTPRINT_LIFE, FOOTPRINT_FADE } from '../sim/types';
 import { getCanvasFactory, drawRig, type AccPart } from './rigRenderer';
+import { drawVectorFigure } from '../vector/figure';
+import { drawBladeVec, drawSnowLipVec } from './rigRenderer';
 import { drawHat, drawPompom, drawScarf, drawMitten, hatTop, scarfKnots, stepAccessoryPhysics, TAIL_SEGS } from './accessories';
 import { windFactor } from '../sim/environment';
 import { SIM_DT } from '../sim/types';
@@ -367,6 +369,15 @@ function drawAgentBody(ctx: Ctx, project: ProjectFile, sim: Simulation, a: Agent
     if (cane && cane.hand === 0) drawCane(ctx, cane);
     const heldFn = held && !top ? () => drawHeld(ctx, held, cv, a) : undefined;
     const nearCane = cane && cane.hand === 1 ? () => drawCane(ctx, cane) : undefined;
+    if (cv.vec) {
+      // vektorová postava: stejná póza a doplňky; držené předměty a hůl v blízké ruce navrch
+      const acc = accessoryDrawer(ctx, project, sim, a, cv);
+      const T = ctx.getTransform(), px = Math.hypot(T.a, T.b); // px obrazovky na jednotku postavy (vč. zoomu / exportu)
+      if (cv.rig.blades) for (const b of cv.rig.blades) drawBladeVec(ctx, b);
+      drawVectorFigure(ctx, cv.pose, cv.vec.body, cv.vec.outfit, { view: cv.view?.used ?? 'front3q', foot: cv.vec.foot, detail: Math.min(1, Math.max(0, (px * 130 - 60) / 140)), seed: a.id.length, t: sim.state.step * SIM_DT }, acc ? (part) => acc(part) : undefined);
+      if (snowColor && cv.rig.snowLips) for (const l of cv.rig.snowLips) if (l) drawSnowLipVec(ctx, l, snowColor);
+      nearCane?.(); heldFn?.();
+    } else
     drawRig(ctx, cv.rig, images, m.rigLibraryDir ?? '', softFar(m.rigLibrary.bodyTemplates[0]?.farShade ?? 0.8), heldFn || nearCane ? () => { nearCane?.(); heldFn?.(); } : undefined, snowColor, accessoryDrawer(ctx, project, sim, a, cv));
     // telefon při pohledu zezadu: displej před hlavou je vidět přes rameno → kreslit navrch
     if (held && top) drawHeld(ctx, held, cv);
