@@ -12,5 +12,7 @@ const img = await loadNodeImages(lp);
 const W = Number(process.env.W ?? 1920), r = createNodeFrameRenderer(lp, img, W, Math.round(W * 9 / 16));
 const sim = Simulation.create(lp.project, lp.manifests);
 const t0 = performance.now(); sim.advanceTo(Number(t)); const t1 = performance.now();
-r.render(sim, Number(t)); const t2 = performance.now();
+r.render(sim, Number(t)); let t2 = performance.now();
+const NF = Number(process.env.FRAMES ?? 0);
+if (NF) { const a = performance.now(); for (let i = 1; i <= NF; i++) { sim.advanceTo(Number(t) + i / 30); r.render(sim, Number(t) + i / 30); } const ms = (performance.now() - a) / NF; console.log(`průměr ${NF} snímků: ${ms.toFixed(0)} ms/snímek (vč. kroku simulace)`); t2 = t1 + ms; }
 await fs.writeFile(out, r.png()); console.log(out, `sim ${(t1 - t0).toFixed(0)} ms, render ${(t2 - t1).toFixed(0)} ms, postav ${sim.state.agents.filter((a) => !a.hidden).length}`);
