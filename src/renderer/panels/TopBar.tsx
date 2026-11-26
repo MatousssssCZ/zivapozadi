@@ -55,7 +55,7 @@ export function TopBar() {
   return (
     <div className="topbar">
       <div className="group">
-        <span className="brand">❄ Zimní scéna</span>
+        <button className="brand-btn" title="Zpět do úvodního menu" onClick={async () => { if (await guardDirty()) store.closeProject(); }}>❄ Menu</button>
         <button className={galleryOpen ? 'active' : 'accent'} onClick={() => store.set({ galleryOpen: !store.state.galleryOpen })} title="Galerie aktivit: projděte všechny aktivity, každá se přehraje v čerstvé simulaci a můžete spouštět návazné akce">🎬 Galerie aktivit</button>
         <button onClick={() => doOpen('new')}>Nový</button>
         <button onClick={() => doOpen('open')}>Otevřít…</button>

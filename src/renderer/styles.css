@@ -150,3 +150,30 @@ button.accent { background: linear-gradient(135deg, #3b5ea8, #6a4fb0); border-co
 .gp-sep { color: var(--muted); margin-left: 8px; }
 .gp-action { background: #2b4a3a; border-color: #4f9a72; }
 .gp-action:hover:not(:disabled) { border-color: var(--ok); }
+
+/* ---------------------------------------------------------------- úvodní menu */
+.welcome.home h1 { font-size: 40px; letter-spacing: .02em; }
+.home-tiles { display: flex; gap: 22px; margin-top: 18px; flex-wrap: wrap; justify-content: center; }
+.home-tile { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; width: 300px; min-height: 190px; padding: 22px 22px; border-radius: 16px; text-align: left; white-space: normal;
+  background: linear-gradient(160deg, #2b3450, #212738); border: 1px solid #46527a; box-shadow: 0 10px 34px rgba(0,0,0,.35); transition: transform .15s, border-color .15s; }
+.home-tile:hover { transform: translateY(-3px); border-color: var(--accent); }
+.home-tile.accent { background: linear-gradient(160deg, #3b4f8f, #4e3b8a); border-color: #8fb3ff; }
+.ht-icon { font-size: 34px; }
+.ht-title { font-size: 22px; font-weight: 700; }
+.ht-desc { color: #c3cbe0; line-height: 1.4; }
+.welcome.scenes { justify-content: flex-start; padding: 26px 30px; overflow: auto; align-items: stretch; }
+.scenes-head { display: flex; align-items: center; justify-content: space-between; max-width: 1100px; width: 100%; margin: 0 auto 14px; }
+.scenes-head h2 { margin: 0; font-size: 24px; }
+.scene-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; max-width: 1100px; width: 100%; margin: 0 auto; }
+.scene-card { display: flex; flex-direction: column; text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; white-space: normal; padding: 0; }
+.scene-card:hover { border-color: var(--accent); }
+.sc-thumb { height: 140px; background: linear-gradient(135deg, #2c3550, #1d2233); display: flex; align-items: center; justify-content: center; font-size: 40px; }
+.sc-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sc-body { padding: 10px 12px 4px; display: flex; flex-direction: column; gap: 3px; }
+.sc-name { font-weight: 700; font-size: 14px; }
+.sc-actions { padding: 8px 12px 12px; margin-top: auto; }
+.scene-card.new { align-items: center; justify-content: center; gap: 6px; padding: 20px; min-height: 230px; border-style: dashed; background: transparent; }
+.brand-btn { font-weight: 700; background: transparent; border-color: transparent; }
+.brand-btn:hover { border-color: var(--accent); }
+.app.home-only { display: block; position: relative; }
+.app.home-only .welcome { position: absolute; inset: 0; }

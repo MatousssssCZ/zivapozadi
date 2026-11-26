@@ -94,6 +94,19 @@ class Store {
     this.images.onChange = () => this.set({});
     await this.images.sync(r.dir, r.project, r.missingAssets, r.manifests);
     for (const i of r.issues.filter((x) => x.level === 'warning').slice(0, 4)) this.toast('warn', i.message, 9000);
+    // nedávné scény (úvodní menu): jméno + složka, nejnovější první
+    try {
+      const list = (JSON.parse(localStorage.getItem('zs-recent') ?? '[]') as { dir: string; name: string; t: number }[]).filter((x) => x.dir !== r.dir);
+      list.unshift({ dir: r.dir, name: r.project.meta.name, t: Date.now() });
+      localStorage.setItem('zs-recent', JSON.stringify(list.slice(0, 10)));
+    } catch { /* soukromý režim */ }
+  }
+
+  /** Zavře projekt a vrátí se do úvodního menu (neuložené změny potvrdí volající). */
+  closeProject() {
+    this.sim.pause();
+    this.set({ dir: null, project: null, manifests: {}, issues: [], missingAssets: [], selection: null, dirty: false, sceneKey: null, focus: null, galleryId: null, actionMenu: null });
+    this.undo = []; this.redo = [];
   }
 
   /** Doplní/aktualizuje manifest postavy (např. po přidání knihovny malovaných dílů). */

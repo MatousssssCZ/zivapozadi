@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { store, useEditor } from './store';
 import { TopBar, doOpen } from './panels/TopBar';
 import { LeftPanel } from './panels/LeftPanel';
@@ -11,22 +11,55 @@ import { deleteSelection, duplicateSelection, addArea } from './ops';
 import { zs } from './api';
 import type { Tool } from './store';
 
+/** Úvodní menu: Scény (ukázkové i vlastní – otevřít a upravit, nová) a Sandbox (galerie aktivit). */
+const SCENES: { key: 'liberec' | 'tram' | 'pastel' | 'demo2' | 'demo'; dir: string; name: string; desc: string }[] = [
+  { key: 'tram', dir: 'Tramvajova-ulice', name: 'Vánoční tramvajová ulice', desc: 'Tramvaj, pekař, květinářka, kočárek, stromky, běžkař, pevnost' },
+  { key: 'liberec', dir: 'Liberec-zivy-trh', name: 'Liberec – živý trh', desc: 'Stánky, rodiny, sněhulák, koulovačka, sáňky, psi a kočky' },
+  { key: 'pastel', dir: 'Pastelove-kluziste', name: 'Pastelové vánoční kluziště', desc: 'Bruslaři, skoky, holubička, pirueta, lavička a přezouvání' },
+  { key: 'demo2', dir: 'Namesti-radnice', name: 'Náměstí s radnicí', desc: 'Starší ukázková scéna' },
+  { key: 'demo', dir: 'Vanocni-namesti', name: 'Vánoční náměstí', desc: 'Testovací grafika' },
+];
 function Welcome() {
-  return (
-    <div className="welcome">
-      <h1>❄ Zimní scéna</h1>
-      <p>Editor animovaných zimních scén s deterministickou simulací a exportem do MP4.</p>
-      <div className="welcome-actions">
-        <button className="primary big accent" onClick={() => store.set({ galleryOpen: true })}>🎬 Galerie aktivit – projít všechny aktivity</button>
-        <button className="primary big" onClick={() => doOpen('liberec')}>Otevřít „Liberec – živý trh“</button>
-        <button className="primary big" onClick={() => doOpen('tram')}>Otevřít „Vánoční tramvajová ulice“</button>
-        <button className="primary big" onClick={() => doOpen('pastel')}>Otevřít „Pastelové vánoční kluziště“</button>
-        <button className="big" onClick={() => doOpen('demo2')}>Demo „Náměstí s radnicí“ (vaše grafika)</button>
-        <button className="big" onClick={() => doOpen('demo')}>Demo „Vánoční náměstí“ (testovací grafika)</button>
-        <button className="big" onClick={() => doOpen('new')}>Nový projekt…</button>
-        <button className="big" onClick={() => doOpen('open')}>Otevřít projekt…</button>
+  const [tab, setTab] = useState<'home' | 'scenes'>('home');
+  let recent: { dir: string; name: string }[] = [];
+  try { recent = (JSON.parse(localStorage.getItem('zs-recent') ?? '[]') as { dir: string; name: string }[]).filter((r) => !SCENES.some((x) => r.dir === x.dir || r.dir.endsWith('/' + x.dir) || r.dir.endsWith(x.dir + '.zscena'))); } catch { /* */ }
+  if (tab === 'home') return (
+    <div className="welcome home">
+      <h1>❄ Živá pozadí</h1>
+      <p className="muted">Zimní scény s deterministickou simulací, animovanými postavami a exportem do videa.</p>
+      <div className="home-tiles">
+        <button className="home-tile" onClick={() => setTab('scenes')}>
+          <span className="ht-icon">🏙</span><span className="ht-title">Scény</span>
+          <span className="ht-desc">Otevřít a upravit hotovou scénu, vytvořit novou nebo otevřít vlastní projekt.</span>
+        </button>
+        <button className="home-tile accent" onClick={() => store.set({ galleryOpen: true })}>
+          <span className="ht-icon">🎬</span><span className="ht-title">Sandbox</span>
+          <span className="ht-desc">Galerie všech aktivit – každá se přehraje v čerstvé simulaci, s návaznými akcemi a zpomalením.</span>
+        </button>
       </div>
-      <p className="muted small">Projekt je složka s příponou .zscena obsahující project.json a zkopírované assety – lze ji přenášet celou.</p>
+    </div>
+  );
+  return (
+    <div className="welcome scenes">
+      <div className="scenes-head"><button className="ghost" onClick={() => setTab('home')}>← Menu</button><h2>Scény</h2><span /></div>
+      <div className="scene-grid">
+        {SCENES.map((sc) => (
+          <div key={sc.key} className="scene-card">
+            <div className="sc-thumb"><img src={`projekty/${sc.dir}.zscena/nahled.jpg`} alt="" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} /></div>
+            <div className="sc-body"><div className="sc-name">{sc.name}</div><div className="muted small">{sc.desc}</div></div>
+            <div className="sc-actions"><button className="primary" onClick={() => doOpen(sc.key)}>Otevřít a upravit</button></div>
+          </div>
+        ))}
+        {recent.map((r) => (
+          <div key={r.dir} className="scene-card own">
+            <div className="sc-thumb own">📁</div>
+            <div className="sc-body"><div className="sc-name">{r.name}</div><div className="muted small">Vlastní scéna · {r.dir}</div></div>
+            <div className="sc-actions"><button className="primary" onClick={() => doOpen('open', r.dir)}>Otevřít a upravit</button></div>
+          </div>
+        ))}
+        <button className="scene-card new" onClick={() => doOpen('new')}><span className="ht-icon">＋</span><span className="sc-name">Nová scéna</span><span className="muted small">Prázdný projekt – pozadí, trasy a postavy přidáte v editoru.</span></button>
+        <button className="scene-card new" onClick={() => doOpen('open')}><span className="ht-icon">📂</span><span className="sc-name">Otevřít projekt…</span><span className="muted small">Složka .zscena z disku.</span></button>
+      </div>
     </div>
   );
 }
@@ -67,6 +100,8 @@ export function App() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
+  // úvodní menu na celé obrazovce (bez nástrojů editoru), dokud není otevřená scéna ani sandbox
+  if (!project && !galleryOpen) return (<div className="app home-only"><Welcome /><Toasts /></div>);
   return (
     <div className="app">
       <TopBar />

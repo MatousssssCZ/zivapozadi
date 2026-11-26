@@ -217,6 +217,7 @@ export function createWebApi(): ZsApi {
     async memory() { return { main: 0 }; },
     onBeforeClose() { window.addEventListener('beforeunload', (e) => { if ((window as unknown as { __zsDirty?: () => boolean }).__zsDirty?.()) e.preventDefault(); }); },
     confirmClose() { /* */ },
-    async startupProject() { let d: string | null = null; try { d = localStorage.getItem('zs-last'); } catch { /* */ } return d ?? DEFAULT_DEMO; },
+    // úvodní menu se zobrazí vždy; přímý odkaz na scénu: ?scena=liberec | tram | pastel | radnice | namesti
+    async startupProject() { try { const q = new URLSearchParams(location.search).get('scena'); if (q) return DEMOS[q] ?? q; } catch { /* */ } return null; },
   };
 }

@@ -199,11 +199,13 @@ export function episodeItems(ctx: Ctx, project: ProjectFile, sim: Simulation, ca
         for (const i of [0, 1] as const) {
           const g = handOf(sim, project, a, i); if (!g) continue;
           const key = `${a.id}:${i}`, handU = (i === 0 ? -footU[1] : -footU[0]) * 1.15, rec = poleTips.get(key) ?? { tip: null, prevU: handU };
-          const back = handU < rec.prevU - 1e-4 || amp < 0.08;
-          if (back && !rec.tip) rec.tip = { X: q.p.X + fx * (handU - 0.1) - fz * side[i] * 2.2, Z: q.p.Z + fz * (handU - 0.1) + fx * side[i] * 2.2 };
-          if (!back || (rec.tip && Math.hypot(rec.tip.X - q.p.X, rec.tip.Z - q.p.Z) > 1.15)) rec.tip = null;
+          // klasika: hůl se zapíchne skoro svisle u přední boty (kousek za rukou), paže ji protlačí dozadu;
+          // pustí se, když je hrot ~0,4 m za rukou (hůl skloněná ~30°) – pak se nese nízko pod rukou dopředu
+          const back = handU < rec.prevU - 1e-4 || amp < 0.08, handM = handU;
+          if (back && !rec.tip) rec.tip = { X: q.p.X + fx * (handM - 0.12) - fz * side[i] * 1.8, Z: q.p.Z + fz * (handM - 0.12) + fx * side[i] * 1.8 };
+          if (rec.tip) { const du = (rec.tip.X - q.p.X) * fx + (rec.tip.Z - q.p.Z) * fz; if (!back || (amp >= 0.08 && handM - du > 0.42)) rec.tip = null; }
           rec.prevU = handU; poleTips.set(key, rec);
-          const tip = rec.tip ? toScreen(cam, rec.tip, 0) : at(handU - 0.55, side[i] * 2.2, 0.12);
+          const tip = rec.tip ? toScreen(cam, rec.tip, 0) : at(handM - 0.18, side[i] * 1.8, 0.1);
           items.push({ key: a.pos.y + (i ? 0.002 : -0.005), tie: 82 + i, draw: () => {
             ctx.save(); ctx.strokeStyle = '#3d4250'; ctx.lineWidth = Math.max(0.8, 0.018 * ppm); ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(g.x, g.y - 0.04 * ppm); ctx.lineTo(tip.x, tip.y); ctx.stroke();
             const bx = g.x + (tip.x - g.x) * 0.9, by = g.y + (tip.y - g.y) * 0.9; ctx.beginPath(); ctx.ellipse(bx, by, 0.04 * ppm, 0.015 * ppm, 0, 0, 7); ctx.stroke(); ctx.restore(); // talířek
