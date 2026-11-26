@@ -149,7 +149,7 @@ export function drawVectorAnimal(ctx: Ctx, b: AnimalBuild, s: AnimalPoseIn, ppm:
     let R0 = front ? { x: sh.x + scap(ph), y: sh.y } : hip;
     if (far) R0 = { x: R0.x - sideDepth * 0.15 * (back3 ? -1 : 1), y: R0.y - sideDepth * 0.2 };
     const R = px(R0), S = stride * ppm;
-    let tg = pawTarget(walk > 0.02 ? ph : 0, duty, walk, R.x, S, b.gait.lift * ppm * (1 - 0.5 * stalk), front);
+    let tg = pawTarget(walk > 0.02 ? ph : 0, duty, walk, R.x, S, b.gait.lift * ppm * (1 - 0.5 * stalk) * (1 + 1.4 * trot), front);
     let T = { x: tg.x, y: tg.y - (far ? sideDepth * 0.2 * ppm : 0) };
     if (sit > 0 && !front) { T = { x: lerp(T.x, R.x + (b.hind[0] * 0.9) * ppm, sit), y: T.y }; tg = { ...tg, contact: true, q: 0, roll: 0 }; }
     if (st > 0 && front) T = { x: T.x + LFl * 0.6 * st * ppm, y: T.y };

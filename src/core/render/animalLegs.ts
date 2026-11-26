@@ -75,12 +75,15 @@ const ss = (x: number) => { const t = clamp(x, 0, 1); return t * t * (3 - 2 * t)
  * `L` celkový dosah (px), `S` délka cyklu (px). Opora: tlapka jde dozadu rychlostí těla (ve světě stojí).
  */
 export function pawTarget(ph: number, duty: number, walk: number, rootX: number, S: number, lift: number, front: boolean): { x: number; y: number; contact: boolean; q: number; roll: number } {
-  const A = 0.5 * duty * S * walk, d = duty; // polovina posunu tlapky během opory
-  const base = rootX + (front ? 0.04 : -0.06) * S * 0.5;
+  // podle reference (Indigo Station – gait of a dog): přední tlapka se opírá kousek před ramenem,
+  // zadní dopadá těsně před kyčlí a odráží se daleko za ní (noha natažená šikmo dozadu)
+  const A = 0.5 * duty * S * walk, d = duty;
+  const base = rootX + (front ? 0.06 : -0.16) * S * walk;
   if (ph < d) { const k = ph / d; return { x: base + A * (1 - 2 * k), y: 0, contact: true, q: k, roll: ss((k - 0.75) / 0.25) }; }
-  // přenos: podélně měkce (smoothstep), výška – nízký oblouk s rychlým zdvihem a pozvolným došlapem
+  // přenos: přední tlapka vyletí výš a dřív (složené zápěstí), zadní nízko; dopředu měkce
   const q = (ph - d) / (1 - d), u = q * q * (3 - 2 * q);
-  const h = lift * walk * Math.sin(Math.PI * Math.pow(q, 0.8)) * (1 - 0.15 * q);
+  const pk = front ? 0.36 : 0.45, e = q < pk ? q / pk * 0.5 : 0.5 + (q - pk) / (1 - pk) * 0.5;
+  const h = lift * walk * (front ? 1.9 : 1.15) * Math.sin(Math.PI * e);
   return { x: base - A + 2 * A * u, y: -h, contact: false, q, roll: 1 - ss(q / 0.35) };
 }
 
@@ -92,9 +95,15 @@ export function pawTarget(ph: number, duty: number, walk: number, rootX: number,
 export function solveLeg(R: P, T: P, segs: [number, number, number], front: boolean, swingQ: number, contact: boolean, roll: number, a3Override?: number): LegSolve {
   const [l1, l2, l3] = segs;
   // distální článek: přední záprstí skoro svisle (mírně vpřed), v odrazu se sklápí; zadní nárt šikmo vzad nahoru
-  let a3: number; // úhel od svislice (+ = horní konec vzad)
-  if (front) a3 = contact ? -0.12 + 0.9 * roll : 0.9 - 0.95 * ss(swingQ / 0.8);
-  else a3 = contact ? 0.38 + 0.35 * roll : 0.75 - 0.4 * ss(swingQ / 0.8);
+  // úhel od svislice (+ = horní konec vzad). Podle reference:
+  // přední – v opoře záprstí skoro svisle (při došlapu mírně vpřed, při odrazu se sklápí), v přenosu
+  //   se zápěstí ostře zlomí: tlapka složená dozadu nahoru (záporný úhel – zápěstí před tlapkou),
+  //   před došlapem se noha natáhne;
+  // zadní – při došlapu hlezno za tlapkou, během opory přejde nad a před ni (noha se natahuje dozadu),
+  //   v přenosu se nárt vrací přes svislou polohu zpět.
+  let a3: number;
+  if (front) a3 = contact ? -0.1 + 0.35 * swingQ + 0.5 * roll : swingQ < 0.36 ? 0.75 + (-1.85 - 0.75) * ss(swingQ / 0.36) : -1.85 + (1.85 - 0.12) * ss((swingQ - 0.36) / 0.64);
+  else a3 = contact ? 0.35 - 0.9 * ss(swingQ) : -0.55 + 0.9 * ss(swingQ);
   if (a3Override !== undefined) a3 = a3Override; // např. sed: nárt leží na zemi
   const W: P = { x: T.x + Math.sin(a3) * l3 * 1, y: T.y - Math.cos(a3) * l3 };
   // kloub mezi l1 a l2 (loket / koleno)
