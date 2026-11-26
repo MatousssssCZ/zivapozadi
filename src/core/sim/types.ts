@@ -154,6 +154,7 @@ export interface ScheduleRuntime { status: 'pending' | 'waiting' | 'started' | '
 export interface LogEntry { t: number; level: 'info' | 'warn'; msg: string; agentId?: string }
 
 export interface SimState {
+  /** kočárek (A17) */ pram?: import('./pram').PramState;
   version: number;
   step: number;
   rng: RngState;

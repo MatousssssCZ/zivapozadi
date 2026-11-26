@@ -50,6 +50,7 @@ export function actionsAt(m: Vec2, agentId: string | null): MenuItem[] {
       items.push({ label: 'Odklízení sněhu', head: true }, { label: 'Jeden pracovní cyklus', run: () => clearingCommand('cycle') }, { label: 'Obnovit sníh', run: () => clearingCommand('reset') });
   }
   if (p.tram) items.push({ label: 'Tramvaj a pekárna', head: true }, { label: 'Přijede tramvaj', run: () => toast(sim.tramNow()) });
+  if (p.pram) items.push({ label: 'Přijde rodič s kočárkem (A17)', run: () => toast(sim.pramNow()) });
   if (p.bakery) {
     items.push({ label: 'Pekař jde zametat (A18a)', run: () => toast(sim.bakerNow('sweep')) });
     items.push({ label: 'Pekař sype chodník (A18b)', run: () => toast(sim.bakerNow('salt')) });

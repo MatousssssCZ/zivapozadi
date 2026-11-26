@@ -30,6 +30,8 @@ import { windFactor } from '../sim/environment';
 import { SIM_DT } from '../sim/types';
 import { drawVectorSled, sledRingScreen, drawRope } from './sledVector';
 import { drawCrate, drawBucket, drawSign, drawGrit } from './shopProps';
+import { drawPram } from './pramVector';
+import { pramPoints } from '../sim/pram';
 import { depthScaleAt, objectLocalToScene } from '../scene/geometry';
 import { hashNoise } from '../math/rng';
 import { clamp, smoothstep } from '../math/vec';
@@ -833,6 +835,8 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
     };
     for (const a of sim.state.agents) if (!a.hidden) items.push({ key: keyOf(a), tie: 10000 + sim.state.agents.indexOf(a), draw: () => drawAgent(ctx, project, sim, a, 1, images) });
     if (tr && trG) items.push({ key: K_TRAM, tie: 9500, draw: () => drawTram(ctx, project, sim, trG, images) });
+    const pst = sim.state.pram;
+    if (pst?.S && pst.phase !== 'offstage') { const cc = toScreen(cameraFor(sc), pramPoints(pst).center), k = depthScaleAt(sc.depth, cc.y) / Q; items.push({ key: cc.y, tie: 12490, draw: () => drawPram(ctx, cameraFor(sc), pst, k) }); }
     const bst = sim.state.bakery;
     if (bst?.crate.out && project.bakery?.crateSpot) { const cr = bst.crate, k = depthScaleAt(sc.depth, cr.y) / Q; items.push({ key: cr.y, tie: 19990, draw: () => drawCrate(ctx, cr.x, cr.y, k) }); }
     for (const p of sim.state.props) {

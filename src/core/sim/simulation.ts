@@ -34,6 +34,7 @@ import { createSkater, stepSkater, stepRinkEvents, separate, addTrails, skatePos
 import { stepFalls, startFall, newFallsState, DEFAULT_FALLS, type FallHost, type FallsState } from './falls';
 import { fallEndShift as fallEndShiftOf, type FallVariant } from '../anim/fallPoses';
 import { stepSled, sledObstacles, sledPathProblem, type SledHost } from './sled';
+import { stepPram, newPramState, pramObstacle, type PramHost } from './pram';
 import { maybeCarryMitten, mittenBusy, stepMitten, type MittenHost } from './mitten';
 import { stepSnowman, startSnowman, abortSnowman, finishSession, snowmanZoneFree, type SessionHost } from '../activities/snowman';
 import { releaseArm as socialRelease, tryGesture } from '../social/social';
@@ -179,7 +180,7 @@ export class Simulation {
       wander: { waitUntil: 0, prevNode: null, atStop: false }, cooldowns: {}, status: 'Stojí',
     };
     a.pace = randRange(a.rng, 0.9, 1.1);
-    if (c.routine === 'sled' || c.routine === 'shovel' || c.routine === 'rider') a.hidden = true; // přijdou později zpoza okraje (nikdy nestojí u vstupu v prvním snímku)
+    if (c.routine === 'sled' || c.routine === 'shovel' || c.routine === 'rider' || c.routine === 'pram') a.hidden = true; // přijdou později zpoza okraje (nikdy nestojí u vstupu v prvním snímku)
     if (c.gaitProfile) { a.anim.elder = elderState(c.gaitProfile, c.caneSide ?? 'R', hashString(c.id)); a.pace = 1; }
     a.lane = (rand(a.rng) < 0.5 ? -1 : 1) * randRange(a.rng, 3, 7);
     a.anim.idleTime = randRange(a.rng, 0, 3);
@@ -454,6 +455,7 @@ export class Simulation {
     if (this.project.rink) this.stepRink(t);
     if (this.project.tram) this.stepTramAll(t);
     if (this.project.bakery) this.stepBakeryAll(t);
+    if (this.project.pram) this.stepPramAll();
     this.stepProps(t);
     this.state.step++;
   }
@@ -532,6 +534,25 @@ export class Simulation {
   }
   // ---------------------------------------------------------------- pekař
   private bakeryHost: BakeryHost | null = null;
+  /** Ladění: kočárek přijede hned. */
+  pramNow(): { ok: boolean; msg: string } { const st = this.state.pram; if (!this.project.pram) return { ok: false, msg: 'Scéna nemá kočárek.' }; if (st && st.phase !== 'offstage') return { ok: false, msg: 'Kočárek už je ve scéně.' }; (this.state.pram ??= newPramState(this.project.pram)).until = this.time(); return { ok: true, msg: 'Přichází rodič s kočárkem.' }; }
+  private pramHost: PramHost | null = null;
+  private stepPramAll() {
+    const c = this.project.pram!, st = (this.state.pram ??= newPramState(c)), self = this;
+    this.pramHost ??= {
+      project: this.project, time: () => self.time(), parent: () => self.state.agents.find((x) => x.id === c.parentId),
+      walk: (x, pts, sp) => { self.sessionHost().walkPath(x, pts, 'kočárek', true); x.speedFactor = sp; },
+      moving: (x) => x.route !== null,
+      show: (x, p) => { x.pos = { ...p }; x.hidden = false; x.visPrev = undefined; x.off = { x: 0, y: 0 }; x.look = null; x.anim.walkBlend = 0; x.anim.settle = null; x.anim.anchors = undefined; x.anim.anchorsXY = undefined; },
+      hide: (x) => { x.hidden = true; x.route = null; x.speed = 0; x.vel = { X: 0, Z: 0 }; x.anim.hands = null; x.anim.sit = null; },
+      face: (x, p) => { x.look = { x: p.x, y: p.y }; },
+      // madlo: obě dlaně před tělem ve výšce ~1 m (lokty mírně pokrčené)
+      hands: (x, on, w) => { x.anim.hands = on ? { t: [{ u: 0.44, h: 1.1, lat: -0.2 }, { u: 0.44, h: 1.1, lat: 0.2 }], w } : null; },
+      tuck: (x, w, tt) => { x.anim.sit = w > 0.001 ? { kind: 'tuck', t: tt, dur: 1e9, w } : null; },
+      log: (m, id) => self.log('info', m, id),
+    };
+    stepPram(c, st, this.pramHost);
+  }
   private stepBakeryAll(t: number) {
     const c = this.project.bakery!, a = this.state.agents.find((x) => x.id === c.bakerId); if (!a) return;
     const st = (this.state.bakery ??= newBakeryState(c, seedRng(this.project.seed, 'bakery'), t));
@@ -866,7 +887,7 @@ export class Simulation {
   }
   /** volnější podmínka pro ruční spuštění: viditelný dospělý bez činnosti a věcí v rukou */
   private fallLoose(a: AgentState): boolean {
-    return !a.hidden && !a.activity && !a.holding && !a.follow && !a.anim.fall && !this.isChild(a) && !a.anim.elder && this.chars.get(a.id)?.routine !== 'shovel' && this.chars.get(a.id)?.routine !== 'sled' && this.chars.get(a.id)?.routine !== 'rider' && !(a.anim.gestures ?? []).length;
+    return !a.hidden && !a.activity && !a.holding && !a.follow && !a.anim.fall && !this.isChild(a) && !a.anim.elder && this.chars.get(a.id)?.routine !== 'shovel' && this.chars.get(a.id)?.routine !== 'sled' && this.chars.get(a.id)?.routine !== 'rider' && this.chars.get(a.id)?.routine !== 'pram' && !(a.anim.gestures ?? []).length;
   }
   private fallCache: FallHost | null = null;
   private fallHost(): FallHost {
@@ -1183,6 +1204,7 @@ export class Simulation {
     const ro = this.state.runtimeObjects;
     const sl = this.state.sled?.phase === 'run' ? sledObstacles(this.sledHost(), this.state.sled, this.sledHost().parent()?.pos ?? null) : [];
     // bedýnka s pečivem venku (A18c) – chodci ji obejdou (0,5 × 0,3 m)
+    const pr = pramObstacle(this.state.pram); if (pr) sl.push(pr);
     const cr = this.state.bakery?.crate;
     if (cr?.out && this.project.bakery?.crateSpot) { const C = toWorld(this.cam(), cr), w = 0.3, d = 0.2; sl.push({ poly: [{ X: C.X - w, Z: C.Z - d }, { X: C.X + w, Z: C.Z - d }, { X: C.X + w, Z: C.Z + d }, { X: C.X - w, Z: C.Z + d }] }); }
     if (sl.length) return [...this.obstaclesW, ...sl, ...this.runtimeObstacles()];
@@ -1501,6 +1523,7 @@ export class Simulation {
     if (a.route) { if (!mv.waitingNarrow) a.status = a.pendingActivity ? 'Jde k činnosti' : this.routeStatus(a); return; }
     if (c.routine === 'shovel') { if (a.hidden) a.status = 'Mimo scénu'; return; } // řídí stepClearing
     if (c.routine === 'baker') return; // řídí stepBakeryAll
+    if (c.routine === 'pram') { if (a.hidden) a.status = 'Mimo scénu'; else if (!a.status) a.status = 'Tlačí kočárek'; return; } // řídí stepPram
     if (c.routine === 'rider') { if (a.hidden) { a.status = 'Mimo scénu'; a.anim.sit = null; } return; } // řídí stepSled
     if (a.tram) { if (!a.route && a.tram.role === 'wait' && a.tram.since > t) a.tram.since = t; return; } // řídí stepTramAll
     if (c.routine === 'sled') { a.status = a.hidden ? 'Mimo scénu' : 'Táhne sáňky s dítětem'; return; } // řídí stepSled

@@ -103,6 +103,10 @@ export async function generateTram(dir: string): Promise<ProjectFile> {
   p.characters.push({ id: 'ch_senior', name: 'Pan Bohumil (senior)', assetId: 'builtin_postava_cg', startNodeId: 'f9', baseScale: 0.97, walkSpeed: 50, palette: pal, wander: true, appearance: old, routine: 'visitor', activities: {}, gaitProfile: 'elderA' });
   const baker = generateGroup(lib, 1, 4246).appearances[0];
   p.characters.push({ id: 'ch_pekar', name: 'Pekař', assetId: 'builtin_postava_cg', startNodeId: 'f2', baseScale: 1, walkSpeed: 55, palette: pal, wander: false, appearance: baker, routine: 'baker', activities: {} });
+  // procházka s kočárkem (A17): po předním chodníku zprava doleva, zastavení vpravo od lavičky v popředí
+  const pramParent = generateGroup(lib, 1, 8841).appearances[0];
+  p.characters.push({ id: 'ch_kocarek', name: 'Rodič s kočárkem', assetId: 'builtin_postava_cg', startNodeId: 'n8', baseScale: 1, walkSpeed: 55, palette: pal, wander: false, appearance: pramParent, routine: 'pram', activities: {} });
+  p.pram = { parentId: 'ch_kocarek', path: [[1800, 612], [1600, 600], [1380, 601], [1200, 644], [950, 703], [760, 734], [585, 750], [300, 768], [-120, 774]].map(([x, y]) => B(x, y)), stopAt: 5, firstDelay: 70, interval: [220, 420] };
   p.crowd = { walkers: 0.75, skaters: 1 }; // výchozí hustota ~4–8 venku
   p.export = { ...p.export, durationSec: 60, chunkSec: 20 };
   await saveProject(dir, p);

@@ -3,8 +3,8 @@
   "formatVersion": 1,
   "meta": {
     "name": "Vánoční tramvajová ulice",
-    "createdAt": "2026-11-26T00:45:45.362Z",
-    "modifiedAt": "2026-11-26T00:45:45.442Z",
+    "createdAt": "2026-11-26T06:48:05.283Z",
+    "modifiedAt": "2026-11-26T06:48:08.450Z",
     "appVersion": "0.1.0"
   },
   "seed": 4242,
@@ -1703,6 +1703,64 @@
       },
       "routine": "baker",
       "activities": {}
+    },
+    {
+      "id": "ch_kocarek",
+      "name": "Rodič s kočárkem",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n8",
+      "baseScale": 1,
+      "walkSpeed": 55,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": false,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1744556967,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_neckwarmer_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_01_cg"
+        },
+        "colors": {
+          "jacket": "tmave-seda",
+          "hat": "petrolejova",
+          "scarf": "kremova",
+          "gloves": "kremova",
+          "trousers": "tmave-seda",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 1.041,
+          "build": 0.996
+        },
+        "motion": {
+          "strideScale": 1.063,
+          "armSwing": 1.271,
+          "bob": 0.925,
+          "sway": 1.101,
+          "idleTempo": 0.956,
+          "lean": 0.92,
+          "speed": 1.013,
+          "phase": 0.107,
+          "armLag": 2.95,
+          "armLR": 1.111
+        },
+        "locks": []
+      },
+      "routine": "pram",
+      "activities": {}
     }
   ],
   "schedule": [],
@@ -1988,6 +2046,53 @@
       "salt": 0.3,
       "crate": 0.25
     }
+  },
+  "pram": {
+    "parentId": "ch_kocarek",
+    "path": [
+      {
+        "x": 2067,
+        "y": 702.8
+      },
+      {
+        "x": 1837.3,
+        "y": 689
+      },
+      {
+        "x": 1584.7,
+        "y": 690.1
+      },
+      {
+        "x": 1378,
+        "y": 739.5
+      },
+      {
+        "x": 1090.9,
+        "y": 807.3
+      },
+      {
+        "x": 872.7,
+        "y": 842.9
+      },
+      {
+        "x": 671.8,
+        "y": 861.2
+      },
+      {
+        "x": 344.5,
+        "y": 881.9
+      },
+      {
+        "x": -137.8,
+        "y": 888.8
+      }
+    ],
+    "stopAt": 5,
+    "firstDelay": 70,
+    "interval": [
+      220,
+      420
+    ]
   },
   "crowd": {
     "walkers": 0.75,
