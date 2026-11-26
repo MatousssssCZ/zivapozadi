@@ -1008,7 +1008,7 @@ export class Simulation {
         if (r.hidden) { r.hidden = false; r.visPrev = undefined; r.off = { x: 0, y: 0 }; r.route = null; r.look = null; r.anim.settle = null; r.anim.anchors = undefined; r.anim.anchorsXY = undefined; }
         r.pos = { ...p }; r.off = { x: 0, y: 0 }; r.speed = 0; r.vel = { X: 0, Z: 0 }; r.anim.walkBlend = 0;
         r.facing = facing; r.anim.dir = directionFromAngle(facing, r.anim.dir);
-        const s0 = r.anim.sit; r.anim.sit = { kind: 'sled', t: (s0?.kind === 'sled' ? s0.t : 0) + SIM_DT, dur: 1e9, w: 1, r: accel };
+        const s0 = r.anim.sit; r.anim.sit = { kind: 'sled', t: (s0?.kind === 'sled' ? s0.t : 0) + SIM_DT, dur: this.project.sled?.kind === 'boby' ? 2e9 : 1e9, w: 1, r: accel };
         r.status = 'Veze se na sáňkách';
       },
       isSnow: (p) => self.sessionHost().isSnow(p),

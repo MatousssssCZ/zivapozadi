@@ -9,7 +9,7 @@ import { loadProject } from '../src/node/projectIO';
 import { loadNodeImages, createNodeFrameRenderer } from '../src/node/napiRender';
 import { Simulation } from '../src/core/sim/simulation';
 const lp = await loadProject(path.resolve('demo/Liberec-zivy-trh.zscena'));
-lp.project.scene.snowfall.enabled = false;
+lp.project.scene.snowfall.enabled = false; if (process.env.BOBY) lp.project.sled!.kind = 'boby';
 const img = await loadNodeImages(lp); const r = createNodeFrameRenderer(lp, img, 1920, 1080);
 const sim = Simulation.create(lp.project, lp.manifests);
 const out = createCanvas(1500, 1200), x = out.getContext('2d'); let k = 0;

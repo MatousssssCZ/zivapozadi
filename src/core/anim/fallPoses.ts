@@ -117,7 +117,7 @@ export function benchPose(kind: 'rest' | 'change' | 'kneel' | 'bend' | 'squat' |
   if (kind === 'ski') return skiPose(t, r ?? 0);
   if (kind === 'climb') return climbPose(t, r ?? 0);
   if (kind === 'angel') return sampleKeys(ANGEL_KEYS, t);
-  if (kind === 'sled') return sledRidePose(t, r ?? 0);
+  if (kind === 'sled') return sledRidePose(t, r ?? 0, dur > 1.5e9); // (dur 2e9 = boby – nízký sed)
   if (kind === 'lift') return liftPose();
   if (kind === 'tuck') return tuckPose(t);
   if (kind === 'kneel' || kind === 'bend' || kind === 'squat') return workPose(kind, t, r);
@@ -162,13 +162,14 @@ export function workPose(kind: 'kneel' | 'bend' | 'squat', t: number, r = 0.2): 
  * paty na přední části saní, ruce drží boční hrany (madla). Trup se v tahu mírně zakloní (setrvačnost –
  * `r` = podélné zrychlení saní v m/s², kladné = rozjezd) a při dojíždění nakloní dopředu.
  */
-export function sledRidePose(t: number, accel: number): FallKey {
+export function sledRidePose(t: number, accel: number, low = false): FallKey {
   const lean = Math.max(-1, Math.min(1, accel / 1.2));
   const sway = Math.sin(t * 0.7) * 1.5;
   return {
-    t: 0, ph: 'pause', hip: W(-0.06, 0.5), pitch: -6 - 9 * lean + sway * 0.3, head: 6 + 4 * lean + sway, roll: sway * 0.4,
-    feet: [W(0.62, 0.3, -0.09, 25), W(0.68, 0.3, 0.09, 25)],
-    hands: [W(0.12, 0.38, -0.24), W(0.16, 0.38, 0.24)], c: ['s'],
+    t: 0, ph: 'pause', hip: W(-0.06, low ? 0.26 : 0.5), pitch: -6 - 9 * lean + sway * 0.3, head: 6 + 4 * lean + sway, roll: sway * 0.4,
+    // boby: sed nízko u dna, nohy natažené ve vaně (paty o zvednutou příď), ruce u madel v lemu
+    feet: low ? [W(0.66, 0.14, -0.09, 18), W(0.72, 0.14, 0.09, 18)] : [W(0.62, 0.3, -0.09, 25), W(0.68, 0.3, 0.09, 25)],
+    hands: low ? [W(0.22, 0.2, -0.26), W(0.26, 0.2, 0.26)] : [W(0.12, 0.38, -0.24), W(0.16, 0.38, 0.24)], c: ['s'],
   };
 }
 

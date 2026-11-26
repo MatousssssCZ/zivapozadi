@@ -15,7 +15,7 @@ const W = 1600, H = 520, cv = createCanvas(W, H), x = cv.getContext('2d') as unk
 x.fillStyle = '#e8ecf6'; x.fillRect(0, 0, W, H);
 (['sane', 'boby'] as const).forEach((kind, r) => {
   for (let i = 0; i < 8; i++) {
-    const sx = 100 + i * 200, sy = 1000, hd = (i / 8) * Math.PI * 2;
+    const sx = 100 + i * 200, sy = Number(process.env.SY ?? 1000), hd = (i / 8) * Math.PI * 2;
     const S = toWorld(cam, { x: 960 + (i - 3.5) * 200, y: sy });
     const ppm = depthScaleAt((scene as { depth: never }).depth, sy) / Q;
     x.save(); x.translate(sx - (960 + (i - 3.5) * 200), r * 260 - (sy - 170)); drawVectorSled(x, cam, S, hd, kind, i * 0.3, ppm, '#c8302c'); x.restore();
