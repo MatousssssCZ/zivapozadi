@@ -1,3 +1,5 @@
+import { FigureLab } from './panels/FigureLab';
+import { setVectorFigures } from '../core/render/characterPose';
 import { useEffect, useState } from 'react';
 import { store, useEditor } from './store';
 import { TopBar, doOpen } from './panels/TopBar';
@@ -35,6 +37,10 @@ function Welcome() {
         <button className="home-tile accent" onClick={() => store.set({ galleryOpen: true })}>
           <span className="ht-icon">🎬</span><span className="ht-title">Sandbox</span>
           <span className="ht-desc">Galerie všech aktivit – každá se přehraje v čerstvé simulaci, s návaznými akcemi a zpomalením.</span>
+        </button>
+        <button className="home-tile" onClick={() => store.set({ labOpen: true })}>
+          <span className="ht-icon">🧥</span><span className="ht-title">Laboratoř postav</span>
+          <span className="ht-desc">Vektorové postavy: oděvy, tělesné typy, pohledy, chůze a krajní pózy – zpomaleně, s kostrou a kontakty.</span>
         </button>
       </div>
     </div>
@@ -75,7 +81,9 @@ export function App() {
   const project = useEditor((s) => s.project);
   const exportOpen = useEditor((s) => s.exportOpen);
   const galleryOpen = useEditor((s) => s.galleryOpen);
+  const labOpen = useEditor((s) => s.labOpen);
   useEffect(() => {
+    try { const v = localStorage.getItem('zs-vektor'); if (v === '1') { setVectorFigures(true); store.set({ vectorFigures: true }); } } catch { /* */ }
     zs().startupProject().then((d) => { if (d) doOpen('open', d); });
     zs().onBeforeClose(() => {
       if (!store.state.dirty || window.confirm('Projekt má neuložené změny. Zavřít bez uložení?')) zs().confirmClose();
@@ -101,6 +109,7 @@ export function App() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
   // úvodní menu na celé obrazovce (bez nástrojů editoru), dokud není otevřená scéna ani sandbox
+  if (labOpen) return (<div className="app home-only"><FigureLab /><Toasts /></div>);
   if (!project && !galleryOpen) return (<div className="app home-only"><Welcome /><Toasts /></div>);
   return (
     <div className="app">
