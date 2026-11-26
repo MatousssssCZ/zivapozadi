@@ -127,7 +127,13 @@ export class Simulation {
         if (w <= 0) { if (x.anim.hands?.src === 'hold') x.anim.hands = null; return; }
         const { view, mirror } = viewForDirection(x.anim.dir), ns = view === 'back3q' || view === 'back' ? 1 : -1;
         const lx = ((M.x - x.pos.x - (x.off?.x ?? 0)) / sc[i]) * (mirror ? -1 : 1), ly = (M.y - x.pos.y - (x.off?.y ?? 0)) / sc[i];
-        const idx = Math.abs(lx) < 3 ? 1 : (Math.sign(lx) === ns ? 1 : 0); // ruka na straně partnera (blízká strana = ns)
+        // ruka na straně partnera (anatomicky): partner vlevo od směru chůze → levá ruka. Levá je vzdálená
+        // (index 0), když postava jde v obraze doprava (vlevo od ní je hloubka scény), jinak blízká.
+        const me = i === 0 ? wl : wf, other = i === 0 ? wf : wl;
+        const hd = x.groundHeading ?? worldAngleOfScreen(cam, x.pos, x.facing);
+        const cross = Math.cos(hd) * (other.Z - me.Z) - Math.sin(hd) * (other.X - me.X); // > 0 → partner vlevo
+        const leftFar = Math.cos(hd) > 0;
+        const idx: 0 | 1 = (cross > 0) === leftFar ? 0 : 1; void ns; void lx;
         const t: [HandTarget | null, HandTarget | null] = [null, null]; t[idx] = { u: 0, h: 0, local: { x: lx, y: ly } };
         x.anim.hands = { t, w, src: 'hold' };
       });
@@ -1496,7 +1502,11 @@ export class Simulation {
     const psi = L.groundHeading ?? 0;
     const d = { X: Math.cos(psi), Z: Math.sin(psi) }, right = { X: d.Z, Z: -d.X };
     const side = f.follow!.side;
-    const slot = { X: LP.X + right.X * side * 0.72 - d.X * 0.4, Z: LP.Z + right.Z * side * 0.72 - d.Z * 0.4 };
+    // dvojice za ruce: při chůzi napříč obrazem by boční rozestup (do hloubky) postavy překryl – partner
+    // jde blíž do strany a o kus víc vzadu, takže jsou v obraze vedle sebe a spojené ruce jsou vidět
+    const hold = this.holdPairs.some(([, fid]) => fid === f.id), hx = hold ? Math.abs(d.X) : 0;
+    const lat = 0.72 * (1 - 0.3 * hx), back = 0.4 + 0.32 * hx;
+    const slot = { X: LP.X + right.X * side * lat - d.X * back, Z: LP.Z + right.Z * side * lat - d.Z * back };
     const e = { X: slot.X - P.X, Z: slot.Z - P.Z }, el = Math.hypot(e.X, e.Z);
     let v: World;
     if (lsp > 0.15) v = { X: lv.X + e.X * 1.2, Z: lv.Z + e.Z * 1.2 };
