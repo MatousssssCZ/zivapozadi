@@ -31,7 +31,8 @@
       "cupSteam": true,
       "stallSteam": true,
       "sources": []
-    }
+    },
+    "vectorFigures": true
   },
   "assets": [
     {

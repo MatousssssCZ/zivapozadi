@@ -1,5 +1,4 @@
 import { FigureLab } from './panels/FigureLab';
-import { setVectorFigures } from '../core/render/characterPose';
 import { useEffect, useState } from 'react';
 import { store, useEditor } from './store';
 import { TopBar, doOpen } from './panels/TopBar';
@@ -83,7 +82,6 @@ export function App() {
   const galleryOpen = useEditor((s) => s.galleryOpen);
   const labOpen = useEditor((s) => s.labOpen);
   useEffect(() => {
-    try { const v = localStorage.getItem('zs-vektor'); if (v === '1') { setVectorFigures(true); store.set({ vectorFigures: true }); } } catch { /* */ }
     zs().startupProject().then((d) => { if (d) doOpen('open', d); });
     zs().onBeforeClose(() => {
       if (!store.state.dirty || window.confirm('Projekt má neuložené změny. Zavřít bez uložení?')) zs().confirmClose();

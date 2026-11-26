@@ -1,4 +1,3 @@
-import { setVectorFigures } from '../../core/render/characterPose';
 import { store, useEditor, type Tool } from '../store';
 import { zs } from '../api';
 import { importAssets, clearingCommand, fallCommand, coopSnowmanCommand, rinkCommand } from '../ops';
@@ -34,15 +33,14 @@ const TOOLS: { id: Tool; label: string; key: string }[] = [
   { id: 'pan', label: 'Posun', key: 'H' },
 ];
 
-/** Přepnutí vektorových postav: mění i kotvy chodidel v simulaci → čerstvá simulace (zapamatuje se). */
+/** Přepnutí vektorových postav = nastavení scény (uloží se s projektem; simulace se sestaví znovu). */
 export function setVectorMode(on: boolean) {
-  setVectorFigures(on); store.set({ vectorFigures: on });
-  try { localStorage.setItem('zs-vektor', on ? '1' : '0'); } catch { /* */ }
-  const p = store.state.project; if (p) { store.sim.pause(); store.sim.restart(p, store.state.manifests); }
+  if (!store.state.project) return;
+  store.edit(on ? 'Vektorové postavy' : 'Malované postavy', (d) => { d.scene.vectorFigures = on; });
 }
 
 export function TopBar() {
-  const vecOn = useEditor((s) => s.vectorFigures);
+  const vecOn = useEditor((s) => !!s.project?.scene.vectorFigures);
   const project = useEditor((s) => s.project);
   const dirty = useEditor((s) => s.dirty);
   const tool = useEditor((s) => s.tool);

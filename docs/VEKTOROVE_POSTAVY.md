@@ -5,7 +5,7 @@ a tlumený akcent). Žádné tělo, oděv ani srst nezávisí na rastrových obr
 zemí, pohyb i všechny existující činnosti (bruslení, odhrnování, sněhulák, koulování, sezení, pády,
 anděl, sáně, venčení…) zůstávají společné. Mění se jen viditelný povrch.
 
-Zapnutí: horní lišta **Vektorové postavy** (zapamatuje se, simulace se spustí znovu). V Node skriptech
+Zapnutí: nastavení scény `scene.vectorFigures` – horní lišta **Vektorové postavy** (uloží se se scénou, simulace se sestaví znovu). Pastelové kluziště je má zapnuté. V Node skriptech
 a testech `VEKTOR=1`. Vývojový náhled: úvodní menu **Laboratoř postav**.
 
 ## Datové oddělení

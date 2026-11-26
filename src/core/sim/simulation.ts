@@ -7,7 +7,7 @@ import { ALL_DIRECTIONS, resolveDirection, resolveClip, type CharacterManifest }
 import { initialAnimState, playAction, stepAnimator, stopAction } from '../anim/animator';
 import { getActivity } from '../activities/registry';
 import { coffeeFreeSlots } from '../activities/coffee';
-import { characterVisual, localToScene, gaitContextFor } from '../render/characterPose';
+import { characterVisual, localToScene, gaitContextFor, setVectorFigures, VECTOR_ENV } from '../render/characterPose';
 import { depthScaleAt } from '../scene/geometry';
 import { Reservations } from './reservations';
 import { directionFromAngle, edgeKey } from './movement';
@@ -76,6 +76,8 @@ export class Simulation {
   private ctx: SimContext;
 
   private constructor(readonly project: ProjectFile, readonly manifests: Record<string, CharacterManifest>, public state: SimState) {
+    // vektorové postavy jsou nastavení scény (mění i kotvy chodidel → platí od vzniku simulace)
+    setVectorFigures(VECTOR_ENV || project.scene.vectorFigures === true);
     this.graph = buildNavGraph(project);
     this.objects = new Map(project.objects.map((o) => [o.id, o]));
     this.zones = new Map(project.zones.map((z) => [z.id, z]));

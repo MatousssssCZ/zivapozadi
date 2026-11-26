@@ -57,6 +57,7 @@ export async function generatePastel(dir: string): Promise<ProjectFile> {
   const p = createEmptyProject('Pastelové vánoční kluziště', 3141);
   p.scene.depth = { enabled: true, ...PASTEL.depth };
   p.scene.backgroundColor = '#dfe8f4';
+  p.scene.vectorFigures = true; // vektorové postavy (laboratoř postav) – bruslaři v nových oděvech
   p.scene.snowfall = { enabled: true, density: 0.35, wind: 0.1 }; // lehké sněžení za světlého dne
   p.scene.environment = { variableSnow: true, gusts: false, cupSteam: true, stallSteam: true, sources: [] };
   const cam = cameraFor(p.scene);

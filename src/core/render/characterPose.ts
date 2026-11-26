@@ -26,7 +26,9 @@ import { figureGeo } from '../vector/figure';
 import type { FootGeom } from '../anim/gaitKinematics';
 
 /** Vektorové postavy (tělo, oděv, hlava bez rastrových dílů) – kostra, činnosti a kontakty zůstávají společné. */
-let vectorFigures = typeof process !== "undefined" && !!process.env?.VEKTOR;
+/** VEKTOR=1 (Node skripty, testy) zapne vektorové postavy ve všech scénách */
+export const VECTOR_ENV = typeof process !== 'undefined' && !!process.env?.VEKTOR;
+let vectorFigures = VECTOR_ENV;
 export function setVectorFigures(on: boolean) { vectorFigures = on; }
 export function vectorFiguresOn() { return vectorFigures; }
 /** Vektorový plán postavy: tělesný profil, outfit (stabilní ze seedu) a kostra podle profilu. */

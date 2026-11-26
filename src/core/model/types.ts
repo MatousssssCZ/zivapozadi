@@ -287,6 +287,8 @@ export interface EnvironmentSettings {
 }
 
 export interface SceneSettings {
+  /** Vektorové postavy a zvířata (tělo, oděv, srst bez rastrů; stejné činnosti a pohyb). */
+  vectorFigures?: boolean;
   width: number;
   height: number;
   backgroundAssetId: string | null;
