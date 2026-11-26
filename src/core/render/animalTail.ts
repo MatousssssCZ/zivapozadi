@@ -17,16 +17,16 @@ export interface TailProfile {
 }
 const P = (o: Partial<TailProfile> & Pick<TailProfile, 'colors'>): TailProfile => ({ base: 0.3, curl: 0.06, droop: 0.2, w0: 0.1, wMax: 0.12, w1: 0.035, wAt: 0.3, bush: 0.3, wag: 0.22, wagHz: [1.6, 3.6], ...o });
 export const TAILS: Record<string, TailProfile> = {
-  dog_collie: P({ base: -0.75, curl: 0.2, droop: 0.15, w0: 0.11, wMax: 0.2, w1: 0.06, wAt: 0.55, bush: 1, colors: ['#2a2a30', '#2f2f36', '#3a3a42'], tip: { color: '#f2eee6', frac: 0.3 }, wag: 0.16 }),
-  dog_bernese: P({ base: -0.85, curl: 0.14, droop: 0.1, w0: 0.12, wMax: 0.19, w1: 0.07, wAt: 0.5, bush: 0.9, colors: ['#1f1d20', '#25221f', '#2b2724'], tip: { color: '#f0ebe2', frac: 0.12 }, wag: 0.14 }),
+  dog_collie: P({ base: -1.05, curl: 0.13, droop: 0.05, w0: 0.11, wMax: 0.2, w1: 0.06, wAt: 0.55, bush: 1, colors: ['#2a2a30', '#2f2f36', '#3a3a42'], tip: { color: '#f2eee6', frac: 0.3 }, wag: 0.16 }),
+  dog_bernese: P({ base: -1.1, curl: 0.1, droop: 0.05, w0: 0.12, wMax: 0.19, w1: 0.07, wAt: 0.5, bush: 0.9, colors: ['#1f1d20', '#25221f', '#2b2724'], tip: { color: '#f0ebe2', frac: 0.12 }, wag: 0.14 }),
   dog_husky: P({ base: 1.25, curl: 0.3, droop: 0, w0: 0.12, wMax: 0.2, w1: 0.08, wAt: 0.45, bush: 0.9, colors: ['#6d7079', '#7a7d86', '#8a8c94'], tip: { color: '#e9e8ea', frac: 0.18 }, wag: 0.1 }),
   dog_dalmatian: P({ base: 0.12, curl: 0.05, droop: 0.25, w0: 0.13, wMax: 0.13, w1: 0.04, wAt: 0.1, bush: 0, colors: ['#f2f0ec', '#efedea', '#e9e7e3'], spots: '#1d1d1f', wag: 0.26 }),
   dog_dachshund: P({ base: -0.05, curl: 0.04, droop: 0.2, w0: 0.13, wMax: 0.13, w1: 0.04, wAt: 0.1, bush: 0.05, colors: ['#8a3f1c', '#93461f', '#7c391a'], wag: 0.24 }),
   dog_frenchie: P({ base: -0.5, curl: 0.5, droop: 0, w0: 0.35, wMax: 0.35, w1: 0.22, wAt: 0.1, bush: 0, colors: ['#c99b63', '#c4955e', '#b9895a'], wag: 0.12, wagHz: [2.5, 5] }),
   dog: P({ base: 0.9, curl: 0.1, droop: 0.05, w0: 0.1, wMax: 0.11, w1: 0.04, wAt: 0.25, bush: 0.35, colors: ['#9c6a3a', '#a8774a', '#b88b5c'], tip: { color: '#f3eee6', frac: 0.28 } }),
-  cat_british: P({ base: 0.55, curl: 0.16, droop: 0.05, w0: 0.16, wMax: 0.17, w1: 0.11, wAt: 0.2, bush: 0.35, colors: ['#6e7486', '#737a8c', '#6a7082'], wag: 0.2, wagHz: [0.45, 0.9] }),
-  cat_mainecoon: P({ base: 0.4, curl: 0.14, droop: 0.05, w0: 0.14, wMax: 0.22, w1: 0.1, wAt: 0.55, bush: 1, colors: ['#c97a3e', '#d98d4f', '#cf8247'], rings: '#a2582a', tip: { color: '#e6b07a', frac: 0.1 }, wag: 0.2, wagHz: [0.4, 0.85] }),
-  cat: P({ base: 0.65, curl: 0.2, droop: 0.05, w0: 0.1, wMax: 0.1, w1: 0.06, wAt: 0.2, bush: 0.25, colors: ['#8d7b66', '#958470', '#7f6e5b'], rings: '#4e4337', tip: { color: '#4e4337', frac: 0.12 }, wag: 0.22, wagHz: [0.45, 0.9] }),
+  cat_british: P({ base: -0.5, curl: 0.19, droop: 0.05, w0: 0.16, wMax: 0.17, w1: 0.11, wAt: 0.2, bush: 0.35, colors: ['#6e7486', '#737a8c', '#6a7082'], wag: 0.2, wagHz: [0.45, 0.9] }),
+  cat_mainecoon: P({ base: -0.4, curl: 0.17, droop: 0.05, w0: 0.14, wMax: 0.22, w1: 0.1, wAt: 0.55, bush: 1, colors: ['#c97a3e', '#d98d4f', '#cf8247'], rings: '#a2582a', tip: { color: '#e6b07a', frac: 0.1 }, wag: 0.2, wagHz: [0.4, 0.85] }),
+  cat: P({ base: -0.5, curl: 0.2, droop: 0.05, w0: 0.1, wMax: 0.1, w1: 0.06, wAt: 0.2, bush: 0.25, colors: ['#8d7b66', '#958470', '#7f6e5b'], rings: '#4e4337', tip: { color: '#4e4337', frac: 0.12 }, wag: 0.22, wagHz: [0.45, 0.9] }),
 };
 export const tailProfileOf = (breed: string | undefined, species: 'dog' | 'cat') => TAILS[breed ?? ''] ?? TAILS[species];
 
@@ -44,7 +44,8 @@ export function drawVectorTail(ctx: Ctx, pr: TailProfile, species: 'dog' | 'cat'
   // vlna: pes – vrtění do stran (v profilu jako kmitání nahoru/dolů u kořene malé, u špičky větší),
   // kočka – pomalé esovité vlnění + občasné švihnutí špičkou
   const hz = pr.wagHz[0] + (pr.wagHz[1] - pr.wagHz[0]) * Math.max(excite, dog ? walk * 0.4 : 0);
-  const amp = pr.wag * (dog ? (0.55 + 0.45 * excite) : 1);
+  const mood = 0.5 + 0.5 * Math.sin(t * 0.13 + seed * 1.7) * Math.sin(t * 0.071 + seed * 0.3); // pomalá proměnlivost
+  const amp = pr.wag * (dog ? Math.max(excite, 0.15 + 0.85 * mood * mood) : 0.4 + 0.6 * mood);
   const flick = dog ? 0 : Math.max(0, Math.sin(t * 0.37 + seed) - 0.85) * 4; // kočka: krátké švihnutí jednou za čas
   const pts: { x: number; y: number }[] = [{ x: rx, y: ry }];
   let a = pr.base + (away ? 0.5 : 0) - walk * (dog ? 0.08 : 0.12); // v chůzi nesen o kus níž

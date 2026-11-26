@@ -56,10 +56,10 @@ export function legProfile(breed: string | undefined, species: 'dog' | 'cat', co
     case 'dog_collie': return base({ front: [0.16, 0.16, 0.06], hind: [0.17, 0.17, 0.095], wFront: [0.08, 0.05, 0.034, 0.033], wHind: [0.12, 0.06, 0.033, 0.033], paw: [0.065, 0.036], shag: 0.6, stance: 0.065, stride: 0.496, duty: 0.65, lift: 0.055 });
     case 'dog_husky': return base({ front: [0.17, 0.17, 0.065], hind: [0.18, 0.18, 0.1], wFront: [0.09, 0.06, 0.04, 0.038], wHind: [0.12, 0.07, 0.04, 0.038], paw: [0.07, 0.04], shag: 0.4, stance: 0.07, stride: 0.52, duty: 0.65, lift: 0.055 });
     case 'dog_dachshund': return base({ front: [0.06, 0.05, 0.03], hind: [0.065, 0.055, 0.04], wFront: [0.06, 0.045, 0.034, 0.034], wHind: [0.07, 0.05, 0.034, 0.034], paw: [0.05, 0.03], stance: 0.07, stride: 0.176, duty: 0.66, lift: 0.025 });
-    case 'cat_british': return base({ front: [0.085, 0.08, 0.035], hind: [0.09, 0.09, 0.055], wFront: [0.06, 0.045, 0.035, 0.034], wHind: [0.08, 0.05, 0.035, 0.034], paw: [0.045, 0.028], shag: 0.15, stance: 0.04, stride: 0.208, duty: 0.7, lift: 0.025, body: { bob: 0.004, pitch: 0.015, headComp: 0.75 } });
-    case 'cat_mainecoon': return base({ front: [0.11, 0.1, 0.045], hind: [0.12, 0.12, 0.07], wFront: [0.07, 0.05, 0.036, 0.035], wHind: [0.1, 0.055, 0.036, 0.035], paw: [0.055, 0.032], shag: 0.7, stance: 0.045, stride: 0.272, duty: 0.7, lift: 0.03, body: { bob: 0.005, pitch: 0.015, headComp: 0.75 } });
+    case 'cat_british': return base({ front: [0.075, 0.07, 0.032], hind: [0.085, 0.08, 0.06], wFront: [0.075, 0.052, 0.04, 0.038], wHind: [0.1, 0.058, 0.038, 0.037], paw: [0.045, 0.028], shag: 0.15, stance: 0.04, stride: 0.208, duty: 0.7, lift: 0.025, body: { bob: 0.004, pitch: 0.015, headComp: 0.75 } });
+    case 'cat_mainecoon': return base({ front: [0.095, 0.09, 0.04], hind: [0.11, 0.1, 0.075], wFront: [0.085, 0.06, 0.044, 0.042], wHind: [0.12, 0.066, 0.042, 0.04], paw: [0.055, 0.032], shag: 0.7, stance: 0.045, stride: 0.272, duty: 0.7, lift: 0.03, body: { bob: 0.005, pitch: 0.015, headComp: 0.75 } });
     default: return species === 'cat'
-      ? base({ front: [0.085, 0.085, 0.035], hind: [0.09, 0.095, 0.055], wFront: [0.05, 0.035, 0.026, 0.026], wHind: [0.07, 0.04, 0.026, 0.026], paw: [0.04, 0.024], stance: 0.035, stride: 0.192, duty: 0.7, lift: 0.025, body: { bob: 0.004, pitch: 0.015, headComp: 0.75 } })
+      ? base({ front: [0.075, 0.075, 0.03], hind: [0.085, 0.085, 0.06], wFront: [0.062, 0.042, 0.03, 0.029], wHind: [0.088, 0.048, 0.03, 0.029], paw: [0.04, 0.024], stance: 0.035, stride: 0.192, duty: 0.7, lift: 0.025, body: { bob: 0.004, pitch: 0.015, headComp: 0.75 } })
       : base({});
   }
 }
