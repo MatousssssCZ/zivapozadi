@@ -41,7 +41,10 @@ function limbXAtY(l: Limb, y: number): number | null {
 }
 
 export function drawVectorFigure(ctx: Ctx, pose: SkeletonPose, body: BodyProfile, of: Outfit, o: FigureOpts, accDraw?: (part: 'hat' | 'scarf') => void): FigureGeo {
-  const back = /back/.test(o.view);
+  const YAW: Record<string, number> = { front: 0, front3q: 0.62, side: 1.42, back3q: Math.PI - 0.62, back: Math.PI };
+  const yaw = YAW[o.view] ?? 0.62, sy = Math.sin(yaw), cy = Math.cos(yaw);
+  const back = cy < 0;
+  const sideExtra = Math.max(0, sy - 0.62) / 0.38; // profil: hloubka trupu (rozestup kloubů v obraze je malý)
   const M = MATERIALS[of.top.material], C = of.colors, det = o.detail;
   const H = pose.hip, Nk = pose.neck;
   const u = norm(sub(Nk, H)), n = perp(u); // u nahoru podél trupu, n vpravo (k přední straně v ¾ pohledu)
@@ -185,7 +188,7 @@ export function drawVectorFigure(ctx: Ctx, pose: SkeletonPose, body: BodyProfile
   const capR = (body.armW + ease) * 0.55;
   // body obrysu (n-souřadnice) v hladinách: kyčel 0, pas 0.42, hrudník 0.72, podpaží 0.8, rameno shLv
   const waistIn = (body.chest - body.waist) * (0.35 + 0.65 * fitted) * 0.6;
-  const fwdBulge = back ? body.chestDepth * 0.4 : body.chestDepth, seat = body.seatDepth;
+  const fwdBulge = sy * (back ? body.chestDepth * 0.7 : body.chestDepth * 1.6) + sideExtra * body.chest * 0.32, seat = sy * body.seatDepth * 1.4 + sideExtra * body.chest * 0.22;
   const Rx = (lv: number) => lv < 0.42 ? lerp(hipR + ease * 0.6, shR + capR * 0.55 - waistIn, lv / 0.42) : lv < 0.72 ? lerp(shR + capR * 0.55 - waistIn, shR + capR * 0.7 + fwdBulge, (lv - 0.42) / 0.3) : shR + capR * 0.75 + fwdBulge * (1 - (lv - 0.72) / 0.3);
   const Lx = (lv: number) => lv < 0.42 ? lerp(hipL - ease * 0.6 - seat * 0.5, shL - capR * 0.55 + waistIn * 0.7, lv / 0.42) : shL - capR * 0.75;
   const hemLv = -(of.top.length * legL) / TL; // pod kyčlí (záporné hladiny)
@@ -310,7 +313,7 @@ export function drawVectorFigure(ctx: Ctx, pose: SkeletonPose, body: BodyProfile
     // stažení v pase (parka s páskem / vypasovaný kabát)
     if (of.top.belt) { ctx.strokeStyle = shadeOf(col, 0.35); ctx.lineWidth = 1.1; ctx.beginPath(); smoothThrough(ctx, [F(0.4, Lx(0.4) - 2), F(0.37, (Lx(0.4) + Rx(0.4)) / 2), F(0.4, Rx(0.4) + 2)], true); ctx.stroke(); }
     // předek: zapínání a rozparek / zadní díl: rozparek a švy
-    const cfOff = (lv: number) => { const l = lv < 0 ? skirtSides(lv)[0] : Lx(lv), r = lv < 0 ? skirtSides(lv)[1] : Rx(lv); return back ? l + (r - l) * 0.52 : l + (r - l) * 0.62; };
+    const cfOff = (lv: number) => { const l = lv < 0 ? skirtSides(lv)[0] : Lx(lv), r = lv < 0 ? skirtSides(lv)[1] : Rx(lv); return l + (r - l) * (back ? 0.5 - 0.1 * sy : 0.5 + 0.2 * sy + 0.25 * sideExtra); };
     if (!back) {
       // otevření lemu mezi nohama (kabát: jeden oděv, mírně se rozevírá podle kroku)
       if (of.top.length > 0.3 && !isSuit) {
@@ -419,48 +422,62 @@ export function drawVectorFigure(ctx: Ctx, pose: SkeletonPose, body: BodyProfile
   };
   const hairCol = hair.color;
   const drawHairBack = () => {
-    // dlouhé vlasy / culík / mikádo: zadní hmota za hlavou (před trupem i po něm podle délky)
-    if (hair.style === 'long') { ctx.fillStyle = shadeOf(hairCol, 0.12); ctx.beginPath(); smoothClosed(ctx, back ? [HP(-0.95, -0.3), HP(0.95, -0.3), HP(1.05, 1.0), HP(0.9, 2.1), HP(-0.9, 2.1), HP(-1.05, 1.0)] : [HP(-0.9, -0.5), HP(0.3, -0.9), HP(-0.1, 0.6), HP(-0.35, 1.9), HP(-1.1, 1.9), HP(-1.1, 0.4)], 0.8); ctx.fill(); }
+    // dlouhé vlasy: hmota za hlavou a rameny (zepředu za tělem, zezadu přes záda – kreslí se v pořadí vrstev)
+    if (hair.style !== 'long') return;
+    ctx.fillStyle = shadeOf(hairCol, 0.12); ctx.beginPath();
+    smoothClosed(ctx, [HP(-1.0, -0.4), HP(1.0, -0.4), HP(1.08, 0.9), HP(0.85, 2.0), HP(-0.85, 2.0), HP(-1.08, 0.9)], 0.8); ctx.fill();
   };
+  // bod na kouli hlavy: úhel kolem svislé osy (0 = k divákovi při yaw 0) a výška (y dolů, v R)
+  const SP = (ang: number, y: number, r = 1): P => { const a = yaw + ang, c = Math.sqrt(Math.max(0, 1 - y * y * 0.6)); return HP(Math.sin(a) * c * r, y); };
+  const vis = (ang: number) => Math.cos(yaw + ang); // > 0 → přivráceno k divákovi
   const drawHead = () => {
-    const face: P[] = back
-      ? [HP(0, -1.02), HP(0.8, -0.62), HP(1.0, 0.05), HP(0.75, 0.68), HP(0.15, 0.98), HP(-0.55, 0.78), HP(-0.98, 0.1), HP(-0.78, -0.62)]
-      : [HP(0, -1.02), HP(0.78, -0.65), HP(0.98, -0.05), HP(1.02, 0.28), HP(0.88, 0.62), HP(0.55, 0.96 * body.jaw + 0.06), HP(0.1, 0.98), HP(-0.5, 0.72), HP(-0.95, 0.1), HP(-0.8, -0.62)];
+    // obrys: lebka + čelist/brada vysunutá ve směru obličeje (podle natočení)
+    const jx = Math.sin(yaw) * 0.5, chin = Math.max(0, vis(0)) ;
+    const face: P[] = [HP(0, -1.02), HP(0.78, -0.66), HP(0.99, -0.05), HP(0.9 + Math.max(0, sy) * 0.12, 0.5), HP(jx + 0.42 * (0.6 + 0.4 * chin) * body.jaw, 0.9), HP(jx, 0.99 + 0.03 * chin), HP(jx - 0.42 * (0.6 + 0.4 * chin), 0.9), HP(-0.9 + Math.max(0, -sy) * 0.12, 0.5), HP(-0.99, -0.05), HP(-0.78, -0.66)];
     const hpth = () => { ctx.beginPath(); smoothClosed(ctx, face, 0.9); };
     ctx.fillStyle = skinC; hpth(); ctx.fill();
-    shadeEdges(ctx, hpth, back ? face.slice(4, 8) : [HP(-0.95, 0.1), HP(-0.6, 0.7), HP(0.1, 1.0)], null, R * 0.35, skinC, 0.7);
-    // ucho
-    const ear = back ? HP(0.78, 0.18) : HP(-0.42, 0.15);
-    ctx.fillStyle = shadeOf(skinC, 0.08); ctx.beginPath(); ctx.ellipse(ear.x, ear.y, R * 0.16, R * 0.23, Math.atan2(headUp.y, headUp.x) + Math.PI / 2, 0, Math.PI * 2); ctx.fill();
-    if (!back) {
-      // tvář: oči, obočí, nos, ústa, líčka – čitelné i v malé velikosti
-      const eyeY = 0.12, e1 = HP(0.22, eyeY), e2 = HP(0.68, eyeY - 0.02);
+    cylShade(ctx, hpth, HP(-1, 0.2), HP(1, 0.2), skinC, 0.55);
+    // uši (po stranách hlavy, za čelistí)
+    for (const ea of [Math.PI / 2, -Math.PI / 2]) if (vis(ea) > -0.35) { const e = SP(ea, 0.12, 0.98); ctx.fillStyle = shadeOf(skinC, 0.1); ctx.beginPath(); ctx.ellipse(e.x, e.y, R * 0.17 * (0.45 + 0.55 * Math.max(0, vis(ea) + 0.35)), R * 0.24, Math.atan2(headUp.y, headUp.x) + Math.PI / 2, 0, Math.PI * 2); ctx.fill(); }
+    if (vis(0) > 0.05) {
+      // tvář: oči, obočí, nos, ústa, líčka – na kouli hlavy, zmenšené podle natočení
       if (det > 0.15) {
-        ctx.fillStyle = mixc(skinC, body.blush, 0.55); ctx.globalAlpha = 0.45; ctx.beginPath(); const ck = HP(0.32, 0.46); ctx.ellipse(ck.x, ck.y, R * 0.2, R * 0.13, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
-        ctx.fillStyle = '#2b2220'; for (const [e, s] of [[e1, 1], [e2, 0.82]] as [P, number][]) { ctx.beginPath(); ctx.ellipse(e.x, e.y, R * 0.075 * s, R * 0.1, 0, 0, Math.PI * 2); ctx.fill(); }
+        ctx.fillStyle = mixc(skinC, body.blush, 0.55); ctx.globalAlpha = 0.45;
+        for (const ca of [0.55, -0.55]) if (vis(ca) > 0.15) { const ck = SP(ca, 0.46, 0.9); ctx.beginPath(); ctx.ellipse(ck.x, ck.y, R * 0.2 * vis(ca), R * 0.13, 0, 0, Math.PI * 2); ctx.fill(); }
+        ctx.globalAlpha = 1; ctx.fillStyle = '#2b2220';
+        for (const ea of [0.42, -0.42]) if (vis(ea) > 0.12) { const e = SP(ea, 0.1, 0.92), k = 0.55 + 0.45 * vis(ea); ctx.beginPath(); ctx.ellipse(e.x, e.y, R * 0.075 * k, R * 0.1, 0, 0, Math.PI * 2); ctx.fill(); }
         if (det > 0.45) {
-          ctx.strokeStyle = shadeOf(hairCol, 0.1); ctx.lineWidth = R * 0.06; ctx.lineCap = 'round'; ctx.beginPath(); const b1 = HP(0.1, -0.08), b2 = HP(0.36, -0.12), b3 = HP(0.58, -0.12), b4 = HP(0.78, -0.08); ctx.moveTo(b1.x, b1.y); ctx.lineTo(b2.x, b2.y); ctx.moveTo(b3.x, b3.y); ctx.lineTo(b4.x, b4.y); ctx.stroke();
-          ctx.strokeStyle = shadeOf(skinC, 0.35); ctx.lineWidth = R * 0.05; ctx.beginPath(); const n1 = HP(0.86, 0.18), n2 = HP(0.98, 0.4), n3 = HP(0.84, 0.44); ctx.moveTo(n1.x, n1.y); ctx.quadraticCurveTo(n2.x, n2.y, n3.x, n3.y); ctx.stroke();
-          ctx.strokeStyle = mixc(skinC, '#7a3a34', 0.5); ctx.lineWidth = R * 0.055; ctx.beginPath(); const m1 = HP(0.46, 0.66), m2 = HP(0.6, 0.7), m3 = HP(0.72, 0.64); ctx.moveTo(m1.x, m1.y); ctx.quadraticCurveTo(m2.x, m2.y, m3.x, m3.y); ctx.stroke();
+          ctx.strokeStyle = shadeOf(hairCol, 0.1); ctx.lineWidth = R * 0.06; ctx.lineCap = 'round';
+          for (const ea of [0.42, -0.42]) if (vis(ea) > 0.12) { const b1 = SP(ea - 0.2, -0.1, 0.95), b2 = SP(ea + 0.2, -0.12, 0.95); ctx.beginPath(); ctx.moveTo(b1.x, b1.y); ctx.lineTo(b2.x, b2.y); ctx.stroke(); }
+          const n1 = SP(0, 0.18, 1.0), n2 = SP(0, 0.4, 1.1), n3 = SP(-0.12 * Math.sign(sy || 1), 0.44, 1.0);
+          ctx.strokeStyle = shadeOf(skinC, 0.35); ctx.lineWidth = R * 0.05; ctx.beginPath(); ctx.moveTo(n1.x, n1.y); ctx.quadraticCurveTo(n2.x, n2.y, n3.x, n3.y); ctx.stroke();
+          ctx.strokeStyle = mixc(skinC, '#7a3a34', 0.5); ctx.lineWidth = R * 0.055; const m1 = SP(-0.22, 0.66, 0.95), m2 = SP(0, 0.7, 0.98), m3 = SP(0.22, 0.66, 0.95); ctx.beginPath(); ctx.moveTo(m1.x, m1.y); ctx.quadraticCurveTo(m2.x, m2.y, m3.x, m3.y); ctx.stroke();
         }
       }
-      if (hair.beard) { ctx.fillStyle = shadeOf(hairCol, 0.05); ctx.beginPath(); smoothClosed(ctx, [HP(-0.45, 0.35), HP(0.15, 0.55), HP(0.48, 0.58), HP(0.62, 0.78), HP(0.95, 0.5), HP(0.82, 0.86), HP(0.3, 1.08), HP(-0.4, 0.82)], 0.8); ctx.fill(); }
+      if (hair.beard) { ctx.fillStyle = shadeOf(hairCol, 0.05); ctx.beginPath(); smoothClosed(ctx, [SP(-1.2, 0.2), SP(-0.5, 0.5), SP(0, 0.56), SP(0.5, 0.5), SP(1.2, 0.2), SP(0.9, 0.75), HP(jx, 1.08), SP(-0.9, 0.75)], 0.8); ctx.fill(); }
     }
-    // vlasy (kryt hlavy podle účesu; ucho zůstává vidět)
-    const hp = (pts: P[]) => { ctx.fillStyle = hairCol; ctx.beginPath(); smoothClosed(ctx, pts, 0.85); ctx.fill(); };
-    const capF = back
-      ? [HP(-0.88, -0.55), HP(0, -1.1), HP(0.85, -0.6), HP(0.98, 0.0), HP(0.6, 0.12), HP(0.45, 0.55), HP(-0.2, 0.62), HP(-0.85, 0.35)]
-      : [HP(-0.95, 0.25), HP(-0.85, -0.6), HP(0, -1.12), HP(0.75, -0.72), HP(0.95, -0.32), HP(0.55, -0.42), HP(0.1, -0.3), HP(-0.25, -0.02), HP(-0.55, 0.05), HP(-0.7, 0.45)];
-    switch (hair.style) {
-      case 'bald': hp(back ? [HP(-0.9, 0.0), HP(0.95, 0.0), HP(0.7, 0.45), HP(-0.6, 0.5)] : [HP(-0.95, 0.0), HP(-0.6, -0.2), HP(-0.5, 0.4), HP(-0.85, 0.45)]); break;
-      case 'crop': hp(capF.map((p) => add(Ch, mul(sub(p, Ch), 0.98)))); break;
-      case 'curly': hp(capF.flatMap((p, i) => [p, add(Ch, mul(sub(p, Ch), 1.08 + 0.04 * hn(i)))])); break;
-      case 'bob': hp(back ? [HP(-1.0, -0.5), HP(0, -1.12), HP(1.0, -0.5), HP(1.08, 0.5), HP(0.8, 0.85), HP(-0.6, 0.9), HP(-1.05, 0.55)] : [HP(-1.05, 0.7), HP(-0.95, -0.6), HP(0, -1.12), HP(0.8, -0.7), HP(1.0, -0.2), HP(0.6, -0.35), HP(0.2, -0.15), HP(-0.3, 0.1), HP(-0.55, 0.75)]); break;
-      case 'long': hp(capF); break;
-      case 'pony': case 'bun': hp(capF); { const bp = back ? HP(0.1, -0.35) : HP(-0.85, hair.style === 'bun' ? -0.75 : -0.2); ctx.fillStyle = shadeOf(hairCol, 0.06); ctx.beginPath(); if (hair.style === 'bun') ctx.arc(bp.x, bp.y, R * 0.34, 0, Math.PI * 2); else smoothClosed(ctx, [bp, add(bp, mul(hn2, -R * 0.35)), add(add(bp, mul(hn2, -R * 0.45)), mul(headUp, -R * 1.1)), add(add(bp, mul(hn2, -R * 0.1)), mul(headUp, -R * 0.9))], 0.8); ctx.fill(); } break;
-      default: hp(capF);
+    // vlasy: čepička přes temeno a týl s výřezem obličeje (evenodd) – tvar podle účesu
+    const lenY = { short: 0.42, crop: 0.3, bob: 0.88, long: 0.95, bun: 0.4, pony: 0.4, curly: 0.55, bald: 0.25 }[hair.style];
+    // spodní okraj: na straně obličeje u spánku (krátké vlasy), na týlu do délky účesu
+    const sideY = (d: number) => { const fw = clamp(cy > 0 ? Math.max(0, sy * d) + cy * 0.7 : 0, 0, 1); return lenY < 0.6 ? lerp(lenY, Math.min(lenY, 0.02), fw) : lenY; };
+    const yR = sideY(1), yL = sideY(-1);
+    const capOut: P[] = []; for (let k = 0; k <= 16; k++) { const a = Math.PI * (k / 16) - Math.PI / 2, x = Math.sin(a), y = -Math.cos(a) * 1.08; capOut.push(HP(x * 1.06, y)); }
+    const mid = cy > 0 ? Math.min(yL, yR) : lenY + 0.1;
+    capOut.push(HP(1.04, yR), HP(0.55, (yR + mid) / 2 + 0.04), HP(-0.55, (yL + mid) / 2 + 0.04), HP(-1.04, yL));
+    const capPath = () => { ctx.beginPath(); smoothClosed(ctx, capOut.map((p, i) => (hair.style === 'curly' ? add(Ch, mul(sub(p, Ch), 1.04 + 0.05 * hn(i))) : p)), 0.8); };
+    // výřez obličeje jako ořez (vlasy jen mimo obličej)
+    const faceCut = () => {
+      if (vis(0) <= 0.05) return;
+      const fc = SP(0, 0.32, 0.6), rx = R * (0.62 + 0.18 * vis(0)) * (0.45 + 0.55 * vis(0)), ry = R * (hair.style === 'bob' || hair.style === 'long' ? 0.72 : 0.68);
+      ctx.beginPath(); ctx.rect(Ch.x - R * 4, Ch.y - R * 4, R * 8, R * 8); ctx.moveTo(fc.x + rx, fc.y); ctx.ellipse(fc.x, fc.y, rx, ry, Math.atan2(headUp.y, headUp.x) + Math.PI / 2, 0, Math.PI * 2); ctx.clip('evenodd');
+    };
+    const hairPath = () => { faceCut(); capPath(); };
+    if (hair.style === 'bald') { ctx.save(); hpth(); ctx.clip(); ctx.fillStyle = hairCol; ctx.beginPath(); for (const ea of [Math.PI / 2, -Math.PI / 2]) if (vis(ea) > -0.6) { const e = SP(ea + 0.35 * Math.sign(-ea), 0.2, 1.0); ctx.moveTo(e.x + R * 0.3, e.y); ctx.ellipse(e.x, e.y, R * 0.3, R * 0.28, 0, 0, Math.PI * 2); } if (vis(0) < 0.2) { const e = SP(Math.PI, 0.3); ctx.moveTo(e.x + R * 0.8, e.y); ctx.ellipse(e.x, e.y, R * 0.8, R * 0.3, 0, 0, Math.PI * 2); } ctx.fill(); ctx.restore(); }
+    else {
+      ctx.save(); ctx.fillStyle = hairCol; hairPath(); ctx.fill(); ctx.restore();
+      if (det > 0.5) { ctx.save(); hairPath(); ctx.clip(); ctx.strokeStyle = lightOf(hairCol, 0.25); ctx.globalAlpha = 0.5; ctx.lineWidth = R * 0.08; ctx.beginPath(); smoothThrough(ctx, [HP(-0.5, -0.78), HP(0.1, -0.98), HP(0.55, -0.78)], true); ctx.stroke(); ctx.restore(); ctx.globalAlpha = 1; }
+      if (hair.style === 'bun' || hair.style === 'pony') { const bp = SP(Math.PI, hair.style === 'bun' ? -0.75 : -0.25, 1.0); ctx.fillStyle = shadeOf(hairCol, 0.06); ctx.beginPath(); if (hair.style === 'bun') ctx.arc(bp.x, bp.y, R * 0.34, 0, Math.PI * 2); else { const dx = Math.sin(yaw + Math.PI); smoothClosed(ctx, [bp, add(bp, mul(hn2, dx * R * 0.35)), add(add(bp, mul(hn2, dx * R * 0.45)), mul(headUp, -R * 1.1)), add(add(bp, mul(hn2, dx * R * 0.05 - R * 0.12)), mul(headUp, -R * 0.9))], 0.8); } ctx.fill(); }
     }
-    if (det > 0.5 && hair.style !== 'bald') { ctx.save(); ctx.beginPath(); smoothClosed(ctx, capF, 0.85); ctx.clip(); ctx.strokeStyle = lightOf(hairCol, 0.25); ctx.globalAlpha = 0.5; ctx.lineWidth = R * 0.08; ctx.beginPath(); smoothThrough(ctx, [HP(-0.5, -0.75), HP(0.1, -0.95), HP(0.55, -0.75)], true); ctx.stroke(); ctx.restore(); ctx.globalAlpha = 1; }
   };
 
   // -------------------------------------------------- tašky a batoh (vlastní úchyty, tlumený kyv)

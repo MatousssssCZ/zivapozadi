@@ -56,5 +56,17 @@ export function templateFor(base: SkeletonTemplate, b: BodyProfile): SkeletonTem
     bones: { ...B, thigh: B.thigh * legK, shin: B.shin * legK, ankleHeight: B.ankleHeight * k, torso: B.torso * bodyK, neck: B.neck * k, shoulderDrop: B.shoulderDrop * k, upperArm: B.upperArm * k, forearm: B.forearm * k },
     gait: { ...base.gait, strideLength: base.gait.strideLength * legK },
     foot: base.foot ? { heel: base.foot.heel * k, toe: base.foot.toe * k } : base.foot,
+    // vektorová postava má všech pět pohledů (profil, čelní a zadní doplňují ¾ pohledy)
+    views: { ...vectorViews(base), ...base.views },
+  };
+}
+
+/** Definice pohledů profil / zepředu / zezadu odvozené z ¾ pohledu šablony (rozestupy kloubů v obraze). */
+function vectorViews(base: SkeletonTemplate): SkeletonTemplate['views'] {
+  const q = base.views.front3q ?? Object.values(base.views)[0]!, hs = q.hipSpread, ss = q.shoulderSpread;
+  return {
+    side: { forward: { x: 1, y: 0 }, hipSpread: hs * 0.28, shoulderSpread: ss * 0.22, headOffsetX: 0.9, shoulderOffsetX: 0.3, nearSide: -1 },
+    front: { forward: { x: 0.05, y: 0.9 }, hipSpread: hs * 1.12, shoulderSpread: ss * 1.18, headOffsetX: 0, shoulderOffsetX: 0, nearSide: -1 },
+    back: { forward: { x: 0.05, y: -0.9 }, hipSpread: hs * 1.12, shoulderSpread: ss * 1.18, headOffsetX: 0, shoulderOffsetX: 0, nearSide: 1 },
   };
 }

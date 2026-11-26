@@ -35,9 +35,10 @@ if (process.argv.includes('--katalog')) {
   await fs.writeFile(out, cc.toBuffer('image/png')); console.log(out); process.exit(0);
 }
 const PPU = Number(process.env.PPU ?? 3);
-const cols: { view: 'front3q' | 'back3q'; ph: number; walk: number; label: string; sit?: string }[] = [
+const cols: { view: 'front3q' | 'back3q' | 'side' | 'front' | 'back'; ph: number; walk: number; label: string; sit?: string }[] = [
   { view: 'front3q', ph: 0, walk: 0, label: 'stoj' }, ...[0, 0.25, 0.5, 0.75].map((ph) => ({ view: 'front3q' as const, ph, walk: 1, label: `krok ${ph}` })),
   { view: 'back3q', ph: 0, walk: 0, label: 'zezadu stoj' }, ...[0, 0.5].map((ph) => ({ view: 'back3q' as const, ph, walk: 1, label: `zezadu krok ${ph}` })),
+  { view: 'side', ph: 0, walk: 0, label: 'profil' }, { view: 'side', ph: 0.25, walk: 1, label: 'profil krok' }, { view: 'front', ph: 0.25, walk: 1, label: 'zepředu krok' }, { view: 'back', ph: 0.25, walk: 1, label: 'zezadu (čelně)' },
   { view: 'front3q', ph: 0, walk: 0, label: 'dřep', sit: 'squat' }, { view: 'front3q', ph: 0, walk: 0, label: 'předklon', sit: 'bend' },
 ];
 const CW = 70 * PPU, CH = 150 * PPU, SMALL = 1.0;
@@ -46,7 +47,7 @@ x.fillStyle = '#dfe3ec'; x.fillRect(0, 0, c.width, c.height);
 list.forEach((of, r) => {
   const body = bodyOf(r * 7 + 3, of.age), base = of.age === 'child' ? CHILD : ADULT, tpl = templateFor(base, body), g = footGeomOf(tpl);
   cols.forEach((cl, k) => {
-    const anim = { dir: cl.view === 'front3q' ? 'SE' : 'NE', walkPhase: cl.ph, walkBlend: cl.walk, idleTime: 3, action: null, sit: cl.sit ? { kind: cl.sit, t: 2, dur: 4, w: 1 } : null } as never;
+    const anim = { dir: ({ front3q: 'SE', back3q: 'NE', side: 'E', front: 'S', back: 'N' } as const)[cl.view], walkPhase: cl.ph, walkBlend: cl.walk, idleTime: 3, action: null, sit: cl.sit ? { kind: cl.sit, t: 2, dur: 4, w: 1 } : null } as never;
     const pose = skeletonPose(tpl, cl.view, false, anim, false, DEFAULT_MOTION, 1);
     x.save(); x.translate(k * CW + CW / 2, (r + 1) * CH - 8 * PPU); x.scale(PPU, PPU);
     x.fillStyle = 'rgba(60,70,100,0.18)'; x.beginPath(); x.ellipse(0, 0, 17, 5, 0, 0, Math.PI * 2); x.fill();

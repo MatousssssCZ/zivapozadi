@@ -76,9 +76,10 @@ export function characterVisual(agent: AgentState, m: CharacterManifest, look: C
   if (m.backend === 'skeleton' && lib && app) {
     const tpl = lib.bodyTemplates.find((t) => t.id === app.bodyTemplate) ?? lib.bodyTemplates[0];
     const req = viewForDirection(agent.anim.dir);
-    const rv = resolveView(tpl, req.view);
+    const rv = { ...resolveView(tpl, req.view) };
     const vp = vectorFigures && look.routine !== 'baker' ? vectorPlan(scaledTemplate(tpl, app.proportions) as SkeletonTemplate & { id: string }, app, look.routine) : null;
     const stpl = vp ? vp.tpl : scaledTemplate(tpl, app.proportions);
+    if (vp && vp.tpl.views[req.view]) { rv.use = req.view; rv.substituted = false; } // vektorová postava má všechny pohledy
     const pose = skeletonPose(stpl, rv.use, req.mirror, agent.anim, agent.holding !== null && agent.holdingKind !== 'bag' && agent.holdingKind !== 'mitten' && agent.holdingKind !== 'shovel', motionOf(agent, app.motion), hashString(agent.id), { ...groundOptions(agent, x, y, scale, req.mirror, cam), snowSink: (agent.snowDepth ?? 0) > 0 && agent.anim ? (agent.snowDepth ?? 0) / Q : 0 });
     const rig = assembleRig(lib, tpl, app, pose, rv.use, vectorAccessories && look.routine !== 'baker' ? accessoriesOf(app, /child/.test(tpl.id)) : null);
     // závěj přes spodek zabořené boty (kreslí se hned po botě; barvu dodá vykreslování z pozadí)
