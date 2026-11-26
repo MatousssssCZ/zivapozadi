@@ -22,7 +22,7 @@ const r = createNodeFrameRenderer(lp, img, 1920, 1080);
 const sim = Simulation.create(lp.project, lp.manifests);
 sim.advanceTo(t0);
 const vis = sim.state.agents.filter((a) => !a.hidden && a.pos.x > 60 && a.pos.x < 1860 && a.pos.y > 200 && a.pos.y < 1060).sort((a, b) => b.pos.y - a.pos.y).slice(0, 12);
-const W = 110, H = 150, S = 3, T = [0, 0.25, 0.5];
+const W = 110, H = 150, S = Number(process.env.S ?? 3), T = [0, 0.25, 0.5];
 const sheet = createCanvas(W * S * T.length, H * S * vis.length), x = sheet.getContext('2d');
 for (let k = 0; k < T.length; k++) {
   sim.advanceTo(t0 + T[k]); r.render(sim, t0 + T[k]);

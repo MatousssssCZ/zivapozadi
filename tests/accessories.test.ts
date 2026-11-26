@@ -41,4 +41,18 @@ describe('vektorové doplňky – fyzika', () => {
     const kinds = new Set(Array.from({ length: 60 }, (_, i) => accessoriesOf(app(i * 31 + 5), false)?.hat ?? 'malovaná'));
     expect(kinds.size).toBeGreaterThanOrEqual(4);
   });
+  it('při chůzi (houpání těla) konec šály neskáče a otočka (zrcadlení) nezpůsobí skok', () => {
+    const o = {}; let prev: { x: number; y: number } | null = null, prev2: { x: number; y: number } | null = null, accSum = 0, n = 0, maxJump = 0;
+    for (let i = 0; i <= 600; i++) {
+      const t = i / 60, mirror = i >= 300 ? -1 : 1; // v polovině se postava otočí (kresba se zrcadlí, uzel přeskočí)
+      const kx = 200 + t * 1.3 * ppm * mirror + (mirror < 0 ? 12 : 0), ky = 50 + Math.sin(t * 2 * Math.PI * 1.8) * 0.025 * ppm; // krok: ±2,5 cm
+      const st = stepAccessoryPhysics(o, 'w', t, { knots: [{ x: kx, y: ky }], segPx: [8], top: null, up: { x: 0, y: -1 }, ppm, chestN: { x: mirror, y: 0 }, chestP: { x: kx - 2 * mirror, y: ky }, wind: 0 });
+      const tip = st.tails[0].p[TAIL_SEGS], rel = { x: (tip.x - kx) * mirror / ppm, y: (tip.y - ky) / ppm }; // v rámci těla
+      if (prev && prev2 && i > 60) { accSum += Math.hypot(rel.x - 2 * prev.x + prev2.x, rel.y - 2 * prev.y + prev2.y) * 3600; n++; }
+      if (prev && i > 60) maxJump = Math.max(maxJump, Math.hypot(rel.x - prev.x, rel.y - prev.y));
+      prev2 = prev; prev = rel;
+    }
+    expect(accSum / n).toBeLessThan(1.5); // m/s² vůči uzlu
+    expect(maxJump).toBeLessThan(0.02); // m za snímek – ani při otočce
+  });
 });
