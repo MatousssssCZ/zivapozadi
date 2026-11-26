@@ -9,6 +9,7 @@ const api = {
   newProject: () => invoke('project:new'),
   openProject: (dir?: string) => invoke('project:open', dir),
   openDemo: (which?: string) => invoke('project:openDemo', which),
+  deleteProject: (d: string, demo: boolean) => invoke('project:delete', d, demo),
   saveProject: (dir: string, project: unknown) => invoke('project:save', dir, project),
   saveProjectAs: (fromDir: string, project: unknown) => invoke('project:saveAs', fromDir, project),
   readAsset: (dir: string, rel: string) => invoke('asset:read', dir, rel),

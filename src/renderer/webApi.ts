@@ -37,7 +37,7 @@ async function pickWebEncoder(w: number, h: number, fps: number, crf: number, pr
   return cands[3];
 }
 
-const DEMOS: Record<string, string> = { namesti: 'Vanocni-namesti', radnice: 'Namesti-radnice', liberec: 'Liberec-zivy-trh', pastel: 'Pastelove-kluziste', pastel2: 'Pastelove-kluziste-2', tram: 'Tramvajova-ulice' };
+const DEMOS: Record<string, string> = { namesti: 'Vanocni-namesti', radnice: 'Namesti-radnice', liberec: 'Liberec-zivy-trh', pastel: 'Pastelove-kluziste', pastel2: 'Pastelove-kluziste-2', pastel3: 'Pastelove-kluziste-3', tram: 'Tramvajova-ulice' };
 const DEFAULT_DEMO = 'Liberec-zivy-trh';
 
 // ------------------------------------------------------------------ IndexedDB (klíč → hodnota)
@@ -142,6 +142,13 @@ let ex: { muxer: Muxer<ArrayBufferTarget>; encoder: VideoEncoder; w: number; h: 
 
 export function createWebApi(): ZsApi {
   return {
+    async deleteProject(d) {
+      // prohlížeč: záznam projektu i jeho uložené soubory (u ukázky jen vaše úpravy – přibalené soubory zůstanou)
+      await idb('projects', 'readwrite', (s) => s.delete(d));
+      const keys = await idb<IDBValidKey[]>('files', 'readonly', (s) => s.getAllKeys());
+      for (const k of keys) if (String(k).startsWith(`${d}|`)) await idb('files', 'readwrite', (s) => s.delete(k));
+      try { if (localStorage.getItem('zs-last') === d) localStorage.removeItem('zs-last'); } catch { /* */ }
+    },
     async newProject() {
       const name = window.prompt('Název nového projektu:', 'Nová scéna'); if (!name) return null;
       const dir = name.trim();

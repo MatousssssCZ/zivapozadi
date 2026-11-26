@@ -193,3 +193,10 @@ button.accent { background: linear-gradient(135deg, #3b5ea8, #6a4fb0); border-co
 .figure-lab .fl-canvas { width: 100%; height: 100%; display: block; }
 .density .dens-n { display: inline-flex; align-items: center; gap: 3px; margin-right: 6px; }
 .density .dens-n input { width: 46px; }
+.scene-card { position: relative; }
+.scene-card .sc-del { position: absolute; top: 8px; right: 8px; z-index: 2; padding: 3px 7px; border-radius: 6px; background: rgba(20,22,34,0.72); border: 1px solid rgba(255,255,255,0.15); opacity: 0.75; }
+.scene-card .sc-del:hover { opacity: 1; background: #b3261e; }
+.scenes-restore { text-align: center; margin-top: 14px; }
+.confirm-del { max-width: 460px; }
+.confirm-del .modal-actions { display: flex; justify-content: flex-end; gap: 8px; padding: 10px 16px 14px; }
+.confirm-del .danger { background: #b3261e; color: #fff; border-color: #b3261e; }

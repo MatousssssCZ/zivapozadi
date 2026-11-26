@@ -9,7 +9,7 @@ export interface OpenResult { dir: string; project: ProjectFile; manifests: Reco
 export interface ZsApi {
   newProject(): Promise<OpenResult | null>;
   openProject(dir?: string): Promise<OpenResult | null>;
-  openDemo(which?: 'namesti' | 'radnice' | 'liberec' | 'pastel' | 'pastel2' | 'tram'): Promise<OpenResult>;
+  openDemo(which?: 'namesti' | 'radnice' | 'liberec' | 'pastel' | 'pastel2' | 'pastel3' | 'tram'): Promise<OpenResult>;
   saveProject(dir: string, project: ProjectFile): Promise<string>;
   saveProjectAs(fromDir: string, project: ProjectFile): Promise<string | null>;
   readAsset(dir: string, rel: string): Promise<Uint8Array>;
@@ -35,6 +35,8 @@ export interface ZsApi {
   onBeforeClose(cb: () => void): void;
   confirmClose(): void;
   startupProject(): Promise<string | null>;
+  /** Smaže scénu: vlastní projekt (složka / záznam v prohlížeči), u ukázkové scény jen uložené úpravy (`demo` = název složky ukázky). */
+  deleteProject(dirOrDemo: string, demo: boolean): Promise<void>;
 }
 
 declare global { interface Window { zs: ZsApi } }

@@ -1,16 +1,19 @@
 /**
  * Pastelové kluziště 2: kopie kluziště s vektorovými těly a oděvy, malovanými hlavami a obličeji,
  * plnějšími postavami a dvojicemi za ruce (dvě děti; muž a žena stejného věku – rodiče, senioři).
- * Spuštění: npx tsx scripts/generate-pastel-v2.ts [cílová složka]
+ * Verze 3 (--v3): navíc živější scéna – prodavačka, víc návštěvníků a rodin, častěji ke stánku, víc
+ * sněhuláků, odklízení chodníků před domy, hustota počty.
+ * Spuštění: npx tsx scripts/generate-pastel-v2.ts [--v3] [cílová složka]
  */
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-const src = 'demo/Pastelove-kluziste.zscena', dst = process.argv[2] ?? 'demo/Pastelove-kluziste-2.zscena';
+const V3 = process.argv.includes('--v3'), argDst = process.argv.slice(2).find((a) => !a.startsWith('--'));
+const src = 'demo/Pastelove-kluziste.zscena', dst = argDst ?? (V3 ? 'demo/Pastelove-kluziste-3.zscena' : 'demo/Pastelove-kluziste-2.zscena');
 await fs.rm(dst, { recursive: true, force: true });
 await fs.cp(src, dst, { recursive: true });
 const pf = path.join(dst, 'project.json');
 const p = JSON.parse(await fs.readFile(pf, 'utf8'));
-p.meta.name = 'Pastelové vánoční kluziště 2';
+p.meta.name = V3 ? 'Pastelové vánoční kluziště 3' : 'Pastelové vánoční kluziště 2';
 p.scene.vectorFigures = true; // vektorová těla a oděvy
 p.scene.paintedHeads = true; // hlava a obličej z malované textury
 type Ch = Record<string, any>;
@@ -34,7 +37,8 @@ const pairs: Ch[] = [
 for (const c of pairs) { delete c.skate; delete c.skatePair; delete c.pet; delete c.petBreed; if (!c.companionId) delete c.companionId; }
 p.characters.push(...pairs);
 
-// ---------------------------------------------------------------- živější scéna
+// ---------------------------------------------------------------- živější scéna (verze 3)
+if (V3) {
 // víc návštěvníků (různé hlavy a vchody) a dvě další rodiny s dítětem (sněhulák, koulovačka)
 const heads = ['head_02_cg', 'head_04_cg', 'head_05_cg', 'head_07_cg', 'head_08_cg', 'head_01_cg', 'head_03_cg', 'head_06_cg', 'head_11_cg', 'head_09_cg'];
 const names = ['Radek', 'Lenka', 'Martin', 'Petra', 'Šárka', 'Jakub', 'Zuzana', 'Michal', 'Božena', 'Stanislav'];
@@ -82,5 +86,6 @@ p.characters.push(...wHeads.map((h, i) => clone(worker, `ch_lopata${i + 2}`, wNa
 
 // hustota (počty) a tempo chodců – lze měnit v horní liště
 p.crowd = { walkersN: 30, skatersN: 18, dogs: 3, walkSpeed: 1 };
+}
 await fs.writeFile(pf, JSON.stringify(p, null, 2) + '\n');
-console.log('Scéna vytvořena:', dst, `(${p.characters.length} postav, ${pairs.length / 2} dvojice za ruce, ${p.clearings.length + 1} úseky odklízení)`);
+console.log('Scéna vytvořena:', dst, `(${p.characters.length} postav, ${pairs.length / 2} dvojice za ruce, ${(p.clearings?.length ?? 0) + 1} úseky odklízení)`);

@@ -14,7 +14,7 @@ const isDev = !!process.env.ZIMNI_SCENA_DEV_URL;
 const appRoot = app.getAppPath();
 const resDir = app.isPackaged ? path.join(process.resourcesPath, 'builtin') : path.join(appRoot, 'resources', 'builtin');
 const demoRoot = app.isPackaged ? path.join(process.resourcesPath, 'demo') : path.join(appRoot, 'demo');
-const DEMOS: Record<string, string> = { namesti: 'Vanocni-namesti', radnice: 'Namesti-radnice', liberec: 'Liberec-zivy-trh', pastel: 'Pastelove-kluziste', pastel2: 'Pastelove-kluziste-2', tram: 'Tramvajova-ulice' };
+const DEMOS: Record<string, string> = { namesti: 'Vanocni-namesti', radnice: 'Namesti-radnice', liberec: 'Liberec-zivy-trh', pastel: 'Pastelove-kluziste', pastel2: 'Pastelove-kluziste-2', pastel3: 'Pastelove-kluziste-3', tram: 'Tramvajova-ulice' };
 
 let win: BrowserWindow | null = null;
 let encoder: NodeEncoderHost | null = null;
@@ -75,6 +75,12 @@ handle('project:open', async (dir?: string) => {
   return openDir(dir);
 });
 
+handle('project:delete', async (d: string, demo: boolean) => {
+  // ukázka: smaže se jen pracovní kopie v Dokumentech (příště se otevře čistá); vlastní projekt jde do koše
+  const target = demo ? path.join(app.getPath('documents'), 'Zimní scéna', d + PROJECT_EXT) : d;
+  if (!existsSync(path.join(target, 'project.json'))) return;
+  await shell.trashItem(target);
+});
 handle('project:openDemo', async (which: string = 'namesti') => {
   const name = DEMOS[which] ?? DEMOS.namesti;
   const demoSrc = path.join(demoRoot, name + PROJECT_EXT);

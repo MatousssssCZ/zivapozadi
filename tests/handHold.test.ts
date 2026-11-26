@@ -6,7 +6,7 @@ import { characterVisual, localToScene } from '../src/core/render/characterPose'
 
 describe('kluziště 2: dvojice za ruce', () => {
   it('děti i páry se drží za ruce (dlaně u sebe), nepovolená dvojice ne', async () => {
-    const lp = await loadProject(path.resolve('demo/Pastelove-kluziste-2.zscena'));
+    const lp = await loadProject(path.resolve('demo/Pastelove-kluziste-3.zscena'));
     // nepovolená dvojice: dva muži → jen vedle sebe + diagnostika
     const bad = JSON.parse(JSON.stringify(lp.project.characters.find((c) => c.id === 'pair_a2')));
     bad.id = 'pair_bad'; bad.name = 'Druhý muž'; bad.appearance.variants.head = 'head_02_cg'; lp.project.characters.push(bad);
