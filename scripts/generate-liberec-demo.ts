@@ -212,6 +212,8 @@ export async function generateLiberec(dir: string): Promise<ProjectFile> {
       objectRoles: { stand: ['obj_stall_drinks'], seating: ['obj_table_left_1', 'obj_table_left_2'], bin: ['obj_kos', 'obj_kos2'] }, params: { queueTimeout: 420 } },
     { id: 'zone_vyhled', name: 'Prohlížení stromu', activityType: 'viewing', activityVersion: 1, enabled: true, bounds: zpoly('tree_watch'), objectRoles: { view: ['obj_tree'] }, params: { lookMin: 5, lookMax: 18 } },
     { id: 'zone_snehulak', name: 'Dětský sníh – sněhulák', activityType: 'snowman', activityVersion: 1, enabled: true, bounds: zpoly('snow_play'), objectRoles: {}, params: { chance: 0.5 } },
+    // sněhový anděl (A07): klidné místo čerstvého sněhu vlevo vpředu (dobře vidět), mimo dětské hřiště
+    { id: 'zone_andel', name: 'Čerstvý sníh – sněhový anděl', activityType: 'snowAngel', activityVersion: 1, enabled: true, bounds: [{ x: 600, y: 930 }, { x: 740, y: 930 }, { x: 740, y: 1000 }, { x: 600, y: 1000 }], objectRoles: {}, params: {} },
     { id: 'zone_koulovacka', name: 'Dětský sníh – koulovačka', activityType: 'snowballFight', activityVersion: 1, enabled: true, bounds: zpoly('snow_play'), objectRoles: {}, params: { chance: 0.4, allowAdults: false } },
   ];
 

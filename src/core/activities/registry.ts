@@ -4,6 +4,7 @@ import { shopRunner } from './shop';
 import { snowmanParticipant } from './snowman';
 import { snowballParticipant } from './snowballFight';
 import { viewingRunner } from './viewing';
+import { snowAngelParticipant } from './snowAngel';
 
 const runners = new Map<string, ActivityRunner>();
 
@@ -17,3 +18,4 @@ registerActivity(shopRunner);
 registerActivity(snowmanParticipant);
 registerActivity(snowballParticipant);
 registerActivity(viewingRunner);
+registerActivity(snowAngelParticipant);

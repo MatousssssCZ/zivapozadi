@@ -91,8 +91,9 @@ const ss = (x: number) => { const t = Math.max(0, Math.min(1, x)); return t * t 
 const lerpP = (a: P3, b: P3, k: number): P3 => ({ u: a.u + (b.u - a.u) * k, h: a.h + (b.h - a.h) * k, lat: (a.lat ?? 0) + ((b.lat ?? 0) - (a.lat ?? 0)) * k, th: (a.th ?? 0) + ((b.th ?? 0) - (a.th ?? 0)) * k });
 
 /** Póza v čase t (s): interpolace sousedních klíčů; kontakty a fáze z klíče, ve kterém t leží. */
-export function sampleFall(v: FallVariant, t: number): FallKey {
-  const K = FALL_KEYS[v];
+export function sampleFall(v: FallVariant, t: number): FallKey { return sampleKeys(FALL_KEYS[v], t); }
+/** Interpolace libovolné řady klíčů (smoothstep mezi sousedními). */
+export function sampleKeys(K: FallKey[], t: number): FallKey {
   if (t <= 0) return K[0];
   if (t >= K[K.length - 1].t) return K[K.length - 1];
   let i = 0; while (i < K.length - 2 && t > K[i + 1].t) i++;
@@ -112,7 +113,8 @@ export const fallPhaseAt = (v: FallVariant, t: number): FallPhase => sampleFall(
  * `change`: předklon, jedna noha zvednutá, obě ruce u boty (šněrování), v polovině druhá noha.
  * Klíč je vůči bodu na zemi pod pánví (místo k sezení); prolíná se vahou (sednutí / vstávání).
  */
-export function benchPose(kind: 'rest' | 'change' | 'kneel' | 'bend' | 'squat' | 'sled' | 'lift' | 'tuck', t: number, dur: number, r?: number): FallKey {
+export function benchPose(kind: 'rest' | 'change' | 'kneel' | 'bend' | 'squat' | 'sled' | 'lift' | 'tuck' | 'angel', t: number, dur: number, r?: number): FallKey {
+  if (kind === 'angel') return sampleKeys(ANGEL_KEYS, t);
   if (kind === 'sled') return sledRidePose(t, r ?? 0);
   if (kind === 'lift') return liftPose();
   if (kind === 'tuck') return tuckPose(t);
@@ -184,3 +186,33 @@ export function tuckPose(t: number): FallKey {
   const s = Math.sin(t * 2.1), q = Math.sin(t * 1.3 + 1);
   return { t: 0, ph: 'pause', hip: W(-0.12, 0.9), pitch: 34 + 2 * q, head: -16, feet: [W(-0.08, 0, -0.12), W(0.06, 0, 0.12)], hands: [W(0.5, 0.82, -0.12), W(0.52 + 0.06 * s, 0.8 + 0.02 * q, 0.06 + 0.05 * s)], c: ['f0', 'f1'] };
 }
+
+/**
+ * Sněhový anděl (A07), dítě. Kořen = místo, kde stálo (u vpřed). Přidřep → sed (ruce za tělem jako
+ * opora) → položení zad a hlavy → tři tahy (ruce po sněhu od boků přes rozpažení nad hlavu a zpět,
+ * nohy roznožení / přinožení, mírně posunuté a s různou amplitudou) → chvilka v klidu → vstávání přes
+ * sed a dřep (ruka k rodiči) → stoj. Délky v délkách nohy dítěte, časy v s.
+ */
+const ANGEL_T = { lie: 3.6, strokes: [4.6, 7.2, 9.9] as number[], still: 12.6, end: 18.4 };
+export const ANGEL_TIMES = ANGEL_T;
+const lieBase = (hands: [P3, P3], feet: [P3, P3], t: number, head = 2): FallKey => ({ t, ph: 'pause', hip: W(-0.32, 0.12), pitch: -86, head, feet, hands, c: ['s', 'f0', 'f1', 'h0', 'h1'] });
+const SIDE: [P3, P3] = [W(-0.45, 0.04, -0.36), W(-0.45, 0.04, 0.36)], CLOSED: [P3, P3] = [W(0.55, 0.04, -0.09), W(0.55, 0.04, 0.09)];
+function strokeKeys(t0: number, amp: number): FallKey[] {
+  const out: [P3, P3] = [W(-1.12, 0.04, -0.88 * amp), W(-1.1, 0.04, 0.9 * amp)], up: [P3, P3] = [W(-1.75 * (0.92 + 0.08 * amp), 0.05, -0.32), W(-1.72 * (0.92 + 0.08 * amp), 0.05, 0.3)];
+  const open: [P3, P3] = [W(0.5, 0.04, -0.42 * amp), W(0.5, 0.04, 0.4 * amp)];
+  return [lieBase(out, open, t0 + 0.6), lieBase(up, open, t0 + 1.25), lieBase(out, open, t0 + 1.85), lieBase(SIDE, CLOSED, t0 + 2.55)];
+}
+export const ANGEL_KEYS: FallKey[] = [
+  { t: 0, ph: 'pause', hip: W(0, 1.04), pitch: 3, head: 0, feet: [W(-0.05, 0), W(0.06, 0)], hands: [W(-0.04, 1.0, -0.05), W(0.06, 1.0, 0.05)], c: ['f0', 'f1'] },
+  { t: 1.1, ph: 'pause', hip: W(-0.12, 0.58), pitch: 24, head: -6, feet: [W(0.0, 0, -0.1), W(0.1, 0, 0.1)], hands: [W(0.15, 0.5, -0.18), W(0.2, 0.52, 0.18)], c: ['f0', 'f1'] },
+  { t: 2.2, ph: 'pause', hip: W(-0.3, 0.13), pitch: 8, head: 4, feet: [W(0.42, 0.02, -0.1), W(0.5, 0.02, 0.1)], hands: [W(-0.62, 0.02, -0.3), W(-0.6, 0.02, 0.3)], c: ['s', 'h0', 'h1', 'f0', 'f1'] },
+  { t: 3.0, ph: 'pause', hip: W(-0.32, 0.12), pitch: -45, head: 10, feet: [W(0.52, 0.03, -0.09), W(0.56, 0.03, 0.09)], hands: [W(-0.7, 0.04, -0.34), W(-0.68, 0.04, 0.34)], c: ['s', 'h0', 'h1'] },
+  lieBase(SIDE, CLOSED, ANGEL_T.lie),
+  ...strokeKeys(ANGEL_T.strokes[0], 0.85), ...strokeKeys(ANGEL_T.strokes[1], 1.0), ...strokeKeys(ANGEL_T.strokes[2], 0.92),
+  lieBase(SIDE, CLOSED, ANGEL_T.still, 6),
+  // vstávání: sed s rukou nataženou k rodiči (blízká strana), přisunutí nohou pod tělo, dřep, stoj
+  { t: 14.4, ph: 'getup', hip: W(-0.3, 0.13), pitch: 22, head: -4, feet: [W(0.4, 0.02, -0.1), W(0.45, 0.02, 0.1)], hands: [W(-0.55, 0.02, -0.3), W(0.15, 0.62, 0.28)], c: ['s', 'h0', 'f0', 'f1'] },
+  { t: 15.6, ph: 'getup', hip: W(-0.18, 0.34), pitch: 34, head: -2, feet: [W(0.02, 0, -0.12), W(0.12, 0, 0.12)], hands: [W(0.0, 0.1, -0.25), W(0.12, 0.85, 0.3)], c: ['f0', 'f1', 'h0'] },
+  { t: 16.9, ph: 'getup', hip: W(-0.06, 0.66), pitch: 22, head: 0, feet: [W(-0.02, 0, -0.1), W(0.1, 0, 0.1)], hands: [W(0.12, 0.5, -0.18), W(0.14, 0.95, 0.28)], c: ['f0', 'f1'] },
+  { t: ANGEL_T.end, ph: 'done', hip: W(-0.02, 1.04), pitch: 4, head: 6, feet: [W(-0.05, 0), W(0.08, 0)], hands: [W(-0.04, 1.0, -0.05), W(0.06, 1.0, 0.05)], c: ['f0', 'f1'] },
+];

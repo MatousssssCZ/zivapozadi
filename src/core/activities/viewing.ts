@@ -59,7 +59,13 @@ export const viewingRunner: ActivityRunner = {
       if (data.target) agent.look = { ...data.target };
       // A03 rodič s dítětem: ukáže dítěti strom (místo focení), dítě se podívá a ukáže taky
       const kid = ctx.state.agents.find((x) => x.follow?.leaderId === agent.id && !x.hidden);
-      if (kid) { data.showAt = now + ctx.randRange(agent, 0.8, 1.8); data.until = Math.max(data.until!, data.showAt + 6); data.photo = false; run.phase = 'look'; run.phaseStart = now; return 'running'; }
+      if (kid) {
+        // A14 u výlohy: první si všimne dítě – ukáže na konkrétní věc za sklem, rodič se podívá na totéž
+        // a teprve pak zareaguje (přikývne / ukáže také); oba mají stejný cíl pohledu
+        const win = /výloh/i.test(o?.name ?? '');
+        if (win && data.target) { kid.look = { ...data.target }; (data as Record<string, unknown>).kidAt = now + ctx.randRange(agent, 0.4, 0.9); (data as Record<string, unknown>).kidId = kid.id; data.showAt = now + ctx.randRange(agent, 3.2, 4.5); data.until = Math.max(data.until!, now + ctx.randRange(agent, 8, 15)); data.photo = false; run.phase = 'look'; run.phaseStart = now; return 'running'; }
+        data.showAt = now + ctx.randRange(agent, 0.8, 1.8); data.until = Math.max(data.until!, data.showAt + 6); data.photo = false; run.phase = 'look'; run.phaseStart = now; return 'running';
+      }
       // fotografie (A06): u stromu občas vytáhne telefon, zamíří a vyfotí (6–12 s)
       data.photo = !agent.holding && (zone.params.photoChance === undefined ? 0.35 : Number(zone.params.photoChance)) > ctx.rand(agent);
       if (data.photo) { data.photoAt = now + ctx.randRange(agent, 0.8, 2); data.until = Math.max(data.until, data.photoAt + 11); }
@@ -75,10 +81,11 @@ export const viewingRunner: ActivityRunner = {
     if (data.showAt !== undefined && !data.shown && now >= data.showAt) {
       const kid = ctx.state.agents.find((x) => x.follow?.leaderId === agent.id && !x.hidden);
       if (kid && ctx.social.gesture(agent, 'point', ctx.randRange(agent, 2.6, 3.4), 0.75)) {
-        data.shown = true; agent.status = 'Ukazuje dítěti strom';
-        ctx.log('info', `${agent.name} ukazuje dítěti (${kid.name}) vánoční strom.`, agent.id);
-        // dítě se po chvíli nadchne a ukáže taky (zkusí znovu, než se zastaví)
-        (data as Record<string, unknown>).kidAt = now + ctx.randRange(agent, 1.2, 2.2); (data as Record<string, unknown>).kidId = kid.id;
+        data.shown = true; const win = /výloh/i.test(ctx.object(data.objectId!)?.name ?? '');
+        agent.status = win ? 'Ukazuje na totéž ve výloze' : 'Ukazuje dítěti strom';
+        ctx.log('info', win ? `${kid.name} ukazuje do výlohy, ${agent.name} se podívá a ukáže také.` : `${agent.name} ukazuje dítěti (${kid.name}) vánoční strom.`, agent.id);
+        // (u stromu) dítě se po chvíli nadchne a ukáže taky (zkusí znovu, než se zastaví)
+        if (!win) { (data as Record<string, unknown>).kidAt = now + ctx.randRange(agent, 1.2, 2.2); (data as Record<string, unknown>).kidId = kid.id; }
       } else if (now > data.showAt + 4) data.shown = true;
     }
     { const kAt = (data as Record<string, unknown>).kidAt as number | undefined, kid = ctx.state.agents.find((x) => x.id === (data as Record<string, unknown>).kidId);
@@ -99,6 +106,7 @@ export const viewingRunner: ActivityRunner = {
     }
     if (now < data.until!) return 'running';
     ctx.res.release(data.key!, agent.id);
+    { const kid = ctx.state.agents.find((x) => x.id === (data as Record<string, unknown>).kidId); if (kid) kid.look = null; }
     (ctx.state.placeCooldowns ??= {})[cdKey(data.key!)] = now + ctx.randRange(agent, 60, 180);
     agent.look = null;
     return 'done';

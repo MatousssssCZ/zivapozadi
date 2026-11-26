@@ -123,7 +123,8 @@
     "shop",
     "viewing",
     "snowman",
-    "snowballFight"
+    "snowballFight",
+    "snowAngel"
   ],
   "rig": {
     "library": "painted-parts-child/library.json",

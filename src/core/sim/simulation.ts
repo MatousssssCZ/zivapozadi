@@ -27,6 +27,7 @@ import { createAnimals, stepAnimals } from './animals';
 import { stepClearing, newClearingState, type ClearingHost } from './clearing';
 import { viewForDirection } from '../anim/skeleton';
 import { stepCoopSnowman, startCoopSnowman } from '../activities/coopSnowman';
+import { startSnowAngel, stepSnowAngel, abortSnowAngel, angelZoneFree, ANGEL_LIFE } from '../activities/snowAngel';
 const TRAM_OUT_DY = 60;
 import { tramGeo, stepTram, newTramState, tramMatrix, doorQuad, applyM, tramVisible, type TramGeo } from './tram';
 import { stepBakery, newBakeryState, bakeryStartNow, TASK_LABEL, type BakeryHost, type BakeryTask } from './bakery';
@@ -456,6 +457,7 @@ export class Simulation {
     if (this.project.tram) this.stepTramAll(t);
     if (this.project.bakery) this.stepBakeryAll(t);
     if (this.project.pram) this.stepPramAll();
+    if (this.state.angels?.length && t - this.state.angels[0].t0 > ANGEL_LIFE) this.state.angels.shift();
     this.stepProps(t);
     this.state.step++;
   }
@@ -609,6 +611,19 @@ export class Simulation {
       if (this.startKidsFight(p, k, zone, t) || startFight(h, zone, k, p, true)) return { ok: true, msg: `${k.name} jde koulovat.` };
     }
     return { ok: false, msg: 'Ve scéně není volná rodina s dítětem.' };
+  }
+  /** Ladění: rodina jde udělat sněhového anděla (A07). */
+  startSnowAngelNow(): { ok: boolean; msg: string } {
+    const h = this.sessionHost();
+    const zone = this.project.zones.find((z) => z.activityType === 'snowAngel' && angelZoneFree(h, z));
+    if (!zone) return { ok: false, msg: 'Žádné volné místo na anděla (zóna „snowAngel“ na sněhu).' };
+    for (const k of this.state.agents.filter((x) => !x.hidden && x.follow && this.isChild(x) && !x.activity)) {
+      const p = this.state.agents.find((x) => x.id === k.follow!.leaderId);
+      if (!p || p.hidden || p.activity || p.holding) continue;
+      p.route = null; k.route = null;
+      if (startSnowAngel(h, zone, p, k)) { p.visit = { mode: 'coffee', until: 0, since: this.time() }; return { ok: true, msg: `${k.name} jde dělat sněhového anděla.` }; }
+    }
+    return { ok: false, msg: 'Ve scéně není volná rodina (rodič s dítětem bez činnosti).' };
   }
   startCoopSnowmanNow(): { ok: boolean; msg: string } {
     const h = this.sessionHost();
@@ -1035,9 +1050,10 @@ export class Simulation {
     const h = this.sessionHost();
     for (const s of [...this.state.sessions]) {
       const coop = s.type === 'snowman' && (s.data as { coop?: boolean }).coop;
-      const r = coop ? stepCoopSnowman(h, s, this.zones.get(s.zoneId!)!) : s.type === 'snowman' ? stepSnowman(h, s) : s.type === 'snowballFight' ? stepFight(h, s) : 'running';
+      const r = coop ? stepCoopSnowman(h, s, this.zones.get(s.zoneId!)!) : s.type === 'snowman' ? stepSnowman(h, s) : s.type === 'snowballFight' ? stepFight(h, s) : s.type === 'snowAngel' ? stepSnowAngel(h, s) : 'running';
       if (r === 'running') continue;
-      if (s.type === 'snowman' && r === 'aborted' && !coop) { this.log('info', 'Stavba sněhuláka se přerušila.'); abortSnowman(h, s); }
+      if (s.type === 'snowAngel') { if (r === 'aborted') abortSnowAngel(h, s); else finishSession(h, s); this.log('info', r === 'aborted' ? 'Sněhový anděl se přerušil.' : 'Sněhový anděl je hotový.'); }
+      else if (s.type === 'snowman' && r === 'aborted' && !coop) { this.log('info', 'Stavba sněhuláka se přerušila.'); abortSnowman(h, s); }
       else { this.log('info', s.type === 'snowman' ? 'Sněhulák je hotový.' : r === 'aborted' ? 'Koulovačka se přerušila.' : 'Koulovačka skončila.'); finishSession(h, s); }
       // dítě (stálá dvojice) se po hře znovu připojí k rodiči
       for (const id of s.participantIds) {
@@ -1747,6 +1763,9 @@ export class Simulation {
             this.log('info', `${a.name} jde s dítětem (${kid.name}) ${z.activityType === 'snowman' ? 'stavět sněhuláka' : 'koulovat'}.`, a.id);
             return;
           }
+          // sněhový anděl (A07): vzácnější volba (losuje se ze seedu scény – neposouvá RNG postav)
+          const az = this.isChild(kid) ? this.project.zones.find((q) => q.activityType === 'snowAngel' && angelZoneFree(h, q)) : undefined;
+          if (az && hashNoise(this.project.seed, 9900 + Math.floor(t), a.id.length) < 0.22 && startSnowAngel(h, az, a, kid)) { a.visit = { mode: 'coffee', until: 0, since: t }; return; }
         }
         const friend = r >= 0.75 ? this.pickFriend(a) : null;
         // setkání přátel: spolu na kávu, nebo (vzácně) postavit sněhuláka

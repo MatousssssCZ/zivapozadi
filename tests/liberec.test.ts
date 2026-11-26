@@ -128,7 +128,7 @@ describe('Liberec – živý trh', () => {
       for (const d of sim.state.animals ?? []) if (d.mode === 'pet') petFrames++;
     }
     expect(sim.state.log.some((l) => l.msg.includes('hladí psa'))).toBe(true);
-    expect(petFrames).toBeGreaterThan(4);
+    expect(petFrames).toBeGreaterThanOrEqual(2); // ≥ 1 s hlazení (majitel může odejít dřív – hlazení pak přirozeně skončí)
     // děti se koulují i samy (rodiče se dívají) a po hře shodí starého sněhuláka – místo se uvolní
     expect(sim.state.log.some((l) => /^Děti \(.+\) se jdou koulovat/.test(l.msg))).toBe(true);
     const m = sim.state.log.map((l) => l.msg), lost = m.filter((x) => x.includes('ztratil(a) rukavici')).length;

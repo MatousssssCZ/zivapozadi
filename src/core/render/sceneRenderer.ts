@@ -29,7 +29,8 @@ import { drawHat, drawPompom, drawScarf, drawMitten, hatTop, scarfKnots, stepAcc
 import { windFactor } from '../sim/environment';
 import { SIM_DT } from '../sim/types';
 import { drawVectorSled, sledRingScreen, drawRope } from './sledVector';
-import { drawCrate, drawBucket, drawSign, drawGrit } from './shopProps';
+import { drawCrate, drawBucket, drawSign, drawGrit, drawAngelImprint } from './shopProps';
+import { ANGEL_LIFE } from '../activities/snowAngel';
 import { drawPram } from './pramVector';
 import { pramPoints } from '../sim/pram';
 import { depthScaleAt, objectLocalToScene } from '../scene/geometry';
@@ -388,7 +389,9 @@ function accessoryDrawer(ctx: Ctx, project: ProjectFile, sim: Simulation, a: Age
   const toL = (p: { x: number; y: number }) => ({ x: (p.x - cv.x) / (sg * k), y: (p.y - cv.y) / k });
   const ppm = k / Q, t = sim.state.step * SIM_DT;
   const env = project.scene.environment, wind = (project.scene.snowfall?.wind ?? 0.1) * 5 * windFactor(project.seed, t, !!env?.gusts); // m/s
-  const knots = scarfKnots(spec, geo), seg = ((spec.tailLen * (geo.back ? 0.3 : 0.4)) / Q / TAIL_SEGS) * (geo.neckW / 11);
+  // vleže (anděl) leží šála na sněhu – volné konce se nekreslí jako visící
+  const lying = a.anim.sit?.kind === 'angel' && a.anim.sit.t > 2.6 && a.anim.sit.t < 16;
+  const knots = lying ? [] : scarfKnots(spec, geo), seg = ((spec.tailLen * (geo.back ? 0.3 : 0.4)) / Q / TAIL_SEGS) * (geo.neckW / 11);
   const top = spec.hat === 'pompom' ? hatTop(spec, geo) : null;
   // rovina hrudi (ve scéně): normála dopředu kolmo na trup, bod u uzlu
   const fwdL = { x: -geo.torsoUp.y, y: geo.torsoUp.x }; if (fwdL.x < 0) { fwdL.x = -fwdL.x; fwdL.y = -fwdL.y; }
@@ -804,6 +807,8 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
   if (sim?.state.falls?.marks.length) drawFallMarks(ctx, project, sim, sim.time());
   if (project.rink) drawRinkIce(ctx, project, sim, images, !!opts.reducedMotion);
   if (project.bakery && sim) drawBakery(ctx, project, sim, images);
+  // otisky sněhových andělů (A07): na zemi pod postavami
+  if (sim?.state.angels?.length) { const cm = cameraFor(project.scene); for (const an of sim.state.angels) { const c = Math.cos(an.dir), s = Math.sin(an.dir); drawAngelImprint(ctx, (a, b) => toScreen(cm, { X: an.X + a * c - b * s, Z: an.Z + a * s + b * c }), an.arms, an.legs, 1 - (opts.time - an.t0) / ANGEL_LIFE, an.getup); } }
   if (sim && (sim.state as { snowFields?: Record<string, SnowField> }).snowFields) drawSnowFieldTrails(ctx, project, sim);
   const worldObjs = visible.filter(({ o }) => o.layer === 'world').map(({ o }) => o);
   drawGroundIntegration(ctx, project, worldObjs, assets, opts.time);

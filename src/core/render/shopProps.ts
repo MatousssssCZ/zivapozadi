@@ -70,3 +70,30 @@ export function drawGrit(ctx: Ctx, grit: Grit[], t: number, life: number) {
   }
   ctx.restore();
 }
+
+/**
+ * Otisk sněhového anděla (A07) na zemi: tělo + hlava, „křídla“ (výseče od ramen podle skutečného
+ * rozsahu tahů) a „sukně“ z roznožení. Měkké okraje, pozvolna zapadá (k = 1 → 0).
+ */
+export function drawAngelImprint(ctx: Ctx, P: (a: number, b: number) => { x: number; y: number }, arms: number, legs: number, k: number, getup: boolean) {
+  if (k <= 0) return;
+  const shape = (pts: { x: number; y: number }[]) => { ctx.beginPath(); pts.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y))); ctx.closePath(); };
+  const fill = `rgba(120,135,190,${(0.42 * k).toFixed(3)})`, rim = `rgba(255,255,255,${(0.65 * k).toFixed(3)})`;
+  ctx.save();
+  const parts: { x: number; y: number }[][] = [];
+  // křídla: od paže u boku (míří k nohám) přes rozpažení k nadhlavě, poloměr = délka paže
+  for (const s of [-1, 1]) {
+    const pts = [P(0.6, s * 0.1)], a0 = Math.PI * 0.95, a1 = a0 - Math.PI * 0.85 * Math.min(1, arms);
+    for (let i = 0; i <= 12; i++) { const q = a0 + (a1 - a0) * (i / 12); pts.push(P(0.6 + Math.cos(q) * 0.48, s * (0.12 + Math.sin(q) * 0.48))); }
+    parts.push(pts);
+  }
+  // nohy: výseč od pánve k chodidlům podle roznožení
+  { const sp = 0.1 + 0.3 * Math.min(1, legs); parts.push([P(0.2, -0.14), P(-0.32, -sp - 0.06), P(-0.38, 0), P(-0.32, sp + 0.06), P(0.2, 0.14)]); }
+  // tělo a hlava
+  { const pts = []; for (let i = 0; i < 16; i++) { const q = (i / 16) * Math.PI * 2; pts.push(P(0.35 + Math.cos(q) * 0.42, Math.sin(q) * 0.16)); } parts.push(pts); }
+  { const pts = []; for (let i = 0; i < 12; i++) { const q = (i / 12) * Math.PI * 2; pts.push(P(0.92 + Math.cos(q) * 0.11, Math.sin(q) * 0.1)); } parts.push(pts); }
+  ctx.fillStyle = fill; for (const p of parts) { shape(p); ctx.fill(); }
+  ctx.strokeStyle = rim; ctx.lineWidth = 1; for (const p of parts) { shape(p); ctx.stroke(); }
+  if (getup) { ctx.fillStyle = `rgba(130,145,190,${(0.3 * k).toFixed(3)})`; for (const [a, b] of [[0.05, -0.32], [-0.1, 0.05], [-0.05, -0.08]]) { const c = P(a, b); ctx.beginPath(); ctx.ellipse(c.x, c.y, 2.2, 1.2, 0, 0, 7); ctx.fill(); } } // ruka a boty při vstávání
+  ctx.restore();
+}

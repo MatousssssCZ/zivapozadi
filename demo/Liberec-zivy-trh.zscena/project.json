@@ -3,8 +3,8 @@
   "formatVersion": 1,
   "meta": {
     "name": "Liberec – živý vánoční trh",
-    "createdAt": "2026-11-26T00:23:14.970Z",
-    "modifiedAt": "2026-11-26T00:23:15.157Z",
+    "createdAt": "2026-11-26T07:03:58.836Z",
+    "modifiedAt": "2026-11-26T07:03:59.037Z",
     "appVersion": "0.1.0"
   },
   "seed": 2611,
@@ -5101,6 +5101,33 @@
       "params": {
         "chance": 0.5
       }
+    },
+    {
+      "id": "zone_andel",
+      "name": "Čerstvý sníh – sněhový anděl",
+      "activityType": "snowAngel",
+      "activityVersion": 1,
+      "enabled": true,
+      "bounds": [
+        {
+          "x": 600,
+          "y": 930
+        },
+        {
+          "x": 740,
+          "y": 930
+        },
+        {
+          "x": 740,
+          "y": 1000
+        },
+        {
+          "x": 600,
+          "y": 1000
+        }
+      ],
+      "objectRoles": {},
+      "params": {}
     },
     {
       "id": "zone_koulovacka",
