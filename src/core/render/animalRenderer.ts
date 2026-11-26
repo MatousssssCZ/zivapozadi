@@ -3,6 +3,7 @@
  * článcích (vzdálené ztmavené za trupem), ocas. Chůze řízená uraženou dráhou (pořadí nohou
  * LH–LF–RH–RF), v klidu nohy rovně, sed = samostatný malovaný díl. Díly jsou assety `animal_*`.
  */
+import { drawVectorTail, tailProfileOf } from './animalTail';
 import type { AnimalState } from '../sim/animals';
 import { SPECIES } from '../sim/animals';
 import { Q } from '../scene/camera';
@@ -12,6 +13,9 @@ import { legProfile, pawTarget, solveLeg, drawLeg, type LegProfile } from './ani
 /** vektorové nohy (výchozí zapnuté); `setVectorLegs(false)` vrátí malované díly nohou */
 let VECTOR_LEGS = true;
 const clamp = (x: number, a: number, b: number) => Math.max(a, Math.min(b, x));
+/** Vektorové ocasy (výchozí zapnuto). */
+let VECTOR_TAILS = true;
+export function setVectorTails(on: boolean) { VECTOR_TAILS = on; }
 export function setVectorLegs(on: boolean) { VECTOR_LEGS = on; }
 const profCache = new Map<string, LegProfile>();
 export function legProfileOf(a: { species: 'dog' | 'cat'; breed?: string }): LegProfile { const k = `${a.species}|${a.breed ?? ''}`; let p = profCache.get(k); if (!p) { p = legProfile(a.breed, a.species, (a.breed ? BREEDS[a.breed]?.colors : undefined) ?? DEFAULT_COLORS[a.species]); profCache.set(k, p); } return p; }
@@ -206,8 +210,13 @@ export function drawAnimal(ctx: Ctx, a: AnimalState, img0: AnimalImages, pxPerM0
   const rotAbout = (r: number) => { if (!r) return; ctx.translate(tc.x, tc.y); ctx.rotate(r); ctx.translate(-tc.x, -tc.y); };
   // ocas za trupem
   ctx.save(); bodyTf(); rotAbout(shakeAt(0.09));
-  const tail = (away ? img(`${pre}tail_back`) : null) ?? img(`${pre}tail`), TB = BR?.tail;
-  if (!tail && img(`${pre}tail_1`)) {
+  // vektorový ocas (všechna plemena): ze strany za trupem, zezadu (míří k divákovi) až po trupu
+  const TP = VECTOR_TAILS ? tailProfileOf(a.breed, sp) : null;
+  const excite = Math.max(sh, a.mode === 'pet' ? 0.8 : 0);
+  const vTail = () => { const tj = J(R.tail); drawVectorTail(ctx, TP!, sp, tj.x, tj.y, R.tailLen * pxPerM * (sp === 'cat' ? 1.15 : 1.05), t, walk, ph, excite, away, a.id.length + (a.breed?.length ?? 0)); };
+  if (TP && !away) vTail();
+  const tail = TP ? null : (away ? img(`${pre}tail_back`) : null) ?? img(`${pre}tail`), TB = BR?.tail;
+  if (!TP && !tail && img(`${pre}tail_1`)) {
     // kočičí ocas ze tří článků (jedno společné měřítko archu): kořen každého článku je vpravo
     // (u článků 1–2 dutý konec), koncový článek je malovaný špičkou doprava → zrcadlit.
     // Řetěz od kořene: oblouk nahoru, pomalé vlnění se zpožděním; kreslí se od špičky ke kořeni,
@@ -250,6 +259,7 @@ export function drawAnimal(ctx: Ctx, a: AnimalState, img0: AnimalImages, pxPerM0
   if (!VL) { leg('h', 'a', 0.5, false); leg('f', 'a', 0.75, false); }
   ctx.save(); bodyTf(); rotAbout(shakeAt(0.04));
   ctx.drawImage(torso, tx, ty, tw, th);
+  if (TP && away) { rotAbout(shakeAt(0.09) - shakeAt(0.04)); vTail(); }
   ctx.restore();
   if (VL) {
     // bližší nohy přes trup, pak lokální překryv srsti z trupu u kořenů (kořen pod siluetou, bez čepu)
