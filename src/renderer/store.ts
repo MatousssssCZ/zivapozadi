@@ -41,12 +41,17 @@ export interface EditorState {
   rinkDebug: boolean;
   /** otevřená nabídka akcí na místě ve scéně */
   actionMenu: import('./canvas/ActionMenu').ActionMenuState | null;
+  /** galerie aktivit (sandbox) */ galleryOpen: boolean; galleryId: string | null;
+  /** otevřená ukázková scéna (galerie ví, zda ji musí načíst) */ sceneKey: string | null;
+  /** požadavek na zaměření kamery: obdélník scény a/nebo sledovaná postava; n = pořadí požadavku */
+  focus: { rect?: { x: number; y: number; w: number; h: number } | null; agentId?: string | null; n: number } | null;
 }
 
 const initial: EditorState = {
   dir: null, project: null, manifests: {}, issues: [], missingAssets: [], selection: null, tool: 'select', routeActiveNode: null,
   drawing: [], zoneType: 'coffee', showMarkers: true, dirty: false, toasts: [], builtins: [], canUndo: false, canRedo: false,
   exportOpen: false, exporting: false, rigDiagnostics: false, clearingDebug: false, gaitDebug: false, fallDebug: false, snowmanDebug: false, rinkDebug: false, actionMenu: null,
+  galleryOpen: false, galleryId: null, sceneKey: null, focus: null,
 };
 
 const HISTORY_LIMIT = 200;

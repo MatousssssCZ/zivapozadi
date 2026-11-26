@@ -5,6 +5,7 @@ import { LeftPanel } from './panels/LeftPanel';
 import { RightPanel } from './panels/RightPanel';
 import { BottomPanel } from './panels/BottomPanel';
 import { ExportDialog } from './panels/ExportDialog';
+import { ActivityGallery } from './panels/ActivityGallery';
 import { EditorCanvas } from './canvas/EditorCanvas';
 import { deleteSelection, duplicateSelection, addArea } from './ops';
 import { zs } from './api';
@@ -16,6 +17,7 @@ function Welcome() {
       <h1>❄ Zimní scéna</h1>
       <p>Editor animovaných zimních scén s deterministickou simulací a exportem do MP4.</p>
       <div className="welcome-actions">
+        <button className="primary big accent" onClick={() => store.set({ galleryOpen: true })}>🎬 Galerie aktivit – projít všechny aktivity</button>
         <button className="primary big" onClick={() => doOpen('liberec')}>Otevřít „Liberec – živý trh“</button>
         <button className="primary big" onClick={() => doOpen('tram')}>Otevřít „Vánoční tramvajová ulice“</button>
         <button className="primary big" onClick={() => doOpen('pastel')}>Otevřít „Pastelové vánoční kluziště“</button>
@@ -39,6 +41,7 @@ const KEY_TOOLS: Record<string, Tool> = { v: 'select', t: 'route', o: 'obstacle'
 export function App() {
   const project = useEditor((s) => s.project);
   const exportOpen = useEditor((s) => s.exportOpen);
+  const galleryOpen = useEditor((s) => s.galleryOpen);
   useEffect(() => {
     zs().startupProject().then((d) => { if (d) doOpen('open', d); });
     zs().onBeforeClose(() => {
@@ -67,10 +70,10 @@ export function App() {
   return (
     <div className="app">
       <TopBar />
-      <div className="main">
-        <LeftPanel />
+      <div className={galleryOpen ? "main gallery-mode" : "main"}>
+        {galleryOpen ? <ActivityGallery /> : <LeftPanel />}
         <div className="center">{project ? <EditorCanvas /> : <Welcome />}</div>
-        <RightPanel />
+        {!galleryOpen && <RightPanel />}
       </div>
       <BottomPanel />
       {exportOpen && project && <ExportDialog />}

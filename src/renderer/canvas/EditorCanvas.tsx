@@ -7,6 +7,7 @@ import type { Vec2 } from '../../core/math/vec';
 import { dist } from '../../core/math/vec';
 import { addArea, addCharacter, addNode, addZone, connectNodes, placeAsset } from '../ops';
 import { ActionMenu, actionsAt, addSource } from './ActionMenu';
+import { GalleryPlayer } from '../panels/ActivityGallery';
 
 interface View { zoom: number; panX: number; panY: number }
 
@@ -57,7 +58,25 @@ export function EditorCanvas() {
   /** prefers-reduced-motion: bez třpytu, bez ledové tříště, slabší sněžení */
   function reducedMotion() { try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; } }
 
+  /** Zaměření kamery (galerie): plynulý přechod na obdélník / za sledovanou postavou. */
+  const focusN = useRef(-1), focusRect = useRef<{ x: number; y: number; w: number; h: number } | null>(null);
+  function applyFocus() {
+    const f = store.state.focus, c = ref.current, p = store.state.project; if (!f || !c || !p) return;
+    if (f.n !== focusN.current) { focusN.current = f.n; focusRect.current = f.rect ?? null; if (!f.rect && !f.agentId) { view.current = { zoom: 1, panX: 0, panY: 0 }; setZoomPct(100); return; } }
+    let R = focusRect.current;
+    const a = f.agentId ? store.sim.sim?.state.agents.find((x) => x.id === f.agentId && !x.hidden) : undefined;
+    if (a) { const w = R?.w ?? 760, h = R?.h ?? 430; R = { x: a.pos.x - w / 2, y: a.pos.y - h * 0.68, w, h }; }
+    if (!R) return;
+    const fit = Math.min(c.width / p.scene.width, c.height / p.scene.height) * 0.94;
+    const zoom = Math.max(1, Math.min(4, Math.min(c.width / (R.w * fit), c.height / (R.h * fit)) * 0.95));
+    const s2 = fit * zoom, cx = R.x + R.w / 2, cy = R.y + R.h / 2;
+    const tx = (p.scene.width / 2 - cx) * s2, ty = (p.scene.height / 2 - cy) * s2, v = view.current, k = 0.12;
+    v.zoom += (zoom - v.zoom) * k; v.panX += (tx - v.panX) * k; v.panY += (ty - v.panY) * k;
+    const pct = Math.round(v.zoom * 100); if (Math.abs(pct - zoomPctRef.current) >= 2) { zoomPctRef.current = pct; setZoomPct(pct); }
+  }
+  const zoomPctRef = useRef(100);
   function draw() {
+    applyFocus();
     const c = ref.current; const st = store.state; if (!c || !st.project) return;
     const ctx = c.getContext('2d')!;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -81,6 +100,7 @@ export function EditorCanvas() {
   }
 
   const onWheel = (e: React.WheelEvent) => {
+    if (store.state.focus) store.set({ focus: null });
     const c = ref.current!, r = c.getBoundingClientRect();
     const before = toScene(e);
     const factor = Math.exp(-e.deltaY * 0.0015);
@@ -224,6 +244,7 @@ export function EditorCanvas() {
         onWheel={onWheel} onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseLeave={() => { mouse.current = null; onMouseUp(); }}
         onDoubleClick={onDoubleClick} onContextMenu={(e) => e.preventDefault()} />
       <ActionMenu />
+      <GalleryPlayer />
       <div className="canvas-hud">
         <span>Přiblížení {zoomPct} %</span>
         <button onClick={() => { view.current = { zoom: 1, panX: 0, panY: 0 }; setZoomPct(100); }}>Celý záběr</button>

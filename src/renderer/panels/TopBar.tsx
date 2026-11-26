@@ -9,12 +9,16 @@ async function guardDirty(): Promise<boolean> {
   return window.confirm('Projekt má neuložené změny. Opravdu pokračovat bez uložení?');
 }
 
-export async function doOpen(kind: 'new' | 'open' | 'demo' | 'demo2' | 'liberec' | 'pastel' | 'tram', dir?: string) {
-  if (!(await guardDirty())) return;
+/** Ukázková scéna podle názvu projektu (galerie aktivit ví, že ji nemusí znovu načítat). */
+export function sceneKeyOf(name: string): string | null { const n = name.toLowerCase(); return n.includes('liberec') ? 'liberec' : n.includes('tramvaj') ? 'tram' : n.includes('kluzi') ? 'pastel' : null; }
+
+export async function doOpen(kind: 'new' | 'open' | 'demo' | 'demo2' | 'liberec' | 'pastel' | 'tram', dir?: string): Promise<boolean> {
+  if (!(await guardDirty())) return false;
   try {
     const r = kind === 'new' ? await zs().newProject() : kind === 'demo' ? await zs().openDemo() : kind === 'demo2' ? await zs().openDemo('radnice') : kind === 'liberec' ? await zs().openDemo('liberec') : kind === 'pastel' ? await zs().openDemo('pastel') : kind === 'tram' ? await zs().openDemo('tram') : await zs().openProject(dir);
-    if (r) { await store.load(r); store.toast('info', `Otevřen projekt „${r.project.meta.name}“.`, 2500); }
-  } catch (e) { store.toast('error', (e as Error).message, 12000); }
+    if (r) { await store.load(r); store.set({ sceneKey: kind === 'new' || kind === 'open' ? sceneKeyOf(r.project.meta.name) : kind }); store.toast('info', `Otevřen projekt „${r.project.meta.name}“.`, 2500); }
+    return !!r;
+  } catch (e) { store.toast('error', (e as Error).message, 12000); return false; }
 }
 
 const TOOLS: { id: Tool; label: string; key: string }[] = [
@@ -47,10 +51,12 @@ export function TopBar() {
   const [fv, setFv] = useState<FallVariant>('back'), [fs, setFs] = useState<1 | -1>(1), [fslow, setFslow] = useState(false), [fhelp, setFhelp] = useState(true);
   const hasElders = useEditor((s) => !!s.project?.characters.some((c) => c.gaitProfile));
   const has = !!project;
+  const galleryOpen = useEditor((s) => s.galleryOpen);
   return (
     <div className="topbar">
       <div className="group">
         <span className="brand">❄ Zimní scéna</span>
+        <button className={galleryOpen ? 'active' : 'accent'} onClick={() => store.set({ galleryOpen: !store.state.galleryOpen })} title="Galerie aktivit: projděte všechny aktivity, každá se přehraje v čerstvé simulaci a můžete spouštět návazné akce">🎬 Galerie aktivit</button>
         <button onClick={() => doOpen('new')}>Nový</button>
         <button onClick={() => doOpen('open')}>Otevřít…</button>
         <button onClick={() => doOpen('demo')}>Demo: náměstí</button>

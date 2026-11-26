@@ -35,6 +35,7 @@ import { createSkater, stepSkater, stepRinkEvents, separate, addTrails, skatePos
 import { stepFalls, startFall, newFallsState, DEFAULT_FALLS, type FallHost, type FallsState } from './falls';
 import { fallEndShift as fallEndShiftOf, type FallVariant } from '../anim/fallPoses';
 import { stepSled, sledObstacles, sledPathProblem, type SledHost } from './sled';
+import { forceMitten } from './mitten';
 import { stepPram, newPramState, pramObstacle, type PramHost } from './pram';
 import { maybeCarryMitten, mittenBusy, stepMitten, type MittenHost } from './mitten';
 import { stepSnowman, startSnowman, abortSnowman, finishSession, snowmanZoneFree, type SessionHost } from '../activities/snowman';
@@ -536,6 +537,17 @@ export class Simulation {
   }
   // ---------------------------------------------------------------- pekař
   private bakeryHost: BakeryHost | null = null;
+  /** Galerie aktivit: sáňky (A03) vyjedou hned. */
+  sledNow(): { ok: boolean; msg: string } { const st = this.state.sled; if (!this.project.sled) return { ok: false, msg: 'Scéna nemá sáňky.' }; if (!st) return { ok: false, msg: 'Sáňky ještě nejsou připravené.' }; if (st.phase !== 'offstage') return { ok: false, msg: 'Sáňky už jedou.' }; st.until = this.time(); return { ok: true, msg: 'Rodič táhne dítě na sáňkách.' }; }
+  /** Galerie aktivit: chodci upadne rukavice (A09). */
+  mittenNow(): { ok: boolean; msg: string } {
+    const W = this.project.scene.width;
+    const a = this.state.agents.find((x) => !x.hidden && !x.holding && !x.activity && !x.follow && !this.isChild(x) && this.chars.get(x.id)?.routine === 'visitor' && !!x.route && x.pos.x > W * 0.2 && x.pos.x < W * 0.8 && !this.state.agents.some((k) => k.follow?.leaderId === x.id));
+    if (!a) return { ok: false, msg: 'Nikdo vhodný právě neprochází.' };
+    return forceMitten(this.mittenHost(), a) ? { ok: true, msg: `${a.name} za chvíli ztratí rukavici.` } : { ok: false, msg: 'Rukavice už ve scéně je.' };
+  }
+  /** Galerie aktivit: dítě začne chytat vločky (A10) – jen za sněžení. */
+  flakesNow(): { ok: boolean; msg: string } { if (!this.project.scene.snowfall.enabled) return { ok: false, msg: 'Nesněží – vločky chytat nelze.' }; const st = (this.state.flakes ??= { next: 90, n: 0 }); if (st.kidId) return { ok: false, msg: 'Už chytá.' }; st.next = this.time(); return { ok: true, msg: 'Rodina se zastaví a dítě chytá vločky.' }; }
   /** Ladění: kočárek přijede hned. */
   pramNow(): { ok: boolean; msg: string } { const st = this.state.pram; if (!this.project.pram) return { ok: false, msg: 'Scéna nemá kočárek.' }; if (st && st.phase !== 'offstage') return { ok: false, msg: 'Kočárek už je ve scéně.' }; (this.state.pram ??= newPramState(this.project.pram)).until = this.time(); return { ok: true, msg: 'Přichází rodič s kočárkem.' }; }
   private pramHost: PramHost | null = null;

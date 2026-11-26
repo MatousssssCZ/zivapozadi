@@ -144,3 +144,13 @@ export function stepMitten(h: MittenHost): void {
     }
   }
 }
+
+/** Ladění / galerie aktivit: postava hned ponese rukavici, která jí za pár sekund upadne. */
+export function forceMitten(h: MittenHost, a: AgentState): boolean {
+  const m = mittenState(h.state), t = h.time();
+  if (m.phase !== 'idle' || a.holding || h.state.props.some((p) => p.kind === 'mitten')) return false;
+  const p: PropState = { id: h.newPropId(), kind: 'mitten', place: { kind: 'held', agentId: a.id }, appearedAt: t, sips: 0 };
+  h.state.props.push(p); a.holding = p.id; a.holdingKind = 'mitten';
+  Object.assign(m, { phase: 'carry', agentId: a.id, propId: p.id, at: t + 2.5, pocket: false });
+  return true;
+}
