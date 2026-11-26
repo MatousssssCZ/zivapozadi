@@ -26,7 +26,7 @@ import { figureGeo } from '../vector/figure';
 import type { FootGeom } from '../anim/gaitKinematics';
 
 /** Vektorové postavy (tělo, oděv, hlava bez rastrových dílů) – kostra, činnosti a kontakty zůstávají společné. */
-let vectorFigures = false;
+let vectorFigures = typeof process !== "undefined" && !!process.env?.VEKTOR;
 export function setVectorFigures(on: boolean) { vectorFigures = on; }
 export function vectorFiguresOn() { return vectorFigures; }
 /** Vektorový plán postavy: tělesný profil, outfit (stabilní ze seedu) a kostra podle profilu. */
@@ -79,9 +79,10 @@ export function characterVisual(agent: AgentState, m: CharacterManifest, look: C
     const rv = { ...resolveView(tpl, req.view) };
     const vp = vectorFigures && look.routine !== 'baker' ? vectorPlan(scaledTemplate(tpl, app.proportions) as SkeletonTemplate & { id: string }, app, look.routine) : null;
     const stpl = vp ? vp.tpl : scaledTemplate(tpl, app.proportions);
+    const paintedView = rv.use; // malované díly (pomocná sestava: úchopy, kotvy) jen v ¾ pohledech
     if (vp && vp.tpl.views[req.view]) { rv.use = req.view; rv.substituted = false; } // vektorová postava má všechny pohledy
     const pose = skeletonPose(stpl, rv.use, req.mirror, agent.anim, agent.holding !== null && agent.holdingKind !== 'bag' && agent.holdingKind !== 'mitten' && agent.holdingKind !== 'shovel', motionOf(agent, app.motion), hashString(agent.id), { ...groundOptions(agent, x, y, scale, req.mirror, cam), snowSink: (agent.snowDepth ?? 0) > 0 && agent.anim ? (agent.snowDepth ?? 0) / Q : 0 });
-    const rig = assembleRig(lib, tpl, app, pose, rv.use, vectorAccessories && look.routine !== 'baker' ? accessoriesOf(app, /child/.test(tpl.id)) : null);
+    const rig = assembleRig(lib, tpl, app, pose, paintedView, vectorAccessories && look.routine !== 'baker' ? accessoriesOf(app, /child/.test(tpl.id)) : null);
     // závěj přes spodek zabořené boty (kreslí se hned po botě; barvu dodá vykreslování z pozadí)
     // brusle: nůž pod podrážkou (pata → přednoží), výška držáku = BLADE_H délky nohy
     if (agent.anim.skate || agent.anim.bladesOn) {

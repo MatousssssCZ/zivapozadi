@@ -48,7 +48,9 @@ export function bodyOf(seed: number, age: AgeGroup): BodyProfile {
 
 /** Kostra podle profilu: výška a poměr nohou mění délky kostí (aktivity počítají v délkách nohou). */
 export function templateFor(base: SkeletonTemplate, b: BodyProfile): SkeletonTemplate {
-  const k = b.height, lr = b.legRatio, B = base.bones;
+  // délky kostí zůstávají z ověřené šablony (výšku už mění proporce vzhledu) – kontakty, pády, brusle
+  // i činnosti jsou na nich vyladěné; vektorový profil mění objemy a hlavu
+  const k = 1, lr = 1, B = base.bones; void b;
   const legK = k * lr, bodyK = k * (2 - lr); // delší nohy → mírně kratší trup (celková výška zůstane)
   return {
     ...base,

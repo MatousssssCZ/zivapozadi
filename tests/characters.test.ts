@@ -6,7 +6,7 @@ import '../src/node/napiRender';
 import type { PartLibrary, CharacterAppearance } from '../src/core/anim/partLibrary';
 import { validateLibrary } from '../src/core/anim/partLibrary';
 import { generateAppearance, generateGroup, validateAppearance, nextSeed, comboKey } from '../src/core/anim/appearanceGenerator';
-import { characterVisual, gaitContextFor } from '../src/core/render/characterPose';
+import { characterVisual, gaitContextFor, setVectorFigures } from '../src/core/render/characterPose';
 import { drawRig, rigImageKey } from '../src/core/render/rigRenderer';
 import { initialAnimState, stepAnimator, playAction } from '../src/core/anim/animator';
 import type { AgentState } from '../src/core/sim/types';
@@ -233,6 +233,8 @@ describe('export se skládanými postavami', () => {
 });
 
 describe('knihovna dílů z ChatGPT (painted-parts-cg)', () => {
+  // test malovaných dílů (mezery v kloubech) – vektorové postavy vypnout
+  beforeAll(() => setVectorFigures(false));
   it('je konzistentní, generuje jen platné kombinace a v kloubech nemá mezery', async () => {
     const D = 'resources/builtin/painted-parts-cg';
     const L = JSON.parse(await fs.readFile(`${D}/library.json`, 'utf8')) as PartLibrary;
