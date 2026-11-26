@@ -122,16 +122,34 @@ export function TopBar() {
 }
 
 /** Hustota davu: podíl chodců a bruslařů, kteří přicházejí (mění se za běhu, bez přestavění simulace). */
+/**
+ * Hustota davu počty (ne procenty): kolik lidí, bruslařů, psů a koček smí být ve scéně, a tempo chodců.
+ * Ukládá se do scény (export je pak stejný). Kdo je navíc, dokončí, co dělá, a odejde.
+ */
 function Density() {
-  const crowd = useEditor((s) => s.project?.crowd);
-  const hasRink = useEditor((s) => !!s.project?.rink);
-  const [w, setW] = useState<number | null>(null), [k, setK] = useState<number | null>(null);
-  const cw = w ?? Math.round((crowd?.walkers ?? 1) * 100), ck = k ?? Math.round((crowd?.skaters ?? 1) * 100);
-  const commit = (key: 'walkers' | 'skaters', v: number) => { store.editLive(key === 'walkers' ? 'Hustota chodců' : 'Hustota bruslařů', (p) => { p.crowd = { ...(p.crowd ?? {}), [key]: v / 100 }; }); setW(null); setK(null); };
+  const p = useEditor((s) => s.project);
+  const crowd = p?.crowd;
+  const [w, setW] = useState<number | null>(null);
+  if (!p) return null;
+  const chars = p.characters, comp = (id: string) => chars.filter((c) => c.companionId === id).length;
+  const walkPool = chars.filter((c) => c.routine === 'visitor' && !c.skate && !c.companionId);
+  const maxWalk = walkPool.reduce((a, c) => a + 1 + comp(c.id), 0), maxSkate = chars.filter((c) => !!c.skate && !c.skatePair).length;
+  const maxDogs = walkPool.filter((c) => c.pet).length, maxCats = p.cats?.length ?? 0;
+  const cur = { walkersN: crowd?.walkersN ?? Math.round(maxWalk * (crowd?.walkers ?? 1)), skatersN: crowd?.skatersN ?? Math.round(maxSkate * (crowd?.skaters ?? 1)), dogs: crowd?.dogs ?? maxDogs, cats: crowd?.cats ?? maxCats };
+  const setN = (key: 'walkersN' | 'skatersN' | 'dogs' | 'cats', v: number, max: number) => { const n = Math.max(0, Math.min(max, Math.round(v))); store.editLive('Hustota davu', (q) => { q.crowd = { ...(q.crowd ?? {}), [key]: n }; }); };
+  const sp = w ?? Math.round((crowd?.walkSpeed ?? 1) * 100);
+  const num = (label: string, key: 'walkersN' | 'skatersN' | 'dogs' | 'cats', max: number, title: string) => max > 0 && (
+    <label className="dens-n" title={title}>{label}<input type="number" min={0} max={max} value={cur[key]} onChange={(e) => setN(key, Number(e.target.value), max)} /><span className="muted">/{max}</span></label>
+  );
   return (
-    <div className="group density" title="Kolik lidí do scény přichází. Kdo je navíc, dokončí, co dělá, a odejde (bruslaři dojezdí a odejdou z ledu).">
-      <span>Chodci</span><input type="range" min={10} max={100} step={5} value={cw} onChange={(e) => setW(Number(e.target.value))} onPointerUp={() => commit('walkers', cw)} onKeyUp={() => commit('walkers', cw)} /><span className="muted">{cw} %</span>
-      {hasRink && <><span>Bruslaři</span><input type="range" min={10} max={100} step={5} value={ck} onChange={(e) => setK(Number(e.target.value))} onPointerUp={() => commit('skaters', ck)} onKeyUp={() => commit('skaters', ck)} /><span className="muted">{ck} %</span></>}
+    <div className="group density">
+      {num('Chodci', 'walkersN', maxWalk, 'Kolik lidí (chodců) smí být ve scéně – doprovod a děti se počítají k nim. Navíc přidaní dokončí, co dělají, a odejdou.')}
+      {p.rink && num('Bruslaři', 'skatersN', maxSkate, 'Kolik bruslařů smí být na ledě')}
+      {num('Psi', 'dogs', maxDogs, 'Kolik majitelů se psem chodí scénou')}
+      {num('Kočky', 'cats', maxCats, 'Kolik koček se ve scéně objevuje')}
+      <span title="Rychlost chůze chodců (násobek; bruslaři a pracovníci mají vlastní tempo)">Rychlost chůze</span>
+      <input type="range" min={50} max={160} step={5} value={sp} onChange={(e) => setW(Number(e.target.value))} onPointerUp={() => { store.editLive('Rychlost chodců', (q) => { q.crowd = { ...(q.crowd ?? {}), walkSpeed: sp / 100 }; }); setW(null); }} onKeyUp={() => { store.editLive('Rychlost chodců', (q) => { q.crowd = { ...(q.crowd ?? {}), walkSpeed: sp / 100 }; }); setW(null); }} />
+      <span className="muted">{(sp / 100).toFixed(2)}×</span>
     </div>
   );
 }

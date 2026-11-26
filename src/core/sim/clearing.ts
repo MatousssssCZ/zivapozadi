@@ -42,10 +42,12 @@ export interface ClearingConfig {
   /** odklízená plocha ve světě (m): X podél pruhů (hrne se k +X), Z napříč */ work: { x0: number; x1: number; z0: number; z1: number };
   /** hromada u okraje (svět, m) */ pileAt: { X: number; Z: number };
   enter: Vec2; approach?: Vec2[]; firstDelay?: number; snow?: Partial<SnowParams>;
+  /** pauza mezi úklidy (s), výchozí 600–1200 */ repeat?: [number, number];
 }
 
 export interface ClearingHost {
   project: ProjectFile; time(): number;
+  /** konfigurace úseku (chybí = project.clearing) */ cfg?: ClearingConfig;
   worker(): AgentState | undefined;
   others(): AgentState[];
   walkPath(a: AgentState, pts: Vec2[], speed: number): void;
@@ -111,7 +113,7 @@ export function edgeOf(cam: ReturnType<typeof cameraFor>, a: AgentState, u: numb
 }
 
 export function stepClearing(h: ClearingHost, st: ClearingState): void {
-  const cfg = h.project.clearing as unknown as ClearingConfig, now = h.time(), a0 = h.worker();
+  const cfg = (h.cfg ?? h.project.clearing) as unknown as ClearingConfig, now = h.time(), a0 = h.worker();
   if (!a0) return;
   const a: AgentState = a0;
   const cam = cameraFor(h.project.scene), seed = h.project.seed;
@@ -291,7 +293,8 @@ export function stepClearing(h: ClearingHost, st: ClearingState): void {
       if (a.route) return;
       h.giveShovel(a, false); h.hide(a); a.anim.tool = null;
       st.doneAt = now; st.n++;
-      st.until = now + 600 + 600 * U(seed, st.n, 1);
+      const rp = cfg.repeat ?? [600, 1200];
+      st.until = now + rp[0] + (rp[1] - rp[0]) * U(seed, st.n, 1);
       st.phase = 'offstage';
       h.log(`${a.name} odklidil(a) sníh (na hromadě ${total(snow).toFixed(1)} kg celkem v oblasti).`, a.id);
       return;

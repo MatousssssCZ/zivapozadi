@@ -191,3 +191,5 @@ button.accent { background: linear-gradient(135deg, #3b5ea8, #6a4fb0); border-co
 .figure-lab .fl-dirs button { width: 34px; }
 .figure-lab button.active { outline: 2px solid #6aa0ff; }
 .figure-lab .fl-canvas { width: 100%; height: 100%; display: block; }
+.density .dens-n { display: inline-flex; align-items: center; gap: 3px; margin-right: 6px; }
+.density .dens-n input { width: 46px; }

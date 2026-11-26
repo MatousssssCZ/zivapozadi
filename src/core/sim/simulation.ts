@@ -116,12 +116,15 @@ export class Simulation {
       if (!L || !F) continue;
       const P = [L, F], ok = P.every((x) => !x.hidden && !x.activity && !x.anim.action && !x.anim.sit && !x.anim.fall && !x.anim.skate && !x.holding && (!x.anim.hands || x.anim.hands.src === 'hold'))
         && F.follow?.leaderId === L.id;
-      const wl = toWorld(cam, L.pos), wf = toWorld(cam, F.pos), near = Math.hypot(wl.X - wf.X, wl.Z - wf.Z) < 1.3;
-      const want = ok && near ? 1 : 0;
+      const wl = toWorld(cam, L.pos), wf = toWorld(cam, F.pos), near = Math.hypot(wl.X - wf.X, wl.Z - wf.Z) < (this.isChild(L) || this.isChild(F) ? 0.78 : 1.2); // ruce dosáhnou (děti kratší paže)
+      // jdou spolu stejným směrem (ne když druhý teprve dobíhá z jiné strany)
+      const hl = L.groundHeading, hf = F.groundHeading;
+      const same = hl === undefined || hf === undefined || L.speed < 0.2 || F.speed < 0.2 || Math.cos(hl - hf) > 0.5;
+      const want = ok && near && same ? 1 : 0;
       // výška rukou (px nad zemí): zápěstí ≈ výška kyčle postavy
       const sc = P.map((x) => (this.chars.get(x.id)?.baseScale ?? 1) * depthScaleAt(depth, x.pos.y));
       const hip = P.map((x, i) => { const c = this.chars.get(x.id)!, m = this.manifests[c.assetId]; return (m ? gaitContextFor(m, { baseScale: 1, appearance: c.appearance, routine: c.routine }).legLen : 60) * 0.98 * sc[i]; });
-      const M = { x: (L.pos.x + (L.off?.x ?? 0) + F.pos.x + (F.off?.x ?? 0)) / 2, y: (L.pos.y + (L.off?.y ?? 0) + F.pos.y + (F.off?.y ?? 0)) / 2 - Math.min(...hip) };
+      const M = { x: (L.pos.x + (L.off?.x ?? 0) + F.pos.x + (F.off?.x ?? 0)) / 2, y: (L.pos.y + (L.off?.y ?? 0) + F.pos.y + (F.off?.y ?? 0)) / 2 - Math.min(...hip) * (P.some((x) => this.isChild(x)) ? 1.18 : 1) }; // děti: ruce výš (krátké paže dosáhnou do strany)
       P.forEach((x, i) => {
         const cur = x.anim.hands?.src === 'hold' ? x.anim.hands.w : 0, w = cur + Math.sign(want - cur) * Math.min(Math.abs(want - cur), SIM_DT / 0.5);
         if (w <= 0) { if (x.anim.hands?.src === 'hold') x.anim.hands = null; return; }
@@ -512,6 +515,7 @@ export class Simulation {
     if (this.state.runtimeObjects?.some((o) => o.collapseAt !== undefined && t > o.collapseAt + 120)) this.state.runtimeObjects = this.state.runtimeObjects.filter((o) => !(o.collapseAt !== undefined && t > o.collapseAt + 120));
     if (this.project.sled && !this.sledBlocked) stepSled(this.sledHost(), (this.state.sled ??= { phase: 'offstage', until: this.project.sled.firstDelay ?? 40, dir: 1, n: 0, hist: [] }));
     if (this.project.clearing && this.project.characters.some((c) => c.id === this.project.clearing!.workerId)) stepClearing(this.clearingHost(), (this.state.clearing ??= newClearingState(this.project.clearing.firstDelay ?? 90)));
+    for (const [ix, cc] of (this.project.clearings ?? []).entries()) if (this.project.characters.some((c) => c.id === cc.workerId)) { const arr = (this.state.clearings ??= []); stepClearing(this.clearingHost(ix), (arr[ix] ??= newClearingState(cc.firstDelay ?? 90))); }
     if (this.state.mitten || this.state.agents.some((a) => a.holdingKind === 'mitten') || this.state.step % 60 === 0) stepMitten(this.mittenHost());
     if (this.project.falls || this.state.falls?.active.length) stepFalls(this.fallHost(), this.fallsState());
     if (this.project.rink) this.stepRink(t);
@@ -700,11 +704,23 @@ export class Simulation {
   patchProject(fn: (p: ProjectFile) => void) { const env = this.project.scene.environment; if (env) this.project.scene.environment = structuredClone(env); this.project.crowd = this.project.crowd ? { ...this.project.crowd } : undefined; fn(this.project); }
   /** smí postava (podle pořadí ve své skupině a hustoty davu) do scény? */
   private crowdAllows(a: AgentState, kind: 'walkers' | 'skaters'): boolean {
-    const k = this.project.crowd?.[kind] ?? 1; if (k >= 0.999) return true;
+    const cr = this.project.crowd, N = kind === 'walkers' ? cr?.walkersN : cr?.skatersN;
     const pool = this.project.characters.filter((c) => (kind === 'skaters' ? !!c.skate && !c.skatePair : c.routine === 'visitor' && !c.skate && !c.companionId));
     const i = pool.findIndex((c) => c.id === a.id); if (i < 0) return true;
+    if (kind === 'walkers' && cr?.dogs !== undefined && this.chars.get(a.id)?.pet) {
+      const owners = pool.filter((c) => c.pet); if (owners.findIndex((c) => c.id === a.id) >= cr.dogs) return false;
+    }
+    if (N !== undefined) {
+      // počet osob: vůdce + jeho stálý doprovod (partner, děti) – postupně podle pořadí v projektu
+      let used = 0;
+      for (let k = 0; k <= i; k++) used += 1 + this.project.characters.filter((c) => c.companionId === pool[k].id).length;
+      return used <= N;
+    }
+    const k = cr?.[kind] ?? 1; if (k >= 0.999) return true;
     return i < Math.round(pool.length * k);
   }
+  /** Násobek rychlosti chůze ze scény (chodci; bruslaři a pracovníci mají vlastní tempo). */
+  private walkK(a: AgentState): number { const k = this.project.crowd?.walkSpeed; return k && this.chars.get(a.id)?.routine === 'visitor' && !a.anim.skate ? k : 1; }
   /** Ladění: koulovačka hned (volná rodina, dětská sněhová kapsa). */
   startFightNow(): { ok: boolean; msg: string } {
     const h = this.sessionHost(), t = this.time();
@@ -1075,10 +1091,12 @@ export class Simulation {
   }
 
   private clearingCache: ClearingHost | null = null;
-  private clearingHost(): ClearingHost {
-    const self = this, id = this.project.clearing?.workerId, sh = () => this.sledHost();
-    return (this.clearingCache ??= {
-      project: this.project, time: () => self.time(),
+  private clearingCaches: ClearingHost[] = [];
+  private clearingHost(ix = -1): ClearingHost {
+    const self = this, cfg = ix >= 0 ? this.project.clearings![ix] : undefined, id = cfg ? cfg.workerId : this.project.clearing?.workerId, sh = () => this.sledHost();
+    if (ix >= 0 && this.clearingCaches[ix]) return this.clearingCaches[ix];
+    const mk = (): ClearingHost => ({
+      project: this.project, time: () => self.time(), cfg,
       worker: () => self.state.agents.find((x) => x.id === id),
       others: () => self.state.agents.filter((x) => x.id !== id),
       walkPath: (a, pts, speed) => { self.sessionHost().walkPath(a, pts, 'odklízení', true); a.speedFactor = speed; },
@@ -1093,6 +1111,8 @@ export class Simulation {
       },
       log: (m, aid) => self.log('info', m, aid),
     });
+    if (ix >= 0) return (this.clearingCaches[ix] = mk());
+    return (this.clearingCache ??= mk());
   }
 
   private mittenCache: MittenHost | null = null;
@@ -1149,6 +1169,8 @@ export class Simulation {
       isSnow: (p) => self.project.areas.some((ar) => ar.kind === 'snow' && ar.polygon.length >= 3 && pointInPolygon(p, ar.polygon)),
     });
   }
+  /** Je volno pro další výraznou událost (sněhulák, koulovačka, anděl)? Výchozí: jen jedna najednou. */
+  private sessionsFree(): boolean { return (this.state.sessions?.length ?? 0) < (this.project.director?.maxSessions ?? 1); }
   private stepSessions(t: number) {
     if (this.state.props.some((p) => p.place.kind === 'flying')) stepBalls(this.sessionHost()); // koule vždy doletí
     if (!this.state.sessions?.length) return;
@@ -1166,7 +1188,8 @@ export class Simulation {
         if (ch?.companionId && x && !x.follow) x.rejoin = { leaderId: ch.companionId, side: ch.companionSide === -1 ? -1 : 1, permanent: true };
       }
       const d = (this.state.director ??= { nextSignificant: 0 });
-      d.nextSignificant = t + randRange(this.state.rng, 90, 180);
+      const gp = this.project.director?.gap ?? [90, 180];
+      d.nextSignificant = t + randRange(this.state.rng, gp[0], gp[1]);
     }
   }
   /** Průchod dveřmi budovy (dveře se otevřou kolem tohoto času). */
@@ -1179,7 +1202,7 @@ export class Simulation {
   /** Volná zóna pro sněhuláka, pokud režisér zrovna dovolí výraznou událost. */
   private snowmanZoneAvailable(t: number, rnd = 0): { id: string; goal: 'snowman' | 'snowball' } | null {
     if ((this.state.director?.nextSignificant ?? 0) > t) return null;
-    if (this.state.sessions?.length) return null; // nejvýš jedna výrazná událost
+    if (!this.sessionsFree()) return null; // nejvýš N výrazných událostí (výchozí 1)
     const h = this.sessionHost();
     const cands = this.project.zones.filter((zz) => (zz.activityType === 'snowman' && !snowmanZoneFree(h, zz)) || (zz.activityType === 'snowballFight' && !fightZoneProblem(h, zz)));
     if (!cands.length) return null;
@@ -1300,7 +1323,7 @@ export class Simulation {
 
   private vmaxOwn(a: AgentState): number {
     const c = this.chars.get(a.id)!;
-    return this.walkSpeedOf(a) * a.pace * (a.speedFactor ?? 1) * depthScaleAt(this.project.scene.depth, a.pos.y) * c.baseScale;
+    return this.walkSpeedOf(a) * a.pace * (a.speedFactor ?? 1) * depthScaleAt(this.project.scene.depth, a.pos.y) * c.baseScale * this.walkK(a);
   }
 
   /** Základní rychlost chůze (j/s). Senior: z profilu (krok × kadence) převedená stejně jako v animátoru,
@@ -1341,7 +1364,7 @@ export class Simulation {
 
   /** Rychlost chůze postavy v m/s (dvojice jde tempem pomalejšího). */
   private vmaxMps(a: AgentState): number {
-    const own = (x: AgentState) => { const c = this.chars.get(x.id)!; return this.walkSpeedOf(x) * x.pace * (x.speedFactor ?? 1) * Q * c.baseScale; };
+    const own = (x: AgentState) => { const c = this.chars.get(x.id)!; return this.walkSpeedOf(x) * x.pace * (x.speedFactor ?? 1) * Q * c.baseScale * this.walkK(x); };
     const f = this.state.agents.find((x) => x.follow?.leaderId === a.id && !x.hidden);
     if (!f) return own(a);
     // druhý z dvojice zaostává (někdo mu vstoupil do cesty): vůdce zpomalí a počká
@@ -1505,7 +1528,8 @@ export class Simulation {
     // dvojice za ruce: při chůzi napříč obrazem by boční rozestup (do hloubky) postavy překryl – partner
     // jde blíž do strany a o kus víc vzadu, takže jsou v obraze vedle sebe a spojené ruce jsou vidět
     const hold = this.holdPairs.some(([, fid]) => fid === f.id), hx = hold ? Math.abs(d.X) : 0;
-    const lat = 0.72 * (1 - 0.3 * hx), back = 0.4 + 0.32 * hx;
+    const kidPair = hold && (this.isChild(f) || this.isChild(L)); // děti mají kratší paže → jdou blíž
+    const lat = (kidPair ? 0.4 : 0.72) * (1 - 0.3 * hx), back = (kidPair ? 0.16 : 0.4) + (kidPair ? 0.18 : 0.32) * hx;
     const slot = { X: LP.X + right.X * side * lat - d.X * back, Z: LP.Z + right.Z * side * lat - d.Z * back };
     const e = { X: slot.X - P.X, Z: slot.Z - P.Z }, el = Math.hypot(e.X, e.Z);
     let v: World;
@@ -1862,7 +1886,7 @@ export class Simulation {
         const zone = this.coffeeZone(a, c);
         // rodina s dítětem: občas si jdou na dětský sníh postavit sněhuláka nebo se koulovat
         const kid = this.state.agents.find((x) => x.follow?.leaderId === a.id && !x.hidden && this.isChild(x));
-        if (kid && !a.holding && (this.state.director?.nextSignificant ?? 0) <= t && !this.state.sessions?.length && rand(a.rng) < 0.55) {
+        if (kid && !a.holding && (this.state.director?.nextSignificant ?? 0) <= t && this.sessionsFree() && rand(a.rng) < 0.55) {
           const h = this.sessionHost();
           const zs = this.project.zones.filter((z) => (z.activityType === 'snowman' && !snowmanZoneFree(h, z)) || (z.activityType === 'snowballFight' && !fightZoneProblem(h, z, true)));
           const z = zs.length ? zs[Math.floor(rand(a.rng) * zs.length)] : null;
@@ -1890,14 +1914,14 @@ export class Simulation {
         }
         if (friend && zone) { this.startMeeting(a, friend, t); return; }
         // nákup u stánku (hračky, perník, pletené zboží)
-        const shop = r >= 0.18 && r < 0.58 && !this.state.agents.some((x) => x.follow?.leaderId === a.id) ? this.zoneFor(a, c, 'shop') : null;
+        const shop = r >= 0.18 && r < 1 - (this.project.visitorMix?.coffee ?? 0.42) && !this.state.agents.some((x) => x.follow?.leaderId === a.id) ? this.zoneFor(a, c, 'shop') : null;
         if (shop) {
           a.pendingActivity = { type: 'shop', zoneId: shop.id, source: 'auto', sourceId: null };
           a.visit = { mode: 'coffee', until: 0, since: t };
           a.status = 'Jde nakupovat';
           return;
         }
-        if (r >= 0.58 && zone) {
+        if (r >= 1 - (this.project.visitorMix?.coffee ?? 0.42) && zone) {
           a.pendingActivity = { type: 'coffee', zoneId: zone.id, source: 'auto', sourceId: null };
           a.visit = { mode: 'coffee', until: 0, since: t };
           a.status = 'Jde na kávu';
@@ -2012,7 +2036,7 @@ export class Simulation {
         f.follow = { leaderId: a.id, side: rand(a.rng) < 0.5 ? 1 : -1 };
         f.visit = { mode: 'with', until: 0, friendId: a.id, since: t };
         // výrazná událost jen jedna naráz: když mezitím začala jiná, jdou místo toho na kávu
-        if (v.goal && v.goalZone && !this.state.sessions?.length && (this.state.director?.nextSignificant ?? 0) <= t) {
+        if (v.goal && v.goalZone && this.sessionsFree() && (this.state.director?.nextSignificant ?? 0) <= t) {
           const zz = this.zones.get(v.goalZone);
           f.follow = null;
           if (zz && (v.goal === 'snowman' ? startSnowman(this.sessionHost(), zz, a, f) : startFight(this.sessionHost(), zz, a, f))) {

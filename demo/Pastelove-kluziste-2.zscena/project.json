@@ -2498,18 +2498,57 @@
       },
       "seller": {
         "assetId": "builtin_postava_cg",
-        "appearance": null,
-        "name": "Prodavačka",
-        "heightOfStall": 0.44,
+        "name": "Prodavačka nápojů",
+        "appearance": {
+          "generator": "parts",
+          "libraryId": "malovane-cg-v1",
+          "seed": 970001,
+          "bodyTemplate": "adult-cg",
+          "variants": {
+            "jacket": "jacket_coat_cg",
+            "hat": "hat_rib_cg",
+            "scarf": "scarf_long_cg",
+            "trousers": "trousers_slim_cg",
+            "boots": "boots_cg",
+            "gloves": "gloves_puffer_cg",
+            "head": "head_04_cg"
+          },
+          "colors": {
+            "jacket": "kremova",
+            "hat": "vinova",
+            "scarf": "tmave-seda",
+            "gloves": "tmave-seda",
+            "trousers": "hneda",
+            "boots": "tmave-seda"
+          },
+          "proportions": {
+            "height": 0.994,
+            "build": 1
+          },
+          "motion": {
+            "strideScale": 1.068,
+            "armSwing": 0.854,
+            "bob": 1.088,
+            "sway": 0.847,
+            "idleTempo": 1.094,
+            "lean": 2.184,
+            "speed": 0.979,
+            "phase": 0.066,
+            "armLag": -0.744,
+            "armLR": 1.099
+          },
+          "locks": []
+        },
+        "heightOfStall": 0.42,
         "offset": {
-          "x": -73,
-          "y": -40
+          "x": 15,
+          "y": -95
         },
         "window": {
           "x0": -303,
-          "y0": -573,
-          "x1": 193,
-          "y1": -297
+          "y0": -598,
+          "x1": 187,
+          "y1": -305
         }
       }
     },
@@ -3949,7 +3988,7 @@
       ],
       "objectRoles": {},
       "params": {
-        "chance": 0.35
+        "chance": 0.85
       }
     },
     {
@@ -3980,6 +4019,35 @@
       "params": {
         "chance": 0.3,
         "allowAdults": false
+      }
+    },
+    {
+      "id": "zone_snehulak2",
+      "name": "Sněhulák (před domy vpravo)",
+      "activityType": "snowman",
+      "activityVersion": 1,
+      "enabled": true,
+      "bounds": [
+        {
+          "x": 1180,
+          "y": 704
+        },
+        {
+          "x": 1264,
+          "y": 704
+        },
+        {
+          "x": 1264,
+          "y": 742
+        },
+        {
+          "x": 1180,
+          "y": 742
+        }
+      ],
+      "objectRoles": {},
+      "params": {
+        "chance": 0.85
       }
     }
   ],
@@ -4043,10 +4111,10 @@
       "activities": {
         "coffee": {
           "enabled": true,
-          "firstDelayMin": 20,
-          "firstDelayMax": 40,
-          "intervalMin": 120,
-          "intervalMax": 260
+          "firstDelayMin": 5,
+          "firstDelayMax": 30,
+          "intervalMin": 45,
+          "intervalMax": 110
         }
       }
     },
@@ -4109,10 +4177,10 @@
       "activities": {
         "coffee": {
           "enabled": true,
-          "firstDelayMin": 29,
-          "firstDelayMax": 49,
-          "intervalMin": 120,
-          "intervalMax": 260
+          "firstDelayMin": 5,
+          "firstDelayMax": 30,
+          "intervalMin": 45,
+          "intervalMax": 110
         }
       }
     },
@@ -4175,10 +4243,10 @@
       "activities": {
         "coffee": {
           "enabled": true,
-          "firstDelayMin": 38,
-          "firstDelayMax": 58,
-          "intervalMin": 120,
-          "intervalMax": 260
+          "firstDelayMin": 5,
+          "firstDelayMax": 30,
+          "intervalMin": 45,
+          "intervalMax": 110
         }
       },
       "pet": "dog",
@@ -4243,10 +4311,10 @@
       "activities": {
         "coffee": {
           "enabled": true,
-          "firstDelayMin": 47,
-          "firstDelayMax": 67,
-          "intervalMin": 120,
-          "intervalMax": 260
+          "firstDelayMin": 5,
+          "firstDelayMax": 30,
+          "intervalMin": 45,
+          "intervalMax": 110
         }
       }
     },
@@ -4309,10 +4377,10 @@
       "activities": {
         "coffee": {
           "enabled": true,
-          "firstDelayMin": 56,
-          "firstDelayMax": 76,
-          "intervalMin": 120,
-          "intervalMax": 260
+          "firstDelayMin": 5,
+          "firstDelayMax": 30,
+          "intervalMin": 45,
+          "intervalMax": 110
         }
       }
     },
@@ -4375,10 +4443,10 @@
       "activities": {
         "coffee": {
           "enabled": true,
-          "firstDelayMin": 65,
-          "firstDelayMax": 85,
-          "intervalMin": 120,
-          "intervalMax": 260
+          "firstDelayMin": 5,
+          "firstDelayMax": 30,
+          "intervalMin": 45,
+          "intervalMax": 110
         }
       },
       "pet": "dog",
@@ -4443,10 +4511,10 @@
       "activities": {
         "coffee": {
           "enabled": true,
-          "firstDelayMin": 74,
-          "firstDelayMax": 94,
-          "intervalMin": 120,
-          "intervalMax": 260
+          "firstDelayMin": 5,
+          "firstDelayMax": 30,
+          "intervalMin": 45,
+          "intervalMax": 110
         }
       }
     },
@@ -4509,10 +4577,10 @@
       "activities": {
         "coffee": {
           "enabled": true,
-          "firstDelayMin": 83,
-          "firstDelayMax": 103,
-          "intervalMin": 120,
-          "intervalMax": 260
+          "firstDelayMin": 5,
+          "firstDelayMax": 30,
+          "intervalMin": 45,
+          "intervalMax": 110
         }
       },
       "pet": "dog",
@@ -4577,10 +4645,10 @@
       "activities": {
         "coffee": {
           "enabled": true,
-          "firstDelayMin": 92,
-          "firstDelayMax": 112,
-          "intervalMin": 120,
-          "intervalMax": 260
+          "firstDelayMin": 5,
+          "firstDelayMax": 30,
+          "intervalMin": 45,
+          "intervalMax": 110
         }
       }
     },
@@ -4643,10 +4711,10 @@
       "activities": {
         "coffee": {
           "enabled": true,
-          "firstDelayMin": 101,
-          "firstDelayMax": 121,
-          "intervalMin": 120,
-          "intervalMax": 260
+          "firstDelayMin": 5,
+          "firstDelayMax": 30,
+          "intervalMin": 45,
+          "intervalMax": 110
         }
       }
     },
@@ -4709,10 +4777,10 @@
       "activities": {
         "coffee": {
           "enabled": true,
-          "firstDelayMin": 110,
-          "firstDelayMax": 130,
-          "intervalMin": 120,
-          "intervalMax": 260
+          "firstDelayMin": 5,
+          "firstDelayMax": 30,
+          "intervalMin": 45,
+          "intervalMax": 110
         }
       }
     },
@@ -4775,10 +4843,10 @@
       "activities": {
         "coffee": {
           "enabled": true,
-          "firstDelayMin": 119,
-          "firstDelayMax": 139,
-          "intervalMin": 120,
-          "intervalMax": 260
+          "firstDelayMin": 5,
+          "firstDelayMax": 30,
+          "intervalMin": 45,
+          "intervalMax": 110
         }
       }
     },
@@ -4841,10 +4909,10 @@
       "activities": {
         "coffee": {
           "enabled": true,
-          "firstDelayMin": 128,
-          "firstDelayMax": 148,
-          "intervalMin": 120,
-          "intervalMax": 260
+          "firstDelayMin": 5,
+          "firstDelayMax": 30,
+          "intervalMin": 45,
+          "intervalMax": 110
         }
       }
     },
@@ -4907,10 +4975,10 @@
       "activities": {
         "coffee": {
           "enabled": true,
-          "firstDelayMin": 137,
-          "firstDelayMax": 157,
-          "intervalMin": 120,
-          "intervalMax": 260
+          "firstDelayMin": 5,
+          "firstDelayMax": 30,
+          "intervalMin": 45,
+          "intervalMax": 110
         }
       }
     },
@@ -6392,10 +6460,10 @@
       "activities": {
         "coffee": {
           "enabled": true,
-          "firstDelayMin": 20,
-          "firstDelayMax": 40,
-          "intervalMin": 120,
-          "intervalMax": 260
+          "firstDelayMin": 5,
+          "firstDelayMax": 30,
+          "intervalMin": 45,
+          "intervalMax": 110
         }
       }
     },
@@ -6458,10 +6526,10 @@
       "activities": {
         "coffee": {
           "enabled": true,
-          "firstDelayMin": 20,
-          "firstDelayMax": 40,
-          "intervalMin": 120,
-          "intervalMax": 260
+          "firstDelayMin": 5,
+          "firstDelayMax": 30,
+          "intervalMin": 45,
+          "intervalMax": 110
         }
       },
       "companionId": "pair_a1",
@@ -6527,10 +6595,10 @@
       "activities": {
         "coffee": {
           "enabled": true,
-          "firstDelayMin": 20,
-          "firstDelayMax": 40,
-          "intervalMin": 120,
-          "intervalMax": 260
+          "firstDelayMin": 5,
+          "firstDelayMax": 30,
+          "intervalMin": 45,
+          "intervalMax": 110
         }
       }
     },
@@ -6593,10 +6661,10 @@
       "activities": {
         "coffee": {
           "enabled": true,
-          "firstDelayMin": 20,
-          "firstDelayMax": 40,
-          "intervalMin": 120,
-          "intervalMax": 260
+          "firstDelayMin": 5,
+          "firstDelayMax": 30,
+          "intervalMin": 45,
+          "intervalMax": 110
         }
       },
       "companionId": "pair_b1",
@@ -6843,6 +6911,1266 @@
       "companionId": "pair_k1",
       "companionSide": -1,
       "holdHands": true
+    },
+    {
+      "id": "ch_v2_1",
+      "name": "Radek",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "pl",
+      "baseScale": 1,
+      "walkSpeed": 58.7,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 950101,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_02_cg"
+        },
+        "colors": {
+          "jacket": "kremova",
+          "hat": "vinova",
+          "scarf": "tmave-seda",
+          "gloves": "tmave-seda",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 0.994,
+          "build": 1
+        },
+        "motion": {
+          "strideScale": 1.068,
+          "armSwing": 0.854,
+          "bob": 1.088,
+          "sway": 0.847,
+          "idleTempo": 1.094,
+          "lean": 2.184,
+          "speed": 0.979,
+          "phase": 0.066,
+          "armLag": -0.744,
+          "armLR": 1.099
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {
+        "coffee": {
+          "enabled": true,
+          "firstDelayMin": 5,
+          "firstDelayMax": 30,
+          "intervalMin": 45,
+          "intervalMax": 110
+        }
+      }
+    },
+    {
+      "id": "ch_v2_2",
+      "name": "Lenka",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "pr",
+      "baseScale": 1,
+      "walkSpeed": 58.7,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 958020,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_04_cg"
+        },
+        "colors": {
+          "jacket": "kremova",
+          "hat": "vinova",
+          "scarf": "tmave-seda",
+          "gloves": "tmave-seda",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 0.994,
+          "build": 1
+        },
+        "motion": {
+          "strideScale": 1.068,
+          "armSwing": 0.854,
+          "bob": 1.088,
+          "sway": 0.847,
+          "idleTempo": 1.094,
+          "lean": 2.184,
+          "speed": 0.979,
+          "phase": 0.066,
+          "armLag": -0.744,
+          "armLR": 1.099
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {
+        "coffee": {
+          "enabled": true,
+          "firstDelayMin": 5,
+          "firstDelayMax": 30,
+          "intervalMin": 45,
+          "intervalMax": 110
+        }
+      }
+    },
+    {
+      "id": "ch_v2_3",
+      "name": "Martin",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "fl",
+      "baseScale": 1,
+      "walkSpeed": 58.7,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 965939,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_05_cg"
+        },
+        "colors": {
+          "jacket": "kremova",
+          "hat": "vinova",
+          "scarf": "tmave-seda",
+          "gloves": "tmave-seda",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 0.994,
+          "build": 1
+        },
+        "motion": {
+          "strideScale": 1.068,
+          "armSwing": 0.854,
+          "bob": 1.088,
+          "sway": 0.847,
+          "idleTempo": 1.094,
+          "lean": 2.184,
+          "speed": 0.979,
+          "phase": 0.066,
+          "armLag": -0.744,
+          "armLR": 1.099
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {
+        "coffee": {
+          "enabled": true,
+          "firstDelayMin": 5,
+          "firstDelayMax": 30,
+          "intervalMin": 45,
+          "intervalMax": 110
+        }
+      }
+    },
+    {
+      "id": "ch_v2_4",
+      "name": "Petra",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "fr",
+      "baseScale": 1,
+      "walkSpeed": 58.7,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 973858,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_07_cg"
+        },
+        "colors": {
+          "jacket": "kremova",
+          "hat": "vinova",
+          "scarf": "tmave-seda",
+          "gloves": "tmave-seda",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 0.994,
+          "build": 1
+        },
+        "motion": {
+          "strideScale": 1.068,
+          "armSwing": 0.854,
+          "bob": 1.088,
+          "sway": 0.847,
+          "idleTempo": 1.094,
+          "lean": 2.184,
+          "speed": 0.979,
+          "phase": 0.066,
+          "armLag": -0.744,
+          "armLR": 1.099
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {
+        "coffee": {
+          "enabled": true,
+          "firstDelayMin": 5,
+          "firstDelayMax": 30,
+          "intervalMin": 45,
+          "intervalMax": 110
+        }
+      }
+    },
+    {
+      "id": "ch_v2_5",
+      "name": "Šárka",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "pl",
+      "baseScale": 1,
+      "walkSpeed": 58.7,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 981777,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_08_cg"
+        },
+        "colors": {
+          "jacket": "kremova",
+          "hat": "vinova",
+          "scarf": "tmave-seda",
+          "gloves": "tmave-seda",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 0.994,
+          "build": 1
+        },
+        "motion": {
+          "strideScale": 1.068,
+          "armSwing": 0.854,
+          "bob": 1.088,
+          "sway": 0.847,
+          "idleTempo": 1.094,
+          "lean": 2.184,
+          "speed": 0.979,
+          "phase": 0.066,
+          "armLag": -0.744,
+          "armLR": 1.099
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {
+        "coffee": {
+          "enabled": true,
+          "firstDelayMin": 5,
+          "firstDelayMax": 30,
+          "intervalMin": 45,
+          "intervalMax": 110
+        }
+      }
+    },
+    {
+      "id": "ch_v2_6",
+      "name": "Jakub",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "pr",
+      "baseScale": 1,
+      "walkSpeed": 58.7,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 989696,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_01_cg"
+        },
+        "colors": {
+          "jacket": "kremova",
+          "hat": "vinova",
+          "scarf": "tmave-seda",
+          "gloves": "tmave-seda",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 0.994,
+          "build": 1
+        },
+        "motion": {
+          "strideScale": 1.068,
+          "armSwing": 0.854,
+          "bob": 1.088,
+          "sway": 0.847,
+          "idleTempo": 1.094,
+          "lean": 2.184,
+          "speed": 0.979,
+          "phase": 0.066,
+          "armLag": -0.744,
+          "armLR": 1.099
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {
+        "coffee": {
+          "enabled": true,
+          "firstDelayMin": 5,
+          "firstDelayMax": 30,
+          "intervalMin": 45,
+          "intervalMax": 110
+        }
+      }
+    },
+    {
+      "id": "ch_v2_7",
+      "name": "Zuzana",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "fl",
+      "baseScale": 1,
+      "walkSpeed": 58.7,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 997615,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_03_cg"
+        },
+        "colors": {
+          "jacket": "kremova",
+          "hat": "vinova",
+          "scarf": "tmave-seda",
+          "gloves": "tmave-seda",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 0.994,
+          "build": 1
+        },
+        "motion": {
+          "strideScale": 1.068,
+          "armSwing": 0.854,
+          "bob": 1.088,
+          "sway": 0.847,
+          "idleTempo": 1.094,
+          "lean": 2.184,
+          "speed": 0.979,
+          "phase": 0.066,
+          "armLag": -0.744,
+          "armLR": 1.099
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {
+        "coffee": {
+          "enabled": true,
+          "firstDelayMin": 5,
+          "firstDelayMax": 30,
+          "intervalMin": 45,
+          "intervalMax": 110
+        }
+      }
+    },
+    {
+      "id": "ch_v2_8",
+      "name": "Michal",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "fr",
+      "baseScale": 1,
+      "walkSpeed": 58.7,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1005534,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_06_cg"
+        },
+        "colors": {
+          "jacket": "kremova",
+          "hat": "vinova",
+          "scarf": "tmave-seda",
+          "gloves": "tmave-seda",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 0.994,
+          "build": 1
+        },
+        "motion": {
+          "strideScale": 1.068,
+          "armSwing": 0.854,
+          "bob": 1.088,
+          "sway": 0.847,
+          "idleTempo": 1.094,
+          "lean": 2.184,
+          "speed": 0.979,
+          "phase": 0.066,
+          "armLag": -0.744,
+          "armLR": 1.099
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {
+        "coffee": {
+          "enabled": true,
+          "firstDelayMin": 5,
+          "firstDelayMax": 30,
+          "intervalMin": 45,
+          "intervalMax": 110
+        }
+      }
+    },
+    {
+      "id": "ch_v2_9",
+      "name": "Božena",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "pl",
+      "baseScale": 1,
+      "walkSpeed": 58.7,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1013453,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_11_cg"
+        },
+        "colors": {
+          "jacket": "kremova",
+          "hat": "vinova",
+          "scarf": "tmave-seda",
+          "gloves": "tmave-seda",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 0.994,
+          "build": 1
+        },
+        "motion": {
+          "strideScale": 1.068,
+          "armSwing": 0.854,
+          "bob": 1.088,
+          "sway": 0.847,
+          "idleTempo": 1.094,
+          "lean": 2.184,
+          "speed": 0.979,
+          "phase": 0.066,
+          "armLag": -0.744,
+          "armLR": 1.099
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {
+        "coffee": {
+          "enabled": true,
+          "firstDelayMin": 5,
+          "firstDelayMax": 30,
+          "intervalMin": 45,
+          "intervalMax": 110
+        }
+      }
+    },
+    {
+      "id": "ch_v2_10",
+      "name": "Stanislav",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "pr",
+      "baseScale": 1,
+      "walkSpeed": 58.7,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1021372,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_09_cg"
+        },
+        "colors": {
+          "jacket": "kremova",
+          "hat": "vinova",
+          "scarf": "tmave-seda",
+          "gloves": "tmave-seda",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 0.994,
+          "build": 1
+        },
+        "motion": {
+          "strideScale": 1.068,
+          "armSwing": 0.854,
+          "bob": 1.088,
+          "sway": 0.847,
+          "idleTempo": 1.094,
+          "lean": 2.184,
+          "speed": 0.979,
+          "phase": 0.066,
+          "armLag": -0.744,
+          "armLR": 1.099
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {
+        "coffee": {
+          "enabled": true,
+          "firstDelayMin": 5,
+          "firstDelayMax": 30,
+          "intervalMin": 45,
+          "intervalMax": 110
+        }
+      }
+    },
+    {
+      "id": "fam_p1",
+      "name": "Ondřej (rodina)",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "pl",
+      "baseScale": 1,
+      "walkSpeed": 58.7,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 960011,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_02_cg"
+        },
+        "colors": {
+          "jacket": "kremova",
+          "hat": "vinova",
+          "scarf": "tmave-seda",
+          "gloves": "tmave-seda",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 0.994,
+          "build": 1
+        },
+        "motion": {
+          "strideScale": 1.068,
+          "armSwing": 0.854,
+          "bob": 1.088,
+          "sway": 0.847,
+          "idleTempo": 1.094,
+          "lean": 2.184,
+          "speed": 0.979,
+          "phase": 0.066,
+          "armLag": -0.744,
+          "armLR": 1.099
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {
+        "coffee": {
+          "enabled": true,
+          "firstDelayMin": 5,
+          "firstDelayMax": 30,
+          "intervalMin": 45,
+          "intervalMax": 110
+        }
+      }
+    },
+    {
+      "id": "fam_p2",
+      "name": "Ivana (rodina)",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "pr",
+      "baseScale": 1,
+      "walkSpeed": 58.7,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 960023,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_08_cg"
+        },
+        "colors": {
+          "jacket": "kremova",
+          "hat": "vinova",
+          "scarf": "tmave-seda",
+          "gloves": "tmave-seda",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 0.994,
+          "build": 1
+        },
+        "motion": {
+          "strideScale": 1.068,
+          "armSwing": 0.854,
+          "bob": 1.088,
+          "sway": 0.847,
+          "idleTempo": 1.094,
+          "lean": 2.184,
+          "speed": 0.979,
+          "phase": 0.066,
+          "armLag": -0.744,
+          "armLR": 1.099
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {
+        "coffee": {
+          "enabled": true,
+          "firstDelayMin": 5,
+          "firstDelayMax": 30,
+          "intervalMin": 45,
+          "intervalMax": 110
+        }
+      }
+    },
+    {
+      "id": "fam_k1",
+      "name": "Matyáš",
+      "assetId": "builtin_postava_dite",
+      "startNodeId": "pl",
+      "baseScale": 1,
+      "walkSpeed": 51.2,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-dite-v1",
+        "seed": 960101,
+        "bodyTemplate": "child-cg",
+        "variants": {
+          "jacket": "jacket_coat_child",
+          "hat": "hat_beanie_child",
+          "scarf": "scarf_long_child",
+          "trousers": "trousers_child",
+          "boots": "boots_child",
+          "gloves": "gloves_child",
+          "head": "head_child"
+        },
+        "colors": {
+          "jacket": "hneda",
+          "hat": "okrova",
+          "scarf": "olivova",
+          "gloves": "okrova",
+          "trousers": "olivova",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 1.009,
+          "build": 0.989
+        },
+        "motion": {
+          "strideScale": 0.951,
+          "armSwing": 1.249,
+          "bob": 0.939,
+          "sway": 1.11,
+          "idleTempo": 0.985,
+          "lean": 1.217,
+          "speed": 1.091,
+          "phase": 0.493,
+          "armLag": 1.196,
+          "armLR": 0.971
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {},
+      "companionId": "fam_p1",
+      "companionSide": 1
+    },
+    {
+      "id": "fam_k2",
+      "name": "Anička",
+      "assetId": "builtin_postava_dite",
+      "startNodeId": "pr",
+      "baseScale": 1,
+      "walkSpeed": 51.2,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-dite-v1",
+        "seed": 960117,
+        "bodyTemplate": "child-cg",
+        "variants": {
+          "jacket": "jacket_coat_child",
+          "hat": "hat_beanie_child",
+          "scarf": "scarf_long_child",
+          "trousers": "trousers_child",
+          "boots": "boots_child",
+          "gloves": "gloves_child",
+          "head": "head_child"
+        },
+        "colors": {
+          "jacket": "hneda",
+          "hat": "okrova",
+          "scarf": "olivova",
+          "gloves": "okrova",
+          "trousers": "olivova",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 1.009,
+          "build": 0.989
+        },
+        "motion": {
+          "strideScale": 0.951,
+          "armSwing": 1.249,
+          "bob": 0.939,
+          "sway": 1.11,
+          "idleTempo": 0.985,
+          "lean": 1.217,
+          "speed": 1.091,
+          "phase": 0.493,
+          "armLag": 1.196,
+          "armLR": 0.971
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {},
+      "companionId": "fam_p2",
+      "companionSide": -1
+    },
+    {
+      "id": "ch_lopata2",
+      "name": "Domovník Pavel",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "pl",
+      "baseScale": 1,
+      "walkSpeed": 55,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": false,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 980011,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_puffer_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_hiking_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_05_cg"
+        },
+        "colors": {
+          "jacket": "vinova",
+          "hat": "petrolejova",
+          "scarf": "hneda",
+          "gloves": "petrolejova",
+          "trousers": "tmave-seda",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 1.034,
+          "build": 0.956
+        },
+        "motion": {
+          "strideScale": 0.938,
+          "armSwing": 1.289,
+          "bob": 1.04,
+          "sway": 1.13,
+          "idleTempo": 0.984,
+          "lean": 1.9,
+          "speed": 1.194,
+          "phase": 0.864,
+          "armLag": 2.006,
+          "armLR": 0.955
+        },
+        "locks": []
+      },
+      "routine": "shovel",
+      "activities": {}
+    },
+    {
+      "id": "ch_lopata3",
+      "name": "Paní Jarmila (dům vpravo)",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "pl",
+      "baseScale": 1,
+      "walkSpeed": 55,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": false,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 980112,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_puffer_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_hiking_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_02_cg"
+        },
+        "colors": {
+          "jacket": "vinova",
+          "hat": "petrolejova",
+          "scarf": "hneda",
+          "gloves": "petrolejova",
+          "trousers": "tmave-seda",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 1.034,
+          "build": 0.956
+        },
+        "motion": {
+          "strideScale": 0.938,
+          "armSwing": 1.289,
+          "bob": 1.04,
+          "sway": 1.13,
+          "idleTempo": 0.984,
+          "lean": 1.9,
+          "speed": 1.194,
+          "phase": 0.864,
+          "armLag": 2.006,
+          "armLR": 0.955
+        },
+        "locks": []
+      },
+      "routine": "shovel",
+      "activities": {}
+    },
+    {
+      "id": "ch_lopata4",
+      "name": "Pan Vladimír",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "pl",
+      "baseScale": 1,
+      "walkSpeed": 55,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": false,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 980213,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_puffer_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_hiking_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_10_cg"
+        },
+        "colors": {
+          "jacket": "vinova",
+          "hat": "petrolejova",
+          "scarf": "hneda",
+          "gloves": "petrolejova",
+          "trousers": "tmave-seda",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 1.034,
+          "build": 0.956
+        },
+        "motion": {
+          "strideScale": 0.938,
+          "armSwing": 1.289,
+          "bob": 1.04,
+          "sway": 1.13,
+          "idleTempo": 0.984,
+          "lean": 1.9,
+          "speed": 1.194,
+          "phase": 0.864,
+          "armLag": 2.006,
+          "armLR": 0.955
+        },
+        "locks": []
+      },
+      "routine": "shovel",
+      "activities": {}
+    },
+    {
+      "id": "ch_lopata5",
+      "name": "Paní Hana (zelený dům)",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "pl",
+      "baseScale": 1,
+      "walkSpeed": 55,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": false,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 980314,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_puffer_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_hiking_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_07_cg"
+        },
+        "colors": {
+          "jacket": "vinova",
+          "hat": "petrolejova",
+          "scarf": "hneda",
+          "gloves": "petrolejova",
+          "trousers": "tmave-seda",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 1.034,
+          "build": 0.956
+        },
+        "motion": {
+          "strideScale": 0.938,
+          "armSwing": 1.289,
+          "bob": 1.04,
+          "sway": 1.13,
+          "idleTempo": 0.984,
+          "lean": 1.9,
+          "speed": 1.194,
+          "phase": 0.864,
+          "armLag": 2.006,
+          "armLR": 0.955
+        },
+        "locks": []
+      },
+      "routine": "shovel",
+      "activities": {}
+    },
+    {
+      "id": "ch_lopata6",
+      "name": "Pan Karel (modrý dům)",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "pl",
+      "baseScale": 1,
+      "walkSpeed": 55,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": false,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 980415,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_puffer_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_hiking_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_06_cg"
+        },
+        "colors": {
+          "jacket": "vinova",
+          "hat": "petrolejova",
+          "scarf": "hneda",
+          "gloves": "petrolejova",
+          "trousers": "tmave-seda",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 1.034,
+          "build": 0.956
+        },
+        "motion": {
+          "strideScale": 0.938,
+          "armSwing": 1.289,
+          "bob": 1.04,
+          "sway": 1.13,
+          "idleTempo": 0.984,
+          "lean": 1.9,
+          "speed": 1.194,
+          "phase": 0.864,
+          "armLag": 2.006,
+          "armLR": 0.955
+        },
+        "locks": []
+      },
+      "routine": "shovel",
+      "activities": {}
+    },
+    {
+      "id": "ch_lopata7",
+      "name": "Paní Marta",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "pl",
+      "baseScale": 1,
+      "walkSpeed": 55,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": false,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 980516,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_puffer_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_hiking_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_12_cg"
+        },
+        "colors": {
+          "jacket": "vinova",
+          "hat": "petrolejova",
+          "scarf": "hneda",
+          "gloves": "petrolejova",
+          "trousers": "tmave-seda",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 1.034,
+          "build": 0.956
+        },
+        "motion": {
+          "strideScale": 0.938,
+          "armSwing": 1.289,
+          "bob": 1.04,
+          "sway": 1.13,
+          "idleTempo": 0.984,
+          "lean": 1.9,
+          "speed": 1.194,
+          "phase": 0.864,
+          "armLag": 2.006,
+          "armLR": 0.955
+        },
+        "locks": []
+      },
+      "routine": "shovel",
+      "activities": {}
     }
   ],
   "schedule": [],
@@ -7898,11 +9226,201 @@
         "y": 758
       }
     ],
-    "firstDelay": 150
+    "firstDelay": 20,
+    "repeat": [
+      120,
+      240
+    ]
   },
   "falls": {
     "enabled": true,
     "meanIntervalSec": 300,
     "minGapSec": 180
+  },
+  "visitorMix": {
+    "coffee": 0.7
+  },
+  "director": {
+    "gap": [
+      20,
+      50
+    ],
+    "maxSessions": 2
+  },
+  "clearings": [
+    {
+      "workerId": "ch_lopata2",
+      "work": {
+        "x0": -18.03921568627451,
+        "x1": -15.42483660130719,
+        "z0": 45.11378561563664,
+        "z1": 45.86378561563664
+      },
+      "pileAt": {
+        "X": -15.02483660130719,
+        "Z": 46.61378561563664
+      },
+      "enter": {
+        "x": -80,
+        "y": 758
+      },
+      "approach": [
+        {
+          "x": 60,
+          "y": 758
+        }
+      ],
+      "firstDelay": 60,
+      "repeat": [
+        150,
+        300
+      ]
+    },
+    {
+      "workerId": "ch_lopata3",
+      "work": {
+        "x0": 5.9259259259259265,
+        "x1": 8.540305010893247,
+        "z0": 45.11378561563664,
+        "z1": 45.86378561563664
+      },
+      "pileAt": {
+        "X": 8.940305010893248,
+        "Z": 46.61378561563664
+      },
+      "enter": {
+        "x": 2000,
+        "y": 764
+      },
+      "approach": [
+        {
+          "x": 1720,
+          "y": 768
+        }
+      ],
+      "firstDelay": 35,
+      "repeat": [
+        150,
+        300
+      ]
+    },
+    {
+      "workerId": "ch_lopata4",
+      "work": {
+        "x0": 13.333333333333334,
+        "x1": 15.947712418300654,
+        "z0": 45.11378561563664,
+        "z1": 45.86378561563664
+      },
+      "pileAt": {
+        "X": 16.347712418300652,
+        "Z": 46.61378561563664
+      },
+      "enter": {
+        "x": 2000,
+        "y": 764
+      },
+      "approach": [
+        {
+          "x": 1720,
+          "y": 768
+        }
+      ],
+      "firstDelay": 100,
+      "repeat": [
+        150,
+        300
+      ]
+    },
+    {
+      "workerId": "ch_lopata5",
+      "work": {
+        "x0": -7.363834422657952,
+        "x1": -4.749455337690632,
+        "z0": 45.11378561563664,
+        "z1": 45.86378561563664
+      },
+      "pileAt": {
+        "X": -4.349455337690632,
+        "Z": 46.61378561563664
+      },
+      "enter": {
+        "x": -80,
+        "y": 758
+      },
+      "approach": [
+        {
+          "x": 500,
+          "y": 758
+        }
+      ],
+      "firstDelay": 170,
+      "repeat": [
+        150,
+        300
+      ]
+    },
+    {
+      "workerId": "ch_lopata6",
+      "work": {
+        "x0": 9.62962962962963,
+        "x1": 12.24400871459695,
+        "z0": 45.11378561563664,
+        "z1": 45.86378561563664
+      },
+      "pileAt": {
+        "X": 12.64400871459695,
+        "Z": 46.61378561563664
+      },
+      "enter": {
+        "x": 2000,
+        "y": 764
+      },
+      "approach": [
+        {
+          "x": 1720,
+          "y": 768
+        }
+      ],
+      "firstDelay": 240,
+      "repeat": [
+        150,
+        300
+      ]
+    },
+    {
+      "workerId": "ch_lopata7",
+      "work": {
+        "x0": -15.206971677559913,
+        "x1": -12.592592592592593,
+        "z0": 45.11378561563664,
+        "z1": 45.86378561563664
+      },
+      "pileAt": {
+        "X": -12.192592592592593,
+        "Z": 46.61378561563664
+      },
+      "enter": {
+        "x": -80,
+        "y": 758
+      },
+      "approach": [
+        {
+          "x": 140,
+          "y": 758
+        }
+      ],
+      "firstDelay": 330,
+      "repeat": [
+        150,
+        300
+      ]
+    }
+  ],
+  "crowd": {
+    "walkersN": 30,
+    "skatersN": 18,
+    "dogs": 3,
+    "walkSpeed": 1
   }
 }

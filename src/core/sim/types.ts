@@ -197,6 +197,7 @@ export interface SimState {
   flakes?: { next: number; n: number; kidId?: string; parentId?: string; started?: boolean; until?: number; dur?: number };
   /** Odklízení sněhu (A11). */
   clearing?: import('./clearing').ClearingState;
+  /** stavy dalších úseků odklízení (project.clearings) */ clearings?: import('./clearing').ClearingState[];
   falls?: import('./falls').FallsState;
   rink?: import('./rink').RinkState;
   tram?: import('./tram').TramState;

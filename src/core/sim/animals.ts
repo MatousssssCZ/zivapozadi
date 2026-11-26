@@ -277,6 +277,7 @@ function stepCat(a: AnimalState, project: ProjectFile, cam: ReturnType<typeof ca
   if (a.mode === 'offstage') {
     a.hidden = true; a.h = 0; a.perch = null;
     if (t < a.until || !spots.length) return;
+    const lim = project.crowd?.cats; if (lim !== undefined && Number(a.id.split('_')[1]) > lim) { a.until = t + 5; return; } // počet koček
     // vstup od okraje, k náhodnému klidovému místu (vzácně na sokl – Z09), odchod druhým okrajem
     const pn = env ? (env.dir.perchNext ??= perches.map(() => 0)) : [];
     const pi = perches.findIndex((_, i) => t >= (pn[i] ?? 0));

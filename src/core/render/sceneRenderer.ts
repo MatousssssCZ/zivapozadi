@@ -817,6 +817,7 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
   // okna a dveře budovy v pozadí (rozsvícení, otevření při průchodu)
   // odklizený pruh (A11): plochý decal dlažby pod chodci; odkrývá se zleva podle postupu, při sněžení zapadá
   if (sim?.state.clearing?.snow) drawSnowSurface(ctx, project, sim.state.clearing.snow, sprite('pavement'));
+  for (const cs of sim?.state.clearings ?? []) if (cs?.snow) drawSnowSurface(ctx, project, cs.snow, sprite('pavement'));
   if (sc.environment && (sc.environment.windows?.length || sc.environment.door)) drawFacade(ctx, project, (sc.backgroundAssetId ? images.get(sc.backgroundAssetId) : null) as never, (images.get('sprite_door_interior') ?? null) as never, sim?.state.doorPasses, opts.time);
   if (sim) drawFootprints(ctx, project, sim, sim.time());
   if (sim?.state.falls?.marks.length) drawFallMarks(ctx, project, sim, sim.time());
@@ -920,6 +921,7 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
     }
     // sníh z odklízení (A11): val, vytlačený sníh, hromada, shluky ve vzduchu
     if (sim.state.clearing?.snow) items.push(...snowItems(ctx, project, sim.state.clearing.snow, opts.time, sprite('snow_pile'), sprite('snowball')));
+    for (const cs of sim.state.clearings ?? []) if (cs?.snow) items.push(...snowItems(ctx, project, cs.snow, opts.time, sprite('snow_pile'), sprite('snowball')));
     // sáňky s dítětem (B02) + provázek od ruky rodiče k úchytu
     const sl = sim.state.sled;
     if (sl?.phase === 'run' && sl.center && project.sled?.riderId && sl.S) {

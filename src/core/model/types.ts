@@ -333,7 +333,12 @@ export interface ProjectFile {
   /** Kočky (volitelné) a klidová místa, kde si sedají. */
   cats?: CatConfig[];
   /** hustota davu: podíl chodců a bruslařů, kteří přicházejí (0–1, výchozí 1) */
-  crowd?: { walkers?: number; skaters?: number };
+  /**
+   * Hustota a tempo davu. Počty (přednost): `walkersN` – kolik lidí smí být ve scéně (doprovod a děti
+   * se počítají k vůdci), `skatersN`, `dogs` (majitelé se psem), `cats`; `walkSpeed` = násobek rychlosti
+   * chůze. Starší `walkers`/`skaters` = podíl (0–1) z dostupných postav.
+   */
+  crowd?: { walkers?: number; skaters?: number; walkersN?: number; skatersN?: number; dogs?: number; cats?: number; walkSpeed?: number };
   catSpots?: Vec2[];
   /**
    * Z09: explicitně označené nízké sokly (0,25–0,55 m), kam kočka občas vyskočí: bod na zemi pod místem
@@ -356,6 +361,12 @@ export interface ProjectFile {
    * odstup pracovníka za lopatou (px), počet pásů; postava pracovníka má routine 'shovel'.
    */
   clearing?: import('../sim/clearing').ClearingConfig;
+  /** Další úseky odklízení (každý s vlastním pracovníkem) – např. chodníky před domy. */
+  clearings?: import('../sim/clearing').ClearingConfig[];
+  /** Režisér výrazných událostí: pauza mezi nimi (s) a kolik jich smí běžet souběžně (výchozí 90–180 s, 1). */
+  director?: { gap?: [number, number]; maxSessions?: number };
+  /** Podíl rozhodnutí návštěvníka, kdy jde ke stánku s nápoji (výchozí 0,42). */
+  visitorMix?: { coffee?: number };
   /** Pády chodců (vzácná událost) – chybí-li, náhodné pády se nespouštějí (ruční spuštění z ladění ano). */
   falls?: Partial<import('../sim/falls').FallsConfig>;
   /** Kluziště (bruslení): obrys ledu, branka, směr jízdy, události. */
