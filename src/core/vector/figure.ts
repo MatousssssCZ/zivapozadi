@@ -527,10 +527,13 @@ export function drawVectorFigure(ctx: Ctx, pose: SkeletonPose, body: BodyProfile
   if (back) drawCollar();
   if (back) drawBackpackBack();
   drawBagStraps();
-  accDraw?.('scarf');
+  // vektorová hlava: nákrčník/šála pod hlavou (otvor vyplní vektorový krk, brada přes límec);
+  // malovaná hlava má namalovaný i krk → nákrčník až po hlavě (s ořezem obličeje – brada zůstane vpředu),
+  // stejně jako u malovaných postav
+  if (!o.paintedHead) accDraw?.('scarf');
   if (!back) drawNeckSkin();
   drawHoodBack();
-  if (o.paintedHead) o.paintedHead(); else drawHead();
+  if (o.paintedHead) { o.paintedHead(); accDraw?.('scarf'); } else drawHead();
   accDraw?.('hat');
   hands[1] = drawArm(1);
   return { headC: HP(0, 0), headUp, headR: R, neck: add(Nk, mul(u, 1.2)), torsoUp: u, neckW: (body.neckR + 2.2) * 2 * 1.35, hands, back, skin: skinC };
