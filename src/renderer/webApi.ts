@@ -17,6 +17,26 @@ import { createEmptyProject } from '../core/model/defaults';
 import { Muxer, ArrayBufferTarget } from 'mp4-muxer';
 
 const BASE = new URL('.', document.baseURI).href;
+/**
+ * Výběr kodéru pro export v prohlížeči: konstantní kvalita (kvantizér odvozený z CRF), klíčový snímek po 10 s.
+ * Měřeno na kluzišti (SSIM Y): AV1/VP9 kvantizér 28 ≈ 22,4 dB rovnoměrně, H.264 (OpenH264, pevný tok) 15,4 dB
+ * s propadem na 12 dB u každého klíčového snímku.
+ */
+async function pickWebEncoder(w: number, h: number, fps: number, crf: number, pref: 'av1' | 'h264') {
+  type Pick = { label: string; mux: 'av1' | 'vp9' | 'avc'; config: VideoEncoderConfig; perFrame?: Record<string, unknown> };
+  const q = Math.max(4, Math.min(55, Math.round(28 + (crf - 20) * 2))), qAvc = Math.max(10, Math.min(45, Math.round(crf + 2)));
+  const avcCodec = w * h > 1920 * 1088 ? 'avc1.640033' : 'avc1.640028';
+  const cands: Pick[] = [
+    { label: `AV1, konstantní kvalita q${q}`, mux: 'av1', config: { codec: w * h > 1920 * 1088 ? 'av01.0.12M.08' : 'av01.0.08M.08', width: w, height: h, framerate: fps, bitrateMode: 'quantizer' } as VideoEncoderConfig, perFrame: { av1: { quantizer: q } } },
+    { label: `VP9, konstantní kvalita q${q}`, mux: 'vp9', config: { codec: 'vp09.00.40.08', width: w, height: h, framerate: fps, bitrateMode: 'quantizer' } as VideoEncoderConfig, perFrame: { vp9: { quantizer: q } } },
+    { label: `H.264, konstantní kvalita q${qAvc}`, mux: 'avc', config: { codec: avcCodec, width: w, height: h, framerate: fps, bitrateMode: 'quantizer' } as VideoEncoderConfig, perFrame: { avc: { quantizer: qAvc } } },
+    { label: 'H.264, vysoký proměnný datový tok', mux: 'avc', config: { codec: avcCodec, width: w, height: h, framerate: fps, bitrate: Math.round(w * h * fps * 0.25), bitrateMode: 'variable', latencyMode: 'quality' } },
+  ];
+  const order = pref === 'h264' ? cands.slice(2) : cands;
+  for (const c of order) { try { if ((await VideoEncoder.isConfigSupported(c.config)).supported) return c; } catch { /* další */ } }
+  return cands[3];
+}
+
 const DEMOS: Record<string, string> = { namesti: 'Vanocni-namesti', radnice: 'Namesti-radnice', liberec: 'Liberec-zivy-trh', pastel: 'Pastelove-kluziste', pastel2: 'Pastelove-kluziste-2', tram: 'Tramvajova-ulice' };
 const DEFAULT_DEMO = 'Liberec-zivy-trh';
 
@@ -118,7 +138,7 @@ const pickFiles = (accept: string): Promise<File[]> => new Promise((res) => {
 const slug = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'asset';
 
 // ------------------------------------------------------------------ export (WebCodecs + MP4)
-let ex: { muxer: Muxer<ArrayBufferTarget>; encoder: VideoEncoder; w: number; h: number; fps: number; n: number; name: string; err: Error | null } | null = null;
+let ex: { muxer: Muxer<ArrayBufferTarget>; encoder: VideoEncoder; w: number; h: number; fps: number; n: number; name: string; err: Error | null; pick: { label: string; perFrame?: Record<string, unknown> } } | null = null;
 
 export function createWebApi(): ZsApi {
   return {
@@ -187,11 +207,14 @@ export function createWebApi(): ZsApi {
     async exportPrepare(outputPath, _dir, plan) {
       if (typeof VideoEncoder === 'undefined') throw new Error('Tento prohlížeč neumí kódovat video (WebCodecs). Použijte Chrome nebo Edge.');
       const w = plan.width, h = plan.height, fps = plan.fps;
-      const muxer = new Muxer({ target: new ArrayBufferTarget(), video: { codec: 'avc', width: w, height: h, frameRate: fps }, fastStart: 'in-memory' });
-      const st = { muxer, encoder: null as unknown as VideoEncoder, w, h, fps, n: 0, name: outputPath.split(/[\\/]/).pop() || 'video.mp4', err: null as Error | null };
+      // Kodér s konstantní kvalitou (bez cyklického rozmazání u klíčových snímků): AV1 → VP9 → H.264.
+      // H.264 s pevným datovým tokem (OpenH264 v Chrome) má strop kvality a každé 2 s propad ostrosti.
+      const pick = await pickWebEncoder(w, h, fps, plan.crf, plan.webCodec ?? 'av1');
+      const muxer = new Muxer({ target: new ArrayBufferTarget(), video: { codec: pick.mux, width: w, height: h, frameRate: fps }, fastStart: 'in-memory' });
+      const st = { muxer, encoder: null as unknown as VideoEncoder, w, h, fps, n: 0, name: outputPath.split(/[\\/]/).pop() || 'video.mp4', err: null as Error | null, pick };
       st.encoder = new VideoEncoder({ output: (chunk, meta) => muxer.addVideoChunk(chunk, meta), error: (e) => { st.err = e as Error; } });
-      const codec = w * h > 1920 * 1088 ? 'avc1.640033' : 'avc1.640028';
-      st.encoder.configure({ codec, width: w, height: h, bitrate: w * h * fps * 0.12, framerate: fps });
+      st.encoder.configure(pick.config);
+      console.info('Export videa:', pick.label);
       ex = st;
       return { firstChunk: 0, checkpoint: null, discardedStale: false };
     },
@@ -200,7 +223,7 @@ export function createWebApi(): ZsApi {
     async exportFrame(buf) {
       const s = ex!; if (s.err) throw s.err;
       const frame = new VideoFrame(buf, { format: 'RGBA', codedWidth: s.w, codedHeight: s.h, timestamp: Math.round((s.n * 1e6) / s.fps), duration: Math.round(1e6 / s.fps) });
-      s.encoder.encode(frame, { keyFrame: s.n % (s.fps * 2) === 0 }); frame.close(); s.n++;
+      s.encoder.encode(frame, { keyFrame: s.n % (s.fps * 10) === 0, ...(s.pick.perFrame ?? {}) } as VideoEncoderEncodeOptions); frame.close(); s.n++;
       while (s.encoder.encodeQueueSize > 6) await new Promise((r) => setTimeout(r, 5));
     },
     async exportEndChunk() { /* */ },

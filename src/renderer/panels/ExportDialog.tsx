@@ -13,6 +13,7 @@ const fmtDur = (s: number | null) => (s === null || !Number.isFinite(s) ? '—' 
 
 export function ExportDialog() {
   const p = useEditor((s) => s.project)!;
+  const isWeb = !navigator.userAgent.includes("Electron"); // prohlížeč kóduje přes WebCodecs, aplikace přes FFmpeg
   const dir = useEditor((s) => s.dir)!;
   const ex = p.export;
   const [ff, setFf] = useState<{ path: string; source: string; hasX264: boolean } | null | undefined>(undefined);
@@ -67,12 +68,13 @@ export function ExportDialog() {
   return (
     <div className="modal-bg">
       <div className="modal" data-testid="export-dialog">
-        <div className="modal-title">Export videa (MP4, H.264)</div>
+        <div className="modal-title">Export videa (MP4{isWeb ? '' : ', H.264'})</div>
         <div className="modal-body">
           <Section title="Obraz">
             <Row label="Rozlišení"><Select<ExportResolution> value={ex.resolution} options={[{ value: '1920x1080', label: '1920 × 1080 (Full HD)' }, { value: '3840x2160', label: '3840 × 2160 (4K UHD)' }]} onChange={(v) => set('Rozlišení exportu', (e) => { e.resolution = v; })} /></Row>
             <Row label="Snímková frekvence"><span>30 fps</span></Row>
             <Row label="Kvalita (CRF, nižší = lepší)"><NumField value={ex.crf} min={12} max={32} onCommit={(v) => set('Kvalita', (e) => { e.crf = Math.round(v); })} /></Row>
+            {isWeb && <Row label="Kodek (prohlížeč)"><Select value={ex.webCodec ?? 'av1'} options={[{ value: 'av1', label: 'AV1 – nejostřejší, bez cyklického rozmazání (doporučeno)' }, { value: 'h264', label: 'H.264 – největší kompatibilita (starší přehrávače)' }]} onChange={(v) => set('Kodek', (e) => { e.webCodec = v as 'av1' | 'h264'; })} /></Row>}
             <Row label="Rychlost kódování"><Select value={ex.preset} options={[{ value: 'veryfast', label: 'velmi rychlé' }, { value: 'faster', label: 'rychlejší' }, { value: 'fast', label: 'rychlé' }, { value: 'medium', label: 'střední (doporučeno)' }, { value: 'slow', label: 'pomalé (menší soubor)' }]} onChange={(v) => set('Preset', (e) => { e.preset = v; })} /></Row>
           </Section>
           <Section title="Délka a zvuk">

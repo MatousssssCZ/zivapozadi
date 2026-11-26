@@ -11,7 +11,7 @@ export interface ExportPlan {
   durationSec: number; totalFrames: number; stepsPerFrame: number;
   chunkFrames: number; chunks: ChunkPlan[];
   audio: AudioPlan | null;
-  crf: number; preset: string;
+  crf: number; preset: string; webCodec?: 'av1' | 'h264';
   diagnosticPng: boolean;
   /** Otisk projektu + nastavení exportu: checkpointy jsou platné jen pro shodný otisk. */
   jobHash: string;
@@ -62,7 +62,7 @@ export function planExport(project: ProjectFile, opts: { audioDurationSec?: numb
   }
   return {
     width, height, fps, durationSec: totalFrames / fps, totalFrames, stepsPerFrame: STEPS_PER_SECOND / fps, chunkFrames, chunks, audio,
-    crf: ex.crf, preset: ex.preset, diagnosticPng: ex.diagnosticPngSequence, jobHash: exportJobHash(project),
+    crf: ex.crf, preset: ex.preset, webCodec: ex.webCodec ?? 'av1', diagnosticPng: ex.diagnosticPngSequence, jobHash: exportJobHash(project),
   };
 }
 

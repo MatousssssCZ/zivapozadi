@@ -261,6 +261,8 @@ export interface ExportSettings {
   /** Co dělat, když je hudba kratší než video. */
   audioWhenShorter: 'loop' | 'silence';
   crf: number;
+  /** Export v prohlížeči: AV1 (konstantní kvalita, nejostřejší) nebo H.264 (největší kompatibilita). */
+  webCodec?: 'av1' | 'h264';
   preset: 'veryfast' | 'faster' | 'fast' | 'medium' | 'slow';
   /** Délka části exportu (s checkpointem) v sekundách. */
   chunkSec: number;
