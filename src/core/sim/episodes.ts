@@ -53,12 +53,14 @@ export function registerEpisode(t: EpisodeType, plan: PlanFn, onTick?: (c: Episo
 /** Vynutí start (galerie aktivit / ladění). */
 export function episodeStartNow(st: EpisodeState, t: number): boolean { if (st.phase !== 'idle') return false; st.until = t; return true; }
 
-export function stepEpisode(c: EpisodeConfig, st: EpisodeState, h: ActorHost): void {
+export function stepEpisode(c: EpisodeConfig, st: EpisodeState, h: ActorHost, busy: Set<string> = new Set()): void {
   const t = h.time(), actors = c.actors.map((id) => h.agent(id)).filter((a): a is AgentState => !!a);
   if (actors.length !== c.actors.length) return;
   if (st.phase === 'idle') {
-    for (const a of actors) if (!a.hidden) h.hide(a);
+    // herec může hrát i v jiné epizodě – schová ho jen ta, která ho právě nemá obsazeného
+    for (const a of actors) if (!a.hidden && !busy.has(a.id)) h.hide(a);
     if (t < st.until) return;
+    if (actors.some((a) => busy.has(a.id))) { st.until = t + 20; return; } // herec je zaneprázdněný jinde – počkat
     st.phase = 'run'; st.si = 0; st.st = t; st.n++; st.data = {};
   }
   const plan = plans[c.type]!(c, st, actors, h);

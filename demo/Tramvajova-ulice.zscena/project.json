@@ -3,8 +3,8 @@
   "formatVersion": 1,
   "meta": {
     "name": "Vánoční tramvajová ulice",
-    "createdAt": "2026-11-26T08:15:55.805Z",
-    "modifiedAt": "2026-11-26T08:15:55.903Z",
+    "createdAt": "2026-11-26T08:26:08.329Z",
+    "modifiedAt": "2026-11-26T08:26:08.448Z",
     "appVersion": "0.1.0"
   },
   "seed": 4242,
@@ -2051,6 +2051,122 @@
       },
       "routine": "actor",
       "activities": {}
+    },
+    {
+      "id": "ch_herec_dite2",
+      "name": "Vojta",
+      "assetId": "builtin_postava_dite",
+      "startNodeId": "n8",
+      "baseScale": 1,
+      "walkSpeed": 45,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": false,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-dite-v1",
+        "seed": 1195369774,
+        "bodyTemplate": "child-cg",
+        "variants": {
+          "jacket": "jacket_coat_child",
+          "hat": "hat_beanie_child",
+          "scarf": "scarf_long_child",
+          "trousers": "trousers_child",
+          "boots": "boots_child",
+          "gloves": "gloves_child",
+          "head": "head_child"
+        },
+        "colors": {
+          "jacket": "olivova",
+          "hat": "tmave-seda",
+          "scarf": "kremova",
+          "gloves": "kremova",
+          "trousers": "tmave-seda",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 1.011,
+          "build": 1.005
+        },
+        "motion": {
+          "strideScale": 0.909,
+          "armSwing": 1.238,
+          "bob": 1.106,
+          "sway": 1.217,
+          "idleTempo": 0.938,
+          "lean": 2.1,
+          "speed": 1.129,
+          "phase": 0.631,
+          "armLag": -0.801,
+          "armLR": 0.947
+        },
+        "locks": []
+      },
+      "routine": "actor",
+      "activities": {}
+    },
+    {
+      "id": "ch_bezkar",
+      "name": "Běžkař",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n8",
+      "baseScale": 1,
+      "walkSpeed": 55,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": false,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1655860173,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_puffer_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_hiking_cg",
+          "gloves": "gloves_cg",
+          "head": "head_05_cg"
+        },
+        "colors": {
+          "jacket": "kremova",
+          "hat": "petrolejova",
+          "scarf": "hneda",
+          "gloves": "petrolejova",
+          "trousers": "olivova",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 0.964,
+          "build": 1.03
+        },
+        "motion": {
+          "strideScale": 0.928,
+          "armSwing": 1.011,
+          "bob": 1.181,
+          "sway": 1.021,
+          "idleTempo": 1.07,
+          "lean": 1.912,
+          "speed": 1.221,
+          "phase": 0.573,
+          "armLag": -1.95,
+          "armLR": 0.851
+        },
+        "locks": []
+      },
+      "routine": "actor",
+      "activities": {}
     }
   ],
   "schedule": [],
@@ -2385,6 +2501,90 @@
     ]
   },
   "episodes": [
+    {
+      "id": "ep_bezky",
+      "type": "ski",
+      "actors": [
+        "ch_bezkar"
+      ],
+      "interval": [
+        240,
+        480
+      ],
+      "firstAt": 90,
+      "pts": {},
+      "paths": {
+        "track": [
+          {
+            "x": 2067,
+            "y": 971.5
+          },
+          {
+            "x": 1779.9,
+            "y": 971.5
+          },
+          {
+            "x": 1320.6,
+            "y": 974.9
+          },
+          {
+            "x": 976.1,
+            "y": 983
+          },
+          {
+            "x": 643.1,
+            "y": 994.4
+          },
+          {
+            "x": 287.1,
+            "y": 1005.9
+          },
+          {
+            "x": -160.8,
+            "y": 1015.1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ep_pevnost",
+      "type": "fort",
+      "actors": [
+        "ch_herec_dite",
+        "ch_herec_dite2"
+      ],
+      "interval": [
+        420,
+        720
+      ],
+      "firstAt": 600,
+      "pts": {
+        "wall": {
+          "x": 1423.9,
+          "y": 996.7
+        },
+        "dig": {
+          "x": 1653.6,
+          "y": 1010.5
+        },
+        "in": {
+          "x": 2021.1,
+          "y": 1016.3
+        },
+        "in2": {
+          "x": 2026.8,
+          "y": 1033.5
+        },
+        "out": {
+          "x": 2055.5,
+          "y": 1022
+        },
+        "out2": {
+          "x": 2061.2,
+          "y": 1035.8
+        }
+      }
+    },
     {
       "id": "ep_svetylka",
       "type": "lights",

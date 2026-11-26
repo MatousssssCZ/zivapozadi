@@ -40,6 +40,8 @@ import { stepEpisode, newEpisodeState, episodeStartNow, type ActorHost } from '.
 import './ep/treeLot';
 import './ep/decorate';
 import './ep/lights';
+import './ep/fort';
+import './ep/ski';
 import { stepPram, newPramState, pramObstacle, type PramHost } from './pram';
 import { maybeCarryMitten, mittenBusy, stepMitten, type MittenHost } from './mitten';
 import { stepSnowman, startSnowman, abortSnowman, finishSession, snowmanZoneFree, type SessionHost } from '../activities/snowman';
@@ -578,7 +580,11 @@ export class Simulation {
   }
   private stepEpisodes() {
     const h = this.actorHost();
-    for (const c of this.project.episodes!) stepEpisode(c, ((this.state.episodes ??= {})[c.id] ??= newEpisodeState(c)), h);
+    const eps = (this.state.episodes ??= {});
+    for (const c of this.project.episodes!) {
+      const busy = new Set(this.project.episodes!.filter((o) => o.id !== c.id && eps[o.id]?.phase === 'run').flatMap((o) => o.actors));
+      stepEpisode(c, (eps[c.id] ??= newEpisodeState(c)), h, busy);
+    }
   }
   /** Ladění: kočárek přijede hned. */
   pramNow(): { ok: boolean; msg: string } { const st = this.state.pram; if (!this.project.pram) return { ok: false, msg: 'Scéna nemá kočárek.' }; if (st && st.phase !== 'offstage') return { ok: false, msg: 'Kočárek už je ve scéně.' }; (this.state.pram ??= newPramState(this.project.pram)).until = this.time(); return { ok: true, msg: 'Přichází rodič s kočárkem.' }; }

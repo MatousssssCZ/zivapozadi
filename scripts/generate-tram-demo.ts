@@ -114,7 +114,15 @@ export async function generateTram(dir: string): Promise<ProjectFile> {
   p.characters.push({ id: 'ch_herec_dite', name: 'Ema', assetId: 'builtin_postava_dite', startNodeId: 'n8', baseScale: 1, walkSpeed: 45, palette: pal, wander: false, appearance: kidActor, routine: 'actor', activities: {} });
   const floristApp = generateGroup(lib, 1, 9125).appearances[0];
   p.characters.push({ id: 'ch_kvetinarka', name: 'Květinářka', assetId: 'builtin_postava_cg', startNodeId: 'f0', baseScale: 1, walkSpeed: 55, palette: pal, wander: false, appearance: floristApp, routine: 'actor', activities: {} });
+  const kid2 = generateGroup(childLib, 1, 9126).appearances[0];
+  p.characters.push({ id: 'ch_herec_dite2', name: 'Vojta', assetId: 'builtin_postava_dite', startNodeId: 'n8', baseScale: 1, walkSpeed: 45, palette: pal, wander: false, appearance: kid2, routine: 'actor', activities: {} });
+  const skierApp = generateGroup(lib, 1, 9127).appearances[0];
+  p.characters.push({ id: 'ch_bezkar', name: 'Běžkař', assetId: 'builtin_postava_cg', startNodeId: 'n8', baseScale: 1, walkSpeed: 55, palette: pal, wander: false, appearance: skierApp, routine: 'actor', activities: {} });
   p.episodes = [
+    { id: 'ep_bezky', type: 'ski', actors: ['ch_bezkar'], interval: [240, 480], firstAt: 90, pts: {},
+      paths: { track: [[1800, 846], [1550, 846], [1150, 849], [850, 856], [560, 866], [250, 876], [-140, 884]].map(([x, y]) => B(x, y)) } },
+    { id: 'ep_pevnost', type: 'fort', actors: ['ch_herec_dite', 'ch_herec_dite2'], interval: [420, 720], firstAt: 600,
+      pts: { wall: B(1240, 868), dig: B(1440, 880), in: B(1760, 885), in2: B(1765, 900), out: B(1790, 890), out2: B(1795, 902) } },
     { id: 'ep_svetylka', type: 'lights', actors: ['ch_kvetinarka'], interval: [600, 900], firstAt: 240,
       pts: { winL: B(582, 418), winR: B(704, 418), wall: B(640, 598), switchAt: B(712, 505), switchStand: B(712, 622), in: B(-70, 628), out: B(-80, 630) } },
     { id: 'ep_zdobeni', type: 'decorate', actors: ['ch_herec3', 'ch_herec_dite'], interval: [360, 600], firstAt: 420,

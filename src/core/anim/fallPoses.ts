@@ -113,7 +113,8 @@ export const fallPhaseAt = (v: FallVariant, t: number): FallPhase => sampleFall(
  * `change`: předklon, jedna noha zvednutá, obě ruce u boty (šněrování), v polovině druhá noha.
  * Klíč je vůči bodu na zemi pod pánví (místo k sezení); prolíná se vahou (sednutí / vstávání).
  */
-export function benchPose(kind: 'rest' | 'change' | 'kneel' | 'bend' | 'squat' | 'sled' | 'lift' | 'tuck' | 'angel' | 'climb', t: number, dur: number, r?: number): FallKey {
+export function benchPose(kind: 'rest' | 'change' | 'kneel' | 'bend' | 'squat' | 'sled' | 'lift' | 'tuck' | 'angel' | 'climb' | 'ski', t: number, dur: number, r?: number): FallKey {
+  if (kind === 'ski') return skiPose(t, r ?? 0);
   if (kind === 'climb') return climbPose(t, r ?? 0);
   if (kind === 'angel') return sampleKeys(ANGEL_KEYS, t);
   if (kind === 'sled') return sledRidePose(t, r ?? 0);
@@ -226,4 +227,21 @@ export const ANGEL_KEYS: FallKey[] = [
 export function climbPose(lead: number, trail: number): FallKey {
   const hipH = STAND_H + Math.min(0, Math.min(lead, trail)) * 0.6 + Math.max(0, Math.max(lead, trail)) * 0.25;
   return { t: 0, ph: 'pause', hip: W(-0.02, hipH), pitch: 6, head: -4, feet: [W(-0.04, Math.max(trail, -0.6), -0.1), W(0.14, Math.max(lead, -0.6), 0.1)], hands: [W(0.18, 0.95, -0.16), W(0.2, 0.98, 0.16)], c: ['f0', 'f1'] };
+}
+
+/**
+ * Běžky – střídavý běh (A01): fáze p ∈ [0,1) cyklu dvou odrazů, `amp` amplituda (0 = stoj, lyže
+ * rovnoběžně). Nohy vpřed / vzad po lyžích (bota vázaná špičkou – u zadní nohy se zvedá pata),
+ * paže křížově (levá noha vpřed ↔ pravá paže vpřed), trup se při odrazu mírně předkloní, kolena tlumí.
+ */
+export function skiPose(p: number, amp: number): FallKey {
+  const s = Math.sin(2 * Math.PI * p), kickI = Math.max(0, Math.sin(2 * Math.PI * ((p % 0.5) / 0.5)));
+  const u0 = 0.4 * amp * s, u1 = -u0; // 0 = vzdálená, 1 = blízká noha
+  const heel = (u: number) => (u < 0 ? -32 * amp * Math.min(1, -u / (0.4 * Math.max(amp, 0.01))) : 0);
+  const hand = (legU: number, side: number): P3 => W(-legU * 1.15 + 0.12, 0.82 + 0.12 * Math.max(0, -legU / 0.4) * amp, side);
+  return {
+    t: 0, ph: 'pause', hip: W(0.02 * amp, 0.96 - 0.04 * amp - 0.02 * kickI * amp), pitch: 6 + 10 * amp + 4 * kickI * amp, head: -4 * amp, roll: 2 * s * amp,
+    feet: [W(u0, 0.0, -0.1, heel(u0)), W(u1, 0.0, 0.1, heel(u1))],
+    hands: [hand(u1, -0.18), hand(u0, 0.18)], c: ['f0', 'f1'],
+  };
 }

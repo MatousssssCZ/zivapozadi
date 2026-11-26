@@ -20,19 +20,19 @@ a co chybí. Vizuálně ověřené znamená: vyrenderované snímky průběhu ce
 
 | ID | Stav | Co je hotové / co chybí |
 |---|---|---|
-| A01 běžkování | **neimplementováno** | Chybí rig lyží a holí (osa lyže, vázání s volnou patou, hrot hole). Lze udělat na rovné zasněžené cestě, ale v tomto kole nezačato. |
+| A01 běžkování | **hotovo, vizuálně ověřeno** (Tramvajová ulice) | Klasický střídavý běh po stopě přes zasněžené pole. Rychlost přibývá jen v oknech odrazu, jinak skluz s třením (μ 0,05) a odporem vzduchu; bez odrazu nikdy nezrychlí. Fáze kroku postupuje podle ujeté dráhy a při rozjezdu jsou kroky krátké. Paže a nohy pracují křížově, pata zadní nohy se zvedá. Zapíchnutý hrot hole drží bod ve sněhu. Pauza o hole (3–8 s), pak rozjezd. Střídá se jistý běžkař a začátečník. Za běžkařem zůstane stopa, která pozvolna zapadá. **Omezení:** délka hole se na obraze mírně mění (hrot drží bod, rukojeť je v ruce); není stoupání ani stromeček. |
 | A02 bobování/sáňkování ze svahu | **blokováno podkladem** | Žádná scéna nemá kopec. Zadání zakazuje simulovat sjezd na vizuálně rovné ploše. Potřeba: pozadí s mírným svahem (5–12°), dojezdem a bočním návratem. Vektorové saně i boby a fyzika skluzu (tření, odpor sněhu) jsou připravené. |
 | A03 tahání dítěte na saních | **hotovo** (Liberec) | Saně mají vlastní fyziku: tření skluznic, odpor sněhu, velký boční odpor, provaz jen v tahu (limit délky, měkký náběh, omezená špička síly). Při zastavení rodiče saně dojedou a provaz povolí, o nohy rodiče se zarazí. Dítě je postava z kostry v sedu (`sit: sled`), trup reaguje na zrychlení. Model je vektorový 3D (sáně / boby). **Chybí:** nasednutí a výstup dítěte v obraze (průchod začíná i končí mimo obraz) a péče rodiče o dítě (úprava čepice). |
 | A04 první lyžování | **blokováno podkladem** | Potřeba svahu (3–7°) s dojezdem a rig lyží; nezačato. |
 | A05 rodič + dítě na saních | **blokováno podkladem** | Potřeba svahu. Dvousedadlový model saní zatím není. |
 | A06 vyšlapávání hlubokým sněhem | **částečně (dřívější)** | Boty se boří do sněhu podle hloubky (`snowDepth`), chůze se zpomalí, stopy vznikají jen pod zatíženou botou a přetrvají. **Chybí:** zvedání kolen podle hloubky, dítě šlapající do stop dospělého, zhutnění stopy pro další průchod. |
 | A07 sněhový anděl | **hotovo, vizuálně ověřeno** (Liberec) | Session rodič + dítě, rezervuje se celá plocha. Dítě se přes dřep a sed položí, udělá 3 tahy (různé amplitudy), chvíli leží, vstává přes sed a dřep s rukou k rodiči, který se ke dítěti skloní. Otisk vzniká z tahů, jeho rozsah jen přibývá. Při vstávání zůstane otisk ruky a bot, celý otisk přetrvá (900 s) a pozvolna zapadá. Konfigurace: zóna `activityType: 'snowAngel'`. **Omezení:** ležící postava je dvourozměrná projekce stávajícího rigu (boční pohled), ruce se nesevřou s rukou rodiče (jen se k sobě natáhnou). |
-| A08 stavba pevnosti | **neimplementováno** | Lze postavit na materiálovém modelu sněhu z kooperativního sněhuláka (`coopSnowman.ts`: odběr sněhu, bilance hmoty). |
+| A08 stavba pevnosti | **hotovo, vizuálně ověřeno** (Tramvajová ulice) | Dvě děti: jedno nabírá v dřepu, hrouda roste v dlaních a nese ji oběma rukama; druhé pokládá a uhlazuje. V polovině si role vymění. Zeď roste po jednotlivých hroudách (místo a vrstva). V místě odběru vzniká prohlubeň a objem odebraného sněhu odpovídá zdi × zhutnění. Hotová vrstva zůstane, další epizoda přidá vrstvu (nejvýš 3). **Omezení:** cihly jsou pravidelné kvádry, hroudy se nedrobí. |
 | A09 hledání spadlého předmětu | **dřívější implementace (B03)** | Rukavice spadne z ruky, postava si všimne, vrátí se, dřepne a zvedne tentýž předmět. Pokud ne, zvedne ho a schová kolemjdoucí. Oprášení zatím chybí. |
 | A10 chytání vloček | **dřívější implementace (B01)** | Jen za sněžení dítě zvedne dlaně a sleduje je, rodič počká. Vločka se nenavádí. |
-| A11 zdobení stromku | **neimplementováno** | Mechanika předávání ozdob s košíkem existuje u sněhuláka (`coopSnowman.ts`). Pro stromek chybí body na větvích a kyvadlo ozdob. |
-| A12 světýlka ve výloze | **neimplementováno** | Lze postavit na pekaři a cílech rukou. Chybí schůdky a výstup po stupních. |
-| A13 odnášení stromku | **neimplementováno** | Chybí prodejní místo se stromky a koordinace dvou nositelů. |
+| A11 zdobení stromku | **hotovo, vizuálně ověřeno** (Tramvajová ulice) | Rodič přinese krabici s ozdobami a položí ji (přidřep). Dítě vybírá ozdoby; nízké větve zdobí samo (z boku, ruka k háčku), vysoké podá rodiči (ruce se potkají, převzetí v okamžiku kontaktu) a rodič zavěsí. Ozdoby se kývají jako kyvadlo s útlumem a zůstanou. Krabice ubývá, obsazené háčky se znovu nepoužijí. **Omezení:** větve se při zavěšení neprohýbají. |
+| A12 světýlka ve výloze | **hotovo, vizuálně ověřeno** (Tramvajová ulice, květinářství) | Štafle přinese a rozevře. Výstup jde po stupních: noha na stupeň, přenos váhy, pánev stoupá, druhá noha dorovná. Úseky řetězu upevňuje na háčky a mezi nimi je průvěs podle konečné délky. Volný konec visí. Sestoupí, přenese štafle k dalším háčkům, vystoupá znovu. Ustoupí, zkontroluje a světla se rozsvítí až stiskem vypínače. Stav přetrvá. |
+| A13 odnášení stromku | **hotovo, vizuálně ověřeno** (Tramvajová ulice) | Prodejní místo s pěti smrčky a cedulí. Dva dospělí prohlížejí (pohled od paty ke špičce), jeden ukáže, druhý zareaguje a obejde stromek. Vytáhnou ho ze stojanu (přidřep), sklopí, druhý převezme špičku. Nesou ho téměř vodorovně a zadní jde po stopě předního. Větve se tlumeně dokývají. Stromek zmizí z nabídky až při zvednutí. **Omezení:** nabídka se zatím nedoplňuje. |
 | A14 zastavení u výlohy | **hotovo** (Tramvajová ulice) | Rodič s dítětem zastaví u výlohy pekárny. U výlohy si první všimne dítě, ukáže na konkrétní bod a oba se dívají na tentýž cíl. Rodič zareaguje po prodlevě (ukáže také), pak společně odejdou. **Chybí:** stání dítěte na špičkách. |
 | A15 rozhovor sousedů | **dřívější implementace** | Setkání, pozdrav a rozhovor se střídáním mluvčího (`src/core/social`): gesta, přikyvování, přenos váhy. |
 | A16 fotografování rodiny | **částečně (dřívější)** | Focení u stromu: telefon je skutečná rekvizita v obou rukou, s pauzou a uložením. **Chybí:** fotograf, který fotí seskupenou rodinu. |
@@ -41,6 +41,38 @@ a co chybí. Vizuálně ověřené znamená: vyrenderované snímky průběhu ce
 | A18b posyp chodníku | **hotovo, vizuálně ověřeno** | Kbelík drží vzdálená ruka před tělem. Blízká ruka nabere v kbelíku, švihem předloktí uvolní dávku a zrnka letí balisticky z ruky. Kbelík má konečný počet dávek (doplní se uvnitř). Posyp leží a pozvolna zapadá. |
 | A18c přenesení bedýnky | **hotovo, vizuálně ověřeno** | Bedýnku nese oběma rukama u madel. Pro zvednutí i položení se přidřepne (kolena a kyčle). Bedýnka zůstane, kde ji položil (je překážka), a při další epizodě ji odnese zpět dovnitř. Nikdy neexistuje dvakrát. |
 | A18d otočení cedule | **hotovo, vizuálně ověřeno** | Cedule „Otevřeno ↔ Hned jsem zpět“ visí na dveřích (otáčí se i s křídlem). Pekař k ní zvedne ruku a otočí ji kolem závěsu. Strana se přepne v hranové poloze, text není nikdy zrcadlový a po puštění cedule dozní. Stav přetrvá až do dalšího gesta. |
+
+## Galerie aktivit (sandbox)
+
+Tlačítko **🎬 Galerie aktivit** (horní lišta i úvodní obrazovka) otevře seznam všech aktivit podle skupin se stavem.
+
+Kliknutí na aktivitu udělá tohle:
+* načte její scénu;
+* postaví čerstvou deterministickou simulaci a převine ji do chvíle, kdy jde aktivitu spustit;
+* aktivitu spustí a zaměří kameru, případně sleduje hlavní postavu.
+
+Přehrávač nad scénou nabízí:
+* ⟲ Znovu, pauzu a krok o 0,1 s;
+* rychlost ¼×, ½×, 1× a 2×;
+* 🎯 Sledovat a ⤢ Celek;
+* **návazné akce**, například na kluzišti skok s otočkou, holubičku, piruetu, jízdu vzad, skluz na jedné noze a pád, u pekaře jednotlivé varianty a příjezd tramvaje.
+
+Katalog je v `src/renderer/activityCatalog.ts`.
+
+## Scénické epizody (A13, A11, A12, A08, A01)
+
+Epizody jsou v `src/core/sim/episodes.ts` a `src/core/sim/ep/*.ts`:
+* herci mají routine „actor“;
+* plán se skládá z kroků s podmínkami: všichni došli, uplynula doba nebo platí podmínka;
+* plán se skládá deterministicky z dat, která se zafixují na začátku epizody;
+* trvalý stav prostředí je v `world` (stromky, ozdoby, světla, zeď, stopy);
+* herec může hrát ve více epizodách a režisér hlídá, aby neběžely souběžně.
+
+Kontrolní snímky vyrobí:
+```bash
+npx tsx scripts/episode-check.ts <id> výstup.png
+```
+Id epizod: `ep_stromky`, `ep_zdobeni`, `ep_svetylka`, `ep_pevnost`, `ep_bezky`.
 
 ## Spuštění a diagnostika
 

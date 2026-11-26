@@ -9,6 +9,8 @@ import type { ProjectFile } from '../model/types';
 import { lotTrees, lotBase, treePose, LOT_N } from '../sim/ep/treeLot';
 import { DECO_TREE_H, hookWorld, ornsOf, ornSwing, decoData, boxLeft, ORN_COLORS } from '../sim/ep/decorate';
 import { characterVisual, localToScene } from './characterPose';
+import { skiPath, skiAt, skiData, skiTracks, SKI } from '../sim/ep/ski';
+import { fortWorld, fortData, slotWorld, FORT } from '../sim/ep/fort';
 import { lightHooks, lightsWorld, lightsData, ladderBase, facadeZ, STEP_H, LADDER_STEPS, HOOK_N } from '../sim/ep/lights';
 import type { AgentState } from '../sim/types';
 import { depthScaleAt } from '../scene/geometry';
@@ -131,6 +133,30 @@ const BULBS: [number, number, number][] = [[255, 196, 90], [235, 80, 70], [90, 1
 /** Průvěs řetězu délky ℓ mezi body vzdálenými s (parabola: ℓ ≈ s + 8d²/3s). */
 const sagOf = (s: number, l: number) => Math.sqrt(Math.max(0, (3 * s * (l - s)) / 8));
 
+/** Sněhová cihla (zaoblený kvádr) s jemným stínováním; střed spodní hrany v B. */
+function drawBlock(ctx: Ctx, cam: Camera, B: World, H0: number, jit: number) {
+  const { w, h, d } = FORT.block, P = (x: number, z: number, y: number) => toScreen(cam, { X: B.X + x, Z: B.Z + z }, H0 + y);
+  const fr = [P(-w / 2, -d / 2, 0), P(w / 2, -d / 2, 0), P(w / 2, -d / 2, h), P(-w / 2, -d / 2, h)], tp = [P(-w / 2, -d / 2, h), P(w / 2, -d / 2, h), P(w / 2, d / 2, h), P(-w / 2, d / 2, h)];
+  const poly = (q: { x: number; y: number }[]) => { ctx.beginPath(); q.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y))); ctx.closePath(); };
+  const g = ctx.createLinearGradient(fr[0].x, fr[3].y, fr[0].x, fr[0].y); g.addColorStop(0, '#f4f7ff'); g.addColorStop(1, `rgb(${196 + Math.round(jit * 14)},${206 + Math.round(jit * 10)},228)`);
+  ctx.fillStyle = g; ctx.lineJoin = 'round'; ctx.strokeStyle = 'rgba(150,165,205,0.55)'; ctx.lineWidth = 1;
+  poly(fr); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#fbfcff'; poly(tp); ctx.fill(); ctx.stroke();
+}
+
+/** zapíchnuté hroty holí (jen pro kreslení): poloha ve světě a ruka */
+const poleTips = new Map<string, { tip: World | null; prevU: number }>();
+/** Dvojitá stopa po běžkách podél dráhy (úsek s0–s1), pozvolna zapadá. */
+function drawTrack(ctx: Ctx, cam: Camera, path: ReturnType<typeof skiPath>, s0: number, s1: number, alpha: number) {
+  if (s1 - s0 < 0.2 || alpha <= 0) return;
+  ctx.save(); ctx.strokeStyle = `rgba(120,135,185,${(0.35 * alpha).toFixed(3)})`; ctx.lineWidth = 1.2;
+  for (const side of [-1, 1]) {
+    ctx.beginPath();
+    for (let s = s0, i = 0; s <= s1; s += 0.4, i++) { const q = skiAt(path, s), o = side * SKI.gauge, p = toScreen(cam, { X: q.p.X - Math.sin(q.dir) * o, Z: q.p.Z + Math.cos(q.dir) * o }); if (i) ctx.lineTo(p.x, p.y); else ctx.moveTo(p.x, p.y); }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 export function episodeItems(ctx: Ctx, project: ProjectFile, sim: Simulation, cam: Camera): Item[] {
   const items: Item[] = [], h = sim.actorHostPublic();
   for (const c of project.episodes ?? []) {
@@ -148,6 +174,51 @@ export function episodeItems(ctx: Ctx, project: ProjectFile, sim: Simulation, ca
         if (d.box === 'carried' && A[0] && !A[0].hidden) { const p0 = handOf(sim, project, A[0], 0), p1 = handOf(sim, project, A[0], 1); if (p0 && p1) items.push({ key: A[0].pos.y + 0.4, tie: 52, draw: () => drawOrnBox(ctx, (p0.x + p1.x) / 2, (p0.y + p1.y) / 2 + 0.08 * ppm, ppm, boxLeft(st)) }); }
         if (d.held) { const a = A[d.held.who]; const p = a && !a.hidden ? handOf(sim, project, a, 1) : null; if (p) items.push({ key: a.pos.y + 0.5, tie: 53, draw: () => drawOrnament(ctx, p.x, p.y, Math.max(1.6, 0.045 * ppm), d.held!.color) }); }
       }
+    }
+    if (c.type === 'ski') {
+      const path = skiPath(h, c), t = sim.time();
+      if (st) for (const tr of skiTracks(st)) { const al = 1 - (t - tr.t0) / SKI.life; items.push({ key: -1e4, tie: 0, draw: () => drawTrack(ctx, cam, path, tr.s0, tr.s1, al) }); }
+      const a = sim.state.agents.find((x) => x.id === c.actors[0]);
+      if (st?.phase === 'run' && a && !a.hidden) {
+        const d = skiData(st), q = skiAt(path, d.s ?? 0), fx = Math.cos(q.dir), fz = Math.sin(q.dir), ppm = depthScaleAt(project.scene.depth, a.pos.y) / Q;
+        items.push({ key: -1e4 + 1, tie: 0, draw: () => drawTrack(ctx, cam, path, d.s0 ?? 0, d.s ?? 0, 1) });
+        const amp = d.amp ?? 0, sn = Math.sin(2 * Math.PI * (d.ph ?? 0)), Lg = 0.92;
+        const footU = [0.4 * amp * sn * Lg, -0.4 * amp * sn * Lg], side = [-SKI.gauge, SKI.gauge];
+        const at = (u: number, l: number, H = 0): { x: number; y: number } => toScreen(cam, { X: q.p.X + fx * u - fz * l, Z: q.p.Z + fz * u + fx * l }, H);
+        // lyže: pod chodidlem (vázání u špičky boty), špička zahnutá nahoru; vzdálená pod postavou, blízká přes boty
+        const ski = (i: number) => () => {
+          const u = footU[i] + 0.12, l = side[i], a0 = at(u - SKI.len * 0.48, l, 0.02), a1 = at(u + SKI.len * 0.45, l, 0.02), tip = at(u + SKI.len * 0.52, l, 0.07);
+          ctx.save(); ctx.lineCap = 'round'; ctx.strokeStyle = i ? '#2f3f5f' : '#26344f'; ctx.lineWidth = Math.max(1.4, 0.035 * ppm);
+          ctx.beginPath(); ctx.moveTo(a0.x, a0.y); ctx.lineTo(a1.x, a1.y); ctx.quadraticCurveTo((a1.x + tip.x) / 2 + 1, a1.y, tip.x, tip.y); ctx.stroke();
+          ctx.strokeStyle = 'rgba(230,236,250,0.7)'; ctx.lineWidth = Math.max(0.5, 0.01 * ppm); ctx.beginPath(); ctx.moveTo(a0.x, a0.y - 0.6); ctx.lineTo(a1.x, a1.y - 0.6); ctx.stroke();
+          ctx.restore();
+        };
+        items.push({ key: a.pos.y - 0.004, tie: 80, draw: ski(0) });
+        items.push({ key: a.pos.y - 0.003, tie: 81, draw: ski(1) }); // těsně pod postavou (bota přes lyži, popředí přes obojí)
+        // hole: rukojeť v ruce; při pohybu paže vzad hrot drží zapíchnutý bod ve sněhu, jinak se vleče za rukou
+        for (const i of [0, 1] as const) {
+          const g = handOf(sim, project, a, i); if (!g) continue;
+          const key = `${a.id}:${i}`, handU = (i === 0 ? -footU[1] : -footU[0]) * 1.15, rec = poleTips.get(key) ?? { tip: null, prevU: handU };
+          const back = handU < rec.prevU - 1e-4 || amp < 0.08;
+          if (back && !rec.tip) rec.tip = { X: q.p.X + fx * (handU - 0.1) - fz * side[i] * 2.2, Z: q.p.Z + fz * (handU - 0.1) + fx * side[i] * 2.2 };
+          if (!back || (rec.tip && Math.hypot(rec.tip.X - q.p.X, rec.tip.Z - q.p.Z) > 1.15)) rec.tip = null;
+          rec.prevU = handU; poleTips.set(key, rec);
+          const tip = rec.tip ? toScreen(cam, rec.tip, 0) : at(handU - 0.55, side[i] * 2.2, 0.12);
+          items.push({ key: a.pos.y + (i ? 0.002 : -0.005), tie: 82 + i, draw: () => {
+            ctx.save(); ctx.strokeStyle = '#3d4250'; ctx.lineWidth = Math.max(0.8, 0.018 * ppm); ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(g.x, g.y - 0.04 * ppm); ctx.lineTo(tip.x, tip.y); ctx.stroke();
+            const bx = g.x + (tip.x - g.x) * 0.9, by = g.y + (tip.y - g.y) * 0.9; ctx.beginPath(); ctx.ellipse(bx, by, 0.04 * ppm, 0.015 * ppm, 0, 0, 7); ctx.stroke(); ctx.restore(); // talířek
+          } });
+        }
+      }
+    }
+    if (c.type === 'fort') {
+      const F = st ? fortWorld(st) : { blocks: [], dug: 0 }, Dg = toWorldOf(project, c.pts.dig), gd = toScreen(cam, Dg), ppm = depthScaleAt(project.scene.depth, gd.y) / Q;
+      // prohlubeň v místě odběru: plocha roste s odebraným objemem (mělká, hloubka ~5 cm)
+      if (F.dug > 0) { const R = Math.sqrt(F.dug / (Math.PI * 0.05)); items.push({ key: gd.y - 5, tie: 70, draw: () => { const g = ctx.createRadialGradient(gd.x, gd.y, 0, gd.x, gd.y, R * ppm); g.addColorStop(0, 'rgba(130,145,195,0.45)'); g.addColorStop(1, 'rgba(130,145,195,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(gd.x, gd.y, R * ppm, R * ppm * 0.4, 0, 0, 7); ctx.fill(); } }); }
+      const blocks = [...F.blocks].sort((a, b) => a.layer - b.layer || a.slot - b.slot);
+      const wall = toScreen(cam, slotWorld(h, c, 0));
+      if (blocks.length) items.push({ key: wall.y, tie: 71, draw: () => { for (const b of blocks) { const sw = slotWorld(h, c, b.slot); drawBlock(ctx, cam, { X: sw.X + (b.layer % 2) * 0.06, Z: sw.Z }, b.layer * FORT.block.h * 0.95, b.jit); } } });
+      if (st?.phase === 'run') { const dd = fortData(st); if (dd.clump) { const a = sim.state.agents.find((x) => x.id === c.actors[dd.clump!.who]); if (a && !a.hidden) { const p0 = handOf(sim, project, a, 0), p1 = handOf(sim, project, a, 1), r = dd.clump.r; if (p0 && p1) items.push({ key: a.pos.y + 0.5, tie: 72, draw: () => { const x = (p0.x + p1.x) / 2, y = (p0.y + p1.y) / 2; const g = ctx.createRadialGradient(x - r * ppm * 0.3, y - r * ppm * 0.3, 1, x, y, r * ppm); g.addColorStop(0, '#ffffff'); g.addColorStop(1, '#c9d2ea'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r * ppm, 0, 7); ctx.fill(); } }); } } }
     }
     if (c.type === 'lights') {
       const hooks = lightHooks(h, c), L = st ? lightsWorld(st) : { hooks: 0, on: false, onAt: 0 }, Zf = facadeZ(h, c);
