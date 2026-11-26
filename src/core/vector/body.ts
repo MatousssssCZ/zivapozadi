@@ -31,9 +31,9 @@ export function bodyOf(seed: number, age: AgeGroup): BodyProfile {
   if (age === 'child') {
     // dítě: relativně velká hlava, kratší nohy, oblé tělo bez pasu
     return {
-      age, height: 0.95 + r(4) * 0.1, neckR: 2.1, shoulder: 6.2 + build * 0.4, chest: 7.4 + build * 0.6, waist: 7.4 + build * 0.6, hips: 7.2 + build * 0.5,
-      chestDepth: 1.2, seatDepth: 1.4, thighW: 8.6 + build * 0.6, kneeW: 6.6, calfW: 6.6, ankleW: 4.4, armW: 5.2, elbowW: 4.4, wristW: 3.4,
-      headR: 8.3 + r(5) * 0.5, jaw: 0.9, legRatio: 1, hand: 4.6, skin, blush: '#e98d82',
+      age, height: 0.95 + r(4) * 0.1, neckR: 2.2, shoulder: 6.6 + build * 0.4, chest: 8.6 + build * 0.6, waist: 8.8 + build * 0.6, hips: 8.4 + build * 0.5,
+      chestDepth: 1.6, seatDepth: 1.6, thighW: 9.8 + build * 0.6, kneeW: 7.6, calfW: 7.4, ankleW: 5.0, armW: 6.0, elbowW: 5.2, wristW: 4.0,
+      headR: 9.2 + r(5) * 0.6, jaw: 0.86, legRatio: 0.94, hand: 4.6, skin, blush: '#ec8a7e',
     };
   }
   const senior = age === 'senior';

@@ -16,7 +16,7 @@ import type { SkeletonPose, Limb } from '../anim/skeleton';
 import type { FootGeom } from '../anim/gaitKinematics';
 import type { BodyProfile } from './body';
 import { MATERIALS, type Outfit } from './outfit';
-import { add, bendAt, clamp, hn, len, lerp, lightOf, mixc, mul, norm, perp, shadeEdges, shadeOf, smoothClosed, smoothThrough, sub, tubePath, tubeSides, type Ctx, type P, type TubeNode } from './geom';
+import { cylShade, withA, mix2, add, bendAt, clamp, hn, len, lerp, lightOf, mixc, mul, norm, perp, shadeEdges, shadeOf, smoothClosed, smoothThrough, sub, tubePath, tubeSides, type Ctx, type P, type TubeNode } from './geom';
 
 export interface FigureGeo {
   headC: P; headUp: P; headR: number; neck: P; torsoUp: P; neckW: number;
@@ -77,7 +77,7 @@ export function drawVectorFigure(ctx: Ctx, pose: SkeletonPose, body: BodyProfile
     let sides: [P[], P[]] = [[], []];
     const path = () => { sides = tubePath(ctx, nodes, false); };
     ctx.fillStyle = col; path(); ctx.fill();
-    shadeEdges(ctx, path, sides[1], det > 0.4 ? sides[0] : null, body.kneeW * 0.7, col, far ? 1.2 : 1);
+    { const m0 = mix2(l.root, l.joint, 0.5), tn = perp(norm(sub(l.end, l.root))), w = body.thighW + legW; cylShade(ctx, path, add(m0, mul(tn, -w * 0.6)), add(m0, mul(tn, w * 0.6)), col, far ? 1.1 : 0.9); }
     if (det > 0.35) {
       // záhyby pod kolenem (jen v ohybu, pevná místa), zesílené koleno u dětí
       ctx.save(); path(); ctx.clip();
@@ -146,7 +146,7 @@ export function drawVectorFigure(ctx: Ctx, pose: SkeletonPose, body: BodyProfile
     let sides: [P[], P[]] = [[], []];
     const path = () => { sides = tubePath(ctx, nodes, false); };
     ctx.fillStyle = col; path(); ctx.fill();
-    shadeEdges(ctx, path, sides[1], det > 0.4 ? sides[0] : null, body.armW * 0.55, col, far ? 1.2 : 1);
+    { const m0 = mix2(a.root, a.joint, 0.6), tn = perp(norm(sub(a.end, a.root))), w = body.armW + e; cylShade(ctx, path, add(m0, mul(tn, -w * 0.62)), add(m0, mul(tn, w * 0.62)), col, far ? 1.1 : 0.9); }
     if (det > 0.35) {
       ctx.save(); path(); ctx.clip(); ctx.lineCap = 'round';
       // prošívání rukávu (péřová): komory kolmo na osu, pevně na délce článku
@@ -208,11 +208,11 @@ export function drawVectorFigure(ctx: Ctx, pose: SkeletonPose, body: BodyProfile
     const lows = of.top.length > 0.2 ? [lowLv] : [hemLv];
     pts.push(F(lows[0], (of.top.length > 0.2 ? Rx(0) : skirtSides(hemLv)[1])));
     for (const lv of [0.2, 0.42, 0.6, 0.72]) pts.push(F(lv, Rx(lv) + scallop(lv)));
-    const sr = F(shLv, shR), srTop = add(sr, mul(u, capR * 0.95));
-    pts.push(add(sr, mul(n, capR * 0.9)), add(srTop, mul(n, capR * 0.35)));
-    pts.push(F(1.0, offN(Nk) + body.neckR + 1.6), F(1.02, offN(Nk) - body.neckR - 1.6));
-    const sl = F(shLv, shL), slTop = add(sl, mul(u, capR * 0.95));
-    pts.push(add(slTop, mul(n, -capR * 0.35)), add(sl, mul(n, -capR * 0.9)));
+    // ramena: zaoblená kopule nad kloubem, svah k límci (ne vodorovná hrana)
+    const sr = F(shLv, shR), sl = F(shLv, shL), nk = offN(Nk), ns = body.neckR + 1.4 + ease * 0.3;
+    pts.push(add(add(sr, mul(n, capR * 0.85)), mul(u, -capR * 0.15)), add(add(sr, mul(n, capR * 0.3)), mul(u, capR * 0.72)), F(lvl(Nk) - 0.06, lerp(shR, nk + ns, 0.55)));
+    pts.push(F(lvl(Nk) - 0.005, nk + ns), F(lvl(Nk) + 0.005, nk - ns));
+    pts.push(F(lvl(Nk) - 0.06, lerp(shL, nk - ns, 0.55)), add(add(sl, mul(n, -capR * 0.3)), mul(u, capR * 0.72)), add(add(sl, mul(n, -capR * 0.85)), mul(u, -capR * 0.15)));
     for (const lv of [0.72, 0.6, 0.42, 0.2]) pts.push(F(lv, Lx(lv) - scallop(lv)));
     pts.push(F(lows[0], (of.top.length > 0.2 ? Lx(0) : skirtSides(hemLv)[0])));
     if (of.top.length <= 0.2) { const [l, r] = skirtSides(hemLv); pts.splice(pts.length, 0, F(hemLv - 0.015, lerp(l, r, 0.5))); void r; }
@@ -267,6 +267,7 @@ export function drawVectorFigure(ctx: Ctx, pose: SkeletonPose, body: BodyProfile
     const sPath = () => roundPoly(hull!, 2.2);
     if (hull) {
       ctx.fillStyle = col; sPath(); ctx.fill();
+      { const xs2 = hull.map((p) => p.x), yh = (H.y + Math.max(...hull.map((p) => p.y))) / 2; cylShade(ctx, sPath, { x: Math.min(...xs2), y: yh }, { x: Math.max(...xs2), y: yh }, col, 0.85); }
       // sukně kabátu: stín na zadní straně, záhyb od kolena ke lemu (podle rozkročení), těžký lem
       const hb = hull.filter((p) => p.y > H.y + 1).sort((a, b) => a.x - b.x);
       shadeEdges(ctx, sPath, hb.length ? [F(0, Lx(0)), hb[0]] : null, null, body.thighW * 0.5, col, 1);
@@ -290,8 +291,9 @@ export function drawVectorFigure(ctx: Ctx, pose: SkeletonPose, body: BodyProfile
       if (hm.length >= 2) { ctx.strokeStyle = shadeOf(col, 0.42); ctx.lineWidth = 0.9; ctx.beginPath(); ctx.moveTo(hm[0].x + 1.5, hemY - 0.4); ctx.lineTo(hm[hm.length - 1].x - 1.5, hemY - 0.4); ctx.stroke(); }
     }
     ctx.fillStyle = col; gPath(); ctx.fill();
-    // stín: zadní strana a spodek, akcent: přední horní část
-    shadeEdges(ctx, gPath, gpts.slice(gpts.length - 9), det > 0.4 ? gpts.slice(3, 9) : null, body.chest * 0.55, col);
+    // objem trupu: válcové stínování napříč + stín pod límcem / v podpaží
+    cylShade(ctx, gPath, F(0.6, Lx(0.6) - 1), F(0.6, Rx(0.6) + 1), col, 0.9);
+    { ctx.save(); gPath(); ctx.clip(); const g2 = ctx.createRadialGradient(Nk.x, Nk.y, 0, Nk.x, Nk.y, body.neckR * 4); g2.addColorStop(0, withA(shadeOf(col, 0.5), 0.45)); g2.addColorStop(1, withA(shadeOf(col, 0.5), 0)); ctx.fillStyle = g2; ctx.fillRect(Nk.x - 20, Nk.y - 20, 40, 40); ctx.restore(); }
     ctx.save(); gPath(); ctx.clip(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     // barevné panely (sportovní): ramenní sedlo v podpůrné barvě
     if (of.top.panels) { ctx.fillStyle = C.support; ctx.beginPath(); smoothThrough(ctx, [F(0.78, shL - capR * 2), F(0.86, offN(Nk)), F(0.78, shR + capR * 2)], true); ctx.lineTo(F(1.3, shR + 10).x, F(1.3, shR + 10).y); ctx.lineTo(F(1.3, shL - 10).x, F(1.3, shL - 10).y); ctx.closePath(); ctx.fill(); ctx.fillStyle = C.accent; ctx.beginPath(); smoothThrough(ctx, [F(0.76, shL - capR * 2), F(0.84, offN(Nk)), F(0.76, shR + capR * 2)], true); smoothThrough(ctx, [F(0.78, shR + capR * 2), F(0.86, offN(Nk)), F(0.78, shL - capR * 2)], false); ctx.closePath(); ctx.fill(); }
@@ -323,6 +325,9 @@ export function drawVectorFigure(ctx: Ctx, pose: SkeletonPose, body: BodyProfile
           ctx.fillStyle = mixc(C.accent, '#1e1b1a', 0.35);
           const rows = of.top.closure === 'double' ? [-2.2, 1.2] : [-0.6];
           for (const lv of [0.6, 0.42, 0.24, 0.06, -0.12].filter((x) => x > hemLv + 0.05)) for (const dx of rows) { const p = F(lv, cfOff(lv) + dx); ctx.beginPath(); ctx.arc(p.x, p.y, 0.75, 0, Math.PI * 2); ctx.fill(); }
+        } else if (of.top.closure === 'toggle') {
+          ctx.strokeStyle = mixc(C.support, '#efe6d6', 0.4); ctx.lineWidth = 0.9; ctx.lineCap = 'round';
+          for (const lv of [0.62, 0.42, 0.22]) { const p = F(lv, cfOff(lv)); ctx.beginPath(); ctx.moveTo(p.x - 1.4, p.y); ctx.lineTo(p.x + 1.4, p.y + 0.2); ctx.stroke(); }
         } else if (of.top.closure === 'zip') {
           ctx.strokeStyle = mixc(col, '#cfcac0', 0.35); ctx.lineWidth = 0.5; ctx.beginPath(); smoothThrough(ctx, [F(0.98, cfOff(0.98) + 0.4), F(0.4, cfOff(0.4) + 0.4), F(hemLv, cfOff(hemLv) + 0.4)], true); ctx.stroke();
           const zp = F(0.9, cfOff(0.9) + 0.6); ctx.fillStyle = '#d9d4cc'; ctx.fillRect(zp.x - 0.4, zp.y, 0.8, 1.8);
@@ -458,8 +463,36 @@ export function drawVectorFigure(ctx: Ctx, pose: SkeletonPose, body: BodyProfile
     if (det > 0.5 && hair.style !== 'bald') { ctx.save(); ctx.beginPath(); smoothClosed(ctx, capF, 0.85); ctx.clip(); ctx.strokeStyle = lightOf(hairCol, 0.25); ctx.globalAlpha = 0.5; ctx.lineWidth = R * 0.08; ctx.beginPath(); smoothThrough(ctx, [HP(-0.5, -0.75), HP(0.1, -0.95), HP(0.55, -0.75)], true); ctx.stroke(); ctx.restore(); ctx.globalAlpha = 1; }
   };
 
+  // -------------------------------------------------- tašky a batoh (vlastní úchyty, tlumený kyv)
+  const bag = of.bag ?? 'none';
+  const swing = (lag: number) => 0.16 * (pose.legs[1].joint.x - pose.legs[0].joint.x) / Math.max(8, legL * 0.3) * Math.cos(lag); // kyv od kroku (pánev → taška), ve stoji odezní s krokem
+  const bagCol = mixc(C.accent, '#2a1c16', 0.25);
+  const drawBackpackBack = () => {
+    // batoh za tělem (zepředu jen okraj u zadní strany) / na zádech (zezadu) – sedí na objemu bundy
+    if (bag !== 'backpack') return;
+    const w = (Rx(0.6) - Lx(0.6)) * (back ? 0.78 : 0.5), top = 0.9, bot = 0.25, cx = back ? (Lx(0.6) + Rx(0.6)) / 2 : Lx(0.6) - ease * 0.4;
+    const path = () => { ctx.beginPath(); smoothClosed(ctx, [F(top, cx - w / 2), F(top + 0.04, cx), F(top, cx + w / 2), F(bot, cx + w / 2 + 0.5), F(bot - 0.03, cx), F(bot, cx - w / 2 - 0.5)], 0.7); };
+    ctx.fillStyle = bagCol; path(); ctx.fill(); cylShade(ctx, path, F(0.55, cx - w / 2), F(0.55, cx + w / 2), bagCol, 0.8);
+    if (back && det > 0.3) { ctx.strokeStyle = shadeOf(bagCol, 0.45); ctx.lineWidth = 0.6; ctx.beginPath(); smoothThrough(ctx, [F(0.55, cx - w * 0.42), F(0.53, cx), F(0.55, cx + w * 0.42)], true); ctx.stroke(); ctx.fillStyle = shadeOf(bagCol, 0.15); ctx.beginPath(); smoothClosed(ctx, [F(0.5, cx - w * 0.3), F(0.5, cx + w * 0.3), F(0.32, cx + w * 0.32), F(0.32, cx - w * 0.32)], 0.5); ctx.fill(); }
+  };
+  const drawBagStraps = () => {
+    if (bag === 'backpack' && !back) { ctx.strokeStyle = shadeOf(bagCol, 0.1); ctx.lineWidth = 1.6; ctx.lineCap = 'round'; for (const sx of [shL + capR * 0.3, shR - capR * 0.5]) { const a0 = F(lvl(Nk) - 0.04, lerp(sx, offN(Nk), 0.45)), a1 = F(0.62, sx); ctx.beginPath(); ctx.moveTo(a0.x, a0.y); ctx.quadraticCurveTo(F(0.85, sx).x, F(0.85, sx).y, a1.x, a1.y); ctx.stroke(); } }
+    if (bag === 'shoulder' || bag === 'tote') {
+      // přes rameno / křížem: popruh z ramene, taška u boku s tlumeným kyvem (za stehnem neprochází – drží se vně boku)
+      const cross = bag === 'shoulder', sh0 = F(shLv + 0.02, back ? shR - capR * 0.2 : shL + capR * 0.2), sideX = back ? Rx(0) + ease : Lx(0) - ease * 0.6;
+      const a = swing(0.6), hang = F(-0.05, sideX - 1), b0 = { x: hang.x + Math.sin(a) * 6, y: hang.y + (1 - Math.cos(a)) * 6 };
+      ctx.strokeStyle = shadeOf(bagCol, 0.2); ctx.lineWidth = 0.9; ctx.beginPath(); ctx.moveTo(sh0.x, sh0.y);
+      if (cross && !back) { const mid = F(0.55, lerp(sideX, Rx(0.55), 0.5)); ctx.quadraticCurveTo(mid.x, mid.y, b0.x + 2, b0.y - 2); } else ctx.lineTo(b0.x, b0.y - 2); ctx.stroke();
+      const bw = bag === 'tote' ? 9 : 7, bh = bag === 'tote' ? 9 : 6;
+      const path = () => { ctx.beginPath(); smoothClosed(ctx, [{ x: b0.x - bw / 2, y: b0.y - 2 }, { x: b0.x + bw / 2, y: b0.y - 2 }, { x: b0.x + bw / 2 + 0.6, y: b0.y + bh }, { x: b0.x - bw / 2 - 0.4, y: b0.y + bh }], 0.35); };
+      ctx.fillStyle = bagCol; path(); ctx.fill(); cylShade(ctx, path, { x: b0.x - bw / 2, y: b0.y }, { x: b0.x + bw / 2, y: b0.y }, bagCol, 0.8);
+      if (det > 0.4) { ctx.strokeStyle = shadeOf(bagCol, 0.4); ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(b0.x - bw / 2 + 0.5, b0.y + 0.6); ctx.lineTo(b0.x + bw / 2 - 0.5, b0.y + 0.6); ctx.stroke(); }
+    }
+  };
+
   // -------------------------------------------------- pořadí vrstev
   const hands: FigureGeo['hands'] = [null, null];
+  if (!back) drawBackpackBack();
   hands[0] = drawArm(0);
   drawHairBack();
   drawBackPanel();
@@ -468,6 +501,8 @@ export function drawVectorFigure(ctx: Ctx, pose: SkeletonPose, body: BodyProfile
   if (!back) drawCollar();
   drawTorso();
   if (back) drawCollar();
+  if (back) drawBackpackBack();
+  drawBagStraps();
   accDraw?.('scarf');
   if (!back) drawNeckSkin();
   drawHead();

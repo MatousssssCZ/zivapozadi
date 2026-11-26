@@ -16,6 +16,24 @@ const ADULT = lib('painted-parts-cg'), CHILD = lib('painted-parts-child');
 const ids = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 const bones = process.argv.includes('--kostra');
 const list = OUTFITS.filter((o) => !ids.length || ids.includes(o.id));
+if (process.argv.includes('--katalog')) {
+  // katalog: mřížka outfitů, každý ¾ zepředu v kroku + ¾ zezadu ve stoji
+  const P2 = Number(process.env.PPU ?? 2.2), cw = 62 * P2, ch = 150 * P2, per = 8, rows = Math.ceil(list.length / per);
+  const cc = createCanvas(cw * 2 * per, ch * rows), xx = cc.getContext('2d') as unknown as CanvasRenderingContext2D;
+  xx.fillStyle = '#dfe3ec'; xx.fillRect(0, 0, cc.width, cc.height);
+  list.forEach((of, i) => {
+    const body = bodyOf(i * 7 + 3, of.age), tpl = templateFor(of.age === 'child' ? CHILD : ADULT, body), g = footGeomOf(tpl);
+    for (const [k, view, ph, wb] of [[0, 'front3q', 0.25, 1], [1, 'back3q', 0, 0]] as const) {
+      const pose = skeletonPose(tpl, view, false, { dir: view === 'front3q' ? 'SE' : 'NE', walkPhase: ph, walkBlend: wb, idleTime: 3, action: null } as never, false, DEFAULT_MOTION, 1);
+      xx.save(); xx.translate(((i % per) * 2 + k) * cw + cw / 2, (Math.floor(i / per) + 1) * ch - 8 * P2); xx.scale(P2, P2);
+      xx.fillStyle = 'rgba(60,70,100,0.18)'; xx.beginPath(); xx.ellipse(0, 0, 17, 5, 0, 0, Math.PI * 2); xx.fill();
+      drawVectorFigure(xx, pose, body, of, { view, foot: g, detail: 1, seed: i, t: 0 }); xx.restore();
+    }
+    xx.fillStyle = '#333'; xx.font = `${4.2 * P2}px sans-serif`; xx.fillText(`${i + 1}. ${of.label}`, (i % per) * 2 * cw + 4, Math.floor(i / per) * ch + 6 * P2);
+  });
+  const out = process.env.OUT ?? 'grafika/vektorove-postavy-katalog.png';
+  await fs.writeFile(out, cc.toBuffer('image/png')); console.log(out); process.exit(0);
+}
 const PPU = Number(process.env.PPU ?? 3);
 const cols: { view: 'front3q' | 'back3q'; ph: number; walk: number; label: string; sit?: string }[] = [
   { view: 'front3q', ph: 0, walk: 0, label: 'stoj' }, ...[0, 0.25, 0.5, 0.75].map((ph) => ({ view: 'front3q' as const, ph, walk: 1, label: `krok ${ph}` })),

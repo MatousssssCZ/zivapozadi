@@ -95,3 +95,19 @@ export function shadeEdges(ctx: Ctx, pathFn: () => void, shadowEdge: P[] | null,
 export const hn = (i: number, k = 0) => { const s = Math.sin(i * 127.1 + k * 311.7) * 43758.5453; return s - Math.floor(s); };
 /** Úhel ohybu v kloubu (0 = rovně, π = zcela složeno). */
 export const bendAt = (a: P, j: P, b: P) => { const u = norm(sub(a, j)), v = norm(sub(b, j)); return Math.PI - Math.acos(clamp(u.x * v.x + u.y * v.y, -1, 1)); };
+
+/**
+ * Válcové stínování napříč tvarem (a → b přes šířku): zadní strana do studeného stínu, světlejší střed,
+ * tlumený teplý akcent u přední hrany, jemné ztmavení na protější hraně (objem bez kreslení obrysu).
+ */
+export function cylShade(ctx: Ctx, pathFn: () => void, a: P, b: P, base: string, k = 1) {
+  const g = ctx.createLinearGradient(a.x, a.y, b.x, b.y);
+  const sh = shadeOf(base, 0.42), li = lightOf(base, 0.3);
+  g.addColorStop(0, withA(sh, 0.55 * k)); g.addColorStop(0.3, withA(sh, 0.12 * k)); g.addColorStop(0.55, withA(li, 0)); g.addColorStop(0.75, withA(li, 0.35 * k)); g.addColorStop(1, withA(sh, 0.2 * k));
+  ctx.save(); pathFn(); ctx.fillStyle = g; ctx.fill(); ctx.restore();
+}
+/** rgb(...) / #hex → rgba s alfou */
+export function withA(c: string, a: number): string {
+  const m = c.startsWith('rgb') ? c.match(/\d+/g)!.map(Number) : (() => { const n = parseInt(c.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; })();
+  return `rgba(${m[0]},${m[1]},${m[2]},${a.toFixed(3)})`;
+}
