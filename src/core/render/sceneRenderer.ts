@@ -24,7 +24,11 @@ import { drawSnowSurface, snowItems } from './snowRender';
 import type { SimState } from '../sim/types';
 import { lidOpenness } from '../sim/simulation';
 import { FOOTPRINT_LIFE, FOOTPRINT_FADE } from '../sim/types';
-import { getCanvasFactory, drawRig } from './rigRenderer';
+import { getCanvasFactory, drawRig, type AccPart } from './rigRenderer';
+import { drawHat, drawPompom, drawScarf, drawMitten, hatTop, scarfKnots, stepAccessoryPhysics, TAIL_SEGS } from './accessories';
+import { windFactor } from '../sim/environment';
+import { SIM_DT } from '../sim/types';
+import { drawVectorSled, sledRingScreen, drawRope } from './sledVector';
 import { depthScaleAt, objectLocalToScene } from '../scene/geometry';
 import { hashNoise } from '../math/rng';
 import { clamp, smoothstep } from '../math/vec';
@@ -352,7 +356,7 @@ function drawAgentBody(ctx: Ctx, project: ProjectFile, sim: Simulation, a: Agent
     if (cane && cane.hand === 0) drawCane(ctx, cane);
     const heldFn = held && !top ? () => drawHeld(ctx, held, cv, a) : undefined;
     const nearCane = cane && cane.hand === 1 ? () => drawCane(ctx, cane) : undefined;
-    drawRig(ctx, cv.rig, images, m.rigLibraryDir ?? '', softFar(m.rigLibrary.bodyTemplates[0]?.farShade ?? 0.8), heldFn || nearCane ? () => { nearCane?.(); heldFn?.(); } : undefined, snowColor);
+    drawRig(ctx, cv.rig, images, m.rigLibraryDir ?? '', softFar(m.rigLibrary.bodyTemplates[0]?.farShade ?? 0.8), heldFn || nearCane ? () => { nearCane?.(); heldFn?.(); } : undefined, snowColor, accessoryDrawer(ctx, project, sim, a, cv));
     // telefon při pohledu zezadu: displej před hlavou je vidět přes rameno → kreslit navrch
     if (held && top) drawHeld(ctx, held, cv);
   } else if (m.backend === 'procedural-test-figure') {
@@ -362,6 +366,40 @@ function drawAgentBody(ctx: Ctx, project: ProjectFile, sim: Simulation, a: Agent
     ctx.fillStyle = 'rgba(120,120,140,0.6)'; ctx.fillRect(-12, -m.height, 24, m.height);
   }
   ctx.restore();
+}
+
+/**
+ * Vektorové doplňky postavy (čepice, bambule, šála, palčáky) – kreslí se v lokálních souřadnicích postavy,
+ * fyzika (konce šály, bambule) běží ve scéně: lokální bod → scéna = (x·±scale + cv.x, y·scale + cv.y).
+ */
+function accessoryDrawer(ctx: Ctx, project: ProjectFile, sim: Simulation, a: AgentState, cv: ReturnType<typeof characterVisual>): ((p: AccPart) => void) | undefined {
+  const acc = cv.rig?.acc; if (!acc) return undefined;
+  const { spec, geo } = acc, sg = cv.mirror ? -1 : 1, k = cv.scale;
+  const toS = (p: { x: number; y: number }) => ({ x: cv.x + p.x * sg * k, y: cv.y + p.y * k });
+  const toL = (p: { x: number; y: number }) => ({ x: (p.x - cv.x) / (sg * k), y: (p.y - cv.y) / k });
+  const ppm = k / Q, t = sim.state.step * SIM_DT;
+  const env = project.scene.environment, wind = (project.scene.snowfall?.wind ?? 0.1) * 5 * windFactor(project.seed, t, !!env?.gusts); // m/s
+  const knots = scarfKnots(spec, geo), seg = ((spec.tailLen * (geo.back ? 0.3 : 0.4)) / Q / TAIL_SEGS) * (geo.neckW / 11);
+  const top = spec.hat === 'pompom' ? hatTop(spec, geo) : null;
+  // rovina hrudi (ve scéně): normála dopředu kolmo na trup, bod u uzlu
+  const fwdL = { x: -geo.torsoUp.y, y: geo.torsoUp.x }; if (fwdL.x < 0) { fwdL.x = -fwdL.x; fwdL.y = -fwdL.y; }
+  const chestN = geo.back ? { x: -fwdL.x * sg, y: -fwdL.y } : { x: fwdL.x * sg, y: fwdL.y };
+  const ph = stepAccessoryPhysics(sim, a.id, t, {
+    knots: knots.map(toS), segPx: knots.map((_, i) => seg * k * (i ? 0.86 : 1)), top: top ? toS(top) : null,
+    up: { x: geo.headUp.x * sg, y: geo.headUp.y }, ppm, chestN, chestP: knots.length ? toS({ x: knots[0].x - (geo.back ? -1 : 1) * geo.neckW * 0.05, y: knots[0].y }) : { x: 0, y: 0 }, wind,
+  });
+  const far = 1;
+  return (part) => {
+    if (part === 'hat') {
+      drawHat(ctx, spec, geo, far);
+      if (top && ph.pom) drawPompom(ctx, spec, toL(ph.pom.p), geo.headR * 0.4, far);
+      else if (spec.hat === 'earflap') drawPompom(ctx, spec, hatTop(spec, geo), geo.headR * 0.3, far);
+    } else if (part === 'scarf') drawScarf(ctx, spec, geo, ph.tails.map((tl) => tl.p.map(toL)), far);
+    else if (spec.mittens) {
+      const i = part === 'mitten0' ? 0 : 1, hd = geo.hands[i];
+      if (hd && !(a.holdingKind === 'mitten' && i === 1)) drawMitten(ctx, spec, hd, i === 0 ? 0.82 : 1, geo.back ? -1 : 1);
+    }
+  };
 }
 
 /** Kontext světel pro aktuální snímek (objekty se zapuštěním a čas). */
@@ -845,7 +883,19 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
     if (sim.state.clearing?.snow) items.push(...snowItems(ctx, project, sim.state.clearing.snow, opts.time, sprite('snow_pile'), sprite('snowball')));
     // sáňky s dítětem (B02) + provázek od ruky rodiče k úchytu
     const sl = sim.state.sled;
-    if (sl?.phase === 'run' && sl.center) {
+    if (sl?.phase === 'run' && sl.center && project.sled?.riderId && sl.S) {
+      // vektorové saně / boby (3D model) + provaz s prověšením; jezdce kreslí běžná vrstva postav
+      const par = sim.state.agents.find((x) => x.id === project.sled?.parentId), kind = project.sled.kind ?? 'sane';
+      const S = sl.S, hd = sl.wang ?? 0, c = toScreen(cam, S), ppm = depthScaleAt(sc.depth, c.y) / Q;
+      items.push({ key: c.y, tie: 12500, draw: () => drawVectorSled(ctx, cam, S, hd, kind, sl.dist ?? 0, ppm, kind === 'boby' ? '#c8302c' : undefined) });
+      if (par && !par.hidden) {
+        const oc = sim.characterOf(par.id), om = oc ? sim.manifests[oc.assetId] : undefined;
+        if (oc && om) {
+          const cv = characterVisual(par, om, oc, sc), hand = localToScene(cv, cv.grip), ring = sledRingScreen(cam, S, hd, kind);
+          items.push({ key: Math.max(par.pos.y, c.y) + 0.1, tie: 12501, draw: () => drawRope(ctx, hand, ring, sl.ropeK ?? 1, ppm) });
+        }
+      }
+    } else if (sl?.phase === 'run' && sl.center) {
       const par = sim.state.agents.find((x) => x.id === project.sled?.parentId);
       const c = sl.center, ppm = depthScaleAt(sc.depth, c.y) / Q;
       const cosA = Math.cos(sl.angle ?? 0), dir = cosA < 0 ? -1 : 1, sx = dir * Math.max(0.4, Math.abs(cosA));

@@ -112,7 +112,8 @@ export const fallPhaseAt = (v: FallVariant, t: number): FallPhase => sampleFall(
  * `change`: předklon, jedna noha zvednutá, obě ruce u boty (šněrování), v polovině druhá noha.
  * Klíč je vůči bodu na zemi pod pánví (místo k sezení); prolíná se vahou (sednutí / vstávání).
  */
-export function benchPose(kind: 'rest' | 'change' | 'kneel' | 'bend' | 'squat', t: number, dur: number, r?: number): FallKey {
+export function benchPose(kind: 'rest' | 'change' | 'kneel' | 'bend' | 'squat' | 'sled', t: number, dur: number, r?: number): FallKey {
+  if (kind === 'sled') return sledRidePose(t, r ?? 0);
   if (kind === 'kneel' || kind === 'bend' || kind === 'squat') return workPose(kind, t, r);
   const SEAT = 0.56; // pánev na sedáku (0,45 m + stehna) v délkách nohy
   const base: FallKey = { t: 0, ph: 'pause', hip: W(-0.12, SEAT), pitch: -4, head: 4, feet: [W(0.38, 0, -0.1), W(0.44, 0, 0.1)], hands: [W(0.22, 0.6, -0.15), W(0.26, 0.6, 0.15)], c: ['s', 'f0', 'f1'] };
@@ -147,5 +148,20 @@ export function workPose(kind: 'kneel' | 'bend' | 'squat', t: number, r = 0.2): 
     t: 0, ph: 'pause', hip: W(-0.09, 0.5 + 0.01 * a0), pitch: 11 + 2 * a0 + 5 * scoop, head: -14 + 2 * a1, roll: 1.5 * a0,
     feet: [W(0.02, 0, -0.17), W(0.08, 0, 0.17)],
     hands: [hand(0, a0), hand(1, a1)], c: ['f0', 'f1'],
+  };
+}
+
+/**
+ * Jezdec sedící na saních: pánev na sedáku (výška saní), nohy natažené vpřed s mírně pokrčenými koleny,
+ * paty na přední části saní, ruce drží boční hrany (madla). Trup se v tahu mírně zakloní (setrvačnost –
+ * `r` = podélné zrychlení saní v m/s², kladné = rozjezd) a při dojíždění nakloní dopředu.
+ */
+export function sledRidePose(t: number, accel: number): FallKey {
+  const lean = Math.max(-1, Math.min(1, accel / 1.2));
+  const sway = Math.sin(t * 0.7) * 1.5;
+  return {
+    t: 0, ph: 'pause', hip: W(-0.06, 0.5), pitch: -6 - 9 * lean + sway * 0.3, head: 6 + 4 * lean + sway, roll: sway * 0.4,
+    feet: [W(0.62, 0.3, -0.09, 25), W(0.68, 0.3, 0.09, 25)],
+    hands: [W(0.12, 0.38, -0.24), W(0.16, 0.38, 0.24)], c: ['s'],
   };
 }

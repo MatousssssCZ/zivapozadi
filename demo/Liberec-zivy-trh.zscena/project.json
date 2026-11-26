@@ -3,8 +3,8 @@
   "formatVersion": 1,
   "meta": {
     "name": "Liberec – živý vánoční trh",
-    "createdAt": "2026-11-25T22:23:47.680Z",
-    "modifiedAt": "2026-11-25T22:23:47.890Z",
+    "createdAt": "2026-11-26T00:23:14.970Z",
+    "modifiedAt": "2026-11-26T00:23:15.157Z",
     "appVersion": "0.1.0"
   },
   "seed": 2611,
@@ -7081,6 +7081,64 @@
       "activities": {}
     },
     {
+      "id": "kid_sane",
+      "name": "Dítě na sáňkách",
+      "assetId": "builtin_postava_dite",
+      "startNodeId": "n1",
+      "baseScale": 1,
+      "walkSpeed": 40,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": false,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-dite-v1",
+        "seed": 890280183,
+        "bodyTemplate": "child-cg",
+        "variants": {
+          "jacket": "jacket_coat_child",
+          "hat": "hat_beanie_child",
+          "scarf": "scarf_long_child",
+          "trousers": "trousers_child",
+          "boots": "boots_child",
+          "gloves": "gloves_child",
+          "head": "head_child"
+        },
+        "colors": {
+          "jacket": "hneda",
+          "hat": "tmave-seda",
+          "scarf": "vinova",
+          "gloves": "tmave-seda",
+          "trousers": "olivova",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 0.984,
+          "build": 1.038
+        },
+        "motion": {
+          "strideScale": 1.011,
+          "armSwing": 1.052,
+          "bob": 1.153,
+          "sway": 1.065,
+          "idleTempo": 1.005,
+          "lean": 0.757,
+          "speed": 0.932,
+          "phase": 0.248,
+          "armLag": 0.712,
+          "armLR": 0.986
+        },
+        "locks": []
+      },
+      "routine": "rider",
+      "activities": {}
+    },
+    {
       "id": "ch_lopata",
       "name": "Pracovník údržby",
       "assetId": "builtin_postava_cg",
@@ -7308,55 +7366,57 @@
   ],
   "sled": {
     "parentId": "ch_sane",
+    "riderId": "kid_sane",
+    "kind": "sane",
     "firstDelay": 75,
     "path": [
       {
         "x": -520,
-        "y": 1072
+        "y": 1074
       },
       {
         "x": -160,
-        "y": 1072
+        "y": 1074
       },
       {
         "x": 250,
-        "y": 1073
+        "y": 1075
       },
       {
-        "x": 520,
-        "y": 1070
+        "x": 560,
+        "y": 1072
       },
       {
-        "x": 680,
-        "y": 1062
+        "x": 700,
+        "y": 1066
       },
       {
-        "x": 760,
+        "x": 775,
         "y": 1048
       },
       {
-        "x": 740,
-        "y": 1032
+        "x": 750,
+        "y": 1028
       },
       {
-        "x": 640,
-        "y": 1030
+        "x": 650,
+        "y": 1024
       },
       {
-        "x": 470,
-        "y": 1040
+        "x": 520,
+        "y": 1034
       },
       {
         "x": 250,
-        "y": 1047
+        "y": 1042
       },
       {
         "x": -160,
-        "y": 1047
+        "y": 1044
       },
       {
         "x": -560,
-        "y": 1047
+        "y": 1044
       }
     ]
   },

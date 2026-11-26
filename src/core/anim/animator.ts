@@ -55,7 +55,7 @@ export interface AnimState {
   /** Bruslení: póza celého těla z cílů (rink.ts → skatePose), přebírá chůzi. */
   skate?: import('./fallPoses').FallKey | null;
   /** Sed na lavičce: odpočinek nebo přezouvání bruslí (čas, délka, váha prolnutí 0–1). */
-  sit?: { kind: 'rest' | 'change' | 'kneel' | 'bend' | 'squat'; r?: number; t: number; dur: number; w: number; from?: { x: number; y: number }; to?: { x: number; y: number } } | null;
+  sit?: { kind: 'rest' | 'change' | 'kneel' | 'bend' | 'squat' | 'sled'; r?: number; t: number; dur: number; w: number; from?: { x: number; y: number }; to?: { x: number; y: number } } | null;
   /** Na nohou jsou brusle (chůze po sněhu k brance / od ní) – kreslí se nůž. */
   bladesOn?: boolean;
 }

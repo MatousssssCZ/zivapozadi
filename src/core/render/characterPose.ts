@@ -10,6 +10,11 @@ import { resolveView } from '../anim/partLibrary';
 import { skeletonPose, viewForDirection, footGeomOf, type SkeletonPose, type ViewId, type PoseOptions, type Anchor } from '../anim/skeleton';
 import { depthScaleAt } from '../scene/geometry';
 import { assembleRig, scaledTemplate, type RigAssembly } from './rigRenderer';
+import { accessoriesOf } from './accessories';
+
+/** Vektorové doplňky (čepice, šála, palčáky) místo malovaných – výchozí zapnuto. */
+let vectorAccessories = true;
+export function setVectorAccessories(on: boolean) { vectorAccessories = on; }
 import type { Vec2 } from '../math/vec';
 import { hashString } from '../math/rng';
 import { ELDER_PROFILES } from '../anim/elderGait';
@@ -35,7 +40,7 @@ export function motionOf(agent: AgentState, m: MotionParams): MotionParams {
   return { ...m, lean: m.lean + p.leanDeg + e.dLean, armSwing: m.armSwing * p.armSwing, bob: m.bob * p.bob, sway: m.sway * 1.15 };
 }
 
-export interface CharacterLook { baseScale: number; appearance?: CharacterAppearance }
+export interface CharacterLook { baseScale: number; appearance?: CharacterAppearance; routine?: string }
 
 /**
  * Jediný zdroj pravdy pro vizuální polohu postavy a jejích úchopových bodů
@@ -56,7 +61,7 @@ export function characterVisual(agent: AgentState, m: CharacterManifest, look: C
     const rv = resolveView(tpl, req.view);
     const stpl = scaledTemplate(tpl, app.proportions);
     const pose = skeletonPose(stpl, rv.use, req.mirror, agent.anim, agent.holding !== null && agent.holdingKind !== 'bag' && agent.holdingKind !== 'mitten' && agent.holdingKind !== 'shovel', motionOf(agent, app.motion), hashString(agent.id), { ...groundOptions(agent, x, y, scale, req.mirror, cam), snowSink: (agent.snowDepth ?? 0) > 0 && agent.anim ? (agent.snowDepth ?? 0) / Q : 0 });
-    const rig = assembleRig(lib, tpl, app, pose, rv.use);
+    const rig = assembleRig(lib, tpl, app, pose, rv.use, vectorAccessories && look.routine !== 'baker' ? accessoriesOf(app, /child/.test(tpl.id)) : null);
     // závěj přes spodek zabořené boty (kreslí se hned po botě; barvu dodá vykreslování z pozadí)
     // brusle: nůž pod podrážkou (pata → přednoží), výška držáku = BLADE_H délky nohy
     if (agent.anim.skate || agent.anim.bladesOn) {

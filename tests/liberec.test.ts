@@ -53,7 +53,7 @@ describe('Liberec – živý trh', () => {
         const par = sim.state.agents.find((x) => x.id === 'ch_sane')!, A = toWorld(cam, par.pos), R = toWorld(cam, sl.ring), C = toWorld(cam, sl.center);
         maxRope = Math.max(maxRope, Math.hypot(A.X - R.X, A.Z - R.Z));
         if (sl.center.x > 0 && sl.center.x < 1920 && !sim.sessionHost().isSnow(sl.center)) sledOffSnow++;
-        for (const x of sim.state.agents) if (!x.hidden && x.id !== par.id) { const P = toWorld(cam, x.pos); sledHit = Math.min(sledHit, Math.hypot(P.X - C.X, P.Z - C.Z)); }
+        for (const x of sim.state.agents) if (!x.hidden && x.id !== par.id && x.id !== lp.project.sled?.riderId) { const P = toWorld(cam, x.pos); sledHit = Math.min(sledHit, Math.hypot(P.X - C.X, P.Z - C.Z)); }
       }
       if (i % 10) continue;
       const vis = sim.state.agents.filter((a) => !a.hidden).map((a) => toWorld(cam, a.pos));
@@ -73,7 +73,7 @@ describe('Liberec – živý trh', () => {
     expect(msgs.filter((m) => m.includes('nakoupil')).length).toBeGreaterThanOrEqual(3);
     expect(msgs.filter((m) => m.includes('nakoupil') || m.includes('bez nákupu')).length).toBeGreaterThanOrEqual(6); // dokončené návštěvy stánků (hluboká scéna: cesta k pultu trvá desítky s)
     // rodiny: dítě (dětská šablona, ~70 % výšky) chodí s rodičem a občas si jdou hrát na sníh
-    const kids = sim.state.agents.filter((a) => sim.isChild(a));
+    const kids = sim.state.agents.filter((a) => sim.isChild(a) && a.id !== 'kid_sane'); // (dítě na sáňkách se nepočítá)
     expect(kids.length).toBe(5);
     expect(msgs.some((m) => m.includes('jde s dítětem'))).toBe(true);
     expect(sim.state.agents.filter((a) => (a.stuckT ?? 0) > 20).map((a) => a.name)).toEqual([]);

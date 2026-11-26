@@ -7,6 +7,7 @@ import type { Vec2 } from '../math/vec';
 import type { SkeletonPose, SkeletonTemplate, ViewId } from '../anim/skeleton';
 import type { BodyTemplateDef, CharacterAppearance, GroupId, PartDef, PartLibrary, PartSlot } from '../anim/partLibrary';
 import type { AssetImages, ImageLike } from './sceneRenderer';
+import type { AccessoryGeo, AccessorySpec } from './accessories';
 
 // ---------------------------------------------------------------- 2D afinní matice [a b c d e f]
 export type Mat = [number, number, number, number, number, number];
@@ -71,6 +72,8 @@ export interface RigAssembly {
   snowLips?: [SnowLip | null, SnowLip | null];
   /** nůž brusle pod botou (lokálně): pata, špička, výška držáku */
   blades?: [{ heel: { x: number; y: number }; toe: { x: number; y: number }; drop: number }, { heel: { x: number; y: number }; toe: { x: number; y: number }; drop: number }];
+  /** vektorové doplňky: popis, geometrie a pořadí kreslení (vkládají se mezi malované díly) */
+  acc?: { spec: AccessorySpec; geo: AccessoryGeo; order: { hat: number; scarf: number; mitten: [number, number] } };
 }
 
 const GROUP_OF: Record<PartSlot, GroupId> = { torso: 'jacket', upperArm: 'jacket', forearm: 'jacket', hat: 'hat', scarf: 'scarf', thigh: 'trousers', shin: 'trousers', foot: 'boots', hand: 'gloves', head: 'head' };
@@ -99,7 +102,7 @@ export function partIndex(lib: PartLibrary): Map<string, PartDef> {
   return idx;
 }
 
-export function assembleRig(lib: PartLibrary, tpl: BodyTemplateDef, app: CharacterAppearance, pose: SkeletonPose, view: ViewId): RigAssembly {
+export function assembleRig(lib: PartLibrary, tpl: BodyTemplateDef, app: CharacterAppearance, pose: SkeletonPose, view: ViewId, acc?: AccessorySpec | null): RigAssembly {
   const idx = partIndex(lib);
   const s = app.proportions.height / lib.pxPerUnit;
   const bw = app.proportions.build;
@@ -137,12 +140,13 @@ export function assembleRig(lib: PartLibrary, tpl: BodyTemplateDef, app: Charact
   const head = part('head');
   const mHead = head ? frame(head, pose.neck, pose.torsoAngle + pose.headTilt) : I;
   push(head, mHead, null);
-  const hat = part('hat');
+  const hat = acc ? undefined : part('hat');
   if (hat && head) { const a = head.anchors.hat; if (a) push(hat, mul(mHead, T(a.x - hat.pivot.x, a.y - hat.pivot.y)), null); else missing.push('kotva hlavy „hat“'); }
-  const scarf = part('scarf');
+  const scarf = acc ? undefined : part('scarf');
   if (scarf && torso) { const a = torso.anchors.scarf; if (a) push(scarf, mul(mTorso, T(a.x - scarf.pivot.x, a.y - scarf.pivot.y)), null); else missing.push('kotva trupu „scarf“'); }
   // končetiny (0 = vzdálená, 1 = blízká)
   let grip: Vec2 = pose.handR;
+  const hands: AccessoryGeo['hands'] = [null, null];
   for (let i = 0; i < 2; i++) {
     const side = i === 0 ? 'far' : 'near';
     const leg = pose.legs[i], arm = pose.arms[i];
@@ -156,6 +160,8 @@ export function assembleRig(lib: PartLibrary, tpl: BodyTemplateDef, app: Charact
     if (hand) {
       const mh = frame(hand, arm.end, faAng);
       push(hand, mh, side);
+      const d = { x: Math.cos(faAng), y: Math.sin(faAng) };
+      hands[i] = { E: arm.end, d, L: hand.trim.h * s * 0.82, W: hand.trim.w * s * 0.98 };
       if (i === 1 && hand.anchors.grip) grip = apply(mh, hand.anchors.grip);
     }
     joints.push({ name: `${side} kyčel`, p: leg.root }, { name: `${side} koleno`, p: leg.joint }, { name: `${side} kotník`, p: leg.end },
@@ -164,7 +170,24 @@ export function assembleRig(lib: PartLibrary, tpl: BodyTemplateDef, app: Charact
   joints.push({ name: 'kořen', p: pose.root }, { name: 'pánev', p: pose.hip }, { name: 'krk', p: pose.neck }, { name: 'hlava', p: pose.head });
   items.sort((a, b) => a.order - b.order);
   const ho = order.indexOf('held');
-  return { items, grip, joints, anchors, missing, view, heldOrder: (ho < 0 ? 999 : ho) * 100 };
+  const asm: RigAssembly = { items, grip, joints, anchors, missing, view, heldOrder: (ho < 0 ? 999 : ho) * 100 };
+  if (acc && head && torso) {
+    // hlava: střed lebky a poloměr z ořezu malby (temeno ≈ horní okraj), směr „nahoru“ z matice hlavy
+    const hc = apply(mHead, { x: head.trim.x + head.trim.w * 0.5, y: head.trim.y + head.trim.h * 0.37 });
+    const ht = apply(mHead, { x: head.trim.x + head.trim.w * 0.5, y: head.trim.y });
+    const ul = Math.hypot(ht.x - hc.x, ht.y - hc.y) || 1;
+    const neckA = torso.anchors.scarf ?? torso.anchors.neck;
+    const nk = neckA ? apply(mTorso, { x: neckA.x, y: neckA.y + 8 }) : pose.neck;
+    const tu = { x: pose.neck.x - pose.hip.x, y: pose.neck.y - pose.hip.y }, tl = Math.hypot(tu.x, tu.y) || 1;
+    const oi = (k: string, d: number) => { const o = order.indexOf(k); return (o < 0 ? d : o) * 100 + 60; };
+    const handOrder = (sd: 'far' | 'near') => (items.find((it) => it.key === `${sd}.hand`)?.order ?? 0) + 1;
+    asm.acc = {
+      spec: acc,
+      geo: { headC: hc, headUp: { x: (ht.x - hc.x) / ul, y: (ht.y - hc.y) / ul }, headR: head.trim.w * s * 0.45, neck: nk, torsoUp: { x: tu.x / tl, y: tu.y / tl }, neckW: torso.trim.w * s * bw * 0.36, hands, back: view === 'back3q' || view === 'back' },
+      order: { hat: oi('hat', 12), scarf: oi('scarf', 13), mitten: [handOrder('far'), handOrder('near')] },
+    };
+  }
+  return asm;
 }
 
 /** Sníh na podrážce zabořené boty; otáčí se s botou kolem kotníku (px, py) o úhel rot. */
@@ -206,9 +229,14 @@ function drawBlade(ctx: CanvasRenderingContext2D, b: NonNullable<RigAssembly['bl
   ctx.restore();
 }
 
-export function drawRig(ctx: CanvasRenderingContext2D, asm: RigAssembly, images: AssetImages, libDir: string, farShade: number, drawHeld?: () => void, snowColor?: string) {
+export type AccPart = 'hat' | 'scarf' | 'mitten0' | 'mitten1';
+export function drawRig(ctx: CanvasRenderingContext2D, asm: RigAssembly, images: AssetImages, libDir: string, farShade: number, drawHeld?: () => void, snowColor?: string, drawAcc?: (part: AccPart) => void) {
   let heldDone = false;
+  // vektorové doplňky se vkládají podle pořadí (čepice po hlavě, šála, palčák hned po ruce)
+  const acc = asm.acc && drawAcc ? ([['hat', asm.acc.order.hat], ['scarf', asm.acc.order.scarf], ['mitten0', asm.acc.order.mitten[0]], ['mitten1', asm.acc.order.mitten[1]]] as [AccPart, number][]).sort((a, b) => a[1] - b[1]) : [];
+  let ai = 0;
   for (const it of asm.items) {
+    while (ai < acc.length && acc[ai][1] < it.order) drawAcc!(acc[ai++][0]);
     if (!heldDone && drawHeld && it.order > asm.heldOrder) { drawHeld(); heldDone = true; }
     const p = it.part;
     const tex = images.get(rigImageKey(libDir, p.texture));
@@ -225,5 +253,6 @@ export function drawRig(ctx: CanvasRenderingContext2D, asm: RigAssembly, images:
     const lip = p.slot === 'foot' && asm.snowLips ? asm.snowLips[it.key === 'far.foot' ? 0 : 1] : null;
     if (lip && snowColor) drawSnowLip(ctx, lip, snowColor);
   }
+  while (ai < acc.length) drawAcc!(acc[ai++][0]);
   if (!heldDone && drawHeld) drawHeld();
 }

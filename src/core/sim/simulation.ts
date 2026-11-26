@@ -179,7 +179,7 @@ export class Simulation {
       wander: { waitUntil: 0, prevNode: null, atStop: false }, cooldowns: {}, status: 'Stojí',
     };
     a.pace = randRange(a.rng, 0.9, 1.1);
-    if (c.routine === 'sled' || c.routine === 'shovel') a.hidden = true; // přijdou později zpoza okraje (nikdy nestojí u vstupu v prvním snímku)
+    if (c.routine === 'sled' || c.routine === 'shovel' || c.routine === 'rider') a.hidden = true; // přijdou později zpoza okraje (nikdy nestojí u vstupu v prvním snímku)
     if (c.gaitProfile) { a.anim.elder = elderState(c.gaitProfile, c.caneSide ?? 'R', hashString(c.id)); a.pace = 1; }
     a.lane = (rand(a.rng) < 0.5 ? -1 : 1) * randRange(a.rng, 3, 7);
     a.anim.idleTime = randRange(a.rng, 0, 3);
@@ -853,7 +853,7 @@ export class Simulation {
   }
   /** volnější podmínka pro ruční spuštění: viditelný dospělý bez činnosti a věcí v rukou */
   private fallLoose(a: AgentState): boolean {
-    return !a.hidden && !a.activity && !a.holding && !a.follow && !a.anim.fall && !this.isChild(a) && !a.anim.elder && this.chars.get(a.id)?.routine !== 'shovel' && this.chars.get(a.id)?.routine !== 'sled' && !(a.anim.gestures ?? []).length;
+    return !a.hidden && !a.activity && !a.holding && !a.follow && !a.anim.fall && !this.isChild(a) && !a.anim.elder && this.chars.get(a.id)?.routine !== 'shovel' && this.chars.get(a.id)?.routine !== 'sled' && this.chars.get(a.id)?.routine !== 'rider' && !(a.anim.gestures ?? []).length;
   }
   private fallCache: FallHost | null = null;
   private fallHost(): FallHost {
@@ -904,6 +904,14 @@ export class Simulation {
     return (this.sledCache ??= {
       project: this.project, time: () => self.time(),
       parent: () => self.state.agents.find((x) => x.id === id),
+      rider: () => (this.project.sled?.riderId ? self.state.agents.find((x) => x.id === this.project.sled!.riderId) : undefined),
+      seat: (r, p, facing, accel) => {
+        if (r.hidden) { r.hidden = false; r.visPrev = undefined; r.off = { x: 0, y: 0 }; r.route = null; r.look = null; r.anim.settle = null; r.anim.anchors = undefined; r.anim.anchorsXY = undefined; }
+        r.pos = { ...p }; r.off = { x: 0, y: 0 }; r.speed = 0; r.vel = { X: 0, Z: 0 }; r.anim.walkBlend = 0;
+        r.facing = facing; r.anim.dir = directionFromAngle(facing, r.anim.dir);
+        const s0 = r.anim.sit; r.anim.sit = { kind: 'sled', t: (s0?.kind === 'sled' ? s0.t : 0) + SIM_DT, dur: 1e9, w: 1, r: accel };
+        r.status = 'Veze se na sáňkách';
+      },
       isSnow: (p) => self.sessionHost().isSnow(p),
       walkPath: (a, pts) => { self.sessionHost().walkPath(a, pts, 'sáňky'); a.speedFactor = 0.85; },
       hide: (a) => { a.hidden = true; a.route = null; a.speed = 0; a.vel = { X: 0, Z: 0 }; stopAction(a.anim); },
@@ -1477,6 +1485,7 @@ export class Simulation {
     if (a.route) { if (!mv.waitingNarrow) a.status = a.pendingActivity ? 'Jde k činnosti' : this.routeStatus(a); return; }
     if (c.routine === 'shovel') { if (a.hidden) a.status = 'Mimo scénu'; return; } // řídí stepClearing
     if (c.routine === 'baker') return; // řídí stepBakeryAll
+    if (c.routine === 'rider') { if (a.hidden) { a.status = 'Mimo scénu'; a.anim.sit = null; } return; } // řídí stepSled
     if (a.tram) { if (!a.route && a.tram.role === 'wait' && a.tram.since > t) a.tram.since = t; return; } // řídí stepTramAll
     if (c.routine === 'sled') { a.status = a.hidden ? 'Mimo scénu' : 'Táhne sáňky s dítětem'; return; } // řídí stepSled
     if (mittenBusy(this.state, a)) return; // vrací se pro rukavici / zvedá ji

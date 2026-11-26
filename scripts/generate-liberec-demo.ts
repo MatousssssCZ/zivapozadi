@@ -262,7 +262,13 @@ export async function generateLiberec(dir: string): Promise<ProjectFile> {
     id: 'ch_sane', name: 'Rodič se sáňkami', assetId: 'builtin_postava_cg', startNodeId: portals[0], baseScale: 1,
     walkSpeed: 60, palette: testPal, wander: false, appearance: sledParent, routine: 'sled', activities: {},
   });
-  p.sled = { parentId: 'ch_sane', firstDelay: 75, path: [[-520, 1072], [-160, 1072], [250, 1073], [520, 1070], [680, 1062], [760, 1048], [740, 1032], [640, 1030], [470, 1040], [250, 1047], [-160, 1047], [-560, 1047]].map(([x, y]) => ({ x, y })) };
+  // dítě na saních: postava z kostry (sedí, drží boky, trup reaguje na rozjezd), saně vektorové
+  const rider = generateGroup(childLib, 1, 6021).appearances[0];
+  p.characters.push({
+    id: 'kid_sane', name: 'Dítě na sáňkách', assetId: 'builtin_postava_dite', startNodeId: portals[0], baseScale: 1,
+    walkSpeed: 40, palette: testPal, wander: false, appearance: rider, routine: 'rider', activities: {},
+  });
+  p.sled = { parentId: 'ch_sane', riderId: 'kid_sane', kind: 'sane', firstDelay: 75, path: [[-520, 1074], [-160, 1074], [250, 1075], [560, 1072], [700, 1066], [775, 1048], [750, 1028], [650, 1024], [520, 1034], [250, 1042], [-160, 1044], [-560, 1044]].map(([x, y]) => ({ x, y })) };
   for (const n of ['sled_child_body', 'sled_child_head']) {
     const a = await importAssetFile(dir, path.join(G, 'sled', `${n}.png`), 'image');
     a.id = `sprite_${n}`; a.name = `Sprite – ${n}`; a.anchor = { x: 0.5, y: 0.5 }; a.pixelScale = 1;
