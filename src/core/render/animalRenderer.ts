@@ -8,6 +8,14 @@ import { SPECIES } from '../sim/animals';
 import { Q } from '../scene/camera';
 import { getCanvasFactory } from './rigRenderer';
 import { BREEDS } from './animalBreeds';
+import { legProfile, pawTarget, solveLeg, drawLeg, type LegProfile } from './animalLegs';
+/** vektorové nohy (výchozí zapnuté); `setVectorLegs(false)` vrátí malované díly nohou */
+let VECTOR_LEGS = true;
+const clamp = (x: number, a: number, b: number) => Math.max(a, Math.min(b, x));
+export function setVectorLegs(on: boolean) { VECTOR_LEGS = on; }
+const profCache = new Map<string, LegProfile>();
+export function legProfileOf(a: { species: 'dog' | 'cat'; breed?: string }): LegProfile { const k = `${a.species}|${a.breed ?? ''}`; let p = profCache.get(k); if (!p) { p = legProfile(a.breed, a.species, (a.breed ? BREEDS[a.breed]?.colors : undefined) ?? DEFAULT_COLORS[a.species]); profCache.set(k, p); } return p; }
+const DEFAULT_COLORS: Record<'dog' | 'cat', Record<string, string>> = { dog: { upper: '#c58a4e', lower: '#efe3d0', paw: '#e6d6c0', hupper: '#c58a4e', hlower: '#efe3d0', hpaw: '#e6d6c0' }, cat: { upper: '#9a8c78', lower: '#a39582', paw: '#d8ccb8', hupper: '#958771', hlower: '#a09079', hpaw: '#d8ccb8' } };
 
 type Img = CanvasImageSource & { width: number; height: number };
 type Ctx = CanvasRenderingContext2D;
@@ -113,10 +121,14 @@ export function drawAnimal(ctx: Ctx, a: AnimalState, img0: AnimalImages, pxPerM0
     if (!up || !lo) return [0, 0];
     return [Math.hypot((u.b[0] - u.a[0]) * up.width, (u.b[1] - u.a[1]) * up.height) * k, Math.hypot((l.b[0] - l.a[0]) * lo.width, (l.b[1] - l.a[1]) * lo.height) * k];
   };
-  const legLen = 0.5 * (segLen('f')[0] + segLen('f')[1] + segLen('h')[0] + segLen('h')[1]) * STAND;
+  const VL = VECTOR_LEGS ? legProfileOf(a) : null;
+  // vektorové nohy: výška kořenů z anatomie (stoj: přední mírně pokrčená, zadní s úhlením)
+  const vScale = BR?.scale ?? 1;
+  const legLen = VL ? pxPerM0 * vScale * 0.5 * ((VL.front[0] + VL.front[1]) * 0.93 + VL.front[2] + VL.paw[1] * 0.4 + (VL.hind[0] + VL.hind[1]) * 0.8 + VL.hind[2] * 0.9 + VL.paw[1] * 0.4)
+    : 0.5 * (segLen('f')[0] + segLen('f')[1] + segLen('h')[0] + segLen('h')[1]) * STAND;
   // trup tak, aby ramena a kyčle byly ve výšce nohou nad zemí (mírné pohupování v chůzi)
   const ph = (a.dist / S.stride) % 1;
-  const bob = Math.sin(ph * Math.PI * 4) * 0.012 * pxPerM * walk;
+  const bob = Math.sin(ph * Math.PI * 4) * (VL ? VL.body.bob : 0.012) * pxPerM * walk;
   const tx = -tw / 2, ty = -legLen - th * R.shoulder[1] + bob;
   const J = (q: [number, number]) => ({ x: tx + q[0] * tw, y: ty + q[1] * th });
   // Z08 protažení: předek dolů, přední tlapky natažené vpřed (obálka 0,4 s náběh/doběh)
@@ -139,6 +151,24 @@ export function drawAnimal(ctx: Ctx, a: AnimalState, img0: AnimalImages, pxPerM0
   // ---- nohy: díly ve stejném měřítku jako trup (k = px obrazovky na px obrázku), dvoučlánková IK
   // s chodidly pevně na zemi ve fázi opory (stance) a obloukem ve švihu → tlapky neklouzají.
   const leg = (kind: 'f' | 'h', side: 'a' | 'b', off: number, far: boolean) => {
+    if (VL) {
+      const front = kind === 'f', ppm = pxPerM0 * vScale;
+      const j0 = BT(J(front ? R.shoulder : R.hip)), j = { x: j0.x + (far ? 0.015 * pxPerM : 0), y: j0.y - (far ? 0.012 * pxPerM : 0) };
+      const S2 = VL.stride * ppm, duty = clamp(VL.duty - 0.08 * Math.min(1, a.speed / 1.4), 0.55, 0.78);
+      const pp = ((((a.dist / VL.stride) + off) % 1) + 1) % 1;
+      let tg = pawTarget(walk > 0.02 ? pp : 0, duty, walk, j.x, S2, VL.lift * ppm, front);
+      // ve stoji: občasné odlehčení jedné nohy (vzácné, nepravidelné), protažení / skok jako dřív
+      if (walk < 0.02 && !fl && !st) { const k2 = Math.sin(t * 0.21 + off * 17 + a.dist) ; if (k2 > 0.985 && side === 'a') tg = { ...tg, y: -0.012 * ppm * (k2 - 0.985) / 0.015 }; }
+      let T = { x: tg.x + (front ? 0.55 : 0) * (VL.front[0] + VL.front[1]) * ppm * st, y: tg.y };
+      if (fl > 0) { const ang = (front ? 0.9 : -0.95) * fl, R2 = (front ? VL.front[0] + VL.front[1] + VL.front[2] : VL.hind[0] + VL.hind[1] + VL.hind[2]) * ppm * 0.95; T = { x: j.x + Math.sin(ang) * R2, y: j.y + Math.cos(ang) * R2 }; }
+      const segs = (front ? VL.front : VL.hind).map((x) => x * ppm) as [number, number, number];
+      const sol = solveLeg(j, T, segs, front, tg.q, tg.contact && fl === 0, tg.roll);
+      const wv = (front ? VL.wFront : VL.wHind).map((x) => x * ppm) as [number, number, number, number];
+      const c = front ? { upper: VL.colors.upper, lower: VL.colors.lower, paw: VL.colors.paw } : { upper: VL.colors.hupper, lower: VL.colors.hlower, paw: VL.colors.hpaw };
+      drawLeg(ctx, sol, wv, [VL.paw[0] * ppm, VL.paw[1] * ppm], c, VL.shag, VL.markings, far, (kind === 'f' ? 11 : 23) + (side === 'a' ? 0 : 5), front);
+      if (debug) dbg.push({ ...sol.pts[0], c: '#ff00e6' }, { ...sol.pts[1], c: '#ffd400' }, { ...sol.pts[2], c: '#ff8000' }, { ...sol.paw, c: tg.contact ? '#00ff80' : '#00e5ff' }, { ...T, c: '#ffffff' });
+      return;
+    }
     const up0 = img(`${pre}${kind}u_${side}${bk}`) ?? img(`${pre}${kind}u_${side}`), lo0 = img(`${pre}${kind}l_${side}${bk}`) ?? img(`${pre}${kind}l_${side}`);
     if (!up0 || !lo0) return;
     const up = far ? darkened(up0) : up0, lo = far ? darkened(lo0) : lo0;
@@ -217,10 +247,17 @@ export function drawAnimal(ctx: Ctx, a: AnimalState, img0: AnimalImages, pxPerM0
     ctx.restore();
   }
   ctx.restore();
-  leg('h', 'a', 0.5, false); leg('f', 'a', 0.75, false);
+  if (!VL) { leg('h', 'a', 0.5, false); leg('f', 'a', 0.75, false); }
   ctx.save(); bodyTf(); rotAbout(shakeAt(0.04));
   ctx.drawImage(torso, tx, ty, tw, th);
   ctx.restore();
+  if (VL) {
+    // bližší nohy přes trup, pak lokální překryv srsti z trupu u kořenů (kořen pod siluetou, bez čepu)
+    leg('h', 'a', 0.5, false); leg('f', 'a', 0.75, false);
+    ctx.save(); bodyTf(); rotAbout(shakeAt(0.04));
+    for (const q of [R.hip, R.shoulder]) { const c0 = J(q); ctx.save(); ctx.beginPath(); ctx.ellipse(c0.x, c0.y - th * 0.06, tw * 0.13, th * 0.22, 0, 0, Math.PI * 2); ctx.clip(); ctx.drawImage(torso, tx, ty, tw, th); ctx.restore(); }
+    ctx.restore();
+  }
   ctx.save(); bodyTf(); rotAbout(shakeAt(0) * 1.6);
   // hlava (u psa sklopená při očichávání)
   const hdImg = img(`${pre}head_down`), down = a.headDown > 0.5 && !hdImg ? a.headDown : 0; // bez dílu: hlava se skloní natočením

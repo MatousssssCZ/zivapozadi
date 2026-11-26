@@ -1,5 +1,5 @@
 /** Vygenerováno scripts/process-animal-breeds.py – kotvy dílů ras psů a koček (needitovat ručně). */
-export interface BreedInfo { species: "dog" | "cat"; parts: string[]; legs: Record<"fu" | "fl" | "hu" | "hl", { a: [number, number]; b: [number, number] }>; legs_back?: Record<"fu" | "fl" | "hu" | "hl", { a: [number, number]; b: [number, number] }>; ears?: { u: number; v: number; w: number; part: string }[]; ears_back?: { u: number; v: number; w: number; part: string }[]; sizes: Record<string, [number, number]> }
+export interface BreedInfo { species: "dog" | "cat"; parts: string[]; legs: Record<"fu" | "fl" | "hu" | "hl", { a: [number, number]; b: [number, number] }>; legs_back?: Record<"fu" | "fl" | "hu" | "hl", { a: [number, number]; b: [number, number] }>; ears?: { u: number; v: number; w: number; part: string }[]; ears_back?: { u: number; v: number; w: number; part: string }[]; sizes: Record<string, [number, number]>; colors?: Record<string, string> }
 export const BREEDS: Record<string, BreedInfo> = {
  "dog_bernese": {
   "species": "dog",
@@ -110,6 +110,14 @@ export const BREEDS: Record<string, BreedInfo> = {
      0.985
     ]
    }
+  },
+  "colors": {
+   "upper": "#312f33",
+   "lower": "#5d3e2b",
+   "paw": "#b2a192",
+   "hupper": "#343135",
+   "hlower": "#5d3e2a",
+   "hpaw": "#ae9a8a"
   },
   "sizes": {
    "torso": [
@@ -312,6 +320,14 @@ export const BREEDS: Record<string, BreedInfo> = {
     ]
    }
   },
+  "colors": {
+   "upper": "#b6acae",
+   "lower": "#b7acae",
+   "paw": "#a89998",
+   "hupper": "#aea3a5",
+   "hlower": "#b6aaab",
+   "hpaw": "#ab9c9b"
+  },
   "sizes": {
    "torso": [
     392,
@@ -512,6 +528,14 @@ export const BREEDS: Record<string, BreedInfo> = {
      0.985
     ]
    }
+  },
+  "colors": {
+   "upper": "#be9675",
+   "lower": "#b48e72",
+   "paw": "#836a5d",
+   "hupper": "#bc9372",
+   "hlower": "#ae896c",
+   "hpaw": "#886e60"
   },
   "sizes": {
    "torso": [
@@ -714,6 +738,14 @@ export const BREEDS: Record<string, BreedInfo> = {
     ]
    }
   },
+  "colors": {
+   "upper": "#403940",
+   "lower": "#887a7c",
+   "paw": "#c6b3ad",
+   "hupper": "#413b44",
+   "hlower": "#958685",
+   "hpaw": "#c7b2ac"
+  },
   "sizes": {
    "torso": [
     378,
@@ -915,6 +947,14 @@ export const BREEDS: Record<string, BreedInfo> = {
     ]
    }
   },
+  "colors": {
+   "upper": "#857f85",
+   "lower": "#c5bab5",
+   "paw": "#b7aaa4",
+   "hupper": "#9d9495",
+   "hlower": "#c5bab4",
+   "hpaw": "#b8aba5"
+  },
   "sizes": {
    "torso": [
     392,
@@ -1115,6 +1155,14 @@ export const BREEDS: Record<string, BreedInfo> = {
      0.985
     ]
    }
+  },
+  "colors": {
+   "upper": "#8e4e32",
+   "lower": "#a1633f",
+   "paw": "#82563d",
+   "hupper": "#935235",
+   "hlower": "#995a38",
+   "hpaw": "#946448"
   },
   "sizes": {
    "torso": [
@@ -1353,6 +1401,14 @@ export const BREEDS: Record<string, BreedInfo> = {
     "part": "earb_b"
    }
   ],
+  "colors": {
+   "upper": "#72707f",
+   "lower": "#767484",
+   "paw": "#706d7a",
+   "hupper": "#716f7e",
+   "hlower": "#777483",
+   "hpaw": "#6e6b78"
+  },
   "sizes": {
    "ear_a": [
     103,
@@ -1630,6 +1686,14 @@ export const BREEDS: Record<string, BreedInfo> = {
     "part": "earb_b"
    }
   ],
+  "colors": {
+   "upper": "#b8744b",
+   "lower": "#c08c67",
+   "paw": "#b58b71",
+   "hupper": "#bb7a50",
+   "hlower": "#c4906c",
+   "hpaw": "#b98e71"
+  },
   "sizes": {
    "ear_a": [
     103,

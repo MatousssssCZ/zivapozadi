@@ -15,7 +15,7 @@ const pick = process.argv.slice(2).filter((a) => !a.startsWith('--')).join(',').
 const rows = pick.length ? ALL.filter((r) => pick.some((q) => r[2]?.includes(q) || r[0].includes(q))) : ALL;
 const dark = process.argv.includes('--tmave'), bones = process.argv.includes('--kostra');
 const cols: [string, number, number, number, number][] = [['stoj', 0, 0, 0, 0], ['krok 0', 1, 0, 0, 0], ['krok ¼', 1, 0.25, 0, 0], ['krok ½', 1, 0.5, 0, 0], ['krok ¾', 1, 0.75, 0, 0], ['zezadu', 0, 0, -1.4, 0], ['zezadu krok', 1, 0.25, -1.4, 0], ['doleva', 1, 0.25, Math.PI, 0], ['čichá', 0, 0, 0, 1]];
-const PPM = 200, W = 230, H = 200, c = createCanvas(W * cols.length, H * rows.length), x = c.getContext('2d');
+const PPM = Number(process.env.PPM ?? 200), W = Math.round(PPM * 1.15), H = PPM, c = createCanvas(W * cols.length, H * rows.length), x = c.getContext('2d');
 x.fillStyle = dark ? '#262b36' : '#e4e9f1'; x.fillRect(0, 0, c.width, c.height);
 rows.forEach(([rn, sp, breed], j) => cols.forEach(([cn, walk, ph, face, extra], i) => {
   const a = { id: 'x', species: sp, breed, pos: { x: 0, y: 0 }, facing: face, speed: walk ? 1 : 0, dist: ph * (sp === 'dog' ? 0.55 : 0.32), mode: 'walk', until: 0, walkLeft: 0, side: 1, hidden: false, headDown: extra === 1 ? 1 : 0, sit: 0 };

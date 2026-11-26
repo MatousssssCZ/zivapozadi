@@ -115,10 +115,17 @@ for breed, (file, sp, layout) in SHEETS.items():
                  'w': round(pm[f'{ek}_{s}']['w'] / h['w'], 3), 'part': f'{ek}_{s}'} for s in ('a', 'b')]
     for key, vals in EAR_FIX.get(breed, {}).items():
         for e, (u, v, w) in zip(info[key], vals): e.update({'u': u, 'v': v, 'w': w})
+    # barvy srsti pro vektorové nohy: průměr neprůhledných pixelů horní části horního dílu, středu spodního
+    # dílu a tlapky (spodních 12 %) – z malby, aby nohy barevně navázaly na trup
+    def mean(crop, v0, v1):
+        a = crop[int(v0 * crop.shape[0]): max(int(v0 * crop.shape[0]) + 1, int(v1 * crop.shape[0]))]; m = a[..., 3] > 200
+        c = a[m][:, :3].mean(0) if m.any() else np.array([128, 128, 128]); return '#%02x%02x%02x' % tuple(int(x) for x in c)
+    info['colors'] = {'upper': mean(pm['fu_a']['crop'], 0.1, 0.45), 'lower': mean(pm['fl_a']['crop'], 0.25, 0.7), 'paw': mean(pm['fl_a']['crop'], 0.86, 1.0),
+                      'hupper': mean(pm['hu_a']['crop'], 0.1, 0.5), 'hlower': mean(pm['hl_a']['crop'], 0.25, 0.7), 'hpaw': mean(pm['hl_a']['crop'], 0.86, 1.0)}
     info['sizes'] = {k: [v['w'], v['h']] for k, v in pm.items()}
     meta[breed] = info
     print(breed, len(pm), 'dílů', info.get('ears'))
 ts = '/** Vygenerováno scripts/process-animal-breeds.py – kotvy dílů ras psů a koček (needitovat ručně). */\n'
-ts += 'export interface BreedInfo { species: "dog" | "cat"; parts: string[]; legs: Record<"fu" | "fl" | "hu" | "hl", { a: [number, number]; b: [number, number] }>; legs_back?: Record<"fu" | "fl" | "hu" | "hl", { a: [number, number]; b: [number, number] }>; ears?: { u: number; v: number; w: number; part: string }[]; ears_back?: { u: number; v: number; w: number; part: string }[]; sizes: Record<string, [number, number]> }\n'
+ts += 'export interface BreedInfo { species: "dog" | "cat"; parts: string[]; legs: Record<"fu" | "fl" | "hu" | "hl", { a: [number, number]; b: [number, number] }>; legs_back?: Record<"fu" | "fl" | "hu" | "hl", { a: [number, number]; b: [number, number] }>; ears?: { u: number; v: number; w: number; part: string }[]; ears_back?: { u: number; v: number; w: number; part: string }[]; sizes: Record<string, [number, number]>; colors?: Record<string, string> }\n'
 ts += 'export const BREEDS: Record<string, BreedInfo> = ' + json.dumps(meta, indent=1) + ';\n'
 open('src/core/render/animalBreeds.ts', 'w').write(ts)

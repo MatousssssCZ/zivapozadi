@@ -49,3 +49,35 @@ Značky v režimu `--kostra`:
 - Tmavá kočka zatím chybí, atlas nedorazil.
 - Rasy nemají malovaný sed. Místo něj stojí, hlavu skloní natočením.
 - Pro husky a jezevčíka (dodané navíc) platí stejné postupy.
+
+## Vektorové nohy (`src/core/render/animalLegs.ts`)
+Nohy se kreslí výhradně vektorově a navazují na malované trupy. Původní malované díly nohou zůstávají jako záloha (`setVectorLegs(false)`).
+
+- **Anatomie:**
+  - přední noha: rameno → loket → zápěstí → tlapka;
+  - zadní noha: kyčel → koleno → hlezno → tlapka;
+  - délky článků v metrech pro každé plemeno (`legProfile`);
+  - stálý směr ohybu: loket vzad, koleno vpřed, hlezno jako zlom vzad.
+- **Pohyb:**
+  - řídí se od tlapek, fáze kroku je dána uraženou dráhou;
+  - v opoře tlapka ve světě stojí (test: posun menší než 0,01 px);
+  - přenos je nízký oblouk s měkkým začátkem i koncem;
+  - pořadí kroků: levá zadní (LH) → levá přední (LF) → pravá zadní (RH) → pravá přední (RF), opora 64–70 % podle plemene, při vyšší rychlosti klesá;
+  - distální článek (záprstí nebo nárt) je řízený úhlem podle fáze, zbytek nohy dopočítává dvoučlánková IK s omezeným dosahem.
+- **Vykreslení:**
+  - souvislý obrys z Bézierových křivek se šířkou podél kostry;
+  - přechod barvy shora dolů (ponožky);
+  - stínování a srst kotvená v lokálních souřadnicích článku;
+  - kresba (skvrny dalmatina) také v lokálních souřadnicích;
+  - tlapka jako měkký objem, který se při došlapu zploští a odvaluje.
+
+  Barvy se vzorkují z malby (`process-animal-breeds.py`), u dvoubarevných plemen se zadávají ručně.
+- **Napojení na trup:**
+  - vzdálené nohy se kreslí za trupem, bližší před ním;
+  - u kořenů bližších nohou se trup lokálně překreslí, takže kořen je schovaný pod srstí a nevzniká viditelný kruhový spoj.
+- **Pohyb těla:** svislý pohyb trupu je odvozený od kroku a jeho amplituda je dána profilem plemene.
+
+**Omezení:**
+- Zatáčení nemá zvláštní řešení. Kontakt drží jen při chůzi rovně, v zatáčce tlapky mírně kloužou.
+- Rozcházení a zastavení plynule mění amplitudu kroku. Během přechodu se tlapka může mírně posunout.
+- Odlehčení jedné nohy ve stoji je jen drobné.
