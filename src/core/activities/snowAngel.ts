@@ -28,8 +28,9 @@ export function angelZoneFree(h: SessionHost, z: ActivityZone): boolean {
 export function startSnowAngel(h: SessionHost, zone: ActivityZone, parent: AgentState, kid: AgentState): ActivitySession | null {
   if (!angelZoneFree(h, zone) || parent.holding || kid.holding) return null;
   const cam = cameraFor(h.project.scene), spot = centroid(zone), S = toWorld(cam, spot);
-  // rodič stojí za dítětem (dál od kamery), aby ho nezakrýval, v dosahu ruky při vstávání
-  const stand = toScreen(cam, { X: S.X - 0.45, Z: S.Z + 0.95 });
+  // dítě leží čelem k divákovi (nohama ke kameře, hlavou do hloubky) – rodič stojí bokem za rozpaženou
+  // rukou, mírně dál od kamery: nezakrývá dítě ani otisk, je v dosahu ruky při vstávání
+  const stand = toScreen(cam, { X: S.X - 1.15, Z: S.Z + 0.35 });
   const now = h.time();
   const s = createSession(h.state, h.res, {
     type: 'snowAngel', zoneId: zone.id, participantIds: [parent.id, kid.id], roles: { [parent.id]: 'parent', [kid.id]: 'child' },
@@ -51,8 +52,8 @@ export function stepSnowAngel(h: SessionHost, s: ActivitySession): 'running' | '
     case 'gather':
       kid.status = 'Jde na čerstvý sníh'; par.status = 'Jde s dítětem';
       if (!h.moving(kid) && !h.moving(par)) {
-        // dítě se otočí bokem k rodiči (leží napříč, hlavou k -X), rodič se dívá na něj
-        kid.look = toScreen(cam, { X: S.X + 2, Z: S.Z }); par.look = { ...kid.pos };
+        // dítě se otočí čelem k divákovi (anděl je vždy vidět zepředu, ne z profilu), rodič se dívá na něj
+        kid.look = toScreen(cam, { X: S.X, Z: S.Z - 2 }); par.look = { ...kid.pos };
         if (now - s.phaseStart > 1.2 || kid.anim.walkBlend < 0.05) { s.phase = 'angel'; s.phaseStart = now; d.t0 = now; }
       }
       if (now > (d.gatherBy ?? now + 1)) return 'aborted'; // nedošli (překážky, dav)
@@ -64,7 +65,7 @@ export function stepSnowAngel(h: SessionHost, s: ActivitySession): 'running' | '
       // otisk: založí se při dosednutí zad, rozsah roste s fází tahů (ne celý hned)
       const st = h.state as SimState;
       if (el >= T.lie && d.imprint === undefined) {
-        const P = toWorld(cam, kid.pos), dir = Math.PI; // hlavou k -X (opačně, než se dívalo)
+        const P = toWorld(cam, kid.pos), dir = Math.PI / 2; // hlavou do hloubky (+Z), nohama ke kameře
         (st.angels ??= []).push({ X: P.X, Z: P.Z, dir, arms: 0, legs: 0, t0: now, child: 1, getup: false }); d.imprint = st.angels.length - 1;
         if (st.angels.length > 6) { st.angels.shift(); d.imprint = st.angels.length - 1; }
       }
@@ -77,7 +78,7 @@ export function stepSnowAngel(h: SessionHost, s: ActivitySession): 'running' | '
       par.status = el < 13 ? 'Dívá se, jak dítě dělá anděla' : 'Pomáhá dítěti vstát';
       if (el >= 13 && el < 17.4) { const w = Math.min(1, (el - 13) / 0.8, (17.4 - el) / 0.6); par.anim.sit = { kind: 'lift', t: el, dur: 1e9, w: w * 0.55 }; }
       else par.anim.sit = null;
-      if (el >= T.end) { kid.anim.sit = null; par.anim.sit = null; s.phase = 'admire'; s.phaseStart = now; d.lookUntil = now + 2.5; kid.look = toScreen(cam, { X: S.X - 0.6, Z: S.Z }); par.look = { ...kid.look }; h.log(`${kid.name} udělal(a) sněhového anděla.`, kid.id); }
+      if (el >= T.end) { kid.anim.sit = null; par.anim.sit = null; s.phase = 'admire'; s.phaseStart = now; d.lookUntil = now + 2.5; kid.look = toScreen(cam, { X: S.X, Z: S.Z + 0.7 }); par.look = { ...kid.look }; /* podívají se na otisk (leží do hloubky) */ h.log(`${kid.name} udělal(a) sněhového anděla.`, kid.id); }
       return 'running';
     }
     case 'admire':

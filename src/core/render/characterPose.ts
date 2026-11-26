@@ -96,7 +96,9 @@ export function characterVisual(agent: AgentState, m: CharacterManifest, look: C
   const lib = m.rigLibrary, app = look.appearance;
   if (m.backend === 'skeleton' && lib && app) {
     const tpl = lib.bodyTemplates.find((t) => t.id === app.bodyTemplate) ?? lib.bodyTemplates[0];
-    const req = viewForDirection(agent.anim.dir);
+    // sněhový anděl: vždy čelem k divákovi (leží nohama ke kameře, rozpažuje do stran) – ne z profilu
+    const angel = agent.anim.sit?.kind === 'angel';
+    const req = angel ? { view: 'front' as ViewId, mirror: false } : viewForDirection(agent.anim.dir);
     const rv = { ...resolveView(tpl, req.view) };
     const vp = vectorFigures && look.routine !== 'baker' ? vectorPlan(scaledTemplate(tpl, app.proportions) as SkeletonTemplate & { id: string }, app, look.routine) : null;
     const stpl = vp ? vp.tpl : scaledTemplate(tpl, app.proportions);
@@ -160,8 +162,11 @@ function groundVec(cam: Camera, at: Vec2, worldAngle: number, sx: number): Vec2 
  */
 function groundOptions(agent: AgentState, x: number, y: number, scale: number, mirror: boolean, cam: Camera): PoseOptions {
   const sx = mirror ? -1 : 1;
-  const gh = agent.groundHeading ?? worldAngleOfScreen(cam, agent.pos, agent.facing); // světový směr chůze
-  const ground = groundVec(cam, { x, y }, gh, sx);
+  // anděl: směr těla ke kameře (dolů po obrazovce), ať leží podél hloubky scény
+  const gh = agent.anim.sit?.kind === 'angel' ? worldAngleOfScreen(cam, agent.pos, Math.PI / 2) : agent.groundHeading ?? worldAngleOfScreen(cam, agent.pos, agent.facing); // světový směr chůze
+  const g0 = groundVec(cam, { x, y }, gh, sx);
+  // anděl: hloubka ležícího těla zesílená (čitelně leží, nohy k divákovi), ne jen reálné zkrácení
+  const ground = g0;
   const an = agent.anim.anchors, xy = agent.anim.anchorsXY;
   const anchors = [0, 1].map((i) => {
     const k = an?.[i], p = xy?.[i];
@@ -171,7 +176,7 @@ function groundOptions(agent: AgentState, x: number, y: number, scale: number, m
     return out;
   }) as [Anchor | null, Anchor | null];
   const e = agent.anim.elder, ct = e?.tipXY && e.tip != null && e.tipXY.key === e.tip ? { x: sx * (e.tipXY.x - x) / scale, y: (e.tipXY.y - y) / scale } : null;
-  return { ground, anchors, footSide: Math.abs(Math.cos(gh)), caneTip: ct };
+  return { ground, anchors, footSide: Math.abs(Math.cos(gh)), caneTip: ct, angelFront: agent.anim.sit?.kind === 'angel' };
 }
 
 /** Údaje pro chůzi postavy (délka nohy, bota, individuální délka kroku) – stejné pro simulaci i náhled. */

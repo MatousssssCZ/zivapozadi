@@ -202,7 +202,9 @@ export function assembleRig(lib: PartLibrary, tpl: BodyTemplateDef, app: Charact
   };
   const ang = (a: Vec2, b: Vec2) => Math.atan2(b.y - a.y, b.x - a.x);
   // trup, hlava, doplňky; delší bunda (torsoStretch): díl se protáhne dolů, ramena a krk zůstanou na místě
-  const torso = part('torso'), kT = tpl.torsoStretch ?? 1;
+  // perspektivně zkrácený trup (leží podél hloubky – anděl): malovaný díl se zkrátí podle pózy
+  const tShort = Math.min(1, Math.hypot(pose.neck.x - pose.hip.x, pose.neck.y - pose.hip.y) / (tpl.bones.torso || 1) / 0.97);
+  const torso = part('torso'), kT = (tpl.torsoStretch ?? 1) * (tShort < 0.9 ? tShort : 1);
   const tOrigin = { x: pose.hip.x - (pose.neck.x - pose.hip.x) * (kT - 1), y: pose.hip.y - (pose.neck.y - pose.hip.y) * (kT - 1) };
   const mTorso = torso ? frame(torso, kT === 1 ? pose.hip : tOrigin, pose.torsoAngle, kT) : I;
   push(torso, mTorso, null);

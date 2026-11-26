@@ -11,7 +11,7 @@ import { hashNoise } from '../math/rng';
 import { meanPelvisHeight, sampleGait, strideLegLen, gaitEvents } from './gaitProfile';
 import { footAt, restFeet, heelAtContact, type FootGeom } from './gaitKinematics';
 import { ELDER_PROFILES, TIP_AHEAD } from './elderGait';
-import { sampleFall, fallDuration, fallEndShift, benchPose, type FallPhase } from './fallPoses';
+import { sampleFall, fallDuration, fallEndShift, benchPose, ANGEL_TIMES, type FallPhase } from './fallPoses';
 import { heelRelOf, type AnimState } from './animator';
 import type { Direction } from './manifest';
 import { evalAll } from '../social/clips';
@@ -324,6 +324,8 @@ export interface PoseOptions {
   snowSink?: number;
   /** Hrot hole ve světě (lokálně) z kotvy při došlapu. */
   caneTip?: Vec2 | null;
+  /** Sněhový anděl čelem k divákovi (leží nohama ke kameře) – vlastní póza v rovině obrazu. */
+  angelFront?: boolean;
 }
 /** Kotva paty: poloha a směr chodidla na zemi (lokálně), uložené při došlapu. */
 export interface Anchor { x: number; y: number; gx?: number; gy?: number }
@@ -810,7 +812,8 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
   if (a.hands && a.hands.w > 0 && !handsLate) applyHands(out, a.hands, kc);
   // bruslení: póza z cílů; pád na ledě se z ní prolne (pád se počítá až po ní)
   if (a.skate) applyKey(out, a.skate, 1, { swap: false, latS: 1, du: 0, signedLat: true, end: 0 }, kc);
-  if (a.sit && a.sit.w > 0) applyKey(out, benchPose(a.sit.kind, a.sit.t, a.sit.dur, a.sit.r), a.sit.w, { swap: false, latS: 1, du: 0, signedLat: true, end: 0 }, kc);
+  if (a.sit && a.sit.w > 0 && a.sit.kind === 'angel' && opts.angelFront) applyAngelFront(out, a.sit.t, a.sit.w, kc);
+  else if (a.sit && a.sit.w > 0) applyKey(out, benchPose(a.sit.kind, a.sit.t, a.sit.dur, a.sit.r), a.sit.w, { swap: false, latS: 1, du: 0, signedLat: true, end: 0 }, kc);
   if (a.hands && a.hands.w > 0 && handsLate) applyHands(out, a.hands, kc);
   if (a.fall) applyFall(out, a.fall, kc);
   return out;
@@ -899,3 +902,51 @@ export function footGeomOf(tpl: SkeletonTemplate): FootGeom {
 }
 
 export function boneAngle(from: Vec2, to: Vec2): number { return Math.atan2(to.y - from.y, to.x - from.x); }
+
+/**
+ * Sněhový anděl zepředu: dítě leží na zádech nohama k divákovi, tělo míří do hloubky scény (na obrazovce
+ * nahoru, perspektivně zkrácené – stylizovaný nadhled ilustrace). Paže se v tazích rozpažují v rovině
+ * sněhu od boků přes vodorovnou polohu až nad hlavu, nohy se rozevírají do V. Lehnutí a vstávání jsou
+ * plynulé prolnutí ze stoje (a zpět) přes podřep. Časování tahů = ANGEL_TIMES (otisk ve sněhu roste s nimi).
+ */
+function applyAngelFront(o: SkeletonPose, t: number, w0: number, c: KeyCtx) {
+  const { B, L } = c, T = ANGEL_TIMES;
+  const sm = (x: number) => { const q = clamp(x, 0, 1); return q * q * (3 - 2 * q); };
+  // váha lehu: dolů 0,3–3,4 s, nahoru 14,2–17,8 s
+  const lie = sm((t - 0.3) / 3.1) * (1 - sm((t - 14.2) / 3.6));
+  // fáze tahu: 0 = paže u boků, 1 = nad hlavou; nohy roznožené během tahu
+  let arm = 0, leg = 0;
+  for (const [i, t0] of T.strokes.entries()) { const q = (t - t0) / 2.55; if (q > 0 && q < 1) { const amp = [0.85, 1, 0.92][i]; arm = Math.sin(Math.PI * q) * amp; leg = Math.min(1, Math.sin(Math.PI * q) * 1.6) * amp; } }
+  const fz = 0.5; // zkrácení hloubky (stylizovaný nadhled)
+  const hip = { x: 0, y: -0.1 * L }, tl = B.torso * fz * 0.95;
+  const neck = { x: 0, y: hip.y - tl }, head = { x: 0, y: neck.y - B.neck * fz * 0.9 };
+  const shoulder = { x: 0, y: neck.y + B.shoulderDrop * fz };
+  const sw = (c.v.shoulderSpread || 6) * 1.25, hw = (c.v.hipSpread || 5) * 1.1, LL = B.thigh + B.shin, AL = B.upperArm + B.forearm;
+  const straight = (root: Vec2, end: Vec2, l1: number, l2: number): Limb => { const d = Math.hypot(end.x - root.x, end.y - root.y), k = Math.min(1, d / (l1 + l2)), f = l1 / (l1 + l2); return { root, joint: { x: root.x + (end.x - root.x) * f, y: root.y + (end.y - root.y) * f }, end, k1: k, k2: k }; };
+  const legs = [0, 1].map((i) => {
+    const sd = c.sideX(i), root = { x: hip.x + sd * hw, y: hip.y };
+    const spread = (0.1 + 0.32 * leg) * LL, end = { x: root.x + sd * spread, y: root.y + Math.sqrt(Math.max(0, LL * LL - spread * spread)) * fz * 0.9 };
+    return straight(root, end, B.thigh, B.shin);
+  }) as [Limb, Limb];
+  const arms = [0, 1].map((i) => {
+    const sd = c.sideX(i), root = { x: shoulder.x + sd * sw, y: shoulder.y };
+    // úhel od „podél těla k nohám“ (0) přes vodorovně (π/2) po „nad hlavu“ (≈ 0,85 π); svislá složka zkrácená hloubkou
+    const al = 0.12 * Math.PI + arm * 0.72 * Math.PI, R = AL * 0.95;
+    const end = { x: root.x + sd * Math.sin(al) * R, y: root.y + Math.cos(al) * R * fz };
+    return straight(root, end, B.upperArm, B.forearm);
+  }) as [Limb, Limb];
+  const w = clamp(w0, 0, 1) * lie;
+  const mix = (a: Vec2, b: Vec2) => ({ x: a.x + (b.x - a.x) * w, y: a.y + (b.y - a.y) * w });
+  const mixL = (a: Limb, b: Limb): Limb => ({ root: mix(a.root, b.root), joint: mix(a.joint, b.joint), end: mix(a.end, b.end), k1: (a.k1 ?? 1) + ((b.k1 ?? 1) - (a.k1 ?? 1)) * w, k2: (a.k2 ?? 1) + ((b.k2 ?? 1) - (a.k2 ?? 1)) * w });
+  // přechod stoj ↔ leh přes podřep: kolena se pokrčí uprostřed přechodu (ne „propadnutí“ rovných nohou)
+  const mid = Math.sin(Math.PI * w);
+  const ls = o.legs.map((l, i) => { const m = mixL(l, legs[i]); if (mid > 0.05) { const kx = c.sideX(i) * 0.12 * L * mid; m.joint = { x: m.joint.x + kx, y: m.joint.y - 0.08 * L * mid }; } return m; }) as [Limb, Limb];
+  Object.assign(o, {
+    hip: mix(o.hip, hip), neck: mix(o.neck, neck), head: mix(o.head, head), shoulder: mix(o.shoulder, shoulder),
+    torsoAngle: o.torsoAngle + (-Math.PI / 2 - o.torsoAngle) * w, headTilt: o.headTilt * (1 - w),
+    legs: ls, arms: o.arms.map((l, i) => mixL(l, arms[i])) as [Limb, Limb],
+    feet: [o.feet[0] * (1 - w), o.feet[1] * (1 - w)], feetK: [1 - 0.35 * w, 1 - 0.35 * w],
+    fall: { ph: 'pause', contacts: w > 0.6 ? [{ p: hip, slide: false, kind: 's' }] : [], end: { x: 0, y: 0 } },
+  });
+  o.handR = o.arms[1].end;
+}
