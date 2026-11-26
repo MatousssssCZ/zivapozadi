@@ -107,6 +107,21 @@ export async function generateTram(dir: string): Promise<ProjectFile> {
   const pramParent = generateGroup(lib, 1, 8841).appearances[0];
   p.characters.push({ id: 'ch_kocarek', name: 'Rodič s kočárkem', assetId: 'builtin_postava_cg', startNodeId: 'n8', baseScale: 1, walkSpeed: 55, palette: pal, wander: false, appearance: pramParent, routine: 'pram', activities: {} });
   p.pram = { parentId: 'ch_kocarek', path: [[1800, 612], [1600, 600], [1380, 601], [1200, 644], [950, 703], [760, 734], [585, 750], [300, 768], [-120, 774]].map(([x, y]) => B(x, y)), stopAt: 5, firstDelay: 70, interval: [220, 420] };
+  // scénické epizody (A13 stromky, …): herci čekají mimo obraz, přicházejí zprava po zasněžené ploše
+  const actorApps = generateGroup(lib, 3, 9123).appearances;
+  ['ch_herec1', 'ch_herec2', 'ch_herec3'].forEach((id, i) => p.characters.push({ id, name: ['Jana', 'Milan', 'Lucie'][i], assetId: 'builtin_postava_cg', startNodeId: 'n8', baseScale: 1, walkSpeed: 55, palette: pal, wander: false, appearance: actorApps[i], routine: 'actor', activities: {} }));
+  const kidActor = generateGroup(childLib, 1, 9124).appearances[0];
+  p.characters.push({ id: 'ch_herec_dite', name: 'Ema', assetId: 'builtin_postava_dite', startNodeId: 'n8', baseScale: 1, walkSpeed: 45, palette: pal, wander: false, appearance: kidActor, routine: 'actor', activities: {} });
+  const floristApp = generateGroup(lib, 1, 9125).appearances[0];
+  p.characters.push({ id: 'ch_kvetinarka', name: 'Květinářka', assetId: 'builtin_postava_cg', startNodeId: 'f0', baseScale: 1, walkSpeed: 55, palette: pal, wander: false, appearance: floristApp, routine: 'actor', activities: {} });
+  p.episodes = [
+    { id: 'ep_svetylka', type: 'lights', actors: ['ch_kvetinarka'], interval: [600, 900], firstAt: 240,
+      pts: { winL: B(582, 418), winR: B(704, 418), wall: B(640, 598), switchAt: B(712, 505), switchStand: B(712, 622), in: B(-70, 628), out: B(-80, 630) } },
+    { id: 'ep_zdobeni', type: 'decorate', actors: ['ch_herec3', 'ch_herec_dite'], interval: [360, 600], firstAt: 420,
+      pts: { tree: B(880, 892), box: B(805, 905), in: B(1760, 900), in2: B(1765, 915), out: B(1790, 905), out2: B(1795, 920) } },
+    { id: 'ep_stromky', type: 'treeLot', actors: ['ch_herec1', 'ch_herec2'], interval: [300, 540], firstAt: 150,
+      pts: { lot: B(1330, 812), in: B(1760, 880), in2: B(1770, 905), carry1: B(1500, 905), out: B(1790, 925) } },
+  ];
   p.crowd = { walkers: 0.75, skaters: 1 }; // výchozí hustota ~4–8 venku
   p.export = { ...p.export, durationSec: 60, chunkSec: 20 };
   await saveProject(dir, p);

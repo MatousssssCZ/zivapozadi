@@ -806,10 +806,12 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
   }
   const out: SkeletonPose = { view, mirror, root: { x: 0, y: 0 }, hip, neck, shoulder, head, headTilt, torsoAngle, legs, arms, feet: [footAng[0], footAng[1]], feetK: [footProj[0].k, footProj[1].k], handR: arms[1].end, heelPts, cupTilt, snowSink: [sink[0], sink[1]], tool: toolOut, cane: caneOut };
   const kc: KeyCtx = { B, v, L, AH, gfx, gfy, fsg, ns, front, side: opts.footSide ?? 1, sideX };
-  if (a.hands && a.hands.w > 0) applyHands(out, a.hands, kc);
+  const handsLate = a.sit?.kind === 'climb'; // na štaflích: ruce (háček, vypínač) až po póze nohou
+  if (a.hands && a.hands.w > 0 && !handsLate) applyHands(out, a.hands, kc);
   // bruslení: póza z cílů; pád na ledě se z ní prolne (pád se počítá až po ní)
   if (a.skate) applyKey(out, a.skate, 1, { swap: false, latS: 1, du: 0, signedLat: true, end: 0 }, kc);
   if (a.sit && a.sit.w > 0) applyKey(out, benchPose(a.sit.kind, a.sit.t, a.sit.dur, a.sit.r), a.sit.w, { swap: false, latS: 1, du: 0, signedLat: true, end: 0 }, kc);
+  if (a.hands && a.hands.w > 0 && handsLate) applyHands(out, a.hands, kc);
   if (a.fall) applyFall(out, a.fall, kc);
   return out;
 }

@@ -113,7 +113,8 @@ export const fallPhaseAt = (v: FallVariant, t: number): FallPhase => sampleFall(
  * `change`: předklon, jedna noha zvednutá, obě ruce u boty (šněrování), v polovině druhá noha.
  * Klíč je vůči bodu na zemi pod pánví (místo k sezení); prolíná se vahou (sednutí / vstávání).
  */
-export function benchPose(kind: 'rest' | 'change' | 'kneel' | 'bend' | 'squat' | 'sled' | 'lift' | 'tuck' | 'angel', t: number, dur: number, r?: number): FallKey {
+export function benchPose(kind: 'rest' | 'change' | 'kneel' | 'bend' | 'squat' | 'sled' | 'lift' | 'tuck' | 'angel' | 'climb', t: number, dur: number, r?: number): FallKey {
+  if (kind === 'climb') return climbPose(t, r ?? 0);
   if (kind === 'angel') return sampleKeys(ANGEL_KEYS, t);
   if (kind === 'sled') return sledRidePose(t, r ?? 0);
   if (kind === 'lift') return liftPose();
@@ -216,3 +217,13 @@ export const ANGEL_KEYS: FallKey[] = [
   { t: 16.9, ph: 'getup', hip: W(-0.06, 0.66), pitch: 22, head: 0, feet: [W(-0.02, 0, -0.1), W(0.1, 0, 0.1)], hands: [W(0.12, 0.5, -0.18), W(0.14, 0.95, 0.28)], c: ['f0', 'f1'] },
   { t: ANGEL_T.end, ph: 'done', hip: W(-0.02, 1.04), pitch: 4, head: 6, feet: [W(-0.05, 0), W(0.08, 0)], hands: [W(-0.04, 1.0, -0.05), W(0.06, 1.0, 0.05)], c: ['f0', 'f1'] },
 ];
+
+/**
+ * Stání / krok na štaflích (A12): kořen postavy je na aktuálním stupni (posun řídí epizoda), `lead` a
+ * `trail` = výška blízké / vzdálené nohy vůči němu (délky nohy) – noha se zvedá přes hranu stupně,
+ * pánev stoupá až po přenosu váhy. Trup mírně nakloněn ke štaflím.
+ */
+export function climbPose(lead: number, trail: number): FallKey {
+  const hipH = STAND_H + Math.min(0, Math.min(lead, trail)) * 0.6 + Math.max(0, Math.max(lead, trail)) * 0.25;
+  return { t: 0, ph: 'pause', hip: W(-0.02, hipH), pitch: 6, head: -4, feet: [W(-0.04, Math.max(trail, -0.6), -0.1), W(0.14, Math.max(lead, -0.6), 0.1)], hands: [W(0.18, 0.95, -0.16), W(0.2, 0.98, 0.16)], c: ['f0', 'f1'] };
+}

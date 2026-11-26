@@ -3,8 +3,8 @@
   "formatVersion": 1,
   "meta": {
     "name": "Vánoční tramvajová ulice",
-    "createdAt": "2026-11-26T06:48:05.283Z",
-    "modifiedAt": "2026-11-26T06:48:08.450Z",
+    "createdAt": "2026-11-26T08:15:55.805Z",
+    "modifiedAt": "2026-11-26T08:15:55.903Z",
     "appVersion": "0.1.0"
   },
   "seed": 4242,
@@ -1761,6 +1761,296 @@
       },
       "routine": "pram",
       "activities": {}
+    },
+    {
+      "id": "ch_herec1",
+      "name": "Jana",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n8",
+      "baseScale": 1,
+      "walkSpeed": 55,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": false,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 2116391530,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_06_cg"
+        },
+        "colors": {
+          "jacket": "olivova",
+          "hat": "petrolejova",
+          "scarf": "tmave-seda",
+          "gloves": "tmave-seda",
+          "trousers": "tmave-seda",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 0.99,
+          "build": 0.959
+        },
+        "motion": {
+          "strideScale": 0.954,
+          "armSwing": 0.748,
+          "bob": 1.172,
+          "sway": 0.993,
+          "idleTempo": 1.115,
+          "lean": 2.775,
+          "speed": 1.111,
+          "phase": 0.057,
+          "armLag": 1.033,
+          "armLR": 0.862
+        },
+        "locks": []
+      },
+      "routine": "actor",
+      "activities": {}
+    },
+    {
+      "id": "ch_herec2",
+      "name": "Milan",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n8",
+      "baseScale": 1,
+      "walkSpeed": 55,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": false,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1936946305,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_09_cg"
+        },
+        "colors": {
+          "jacket": "okrova",
+          "hat": "olivova",
+          "scarf": "vinova",
+          "gloves": "vinova",
+          "trousers": "olivova",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 1.035,
+          "build": 0.958
+        },
+        "motion": {
+          "strideScale": 1.068,
+          "armSwing": 0.979,
+          "bob": 1.045,
+          "sway": 0.763,
+          "idleTempo": 0.925,
+          "lean": 2.174,
+          "speed": 1.088,
+          "phase": 0.927,
+          "armLag": -1.423,
+          "armLR": 0.9
+        },
+        "locks": []
+      },
+      "routine": "actor",
+      "activities": {}
+    },
+    {
+      "id": "ch_herec3",
+      "name": "Lucie",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n8",
+      "baseScale": 1,
+      "walkSpeed": 55,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": false,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 677905139,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_hiking_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_09_cg"
+        },
+        "colors": {
+          "jacket": "olivova",
+          "hat": "hneda",
+          "scarf": "kremova",
+          "gloves": "hneda",
+          "trousers": "olivova",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 1.01,
+          "build": 0.95
+        },
+        "motion": {
+          "strideScale": 0.925,
+          "armSwing": 1.082,
+          "bob": 0.923,
+          "sway": 1.101,
+          "idleTempo": 1.024,
+          "lean": 2.391,
+          "speed": 1.007,
+          "phase": 0.185,
+          "armLag": 1.823,
+          "armLR": 0.893
+        },
+        "locks": []
+      },
+      "routine": "actor",
+      "activities": {}
+    },
+    {
+      "id": "ch_herec_dite",
+      "name": "Ema",
+      "assetId": "builtin_postava_dite",
+      "startNodeId": "n8",
+      "baseScale": 1,
+      "walkSpeed": 45,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": false,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-dite-v1",
+        "seed": 495868793,
+        "bodyTemplate": "child-cg",
+        "variants": {
+          "jacket": "jacket_coat_child",
+          "hat": "hat_beanie_child",
+          "scarf": "scarf_long_child",
+          "trousers": "trousers_child",
+          "boots": "boots_child",
+          "gloves": "gloves_child",
+          "head": "head_child"
+        },
+        "colors": {
+          "jacket": "vinova",
+          "hat": "olivova",
+          "scarf": "okrova",
+          "gloves": "okrova",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 1.01,
+          "build": 1.037
+        },
+        "motion": {
+          "strideScale": 0.937,
+          "armSwing": 0.966,
+          "bob": 0.972,
+          "sway": 1.148,
+          "idleTempo": 0.995,
+          "lean": 2.638,
+          "speed": 1.008,
+          "phase": 0.455,
+          "armLag": -1.914,
+          "armLR": 0.953
+        },
+        "locks": []
+      },
+      "routine": "actor",
+      "activities": {}
+    },
+    {
+      "id": "ch_kvetinarka",
+      "name": "Květinářka",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "f0",
+      "baseScale": 1,
+      "walkSpeed": 55,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": false,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 689197216,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_puffer_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_06_cg"
+        },
+        "colors": {
+          "jacket": "olivova",
+          "hat": "okrova",
+          "scarf": "vinova",
+          "gloves": "vinova",
+          "trousers": "olivova",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 1.024,
+          "build": 1.026
+        },
+        "motion": {
+          "strideScale": 1.099,
+          "armSwing": 0.692,
+          "bob": 1.147,
+          "sway": 0.974,
+          "idleTempo": 1.102,
+          "lean": 1.704,
+          "speed": 0.943,
+          "phase": 0.308,
+          "armLag": 0.028,
+          "armLR": 0.885
+        },
+        "locks": []
+      },
+      "routine": "actor",
+      "activities": {}
     }
   ],
   "schedule": [],
@@ -2094,6 +2384,124 @@
       420
     ]
   },
+  "episodes": [
+    {
+      "id": "ep_svetylka",
+      "type": "lights",
+      "actors": [
+        "ch_kvetinarka"
+      ],
+      "interval": [
+        600,
+        900
+      ],
+      "firstAt": 240,
+      "pts": {
+        "winL": {
+          "x": 668.3,
+          "y": 480
+        },
+        "winR": {
+          "x": 808.4,
+          "y": 480
+        },
+        "wall": {
+          "x": 734.9,
+          "y": 686.7
+        },
+        "switchAt": {
+          "x": 817.6,
+          "y": 579.9
+        },
+        "switchStand": {
+          "x": 817.6,
+          "y": 714.3
+        },
+        "in": {
+          "x": -80.4,
+          "y": 721.1
+        },
+        "out": {
+          "x": -91.9,
+          "y": 723.4
+        }
+      }
+    },
+    {
+      "id": "ep_zdobeni",
+      "type": "decorate",
+      "actors": [
+        "ch_herec3",
+        "ch_herec_dite"
+      ],
+      "interval": [
+        360,
+        600
+      ],
+      "firstAt": 420,
+      "pts": {
+        "tree": {
+          "x": 1010.5,
+          "y": 1024.3
+        },
+        "box": {
+          "x": 924.4,
+          "y": 1039.2
+        },
+        "in": {
+          "x": 2021.1,
+          "y": 1033.5
+        },
+        "in2": {
+          "x": 2026.8,
+          "y": 1050.7
+        },
+        "out": {
+          "x": 2055.5,
+          "y": 1039.2
+        },
+        "out2": {
+          "x": 2061.2,
+          "y": 1056.5
+        }
+      }
+    },
+    {
+      "id": "ep_stromky",
+      "type": "treeLot",
+      "actors": [
+        "ch_herec1",
+        "ch_herec2"
+      ],
+      "interval": [
+        300,
+        540
+      ],
+      "firstAt": 150,
+      "pts": {
+        "lot": {
+          "x": 1527.3,
+          "y": 932.4
+        },
+        "in": {
+          "x": 2021.1,
+          "y": 1010.5
+        },
+        "in2": {
+          "x": 2032.5,
+          "y": 1039.2
+        },
+        "carry1": {
+          "x": 1722.5,
+          "y": 1039.2
+        },
+        "out": {
+          "x": 2055.5,
+          "y": 1062.2
+        }
+      }
+    }
+  ],
   "crowd": {
     "walkers": 0.75,
     "skaters": 1

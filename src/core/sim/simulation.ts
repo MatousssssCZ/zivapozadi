@@ -36,6 +36,10 @@ import { stepFalls, startFall, newFallsState, DEFAULT_FALLS, type FallHost, type
 import { fallEndShift as fallEndShiftOf, type FallVariant } from '../anim/fallPoses';
 import { stepSled, sledObstacles, sledPathProblem, type SledHost } from './sled';
 import { forceMitten } from './mitten';
+import { stepEpisode, newEpisodeState, episodeStartNow, type ActorHost } from './episodes';
+import './ep/treeLot';
+import './ep/decorate';
+import './ep/lights';
 import { stepPram, newPramState, pramObstacle, type PramHost } from './pram';
 import { maybeCarryMitten, mittenBusy, stepMitten, type MittenHost } from './mitten';
 import { stepSnowman, startSnowman, abortSnowman, finishSession, snowmanZoneFree, type SessionHost } from '../activities/snowman';
@@ -182,7 +186,7 @@ export class Simulation {
       wander: { waitUntil: 0, prevNode: null, atStop: false }, cooldowns: {}, status: 'Stojí',
     };
     a.pace = randRange(a.rng, 0.9, 1.1);
-    if (c.routine === 'sled' || c.routine === 'shovel' || c.routine === 'rider' || c.routine === 'pram') a.hidden = true; // přijdou později zpoza okraje (nikdy nestojí u vstupu v prvním snímku)
+    if (c.routine === 'sled' || c.routine === 'shovel' || c.routine === 'rider' || c.routine === 'pram' || c.routine === 'actor') a.hidden = true; // přijdou později zpoza okraje (nikdy nestojí u vstupu v prvním snímku)
     if (c.gaitProfile) { a.anim.elder = elderState(c.gaitProfile, c.caneSide ?? 'R', hashString(c.id)); a.pace = 1; }
     a.lane = (rand(a.rng) < 0.5 ? -1 : 1) * randRange(a.rng, 3, 7);
     a.anim.idleTime = randRange(a.rng, 0, 3);
@@ -458,6 +462,7 @@ export class Simulation {
     if (this.project.tram) this.stepTramAll(t);
     if (this.project.bakery) this.stepBakeryAll(t);
     if (this.project.pram) this.stepPramAll();
+    if (this.project.episodes?.length) this.stepEpisodes();
     if (this.state.angels?.length && t - this.state.angels[0].t0 > ANGEL_LIFE) this.state.angels.shift();
     this.stepProps(t);
     this.state.step++;
@@ -548,6 +553,33 @@ export class Simulation {
   }
   /** Galerie aktivit: dítě začne chytat vločky (A10) – jen za sněžení. */
   flakesNow(): { ok: boolean; msg: string } { if (!this.project.scene.snowfall.enabled) return { ok: false, msg: 'Nesněží – vločky chytat nelze.' }; const st = (this.state.flakes ??= { next: 90, n: 0 }); if (st.kidId) return { ok: false, msg: 'Už chytá.' }; st.next = this.time(); return { ok: true, msg: 'Rodina se zastaví a dítě chytá vločky.' }; }
+  /** Galerie aktivit: scénická epizoda (A13, A11, A12, A08, A01) začne hned. */
+  episodeNow(id: string): { ok: boolean; msg: string } {
+    const c = this.project.episodes?.find((e) => e.id === id); if (!c) return { ok: false, msg: 'Scéna tuto aktivitu nemá.' };
+    const st = ((this.state.episodes ??= {})[id] ??= newEpisodeState(c));
+    return episodeStartNow(st, this.time()) ? { ok: true, msg: 'Aktivita začíná.' } : { ok: false, msg: 'Aktivita už probíhá.' };
+  }
+  actorHostPublic(): ActorHost { return this.actorHost(); }
+  private actorHostC: ActorHost | null = null;
+  private actorHost(): ActorHost {
+    const self = this;
+    return (this.actorHostC ??= {
+      project: this.project, time: () => self.time(), dt: SIM_DT, agent: (id) => self.state.agents.find((x) => x.id === id),
+      walk: (x, pts, sp) => { self.sessionHost().walkPath(x, pts, 'epizoda', true); x.speedFactor = sp; },
+      moving: (x) => x.route !== null,
+      show: (x, p) => { x.pos = { ...p }; x.hidden = false; x.visPrev = undefined; x.off = { x: 0, y: 0 }; x.look = null; x.anim.walkBlend = 0; x.anim.settle = null; x.anim.anchors = undefined; x.anim.anchorsXY = undefined; },
+      hide: (x) => { x.hidden = true; x.route = null; x.speed = 0; x.vel = { X: 0, Z: 0 }; x.anim.hands = null; x.anim.sit = null; x.look = null; },
+      face: (x, p) => { x.look = p ? { x: p.x, y: p.y } : null; },
+      hands: (x, tg, w = 1) => { x.anim.hands = tg && w > 0 ? { t: tg, w } : null; },
+      pose: (x, kind, w = 1, t = 0, r) => { x.anim.sit = kind && w > 0.001 ? { kind: kind as never, t, dur: 1e9, w, r } : null; },
+      gesture: (x, fam, dur) => self.sessionHost().gesture(x, fam as never, dur ? { dur } : {}),
+      log: (m, id) => self.log('info', m, id),
+    });
+  }
+  private stepEpisodes() {
+    const h = this.actorHost();
+    for (const c of this.project.episodes!) stepEpisode(c, ((this.state.episodes ??= {})[c.id] ??= newEpisodeState(c)), h);
+  }
   /** Ladění: kočárek přijede hned. */
   pramNow(): { ok: boolean; msg: string } { const st = this.state.pram; if (!this.project.pram) return { ok: false, msg: 'Scéna nemá kočárek.' }; if (st && st.phase !== 'offstage') return { ok: false, msg: 'Kočárek už je ve scéně.' }; (this.state.pram ??= newPramState(this.project.pram)).until = this.time(); return { ok: true, msg: 'Přichází rodič s kočárkem.' }; }
   private pramHost: PramHost | null = null;
@@ -914,7 +946,7 @@ export class Simulation {
   }
   /** volnější podmínka pro ruční spuštění: viditelný dospělý bez činnosti a věcí v rukou */
   private fallLoose(a: AgentState): boolean {
-    return !a.hidden && !a.activity && !a.holding && !a.follow && !a.anim.fall && !this.isChild(a) && !a.anim.elder && this.chars.get(a.id)?.routine !== 'shovel' && this.chars.get(a.id)?.routine !== 'sled' && this.chars.get(a.id)?.routine !== 'rider' && this.chars.get(a.id)?.routine !== 'pram' && !(a.anim.gestures ?? []).length;
+    return !a.hidden && !a.activity && !a.holding && !a.follow && !a.anim.fall && !this.isChild(a) && !a.anim.elder && this.chars.get(a.id)?.routine !== 'shovel' && this.chars.get(a.id)?.routine !== 'sled' && this.chars.get(a.id)?.routine !== 'rider' && this.chars.get(a.id)?.routine !== 'pram' && this.chars.get(a.id)?.routine !== 'actor' && !(a.anim.gestures ?? []).length;
   }
   private fallCache: FallHost | null = null;
   private fallHost(): FallHost {
@@ -1551,6 +1583,7 @@ export class Simulation {
     if (a.route) { if (!mv.waitingNarrow) a.status = a.pendingActivity ? 'Jde k činnosti' : this.routeStatus(a); return; }
     if (c.routine === 'shovel') { if (a.hidden) a.status = 'Mimo scénu'; return; } // řídí stepClearing
     if (c.routine === 'baker') return; // řídí stepBakeryAll
+    if (c.routine === 'actor') { if (a.hidden) a.status = 'Mimo scénu'; return; } // řídí režisér epizod
     if (c.routine === 'pram') { if (a.hidden) a.status = 'Mimo scénu'; else if (!a.status) a.status = 'Tlačí kočárek'; return; } // řídí stepPram
     if (c.routine === 'rider') { if (a.hidden) { a.status = 'Mimo scénu'; a.anim.sit = null; } return; } // řídí stepSled
     if (a.tram) { if (!a.route && a.tram.role === 'wait' && a.tram.since > t) a.tram.since = t; return; } // řídí stepTramAll
