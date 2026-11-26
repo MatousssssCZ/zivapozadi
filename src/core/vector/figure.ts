@@ -138,8 +138,10 @@ export function drawVectorFigure(ctx: Ctx, pose: SkeletonPose, body: BodyProfile
     const comp = M.compress * bf;
     const wr = add(a.end, mul(t2, -2.2));
     const nodes: TubeNode[] = [
-      { p: add(a.root, mul(t1, -2.5)), w: body.armW + e + 1.6 },
-      { p: a.root, w: body.armW + e + 1.2 },
+      // nasazení rukávu: zaoblený vrch lícuje s kopulí ramene trupu (oblouk ≈ 0,9 capR nad kloubem),
+      // nevystupuje nad horní hranu trupu
+      { p: add(a.root, mul(t1, 0.9)), w: Math.min(body.armW + e + 1.2, capR * 1.75) },
+      { p: add(a.root, mul(t1, 2.4)), w: body.armW + e + 1.0 },
       { p: add(a.root, mul(sub(a.joint, a.root), 0.55)), w: body.armW + e * 1.05 },
       { p: a.joint, w: body.elbowW + e, a: -inner * body.elbowW * comp },
       { p: add(a.joint, mul(sub(wr, a.joint), 0.5)), w: (body.elbowW + body.wristW) / 2 + e * 0.95 },
@@ -219,9 +221,10 @@ export function drawVectorFigure(ctx: Ctx, pose: SkeletonPose, body: BodyProfile
     const sr = F(shLv, shR), sl = F(shLv, shL), nk = offN(Nk), ns = body.neckR + 1.4 + ease * 0.3;
     // zaoblená ramena: oblouk kolem kloubu (deltový sval pod látkou) a měkký svah ke krku
     const arc = (c: P, side: number, a0: number, a1: number) => { const out: P[] = []; for (let k = 0; k <= 3; k++) { const a = a0 + (a1 - a0) * (k / 3); out.push(add(c, add(mul(n, side * Math.cos(a) * capR * 0.95), mul(u, Math.sin(a) * capR * 0.95)))); } return out; };
-    pts.push(...arc(sr, 1, -0.35, 1.25), F(lvl(Nk) - 0.05, lerp(shR, nk + ns, 0.62)));
-    pts.push(F(lvl(Nk) - 0.005, nk + ns), F(lvl(Nk) + 0.005, nk - ns));
-    pts.push(F(lvl(Nk) - 0.05, lerp(shL, nk - ns, 0.62)), ...arc(sl, -1, 1.25, -0.35));
+    // obrys stoupá od ramene ke krku plynule (svah šíje) – žádný hrbolek nad ramenem
+    pts.push(...arc(sr, 1, -0.35, 0.95), F(lvl(Nk) - 0.012, lerp(shR, nk + ns, 0.6)));
+    pts.push(F(lvl(Nk) + 0.02, nk + ns), F(lvl(Nk) + 0.03, nk - ns));
+    pts.push(F(lvl(Nk) - 0.012, lerp(shL, nk - ns, 0.6)), ...arc(sl, -1, 0.95, -0.35));
     for (const lv of [0.72, 0.6, 0.42, 0.2]) pts.push(F(lv, Lx(lv) - scallop(lv)));
     pts.push(F(lows[0], (of.top.length > 0.2 ? Lx(0) : skirtSides(hemLv)[0])));
     if (of.top.length <= 0.2) { const [l, r] = skirtSides(hemLv); pts.splice(pts.length, 0, F(hemLv - 0.015, lerp(l, r, 0.5))); void r; }
