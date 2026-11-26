@@ -29,7 +29,7 @@ import { viewForDirection } from '../anim/skeleton';
 import { stepCoopSnowman, startCoopSnowman } from '../activities/coopSnowman';
 const TRAM_OUT_DY = 60;
 import { tramGeo, stepTram, newTramState, tramMatrix, doorQuad, applyM, tramVisible, type TramGeo } from './tram';
-import { stepBakery, newBakeryState, type BakeryHost } from './bakery';
+import { stepBakery, newBakeryState, bakeryStartNow, TASK_LABEL, type BakeryHost, type BakeryTask } from './bakery';
 import { createSkater, stepSkater, stepRinkEvents, separate, addTrails, skatePose, SKATE_PROFILES, TRAIL_LIFE, FALL_TOTAL, type IceGeo, type RinkState, type RinkCtx , forceRinkEvent, makeIceGeo, RINK_FALL_T0, rinkFallLen, LIFE_LABEL, insideW, clampToIce, type TrickKind } from './rink';
 import { stepFalls, startFall, newFallsState, DEFAULT_FALLS, type FallHost, type FallsState } from './falls';
 import { fallEndShift as fallEndShiftOf, type FallVariant } from '../anim/fallPoses';
@@ -474,7 +474,7 @@ export class Simulation {
   }
   /** Ladění: tramvaj přijede hned. */
   tramNow(): { ok: boolean; msg: string } { const st = this.state.tram; if (!st) return { ok: false, msg: 'Scéna nemá tramvaj.' }; if (st.phase !== 'wait') return { ok: false, msg: 'Tramvaj už jede.' }; st.until = this.time(); return { ok: true, msg: 'Tramvaj přijíždí.' }; }
-  bakerNow(): { ok: boolean; msg: string } { const st = this.state.bakery; if (!st) return { ok: false, msg: 'Scéna nemá pekárnu.' }; if (st.phase !== 'inside') return { ok: false, msg: 'Pekař už je venku.' }; st.until = this.time(); return { ok: true, msg: 'Pekař jde zametat.' }; }
+  bakerNow(task?: BakeryTask): { ok: boolean; msg: string } { const st = this.state.bakery; if (!st) return { ok: false, msg: 'Scéna nemá pekárnu.' }; if (!bakeryStartNow(st, this.time(), task)) return { ok: false, msg: 'Pekař už je venku.' }; return { ok: true, msg: `Pekař jde ven${task ? ': ' + TASK_LABEL[task] : ''}.` }; }
   private stepTramAll(t: number) {
     const c = this.project.tram!, g = this.tramGeometry();
     const st = (this.state.tram ??= newTramState(c, seedRng(this.project.seed, 'tram'), t));
@@ -541,15 +541,28 @@ export class Simulation {
       moving: (x) => x.route !== null,
       show: (x, p) => { x.pos = { ...p }; x.hidden = false; x.visPrev = undefined; x.off = { x: 0, y: 0 }; x.look = null; x.anim.walkBlend = 0; x.anim.settle = null; x.anim.anchors = undefined; x.anim.anchorsXY = undefined; },
       hide: (x) => { x.hidden = true; x.route = null; x.speed = 0; x.vel = { X: 0, Z: 0 }; },
-      broom: (x, on) => {
-        if (on && !x.holding) { const p: PropState = { id: `prop${self.state.nextPropId++}`, kind: 'shovel', variant: 'broom', place: { kind: 'held', agentId: x.id }, appearedAt: self.time(), sips: 0 }; self.state.props.push(p); x.holding = p.id; x.holdingKind = 'shovel'; x.anim.tool = { u: 0.35, h: 0.55, beta: 1.25, crouch: 0, lean: 0 }; }
-        if (!on && x.holding) { const hid = x.holding; self.state.props = self.state.props.filter((p) => p.id !== hid); x.holding = null; x.holdingKind = null; x.anim.tool = null; }
+      equip: (x, item) => {
+        if (x.holding) { const hid = x.holding; self.state.props = self.state.props.filter((p) => p.id !== hid); x.holding = null; x.holdingKind = null; x.anim.tool = null; }
+        if (!item) return;
+        const kind = item === 'broom' ? 'shovel' : item;
+        const p: PropState = { id: `prop${self.state.nextPropId++}`, kind, variant: item === 'broom' ? 'broom' : undefined, place: { kind: 'held', agentId: x.id }, appearedAt: self.time(), sips: 0 };
+        self.state.props.push(p); x.holding = p.id; x.holdingKind = kind;
+        if (item === 'broom') x.anim.tool = { u: 0.35, h: 0.55, beta: 1.25, crouch: 0, lean: 0 };
+        // bedýnka: obě ruce u madel před tělem (kratší krok); kbelík řídí krok posypu
+        if (item === 'crate') x.anim.hands = { t: [{ u: 0.3, h: 0.86, lat: -0.2 }, { u: 0.3, h: 0.86, lat: 0.2 }], w: 1 };
+        else x.anim.hands = null;
       },
+      hands: (x, tg, w) => {
+        if (x.holdingKind === 'crate' && !tg) { x.anim.hands = { t: [{ u: 0.3, h: 0.86, lat: -0.2 }, { u: 0.3, h: 0.86, lat: 0.2 }], w: 1 }; return; }
+        x.anim.hands = tg && w > 0 ? { t: tg, w } : null;
+      },
+      crouch: (x, w, tt) => { x.anim.sit = w > 0.001 ? { kind: 'lift', t: tt, dur: 1e9, w } : null; },
+      log: (m, id) => self.log('info', m, id),
       face: (x, p) => { x.look = { x: p.x, y: p.y }; },
       ppm: (y) => self.tramPpm(y),
     };
     stepBakery(c, st, a, this.bakeryHost, t, SIM_DT);
-    if (st.phase !== 'sweep' && a.holding && !a.anim.tool) a.anim.tool = { u: 0.35, h: 0.55, beta: 1.25, crouch: 0, lean: 0 }; // nese koště
+    if (a.holdingKind === 'shovel' && !a.anim.tool) a.anim.tool = { u: 0.35, h: 0.55, beta: 1.25, crouch: 0, lean: 0 }; // nese koště
   }
 
   /** Ladění: rodina (rodič + dítě) hned začne stavět sněhuláka v první volné zóně. */
@@ -1169,6 +1182,9 @@ export class Simulation {
     if (!this.obstaclesW) { const c = this.cam(); this.obstaclesW = this.graph.obstacles.map((o) => ({ poly: o.polygon.map((p) => toWorld(c, p)) })); }
     const ro = this.state.runtimeObjects;
     const sl = this.state.sled?.phase === 'run' ? sledObstacles(this.sledHost(), this.state.sled, this.sledHost().parent()?.pos ?? null) : [];
+    // bedýnka s pečivem venku (A18c) – chodci ji obejdou (0,5 × 0,3 m)
+    const cr = this.state.bakery?.crate;
+    if (cr?.out && this.project.bakery?.crateSpot) { const C = toWorld(this.cam(), cr), w = 0.3, d = 0.2; sl.push({ poly: [{ X: C.X - w, Z: C.Z - d }, { X: C.X + w, Z: C.Z - d }, { X: C.X + w, Z: C.Z + d }, { X: C.X - w, Z: C.Z + d }] }); }
     if (sl.length) return [...this.obstaclesW, ...sl, ...this.runtimeObstacles()];
     if (!ro?.length) return this.obstaclesW;
     // sněhuláci: kolizní stopa (osmiúhelník kolem spodní koule); shozený už nepřekáží

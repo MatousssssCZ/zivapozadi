@@ -806,6 +806,7 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
   }
   const out: SkeletonPose = { view, mirror, root: { x: 0, y: 0 }, hip, neck, shoulder, head, headTilt, torsoAngle, legs, arms, feet: [footAng[0], footAng[1]], feetK: [footProj[0].k, footProj[1].k], handR: arms[1].end, heelPts, cupTilt, snowSink: [sink[0], sink[1]], tool: toolOut, cane: caneOut };
   const kc: KeyCtx = { B, v, L, AH, gfx, gfy, fsg, ns, front, side: opts.footSide ?? 1, sideX };
+  if (a.hands && a.hands.w > 0) applyHands(out, a.hands, kc);
   // bruslení: póza z cílů; pád na ledě se z ní prolne (pád se počítá až po ní)
   if (a.skate) applyKey(out, a.skate, 1, { swap: false, latS: 1, du: 0, signedLat: true, end: 0 }, kc);
   if (a.sit && a.sit.w > 0) applyKey(out, benchPose(a.sit.kind, a.sit.t, a.sit.dur, a.sit.r), a.sit.w, { swap: false, latS: 1, du: 0, signedLat: true, end: 0 }, kc);
@@ -823,6 +824,26 @@ function applyFall(o: SkeletonPose, f: { v: import('./fallPoses').FallVariant; s
   const k = sampleFall(f.v, f.t);
   const w = smoothstep(f.t / 0.2) * (1 - smoothstep((f.t - (dur - 0.35)) / 0.35));
   applyKey(o, k, w, { swap: f.s < 0, latS: f.v === 'side' ? f.s : 1, du: f.du ?? 0, signedLat: false, end: fallEndShift(f.v) }, c);
+}
+/**
+ * Cíle rukou (manipulace s předměty): ruka jde IK na bod v rovině chůze, paže se nikdy neprodlouží –
+ * nedosažitelný cíl se zastaví na 97 % dosahu. Prolnutí váhou w z běžné pózy (bez skoku).
+ */
+function applyHands(o: SkeletonPose, hd: NonNullable<AnimState['hands']>, c: KeyCtx) {
+  const { B, v, L, gfx, gfy, ns, front } = c;
+  const kx = front ? ns * 0.75 : 0, ky = front ? 0.1 : 0.3, w = clamp(hd.w, 0, 1);
+  const reach = (B.upperArm + B.forearm) * 0.97;
+  const arms = [...o.arms] as [Limb, Limb];
+  for (let i = 0; i < 2; i++) {
+    const q = hd.t[i]; if (!q) continue;
+    const lat = q.lat ?? 0, tg = { x: gfx * q.u * L + lat * L * kx, y: gfy * q.u * L - q.h * L + lat * ns * L * ky };
+    const root = { x: o.shoulder.x + c.sideX(i) * v.shoulderSpread, y: o.shoulder.y };
+    let T = { x: o.arms[i].end.x + (tg.x - o.arms[i].end.x) * w, y: o.arms[i].end.y + (tg.y - o.arms[i].end.y) * w };
+    const dx = T.x - root.x, dy = T.y - root.y, dd = Math.hypot(dx, dy);
+    if (dd > reach) T = { x: root.x + (dx / dd) * reach, y: root.y + (dy / dd) * reach };
+    arms[i] = ik(root, T, B.upperArm, B.forearm, 1);
+  }
+  o.arms = arms; o.handR = arms[1].end;
 }
 type KeyCtx = { B: SkeletonTemplate['bones']; v: SkeletonViewDef; L: number; AH: number; gfx: number; gfy: number; fsg: number; ns: number; front: boolean; side: number; sideX: (i: number) => number };
 /**

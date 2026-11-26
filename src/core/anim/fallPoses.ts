@@ -112,8 +112,9 @@ export const fallPhaseAt = (v: FallVariant, t: number): FallPhase => sampleFall(
  * `change`: předklon, jedna noha zvednutá, obě ruce u boty (šněrování), v polovině druhá noha.
  * Klíč je vůči bodu na zemi pod pánví (místo k sezení); prolíná se vahou (sednutí / vstávání).
  */
-export function benchPose(kind: 'rest' | 'change' | 'kneel' | 'bend' | 'squat' | 'sled', t: number, dur: number, r?: number): FallKey {
+export function benchPose(kind: 'rest' | 'change' | 'kneel' | 'bend' | 'squat' | 'sled' | 'lift', t: number, dur: number, r?: number): FallKey {
   if (kind === 'sled') return sledRidePose(t, r ?? 0);
+  if (kind === 'lift') return liftPose();
   if (kind === 'kneel' || kind === 'bend' || kind === 'squat') return workPose(kind, t, r);
   const SEAT = 0.56; // pánev na sedáku (0,45 m + stehna) v délkách nohy
   const base: FallKey = { t: 0, ph: 'pause', hip: W(-0.12, SEAT), pitch: -4, head: 4, feet: [W(0.38, 0, -0.1), W(0.44, 0, 0.1)], hands: [W(0.22, 0.6, -0.15), W(0.26, 0.6, 0.15)], c: ['s', 'f0', 'f1'] };
@@ -164,4 +165,12 @@ export function sledRidePose(t: number, accel: number): FallKey {
     feet: [W(0.62, 0.3, -0.09, 25), W(0.68, 0.3, 0.09, 25)],
     hands: [W(0.12, 0.38, -0.24), W(0.16, 0.38, 0.24)], c: ['s'],
   };
+}
+
+/**
+ * Zvedání / pokládání nákladu (bedýnka): přidřep v kolenou a kyčlích, trup mírně vpřed, záda nejsou
+ * ohnutá v pase; ruce u madel nízko před chodidly (náklad blízko těla).
+ */
+export function liftPose(): FallKey {
+  return { t: 0, ph: 'pause', hip: W(-0.08, 0.66), pitch: 30, head: -12, feet: [W(-0.06, 0, -0.12), W(0.1, 0, 0.12)], hands: [W(0.36, 0.2, -0.2), W(0.38, 0.2, 0.2)], c: ['f0', 'f1'] };
 }

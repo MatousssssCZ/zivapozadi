@@ -2,6 +2,7 @@
  * Editorové značky (trasy, zóny, oblasti, výběr). Kreslí se POUZE na editorové plátno –
  * export ani náhled bez značek tento modul nikdy nevolají.
  */
+import { bakeryLabel } from '../core/sim/bakery';
 import type { ProjectFile, SceneObject } from '../core/model/types';
 import type { Simulation } from '../core/sim/simulation';
 import type { Selection, Tool } from './store';
@@ -290,7 +291,8 @@ function drawTramDebug(ctx: Ctx, o: OverlayInput) {
   if (p.bakery) {
     const b = p.bakery, st = sim.state.bakery; ctx.strokeStyle = '#ff00e6'; ctx.strokeRect(b.door.x0, b.door.y0, b.door.x1 - b.door.x0, b.door.y1 - b.door.y0);
     ctx.beginPath(); ctx.moveTo(b.sweep[0].x, b.sweep[0].y); ctx.lineTo(b.sweep[1].x, b.sweep[1].y); ctx.stroke();
-    if (st) label(ctx, `pekař: ${st.phase}${st.phase === 'inside' ? ` · venku za ${Math.max(0, st.until - sim.time()).toFixed(0)} s` : ''} · zametených míst ${st.patches.length}`, p.scene.width / 2, 58 * px, px);
+    if (b.crateSpot) { ctx.beginPath(); ctx.arc(b.crateSpot.x, b.crateSpot.y, 5 * px, 0, 7); ctx.stroke(); }
+    if (st) label(ctx, `pekař: ${bakeryLabel(st)}${st.phase === 'inside' ? ` · venku za ${Math.max(0, st.until - sim.time()).toFixed(0)} s` : ''} · cedule ${st.sign.side === 'open' ? 'Otevřeno' : 'Hned jsem zpět'} · bedýnka ${st.crate.out ? 'venku' : 'uvnitř'} · kbelík ${st.grits} · hotovo: zam. ${st.done.sweep}, posyp ${st.done.salt}, bedýnka ${st.done.crate}, cedule ${st.done.sign}`, p.scene.width / 2, 58 * px, px);
   }
   for (const a of sim.state.agents) if (!a.hidden && (a.tram || sim.characterOf(a.id)?.routine === 'baker')) label(ctx, `${a.name}: ${a.tram ? a.tram.role : a.status}`, a.pos.x, a.pos.y + 16 * px, px, '#fff', 'rgba(30,60,140,0.8)');
   ctx.restore();

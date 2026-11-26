@@ -50,7 +50,11 @@ export function actionsAt(m: Vec2, agentId: string | null): MenuItem[] {
       items.push({ label: 'Odklízení sněhu', head: true }, { label: 'Jeden pracovní cyklus', run: () => clearingCommand('cycle') }, { label: 'Obnovit sníh', run: () => clearingCommand('reset') });
   }
   if (p.tram) items.push({ label: 'Tramvaj a pekárna', head: true }, { label: 'Přijede tramvaj', run: () => toast(sim.tramNow()) });
-  if (p.bakery) items.push({ label: 'Pekař jde zametat', run: () => toast(sim.bakerNow()) });
+  if (p.bakery) {
+    items.push({ label: 'Pekař jde zametat (A18a)', run: () => toast(sim.bakerNow('sweep')) });
+    items.push({ label: 'Pekař sype chodník (A18b)', run: () => toast(sim.bakerNow('salt')) });
+    if (p.bakery.crateSpot) items.push({ label: 'Pekař přenese bedýnku (A18c)', run: () => toast(sim.bakerNow('crate')) });
+  }
   if (!a) {
     items.push({ label: 'Kdekoli', head: true });
     items.push({ label: 'Pád chodce (nejbližší)', run: () => toast(sim.triggerFall('back', 1, { helper: true }), 'Pád: ') });

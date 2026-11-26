@@ -3,8 +3,8 @@
   "formatVersion": 1,
   "meta": {
     "name": "Vánoční tramvajová ulice",
-    "createdAt": "2026-11-25T23:46:01.552Z",
-    "modifiedAt": "2026-11-25T23:46:01.630Z",
+    "createdAt": "2026-11-26T00:45:45.362Z",
+    "modifiedAt": "2026-11-26T00:45:45.442Z",
     "appVersion": "0.1.0"
   },
   "seed": 4242,
@@ -1977,7 +1977,17 @@
       180,
       360
     ],
-    "firstAt": 60
+    "firstAt": 60,
+    "crateSpot": {
+      "x": 358.3,
+      "y": 705.1
+    },
+    "sign": true,
+    "tasks": {
+      "sweep": 0.45,
+      "salt": 0.3,
+      "crate": 0.25
+    }
   },
   "crowd": {
     "walkers": 0.75,

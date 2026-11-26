@@ -27,7 +27,7 @@ export const TRAM_SCENE = {
   shelterFootY: 565,
   tram: { stopDoorX: 1478, interval: [100, 180] as [number, number], alight: [0, 3] as [number, number], board: [0, 4] as [number, number], firstAt: 35 },
   waitSpots: [[1462, 570], [1505, 574], [1548, 571], [1420, 580]] as [number, number][],
-  bakery: { door: [219, 440, 281, 592] as [number, number, number, number], inside: [250, 589] as [number, number], outside: [262, 626] as [number, number], sweep: [[240, 631], [520, 624]] as [[number, number], [number, number]], interval: [180, 360] as [number, number], firstAt: 60 },
+  bakery: { door: [219, 440, 281, 592] as [number, number, number, number], inside: [250, 589] as [number, number], outside: [262, 626] as [number, number], sweep: [[240, 631], [520, 624]] as [[number, number], [number, number]], interval: [180, 360] as [number, number], firstAt: 60, crateSpot: [312, 614] as [number, number] },
   farPath: [[-70, 628], [120, 627], [262, 629], [520, 623], [800, 600], [1000, 568], [1180, 547], [1350, 529], [1520, 516], [1730, 511]] as [number, number][],
   nearPath: [[-80, 772], [300, 766], [650, 742], [950, 700], [1200, 640], [1380, 597], [1460, 591], [1600, 596], [1760, 606]] as [number, number][],
   window: [[392, 628], [452, 624]] as [number, number][],
@@ -75,7 +75,7 @@ export async function generateTram(dir: string): Promise<ProjectFile> {
     waitSpots: TRAM_SCENE.waitSpots.map(([x, y]) => B(x, y)),
   };
   const bk = TRAM_SCENE.bakery, d0 = B(bk.door[0], bk.door[1]), d1 = B(bk.door[2], bk.door[3]);
-  p.bakery = { bakerId: 'ch_pekar', door: { x0: d0.x, y0: d0.y, x1: d1.x, y1: d1.y, hinge: 'left' }, inside: B(...bk.inside), outside: B(...bk.outside), sweep: [B(...bk.sweep[0]), B(...bk.sweep[1])], interval: bk.interval, firstAt: bk.firstAt };
+  p.bakery = { bakerId: 'ch_pekar', door: { x0: d0.x, y0: d0.y, x1: d1.x, y1: d1.y, hinge: 'left' }, inside: B(...bk.inside), outside: B(...bk.outside), sweep: [B(...bk.sweep[0]), B(...bk.sweep[1])], interval: bk.interval, firstAt: bk.firstAt, crateSpot: B(...bk.crateSpot), sign: true, tasks: { sweep: 0.45, salt: 0.3, crate: 0.25 } };
   // trasy: vzdálený chodník a přední zasněžený chodník (nespojené – nikdo nepřechází koleje)
   const nodes: NavNode[] = [], edges: NavEdge[] = [];
   const chain = (pts: [number, number][], pre: string, names: Record<number, string> = {}) => pts.forEach(([x, y], i) => {

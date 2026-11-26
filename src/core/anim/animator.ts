@@ -22,9 +22,17 @@ export function heelRelOf(a: AnimState): [number | null, number | null] {
  */
 export interface ToolPose { u: number; h: number; beta: number; crouch: number; lean: number; oneHand?: boolean; load?: number }
 
+export interface HandTarget { u: number; h: number; lat?: number }
+
 export interface AnimState {
   dir: Direction;
   /** nástroj v rukou (lopata) */ tool?: ToolPose | null;
+  /**
+   * Cíle rukou pro manipulaci (bedýnka, madlo kočárku, kbelík, ukazování, cedule): body v rovině chůze
+   * v délkách nohy od kořene (u vpřed, h výška, lat do strany; index 0 = vzdálená ruka, 1 = blízká),
+   * null = ruka zůstává v běžné póze. w = váha prolnutí (0..1) – mění se plynule, ruce nepřeskočí.
+   */
+  hands?: { t: [HandTarget | null, HandTarget | null]; w: number } | null;
   walkPhase: number;
   walkBlend: number;
   idleTime: number;
@@ -55,7 +63,7 @@ export interface AnimState {
   /** Bruslení: póza celého těla z cílů (rink.ts → skatePose), přebírá chůzi. */
   skate?: import('./fallPoses').FallKey | null;
   /** Sed na lavičce: odpočinek nebo přezouvání bruslí (čas, délka, váha prolnutí 0–1). */
-  sit?: { kind: 'rest' | 'change' | 'kneel' | 'bend' | 'squat' | 'sled'; r?: number; t: number; dur: number; w: number; from?: { x: number; y: number }; to?: { x: number; y: number } } | null;
+  sit?: { kind: 'rest' | 'change' | 'kneel' | 'bend' | 'squat' | 'sled' | 'lift'; r?: number; t: number; dur: number; w: number; from?: { x: number; y: number }; to?: { x: number; y: number } } | null;
   /** Na nohou jsou brusle (chůze po sněhu k brance / od ní) – kreslí se nůž. */
   bladesOn?: boolean;
 }

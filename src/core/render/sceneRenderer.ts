@@ -19,7 +19,7 @@ import { SHOVEL_SPRITE } from '../anim/skeleton';
 import { cameraFor, toScreen, toWorld, Q, type World } from '../scene/camera';
 import { SLED } from '../sim/sled';
 import { tramGeo, tramMatrix, trackYAt, doorQuad, tramVisible, type TramGeo } from '../sim/tram';
-import { BAKERY_REFILL } from '../sim/bakery';
+import { BAKERY_REFILL, GRIT_LIFE } from '../sim/bakery';
 import { drawSnowSurface, snowItems } from './snowRender';
 import type { SimState } from '../sim/types';
 import { lidOpenness } from '../sim/simulation';
@@ -29,6 +29,7 @@ import { drawHat, drawPompom, drawScarf, drawMitten, hatTop, scarfKnots, stepAcc
 import { windFactor } from '../sim/environment';
 import { SIM_DT } from '../sim/types';
 import { drawVectorSled, sledRingScreen, drawRope } from './sledVector';
+import { drawCrate, drawBucket, drawSign, drawGrit } from './shopProps';
 import { depthScaleAt, objectLocalToScene } from '../scene/geometry';
 import { hashNoise } from '../math/rng';
 import { clamp, smoothstep } from '../math/vec';
@@ -207,6 +208,12 @@ const softFar = (f: number) => 1 - (1 - f) * 0.5;
 function drawHeld(ctx: Ctx, held: PropState, cv: ReturnType<typeof characterVisual>, agent?: AgentState) {
   const g = cv.grip;
   if (held.kind === 'bag') return drawBag(ctx, g.x, g.y + 1, 1, held.variant);
+  if (held.kind === 'crate') {
+    // bedýnka mezi dlaněmi: madla ve výšce rukou (lokální jednotky postavy; k = jednotek na metr)
+    const A = cv.pose.arms[0].end, B = cv.pose.arms[1].end, k = 1 / Q;
+    return drawCrate(ctx, (A.x + B.x) / 2, (A.y + B.y) / 2 + 0.82 * 0.22 * k, k);
+  }
+  if (held.kind === 'bucket') { const A = cv.pose.arms[0].end, k = 1 / Q; return drawBucket(ctx, A.x, A.y + 0.02 * k, k, 1); }
   if (held.kind === 'phone') {
     // zezadu je vidět displej (focí scénu před sebou), zepředu zadní strana s fotoaparátem
     const back = /back/.test(cv.view?.used ?? '');
@@ -632,7 +639,10 @@ function drawBakery(ctx: Ctx, project: ProjectFile, sim: Simulation, images: Ass
     const x = q.x + q.vx * a, y = q.y + q.vy * a + 0.5 * 9.81 * a * a * (q.vy === 0 ? 0 : -q.vy / 0.9 / 3);
     ctx.fillStyle = `rgba(250,252,255,${(0.9 * k).toFixed(3)})`; ctx.beginPath(); ctx.arc(x, Math.min(y, q.y), 1.6, 0, Math.PI * 2); ctx.fill();
   }
-  if (st.door <= 0.001) return;
+  drawGrit(ctx, st.grit, t, GRIT_LIFE);
+  // cedule na dveřích (A18d): závěs v horní části křídla, otáčí se jen gestem pekaře, pak dozní
+  const sign = () => { if (!c.sign) return; const d = c.door, w = d.x1 - d.x0, sw = (t - st.sign.rel) < 4 ? 0.12 * Math.exp(-(t - st.sign.rel) * 1.4) * Math.sin((t - st.sign.rel) * 7) : 0; drawSign(ctx, w * 0.5, (d.y1 - d.y0) * 0.36, w * 0.62, st.sign.side, st.sign.flip, sw); };
+  if (st.door <= 0.001) { ctx.save(); ctx.translate(c.door.x0, c.door.y0); sign(); ctx.restore(); return; }
   const bg = project.scene.backgroundAssetId ? images.get(project.scene.backgroundAssetId) as (CanvasImageSource & { width: number; height: number }) | undefined : undefined; if (!bg) return;
   const d = c.door, w = d.x1 - d.x0, h = d.y1 - d.y0, kx = bg.width / project.scene.width, ky = bg.height / project.scene.height;
   // otvor: teplé světlo obchodu (lehce tlumené), na podlaze odlesk
@@ -646,6 +656,8 @@ function drawBakery(ctx: Ctx, project: ProjectFile, sim: Simulation, images: Ass
   ctx.transform((cw / w) * sgn, -sgn * sk / w, 0, 1, hx, d.y0);
   ctx.drawImage(bg, d.x0 * kx, d.y0 * ky, w * kx, h * ky, sgn > 0 ? 0 : -w, 0, w, h);
   ctx.fillStyle = `rgba(30,18,10,${(0.35 * st.door).toFixed(3)})`; ctx.fillRect(0, 0, w, h);
+  if (sgn < 0) ctx.translate(-w, 0);
+  sign();
   ctx.restore();
 }
 /** Mantinel: krátké úseky řazené podle hloubky (postavy za ním i před ním), výška `boardH` (0,95 m). */
@@ -821,6 +833,8 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
     };
     for (const a of sim.state.agents) if (!a.hidden) items.push({ key: keyOf(a), tie: 10000 + sim.state.agents.indexOf(a), draw: () => drawAgent(ctx, project, sim, a, 1, images) });
     if (tr && trG) items.push({ key: K_TRAM, tie: 9500, draw: () => drawTram(ctx, project, sim, trG, images) });
+    const bst = sim.state.bakery;
+    if (bst?.crate.out && project.bakery?.crateSpot) { const cr = bst.crate, k = depthScaleAt(sc.depth, cr.y) / Q; items.push({ key: cr.y, tie: 19990, draw: () => drawCrate(ctx, cr.x, cr.y, k) }); }
     for (const p of sim.state.props) {
       const s = depthScaleAt(sc.depth, propY(p)) * 1.0;
       if (p.place.kind === 'counter') {
