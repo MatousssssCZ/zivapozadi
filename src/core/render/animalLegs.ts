@@ -89,12 +89,13 @@ export function pawTarget(ph: number, duty: number, walk: number, rootX: number,
  * (fáze), horní dva články dvoučlánková IK s pevným směrem ohybu: přední loket vzad (−1), zadní koleno
  * vpřed (+1); hlezno je pak zlom vzad. Dosah omezen (žádné natahování kostí).
  */
-export function solveLeg(R: P, T: P, segs: [number, number, number], front: boolean, swingQ: number, contact: boolean, roll: number): LegSolve {
+export function solveLeg(R: P, T: P, segs: [number, number, number], front: boolean, swingQ: number, contact: boolean, roll: number, a3Override?: number): LegSolve {
   const [l1, l2, l3] = segs;
   // distální článek: přední záprstí skoro svisle (mírně vpřed), v odrazu se sklápí; zadní nárt šikmo vzad nahoru
   let a3: number; // úhel od svislice (+ = horní konec vzad)
   if (front) a3 = contact ? -0.12 + 0.9 * roll : 0.9 - 0.95 * ss(swingQ / 0.8);
   else a3 = contact ? 0.38 + 0.35 * roll : 0.75 - 0.4 * ss(swingQ / 0.8);
+  if (a3Override !== undefined) a3 = a3Override; // např. sed: nárt leží na zemi
   const W: P = { x: T.x + Math.sin(a3) * l3 * 1, y: T.y - Math.cos(a3) * l3 };
   // kloub mezi l1 a l2 (loket / koleno)
   let dx = W.x - R.x, dy = W.y - R.y, d = Math.hypot(dx, dy);

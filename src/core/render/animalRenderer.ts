@@ -4,6 +4,8 @@
  * LH–LF–RH–RF), v klidu nohy rovně, sed = samostatný malovaný díl. Díly jsou assety `animal_*`.
  */
 import { drawVectorTail, tailProfileOf } from './animalTail';
+import { vectorFiguresOn } from './characterPose';
+import { buildOf, drawVectorAnimal } from '../vector/animal';
 import type { AnimalState } from '../sim/animals';
 import { SPECIES } from '../sim/animals';
 import { Q } from '../scene/camera';
@@ -82,6 +84,7 @@ function darkened(im: Img): Img {
 
 /** Vykreslí zvíře s chodidly v (0,0) – volající nastaví posun a měřítko (px na metr). */
 export function drawAnimal(ctx: Ctx, a: AnimalState, img0: AnimalImages, pxPerM0: number, t: number, debug = false): void {
+  if (vectorFiguresOn()) { drawAnimalVec(ctx, a, pxPerM0, t, debug); return; }
   const dbg: { x: number; y: number; c: string }[] = [];
   const sp = a.species, BR = a.breed ? BREED_RIG[a.breed] : undefined, BI = a.breed ? BREEDS[a.breed] : undefined;
   const R: Rig = { ...RIGS[sp], ...(BR?.rig ?? {}) }, S = SPECIES[sp];
@@ -297,3 +300,15 @@ export function drawAnimalShadow(ctx: Ctx, a: AnimalState, pxPerM: number): void
   ctx.beginPath(); ctx.ellipse(0, 0, L * 0.55, Math.max(1, L * 0.09), 0, 0, Math.PI * 2); ctx.fill();
 }
 export const pxPerMeter = (depthScale: number) => depthScale / Q;
+
+/** Plně vektorové zvíře (s vektorovými postavami): stejné režimy a dráha ze simulace, jiné tělo. */
+function drawAnimalVec(ctx: Ctx, a: AnimalState, ppm: number, t: number, debug: boolean) {
+  const b = buildOf(a.breed, a.species), mirror = Math.cos(a.facing) < -0.05;
+  const yaw = clamp(Math.sin(a.facing) * 1.1, -1, 1) * (Math.abs(Math.sin(a.facing)) > 0.35 ? 1 : 0.4);
+  // pohled zpět: cíl pohledu za zvířetem (vůči směru chůze)
+  const lb = a.look ? (((a.look.x - a.pos.x) * Math.cos(a.facing) + (a.look.y - a.pos.y) * Math.sin(a.facing)) < -0.3 ? 1 : 0) : 0;
+  ctx.save(); if (mirror) ctx.scale(-1, 1);
+  const pts = drawVectorAnimal(ctx, b, { dist: a.dist, speed: a.speed, t, mode: a.mode, sit: a.sit, headDown: a.headDown, since: a.since, until: a.until, yaw, lookBack: lb, alert: a.mode === 'notice' || a.mode === 'meet' ? 1 : 0, excite: a.mode === 'pet' ? 0.9 : a.mode === 'meet' ? 0.6 : 0, seed: a.id.length * 7 + (a.breed?.length ?? 0) }, ppm, debug);
+  if (debug) for (const q of pts) { ctx.fillStyle = q.c; ctx.beginPath(); ctx.arc(q.x, q.y, 3, 0, Math.PI * 2); ctx.fill(); }
+  ctx.restore();
+}

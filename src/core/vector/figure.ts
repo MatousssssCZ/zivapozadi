@@ -388,8 +388,9 @@ export function drawVectorFigure(ctx: Ctx, pose: SkeletonPose, body: BodyProfile
   };
   const drawHoodBack = () => {
     if (of.top.collar !== 'hood' || !back) return;
-    const c = Nk, w = body.neckR + 5, col = C.main;
-    const path = () => { ctx.beginPath(); smoothClosed(ctx, [add(c, mul(n, -w)), add(add(c, mul(n, -w * 0.8)), mul(u, 6.5)), add(add(c, mul(n, w * 0.6)), mul(u, 7.5)), add(c, mul(n, w)), add(add(c, mul(u, -5)), mul(n, 0.5))], 0.8); };
+    // shrnutá kapuce leží na zádech pod týlem (hlava a vlasy zůstávají vidět)
+    const c = add(Nk, mul(u, -1.5)), w = body.neckR + 4, col = C.main;
+    const path = () => { ctx.beginPath(); smoothClosed(ctx, [add(c, mul(n, -w)), add(add(c, mul(n, -w * 0.7)), mul(u, 3.2)), add(add(c, mul(n, w * 0.6)), mul(u, 3.6)), add(c, mul(n, w)), add(add(c, mul(u, -6)), mul(n, 0.5))], 0.8); };
     ctx.fillStyle = col; path(); ctx.fill();
     ctx.save(); path(); ctx.clip(); ctx.strokeStyle = shadeOf(col, 0.4); ctx.lineWidth = 0.7; ctx.beginPath(); smoothThrough(ctx, [add(add(c, mul(n, -w * 0.6)), mul(u, 4)), add(add(c, mul(n, 0)), mul(u, 1)), add(add(c, mul(n, w * 0.5)), mul(u, 4.5))], true); ctx.stroke();
     if (of.top.kind === 'parka' && det > 0.4) { ctx.strokeStyle = mixc(C.support, '#ffffff', 0.2); ctx.lineWidth = 1.6; ctx.setLineDash([0.6, 0.8]); ctx.beginPath(); smoothThrough(ctx, [add(add(c, mul(n, -w * 0.85)), mul(u, 5.6)), add(add(c, mul(n, 0)), mul(u, 7.4)), add(add(c, mul(n, w * 0.6)), mul(u, 6.8))], true); ctx.stroke(); ctx.setLineDash([]); }
@@ -522,8 +523,8 @@ export function drawVectorFigure(ctx: Ctx, pose: SkeletonPose, body: BodyProfile
   drawBagStraps();
   accDraw?.('scarf');
   if (!back) drawNeckSkin();
-  drawHead();
   drawHoodBack();
+  drawHead();
   accDraw?.('hat');
   hands[1] = drawArm(1);
   return { headC: HP(0, 0), headUp, headR: R, neck: add(Nk, mul(u, 1.2)), torsoUp: u, neckW: (body.neckR + 2.2) * 2 * 1.35, hands, back, skin: skinC };

@@ -323,7 +323,8 @@ function stepConversation(world: SocialWorld, c: Conversation, env: SocialEnv): 
     let first = avail[0];
     if (avail.length > 1 && !(avail[0] === c.members[0] && nextU01(c.rng) < 0.65)) first = weighted(c.rng, avail.slice(avail[0] === c.members[0] ? 1 : 0).map((m) => [m, traits(m)?.turnWeight ?? 1] as [string, number])) ?? avail[0];
     // začít až po případném dopití (nikdy nemluvit s kelímkem u úst)
-    planTurn(c, first, Math.max(now + 0.3, busyUntil(env.agent(first), now) + 0.45), 0, 'first', traits(first)?.tempo ?? 1);
+    const bu = isVirtual(first) ? -Infinity : busyUntil(env.agent(first), now); // virtuální člen není „zaneprázdněný“
+    planTurn(c, first, Number.isFinite(bu) ? Math.max(now + 0.3, bu + 0.45) : now + 0.3, 0, 'first', traits(first)?.tempo ?? 1);
     world.stats.turns++;
     return;
   }
