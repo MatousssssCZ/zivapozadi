@@ -43,6 +43,15 @@ export async function setBackground(a: AssetEntry | null) {
   store.edit('Změna pozadí', (d) => { d.scene.backgroundAssetId = asset?.id ?? null; });
 }
 
+/** Lidský popis výběru (pro potvrzení smazání); null = nic vybráno. */
+export function selectionLabel(): string | null {
+  const s = store.state.selection, p = store.state.project; if (!s || !p) return null;
+  if (s.kind === 'object') { const o = p.objects.find((x) => x.id === s.id); return o ? `objekt „${o.name}“` : null; }
+  if (s.kind === 'character') { const c = p.characters.find((x) => x.id === s.id) as { name?: string } | undefined; return c ? `postavu „${c.name ?? s.id}“` : null; }
+  if (s.kind === 'zone') { const z = p.zones.find((x) => x.id === s.id) as { name?: string } | undefined; return `zónu „${z?.name ?? s.id}“`; }
+  return ({ point: 'interakční bod', node: 'bod trasy', edge: 'spojení trasy', area: 'oblast', event: 'událost' } as Record<string, string>)[s.kind] ?? 'vybraný prvek';
+}
+
 export function deleteSelection() {
   const s = store.state.selection; if (!s) return;
   const p = P();

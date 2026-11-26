@@ -91,8 +91,8 @@ export function App() {
       if (mod && e.key.toLowerCase() === 'z' && !e.shiftKey) { e.preventDefault(); store.undoOp(); return; }
       if (mod && (e.key.toLowerCase() === 'y' || (e.key.toLowerCase() === 'z' && e.shiftKey))) { e.preventDefault(); store.redoOp(); return; }
       if (mod && e.key.toLowerCase() === 'd') { e.preventDefault(); duplicateSelection(); return; }
-      if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); deleteSelection(); return; }
-      if (e.key === 'Escape') { store.set({ actionMenu: null, drawing: [], routeActiveNode: null, selection: store.state.tool === 'select' ? null : store.state.selection }); return; }
+      if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); if (store.state.galleryOpen) { if (store.state.selection) store.set({ confirmDelete: true }); } else deleteSelection(); return; }
+      if (e.key === 'Escape') { store.set({ confirmDelete: false, actionMenu: null, drawing: [], routeActiveNode: null, selection: store.state.tool === 'select' ? null : store.state.selection }); return; }
       if (e.key === 'Enter' && store.state.drawing.length >= 3 && (store.state.tool === 'obstacle' || store.state.tool === 'snow')) { addArea(store.state.tool, store.state.drawing); return; }
       if (e.key === ' ') { e.preventDefault(); store.sim.clock.playing ? store.sim.pause() : store.sim.play(); return; }
       if (!mod && KEY_TOOLS[e.key.toLowerCase()]) store.set({ tool: KEY_TOOLS[e.key.toLowerCase()], drawing: [], routeActiveNode: null });

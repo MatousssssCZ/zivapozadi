@@ -56,6 +56,75 @@ function tinted(key: string, tex: ImageLike, mask: ImageLike | null | undefined,
   return c as unknown as ImageLike;
 }
 
+/**
+ * Namalované čepice a nákrčníky mají v malbě i vnitřek (tmavý otvor pod lemem čepice, horní otvor
+ * nákrčníku). Ten se odstraní: pixel mimo masku pleteniny, který je pleteninou uzavřený zleva i zprava
+ * a u čepice i shora (otvor pod lemem), u nákrčníku/šály zdola v horní části (horní otvor). Bambule
+ * (pod ní je pletenina, nad ní nic) zůstane.
+ */
+const insideCache = new Map<string, ImageLike>();
+function stripInside(key: string, tex: ImageLike, mask: ImageLike, slot: 'hat' | 'scarf'): ImageLike {
+  const hit = insideCache.get(key); if (hit) return hit;
+  if (!canvasFactory) return tex;
+  const W = tex.width, H = tex.height;
+  const c = canvasFactory(W, H), ctx = c.getContext('2d') as CanvasRenderingContext2D;
+  const m = canvasFactory(W, H), mc = m.getContext('2d') as CanvasRenderingContext2D;
+  try {
+    ctx.drawImage(tex as CanvasImageSource, 0, 0); mc.drawImage(mask as CanvasImageSource, 0, 0);
+    const img = ctx.getImageData(0, 0, W, H), d = img.data, md = mc.getImageData(0, 0, W, H).data;
+    // maska pleteniny vyhlazená (otevření 5×5): drobné ostrůvky masky uvnitř otvoru se nepočítají
+    const raw = new Uint8Array(W * H); for (let k = 0; k < W * H; k++) raw[k] = md[k * 4 + 3] > 100 && md[k * 4] > 100 ? 1 : 0;
+    const integ = new Int32Array((W + 1) * (H + 1));
+    for (let y = 0; y < H; y++) { let run = 0; for (let x = 0; x < W; x++) { run += raw[y * W + x]; integ[(y + 1) * (W + 1) + x + 1] = integ[y * (W + 1) + x + 1] + run; } }
+    const box = (x: number, y: number, r: number) => { const xa = Math.max(0, x - r), ya = Math.max(0, y - r), xb = Math.min(W, x + r + 1), yb = Math.min(H, y + r + 1); return { n: integ[yb * (W + 1) + xb] - integ[ya * (W + 1) + xb] - integ[yb * (W + 1) + xa] + integ[ya * (W + 1) + xa], a: (xb - xa) * (yb - ya) }; };
+    const R = Math.max(2, Math.round(Math.min(W, H) * 0.03));
+    const sm = new Uint8Array(W * H); for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const b = box(x, y, R); sm[y * W + x] = raw[y * W + x] && b.n > b.a * 0.6 ? 1 : 0; }
+    const isM = (x: number, y: number) => sm[y * W + x] === 1;
+    // svislé meze pleteniny po sloupcích a vodorovné po řádcích
+    const top = new Int32Array(W).fill(H), bot = new Int32Array(W).fill(-1), left = new Int32Array(H).fill(W), right = new Int32Array(H).fill(-1);
+    let y0 = H, y1 = -1;
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (isM(x, y)) { if (y < top[x]) top[x] = y; bot[x] = y; if (x < left[y]) left[y] = x; right[y] = x; if (y < y0) y0 = y; y1 = y; }
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const i = (y * W + x) * 4; if (d[i + 3] === 0 || isM(x, y)) continue;
+      if (!(x > left[y] && x < right[y])) continue;
+      const inside = slot === 'hat' ? y > top[x] && y > y0 + (y1 - y0) * 0.45 : y < bot[x] && y < y0 + (y1 - y0) * 0.4;
+      if (inside) d[i + 3] = 0;
+    }
+    if (slot === 'hat') {
+      // spodní hrana lemu = první díra pod pleteninou ve sloupci; křivka se vyhladí (medián) a doplní
+      // mezi sloupci, pod ní je jen vnitřek a zadní okraj zespodu → pryč
+      const cut = new Float64Array(W).fill(NaN);
+      for (let x = 0; x < W; x++) for (let y = Math.max(0, top[x]) + 1; y <= bot[x]; y++) { if (d[(y * W + x) * 4 + 3] === 0) { cut[x] = y; break; } }
+      const xs: number[] = []; for (let x = 0; x < W; x++) if (!Number.isNaN(cut[x])) xs.push(x);
+      if (xs.length > W * 0.1) {
+        const xa = xs[0], xb = xs[xs.length - 1], hw = Math.max(2, Math.round(W * 0.05)), sm2 = new Float64Array(W).fill(NaN);
+        for (let x = xa; x <= xb; x++) { const v: number[] = []; for (let k = x - hw; k <= x + hw; k++) if (k >= 0 && k < W && !Number.isNaN(cut[k])) v.push(cut[k]); if (v.length) { v.sort((a, b) => a - b); sm2[x] = v[Math.floor(v.length * 0.3)]; } }
+        for (let x = xa; x <= xb; x++) { const c0 = sm2[x]; if (Number.isNaN(c0)) continue; for (let y = Math.floor(c0); y < H; y++) { const i = (y * W + x) * 4; d[i + 3] = y === Math.floor(c0) ? Math.round(d[i + 3] * (1 - (c0 - y))) : 0; } }
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+  } catch { return tex; }
+  insideCache.set(key, c as unknown as ImageLike);
+  return c as unknown as ImageLike;
+}
+
+/** Průměrná barva krku (spodek ořezu hlavy, střed) – výplň otvoru nákrčníku/šály. */
+const skinCache = new Map<string, string>();
+function neckTone(key: string, tex: ImageLike, trim: { x: number; y: number; w: number; h: number }): string | undefined {
+  const hit = skinCache.get(key); if (hit) return hit;
+  if (!canvasFactory) return undefined;
+  const sw = Math.max(1, Math.round(trim.w * 0.36)), sh = Math.max(1, Math.round(trim.h * 0.16));
+  const c = canvasFactory(sw, sh), ctx = c.getContext('2d') as CanvasRenderingContext2D;
+  try {
+    ctx.drawImage(tex as CanvasImageSource, trim.x + trim.w * 0.32, trim.y + trim.h * 0.8, sw, sh, 0, 0, sw, sh);
+    const d = ctx.getImageData(0, 0, sw, sh).data; let r = 0, g = 0, b = 0, n = 0;
+    for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 200) { r += d[i]; g += d[i + 1]; b += d[i + 2]; n++; }
+    if (!n) return undefined;
+    const col = `rgb(${Math.round(r / n)},${Math.round(g / n)},${Math.round(b / n)})`;
+    skinCache.set(key, col); return col;
+  } catch { return undefined; }
+}
+
 // ---------------------------------------------------------------- sestavení
 export interface RigItem { part: PartDef; m: Mat; color: string | undefined; far: boolean; key: string; order: number }
 export interface RigAssembly {
@@ -183,7 +252,7 @@ export function assembleRig(lib: PartLibrary, tpl: BodyTemplateDef, app: Charact
     const handOrder = (sd: 'far' | 'near') => (items.find((it) => it.key === `${sd}.hand`)?.order ?? 0) + 1;
     asm.acc = {
       spec: acc,
-      geo: { headC: hc, headUp: { x: (ht.x - hc.x) / ul, y: (ht.y - hc.y) / ul }, headR: head.trim.w * s * 0.45, neck: nk, torsoUp: { x: tu.x / tl, y: tu.y / tl }, neckW: torso.trim.w * s * bw * 0.36, hands, back: view === 'back3q' || view === 'back' },
+      geo: { headBottom: apply(mHead, { x: head.trim.x + head.trim.w * 0.5, y: head.trim.y + head.trim.h }), headC: hc, headUp: { x: (ht.x - hc.x) / ul, y: (ht.y - hc.y) / ul }, headR: head.trim.w * s * 0.45, neck: nk, torsoUp: { x: tu.x / tl, y: tu.y / tl }, neckW: torso.trim.w * s * bw * 0.36, hands, back: view === 'back3q' || view === 'back' },
       order: { hat: oi('hat', 12), scarf: oi('scarf', 13), mitten: [handOrder('far'), handOrder('near')] },
     };
   }
@@ -241,8 +310,11 @@ export function drawRig(ctx: CanvasRenderingContext2D, asm: RigAssembly, images:
     const p = it.part;
     const tex = images.get(rigImageKey(libDir, p.texture));
     if (!tex) continue;
+    if (p.slot === 'head' && asm.acc) asm.acc.geo.skin = neckTone(rigImageKey(libDir, p.texture), tex, p.trim);
     const mask = p.mask ? images.get(rigImageKey(libDir, p.mask)) : null;
-    const img = tinted(rigImageKey(libDir, p.texture), tex, mask, p.mask ? it.color : undefined, it.far ? farShade : 1);
+    const strip = mask && (p.slot === 'hat' || p.slot === 'scarf');
+    const tkey = rigImageKey(libDir, p.texture) + (strip ? '|bez-vnitrku' : '');
+    const img = tinted(tkey, strip ? stripInside(tkey, tex, mask, p.slot as 'hat' | 'scarf') : tex, mask, p.mask ? it.color : undefined, it.far ? farShade : 1);
     // brusle: nůž a držák se kreslí pod botu (bota je přes ně)
     if (p.slot === 'foot' && asm.blades) drawBlade(ctx, asm.blades[it.key === 'far.foot' ? 0 : 1], it.far);
     ctx.save();
@@ -256,3 +328,4 @@ export function drawRig(ctx: CanvasRenderingContext2D, asm: RigAssembly, images:
   while (ai < acc.length) drawAcc!(acc[ai++][0]);
   if (!heldDone && drawHeld) drawHeld();
 }
+

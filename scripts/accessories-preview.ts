@@ -13,12 +13,13 @@ import { Simulation } from '../src/core/sim/simulation';
 import { setVectorAccessories, characterVisual } from '../src/core/render/characterPose';
 
 const dir = path.resolve(process.argv[2] ?? 'demo/Tramvajova-ulice.zscena'), out = path.resolve(process.argv[3] ?? 'doplnky.png');
+const RS = Number(process.env.RS ?? 1);
 const t0 = Number(process.argv[4] ?? 80);
 if (process.env.MALOVANE) setVectorAccessories(false);
 const lp = await loadProject(dir);
 lp.project.scene.snowfall.enabled = false;
 const img = await loadNodeImages(lp);
-const r = createNodeFrameRenderer(lp, img, 1920, 1080);
+const r = createNodeFrameRenderer(lp, img, 1920 * RS, 1080 * RS);
 const sim = Simulation.create(lp.project, lp.manifests);
 sim.advanceTo(t0);
 const vis = sim.state.agents.filter((a) => !a.hidden && a.pos.x > 60 && a.pos.x < 1860 && a.pos.y > 200 && a.pos.y < 1060).sort((a, b) => b.pos.y - a.pos.y).slice(0, 12);
@@ -34,7 +35,7 @@ for (let k = 0; k < T.length; k++) {
     const hc = cv.rig?.acc?.geo.headC ?? { x: 0, y: -120 }, hr = cv.rig?.acc?.geo.headR ?? 8;
     const hh = hr * 9 * cv.scale * (process.env.CELA ? 2.2 : 1), w = hh * (W / H), top = cv.y + (hc.y - hr * 2.2) * cv.scale;
     const cx0 = cv.x + hc.x * (cv.mirror ? -1 : 1) * cv.scale;
-    x.drawImage(im, cx0 - w / 2, top, w, hh, k * W * S, i * H * S, W * S, H * S);
+    x.drawImage(im, (cx0 - w / 2) * RS, top * RS, w * RS, hh * RS, k * W * S, i * H * S, W * S, H * S);
     x.fillStyle = '#000'; x.font = '18px sans-serif'; x.fillText(`${a.id} t+${T[k]}`, k * W * S + 6, i * H * S + 20);
   });
 }

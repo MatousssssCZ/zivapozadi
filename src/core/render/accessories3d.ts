@@ -11,6 +11,7 @@ import type { AccessorySpec, AccessoryGeo } from './accessories';
 type V3 = [number, number, number];
 type Ctx = CanvasRenderingContext2D;
 const YAW = 0.62; // ¾ pohled
+const PITCH = 0.13; // kamera mírně shora (krk/límec)
 const LIGHT: V3 = (() => { const v: V3 = [-0.5, 0.72, 0.6], l = Math.hypot(...v); return [v[0] / l, v[1] / l, v[2] / l]; })();
 const add = (a: V3, b: V3): V3 => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
 const mul = (a: V3, k: number): V3 => [a[0] * k, a[1] * k, a[2] * k];
@@ -70,7 +71,7 @@ export function drawHat3D(ctx: Ctx, s: AccessorySpec, g: AccessoryGeo, far: numb
       // ohrnutý lem: silnější prstenec přes spodek, hustší žebra
       const c0 = (p: number) => rimTheta(p) - 0.36, c1 = (p: number) => rimTheta(p) + 0.04;
       for (let h2 = 0; h2 < 2; h2++) {
-        const pa = p0 + (h2 * dPhi) / 2, pb = pa + dPhi / 2, rk = 1.075;
+        const pa = p0 + (h2 * dPhi) / 2, pb = pa + dPhi / 2, rk = 1.045;
         quad(capPoint(s, g, c0(pa), pa, rk), capPoint(s, g, c0(pb), pb, rk), capPoint(s, g, c1(pb), pb, rk * 0.99), capPoint(s, g, c1(pa), pa, rk * 0.99), s.hatStripes ? s.hatColor2 : s.hatColor, h2 ? 0.86 : 1);
       }
     }
@@ -112,30 +113,76 @@ export function hatTop3D(s: AccessorySpec, g: AccessoryGeo): Vec2 {
 export function drawNeck3D(ctx: Ctx, s: AccessorySpec, g: AccessoryGeo, far: number) {
   if (s.scarf === 'none') return;
   const { F, S, U } = axes(g.back), w = g.neckW, tube = s.scarf === 'tube';
-  const R0 = w * (tube ? 0.58 : 0.62), y0 = -w * (tube ? 0.26 : 0.12), y1 = w * (tube ? 0.4 : 0.34), NP = 28, NR = tube ? 7 : 6;
+  // nákrčník sedí pod bradou (nesahá přes obličej), šála je nižší omotaná role
+  const R0 = w * (tube ? 0.52 : 0.58), y0 = -w * (tube ? 0.3 : 0.16), y1 = w * (tube ? 0.22 : 0.2), NP = 32, NR = tube ? 7 : 6;
   const ang = Math.atan2(g.torsoUp.y, g.torsoUp.x) + Math.PI / 2;
   const radius = (u: number) => tube
-    ? R0 * (1 + 0.05 * u + (u > 0.68 ? 0.07 : 0)) // nahoře ohrnutý límec
+    ? R0 * (1 + 0.04 * u + (u > 0.72 ? 0.06 : 0) + 0.14 * (1 - u) ** 2) // dole rozšířený přes límec bundy, nahoře ohrnutý
     : R0 * (1 + 0.1 * Math.sin(Math.PI * ((u * 2) % 1)) - 0.04 * u); // dvě otočky
   const P = (u: number, phi: number): V3 => { const r = radius(u), hh = y0 + (y1 - y0) * u; return add(mul(U, hh), mul(add(mul(F, Math.cos(phi)), mul(S, Math.sin(phi))), r)); };
+  // mírný pohled shora: kruhy krku se promítnou jako elipsy (horní okraj je oblouk, ne rovná hrana)
+  const cp = Math.cos(PITCH), sp = Math.sin(PITCH);
+  const projP = (p: V3): Vec2 => ({ x: p[0], y: -(p[1] * cp) + p[2] * sp });
+  const facing = (n: V3) => n[2] * cp + n[1] * sp;
   const facets: Facet[] = [], dPhi = (2 * Math.PI) / NP;
   for (let j = 0; j < NP; j++) {
     const p0 = j * dPhi, p1 = p0 + dPhi;
     for (let i = 0; i < NR; i++) {
       const u0 = i / NR, u1 = (i + 1) / NR, a = P(u0, p0), b = P(u0, p1), c = P(u1, p1), d = P(u1, p0);
       const mid = (p0 + p1) / 2, n = norm([Math.cos(mid) * F[0] + Math.sin(mid) * S[0], 0, Math.cos(mid) * F[2] + Math.sin(mid) * S[2]]);
-      if (n[2] < -0.02) continue;
+      if (n[2] < -0.02) continue; // zadní (vnitřní) polovina se nekreslí – otvorem je vidět krk
       const ctr = mul(add(add(a, b), add(c, d)), 0.25);
       let color = s.scarfColor, k = 1;
-      if (tube) { k = j % 2 ? 0.9 : 1; if (u0 >= 0.7) k *= 1.06; if (s.scarfStripes && (i === 2 || i === 4)) color = s.scarfColor2; }
+      if (tube) { k = j % 2 ? 0.9 : 1; if (u0 >= 0.72) k *= 1.06; if (s.scarfStripes && (i === 2 || i === 4)) color = s.scarfColor2; }
       else { const roll = (u0 * 2) % 1; k = 0.86 + 0.18 * Math.sin(Math.PI * roll); if (s.scarfStripes && ((j + i * 2) % 7 === 0)) color = s.scarfColor2; }
-      facets.push({ pts: [a, b, c, d].map(proj), z: ctr[2], n: [n[0], tube ? 0.1 : 0.15 * Math.cos(Math.PI * ((u0 * 2) % 1)), n[2]], color, k: k * far });
+      facets.push({ pts: [a, b, c, d].map(projP), z: ctr[2] * cp + ctr[1] * sp, n: [n[0], tube ? 0.1 : 0.15 * Math.cos(Math.PI * ((u0 * 2) % 1)), n[2]], color, k: k * far });
     }
   }
+  // horní plocha ohrnutého lemu (vidět shora) – jen přední polovina prstence, zadní zakryje krk a hlava
+  const top = (phi: number, rk: number) => { const r = radius(1) * rk; return add(mul(U, y1), mul(add(mul(F, Math.cos(phi)), mul(S, Math.sin(phi))), r)); };
+  for (let j = 0; j < NP; j++) {
+    const p0 = j * dPhi, p1 = p0 + dPhi, mid = (p0 + p1) / 2, nz = Math.cos(mid) * F[2] + Math.sin(mid) * S[2];
+    const a = top(p0, 1), b = top(p1, 1), c = top(p1, 0.8), d = top(p0, 0.8);
+    // celý horní lem (i zadní půlka za krkem je shora vidět jako vnější plocha role)
+    facets.push({ pts: [a, b, c, d].map(projP), z: nz < 0 ? -1e3 + nz : 1e3, n: [0, 1, 0.3], color: s.scarfColor, k: (tube ? 1.02 : 0.95) * (nz < 0 ? 0.88 : 1) * far });
+  }
+  void facing;
+  // otvor límce: místo vnitřku je vidět krk ve stínu brady (žádná vnitřní stěna)
+  const hole = () => { ctx.beginPath(); for (let j = 0; j <= NP; j++) { const q = projP(top(j * dPhi, 0.82)), x = g.neck.x + q.x * Math.cos(ang) - q.y * Math.sin(ang), y = g.neck.y + q.x * Math.sin(ang) + q.y * Math.cos(ang); j ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.closePath(); };
+  ctx.save();
+  if (!g.back) {
+    // pohled zepředu: brada a čelist jsou před límcem → část nákrčníku za obličejem se nekreslí
+    const ha = Math.atan2(g.headUp.y, g.headUp.x) + Math.PI / 2, cx = g.headC.x - g.headUp.x * g.headR * 0.12, cy = g.headC.y - g.headUp.y * g.headR * 0.12;
+    ctx.beginPath(); ctx.rect(cx - g.headR * 40, cy - g.headR * 40, g.headR * 80, g.headR * 80);
+    ctx.ellipse(cx, cy, g.headR * 0.92, g.headR * 1.22, ha, 0, Math.PI * 2);
+    ctx.clip('evenodd');
+  }
+  // krk v otvoru: barva kůže z malby hlavy, k zadní hraně do stínu (brada a límec)
+  hole(); ctx.fillStyle = g.skin ?? '#c99a82'; ctx.fill();
+  if (!g.back) {
+    // krk vystupuje z otvoru k bradě (za obličejem ho ořez schová): válec se stínem po stranách
+    const hc = projP(top(0, 0)), hw = R0 * 0.62;
+    ctx.save(); ctx.translate(g.neck.x, g.neck.y); ctx.rotate(ang);
+    // konec namalovaného krku (v otočeném rámci límce); krk se jen napojí, nepřekreslí hlavu
+    const hb = g.headBottom ?? { x: g.neck.x, y: g.neck.y - w }, dx = hb.x - g.neck.x, dy = hb.y - g.neck.y;
+    const yb = hc.y, yt = Math.min(yb, -dx * Math.sin(ang) + dy * Math.cos(ang) - w * 0.04);
+    const gx = ctx.createLinearGradient(-hw, 0, hw, 0);
+    gx.addColorStop(0, 'rgba(40,22,16,0.4)'); gx.addColorStop(0.35, 'rgba(40,22,16,0.05)'); gx.addColorStop(0.7, 'rgba(40,22,16,0.08)'); gx.addColorStop(1, 'rgba(40,22,16,0.45)');
+    ctx.beginPath(); ctx.rect(-hw, yt, hw * 2, yb - yt); ctx.fillStyle = g.skin ?? '#c99a82'; ctx.fill(); ctx.fillStyle = gx; ctx.fill();
+    ctx.restore();
+  }
+  hole(); ctx.save(); ctx.clip();
+  { const a0 = projP(top(0, 0.82)), a1 = projP(top(Math.PI, 0.82)), cA = Math.cos(ang), sA = Math.sin(ang);
+    const X = (q: Vec2) => g.neck.x + q.x * cA - q.y * sA, Y = (q: Vec2) => g.neck.y + q.x * sA + q.y * cA;
+    const gr = ctx.createLinearGradient(X(a0), Y(a0), X(a1), Y(a1));
+    gr.addColorStop(0, 'rgba(40,22,16,0.15)'); gr.addColorStop(1, `rgba(40,22,16,${g.back ? 0.35 : 0.55})`);
+    ctx.fillStyle = gr; ctx.fillRect(g.neck.x - w * 3, g.neck.y - w * 3, w * 6, w * 6); }
+  ctx.restore();
   drawFacets(ctx, facets, g.neck.x, g.neck.y, ang, w * 0.02);
   // horní hrana límce (pletený okraj): tmavší linka po přední polovině
   const c = Math.cos(ang), sn = Math.sin(ang);
-  ctx.strokeStyle = 'rgba(0,0,0,0.18)'; ctx.lineWidth = w * 0.03; ctx.beginPath(); let first = true;
-  for (let j = 0; j <= 40; j++) { const phi = (j / 40) * 2 * Math.PI, q = P(1, phi), n = Math.cos(phi) * F[2] + Math.sin(phi) * S[2]; if (n < 0) { first = true; continue; } const p = proj(q), x = g.neck.x + p.x * c - p.y * sn, y = g.neck.y + p.x * sn + p.y * c; if (first) { ctx.moveTo(x, y); first = false; } else ctx.lineTo(x, y); }
+  ctx.strokeStyle = 'rgba(0,0,0,0.16)'; ctx.lineWidth = w * 0.03; ctx.beginPath(); let first = true;
+  for (let j = 0; j <= 40; j++) { const phi = (j / 40) * 2 * Math.PI, q = P(1, phi), n = Math.cos(phi) * F[2] + Math.sin(phi) * S[2]; if (n < 0) { first = true; continue; } const p = projP(q), x = g.neck.x + p.x * c - p.y * sn, y = g.neck.y + p.x * sn + p.y * c; if (first) { ctx.moveTo(x, y); first = false; } else ctx.lineTo(x, y); }
   ctx.stroke();
+  ctx.restore();
 }

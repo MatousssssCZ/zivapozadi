@@ -47,6 +47,8 @@ export interface AccessoryGeo {
   neck: Vec2; torsoUp: Vec2; neckW: number;
   hands: ({ E: Vec2; d: Vec2; L: number; W: number } | null)[];
   back: boolean;
+  /** barva krku z malby hlavy (výplň otvoru límce) */ skin?: string;
+  /** spodní okraj malby hlavy (konec namalovaného krku) */ headBottom?: Vec2;
 }
 
 // ---------------------------------------------------------------- fyzika

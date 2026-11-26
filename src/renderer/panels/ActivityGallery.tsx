@@ -9,6 +9,7 @@ import { store, useEditor } from '../store';
 import { doOpen } from './TopBar';
 import { CATALOG, STATUS_LABEL, SCENE_LABEL, type CatalogEntry, type R } from '../activityCatalog';
 import { SIM_DT } from '../../core/sim/types';
+import { deleteSelection, selectionLabel } from '../ops';
 
 const toastR = (r: R | string) => { const ok = typeof r === 'string' ? true : r.ok, msg = typeof r === 'string' ? r : r.msg; store.toast(ok ? 'info' : 'warn', msg, 2600); };
 
@@ -79,6 +80,7 @@ export function ActivityGallery() {
 /** Přehrávač nad plátnem (jen při otevřené galerii a vybrané aktivitě). */
 export function GalleryPlayer() {
   const open = useEditor((s) => s.galleryOpen), sel = useEditor((s) => s.galleryId), focus = useEditor((s) => s.focus);
+  const picked = useEditor((s) => s.selection), confirm = useEditor((s) => s.confirmDelete);
   const [, force] = useState(0);
   const e = CATALOG.find((x) => x.id === sel);
   if (!open || !e || !e.start || store.state.sceneKey !== e.scene) return null;
@@ -94,8 +96,16 @@ export function GalleryPlayer() {
       <span className="gp-speeds">{[0.25, 0.5, 1, 2].map((v) => <button key={v} className={speed === v ? 'active' : ''} onClick={() => set(() => store.sim.setSpeed(v))}>{v === 0.25 ? '¼×' : v === 0.5 ? '½×' : `${v}×`}</button>)}</span>
       <button className={focus?.agentId ? 'active' : ''} disabled={!e.follow} onClick={() => { const id = focus?.agentId ? null : (sim && e.follow?.(sim)); store.set({ focus: { rect: e.focus ?? null, agentId: id ?? null, n: (focus?.n ?? 0) + 1 } }); }} title="Kamera sleduje hlavní postavu">🎯 Sledovat</button>
       <button onClick={() => store.set({ focus: { rect: null, agentId: null, n: (focus?.n ?? 0) + 1 } })} title="Celý záběr scény">⤢ Celek</button>
+      <button className="gp-del" disabled={!picked} onClick={() => store.set({ confirmDelete: true })} title={picked ? `Smazat ${selectionLabel()} (Delete)` : 'Nejdřív klikněte do scény na prvek, který chcete smazat'}>🗑 Smazat</button>
       {!!e.actions?.length && <span className="gp-sep">Návazné akce:</span>}
       {e.actions?.map((a) => <button key={a.label} className="gp-action" onClick={() => { const s = store.sim.sim; if (!s) return; toastR(a.run(s)); if (e.follow) setTimeout(() => { const s2 = store.sim.sim; const id = s2 && e.follow!(s2); if (id) store.set({ focus: { ...(store.state.focus ?? { n: 0 }), agentId: id } }); }, 400); if (!store.sim.clock.playing) store.sim.play(); }}>{a.label}</button>)}
+      {confirm && picked && (
+        <div className="gp-confirm" role="alertdialog">
+          <span>Opravdu smazat {selectionLabel()}? Změna se projeví ve scéně (vrátíte ji Ctrl+Z).</span>
+          <button className="danger" autoFocus onClick={() => { deleteSelection(); store.set({ confirmDelete: false }); playEntry(e); }}>Ano, smazat</button>
+          <button onClick={() => store.set({ confirmDelete: false })}>Zrušit</button>
+        </div>
+      )}
     </div>
   );
 }

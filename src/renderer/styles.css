@@ -177,3 +177,6 @@ button.accent { background: linear-gradient(135deg, #3b5ea8, #6a4fb0); border-co
 .brand-btn:hover { border-color: var(--accent); }
 .app.home-only { display: block; position: relative; }
 .app.home-only .welcome { position: absolute; inset: 0; }
+.gallery-player .gp-del:not(:disabled) { color: #b3261e; }
+.gp-confirm { flex-basis: 100%; display: flex; gap: 8px; align-items: center; justify-content: center; padding: 6px 10px; margin-top: 2px; border-radius: 8px; background: rgba(179, 38, 30, 0.1); border: 1px solid rgba(179, 38, 30, 0.35); font-size: 13px; }
+.gp-confirm .danger { background: #b3261e; color: #fff; border-color: #b3261e; }
