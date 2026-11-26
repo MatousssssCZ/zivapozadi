@@ -13,10 +13,11 @@ import { zs } from './api';
 import type { Tool } from './store';
 
 /** Úvodní menu: Scény (ukázkové i vlastní – otevřít a upravit, nová) a Sandbox (galerie aktivit). */
-const SCENES: { key: 'liberec' | 'tram' | 'pastel' | 'demo2' | 'demo'; dir: string; name: string; desc: string }[] = [
+const SCENES: { key: 'liberec' | 'tram' | 'pastel' | 'pastel2' | 'demo2' | 'demo'; dir: string; name: string; desc: string }[] = [
   { key: 'tram', dir: 'Tramvajova-ulice', name: 'Vánoční tramvajová ulice', desc: 'Tramvaj, pekař, květinářka, kočárek, stromky, běžkař, pevnost' },
   { key: 'liberec', dir: 'Liberec-zivy-trh', name: 'Liberec – živý trh', desc: 'Stánky, rodiny, sněhulák, koulovačka, sáňky, psi a kočky' },
   { key: 'pastel', dir: 'Pastelove-kluziste', name: 'Pastelové vánoční kluziště', desc: 'Bruslaři, skoky, holubička, pirueta, lavička a přezouvání' },
+  { key: 'pastel2', dir: 'Pastelove-kluziste-2', name: 'Pastelové kluziště 2', desc: 'Vektorové oděvy s malovanými obličeji, plnější postavy, dvojice za ruce' },
   { key: 'demo2', dir: 'Namesti-radnice', name: 'Náměstí s radnicí', desc: 'Starší ukázková scéna' },
   { key: 'demo', dir: 'Vanocni-namesti', name: 'Vánoční náměstí', desc: 'Testovací grafika' },
 ];

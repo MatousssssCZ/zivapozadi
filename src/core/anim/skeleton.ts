@@ -838,7 +838,7 @@ function applyHands(o: SkeletonPose, hd: NonNullable<AnimState['hands']>, c: Key
   const arms = [...o.arms] as [Limb, Limb];
   for (let i = 0; i < 2; i++) {
     const q = hd.t[i]; if (!q) continue;
-    const lat = q.lat ?? 0, tg = { x: gfx * q.u * L + lat * L * kx, y: gfy * q.u * L - q.h * L + lat * ns * L * ky };
+    const lat = q.lat ?? 0, tg = q.local ?? { x: gfx * q.u * L + lat * L * kx, y: gfy * q.u * L - q.h * L + lat * ns * L * ky };
     const root = { x: o.shoulder.x + c.sideX(i) * v.shoulderSpread, y: o.shoulder.y };
     let T = { x: o.arms[i].end.x + (tg.x - o.arms[i].end.x) * w, y: o.arms[i].end.y + (tg.y - o.arms[i].end.y) * w };
     const dx = T.x - root.x, dy = T.y - root.y, dd = Math.hypot(dx, dy);

@@ -1,3 +1,4 @@
+import type { HandTarget } from '../anim/animator';
 import type { ProjectFile, SceneObject, ActivityZone, CharacterInstance } from '../model/types';
 import { buildNavGraph, findPath, nearestAccessibleNode, type NavGraph } from '../nav/navGraph';
 import { interactionPointWorld } from '../scene/geometry';
@@ -7,7 +8,7 @@ import { ALL_DIRECTIONS, resolveDirection, resolveClip, type CharacterManifest }
 import { initialAnimState, playAction, stepAnimator, stopAction } from '../anim/animator';
 import { getActivity } from '../activities/registry';
 import { coffeeFreeSlots } from '../activities/coffee';
-import { characterVisual, localToScene, gaitContextFor, setVectorFigures, VECTOR_ENV } from '../render/characterPose';
+import { characterVisual, localToScene, gaitContextFor, setVectorFigures, setPaintedHeads, VECTOR_ENV, headIdentity } from '../render/characterPose';
 import { depthScaleAt } from '../scene/geometry';
 import { Reservations } from './reservations';
 import { directionFromAngle, edgeKey } from './movement';
@@ -78,6 +79,7 @@ export class Simulation {
   private constructor(readonly project: ProjectFile, readonly manifests: Record<string, CharacterManifest>, public state: SimState) {
     // vektorové postavy jsou nastavení scény (mění i kotvy chodidel → platí od vzniku simulace)
     setVectorFigures(VECTOR_ENV || project.scene.vectorFigures === true);
+    setPaintedHeads(project.scene.paintedHeads === true);
     this.graph = buildNavGraph(project);
     this.objects = new Map(project.objects.map((o) => [o.id, o]));
     this.zones = new Map(project.zones.map((z) => [z.id, z]));
@@ -86,6 +88,50 @@ export class Simulation {
     this.compilePoints();
     this.ctx = this.makeContext();
     this.staticDiagnostics();
+    this.initHandHold();
+  }
+
+  /** Dvojice za ruce (ověřené při vzniku simulace): [vůdce, následník]. */
+  private holdPairs: [string, string][] = [];
+  private initHandHold() {
+    for (const c of this.project.characters) {
+      if (!c.holdHands || !c.companionId) continue;
+      const l = this.chars.get(c.companionId); if (!l) continue;
+      const A = headIdentity(l.appearance), B = headIdentity(c.appearance);
+      const kids = A?.age === 'child' && B?.age === 'child';
+      const couple = !!A && !!B && A.age === B.age && A.age !== 'child' && !!A.sex && !!B.sex && A.sex !== B.sex;
+      if (kids || couple) this.holdPairs.push([l.id, c.id]);
+      else this.addDiag('warning', `${c.name} a ${l.name}: za ruce jen dvě děti, nebo muž a žena stejného věku – dvojice půjde vedle sebe.`, c.id);
+    }
+  }
+  /**
+   * Držení za ruce: společný bod mezi oběma (ve výšce nižší z rukou – dosáhne i dítě), každý k němu
+   * natáhne ruku na straně partnera. Plynulé navázání a uvolnění; jen když oba jdou spolu volně
+   * (bez činnosti, předmětu, sedu, pádu) a jsou blízko.
+   */
+  private stepHandHold() {
+    const cam = this.cam(), depth = this.project.scene.depth;
+    for (const [lid, fid] of this.holdPairs) {
+      const L = this.state.agents.find((x) => x.id === lid), F = this.state.agents.find((x) => x.id === fid);
+      if (!L || !F) continue;
+      const P = [L, F], ok = P.every((x) => !x.hidden && !x.activity && !x.anim.action && !x.anim.sit && !x.anim.fall && !x.anim.skate && !x.holding && (!x.anim.hands || x.anim.hands.src === 'hold'))
+        && F.follow?.leaderId === L.id;
+      const wl = toWorld(cam, L.pos), wf = toWorld(cam, F.pos), near = Math.hypot(wl.X - wf.X, wl.Z - wf.Z) < 1.3;
+      const want = ok && near ? 1 : 0;
+      // výška rukou (px nad zemí): zápěstí ≈ výška kyčle postavy
+      const sc = P.map((x) => (this.chars.get(x.id)?.baseScale ?? 1) * depthScaleAt(depth, x.pos.y));
+      const hip = P.map((x, i) => { const c = this.chars.get(x.id)!, m = this.manifests[c.assetId]; return (m ? gaitContextFor(m, { baseScale: 1, appearance: c.appearance, routine: c.routine }).legLen : 60) * 0.98 * sc[i]; });
+      const M = { x: (L.pos.x + (L.off?.x ?? 0) + F.pos.x + (F.off?.x ?? 0)) / 2, y: (L.pos.y + (L.off?.y ?? 0) + F.pos.y + (F.off?.y ?? 0)) / 2 - Math.min(...hip) };
+      P.forEach((x, i) => {
+        const cur = x.anim.hands?.src === 'hold' ? x.anim.hands.w : 0, w = cur + Math.sign(want - cur) * Math.min(Math.abs(want - cur), SIM_DT / 0.5);
+        if (w <= 0) { if (x.anim.hands?.src === 'hold') x.anim.hands = null; return; }
+        const { view, mirror } = viewForDirection(x.anim.dir), ns = view === 'back3q' || view === 'back' ? 1 : -1;
+        const lx = ((M.x - x.pos.x - (x.off?.x ?? 0)) / sc[i]) * (mirror ? -1 : 1), ly = (M.y - x.pos.y - (x.off?.y ?? 0)) / sc[i];
+        const idx = Math.abs(lx) < 3 ? 1 : (Math.sign(lx) === ns ? 1 : 0); // ruka na straně partnera (blízká strana = ns)
+        const t: [HandTarget | null, HandTarget | null] = [null, null]; t[idx] = { u: 0, h: 0, local: { x: lx, y: ly } };
+        x.anim.hands = { t, w, src: 'hold' };
+      });
+    }
   }
 
   /** Sestaví počáteční stav ze projektu (čas 0). */
@@ -467,6 +513,7 @@ export class Simulation {
     if (this.project.bakery) this.stepBakeryAll(t);
     if (this.project.pram) this.stepPramAll();
     if (this.project.episodes?.length) this.stepEpisodes();
+    if (this.holdPairs.length) this.stepHandHold();
     if (this.state.angels?.length && t - this.state.angels[0].t0 > ANGEL_LIFE) this.state.angels.shift();
     this.stepProps(t);
     this.state.step++;

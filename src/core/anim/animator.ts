@@ -22,7 +22,7 @@ export function heelRelOf(a: AnimState): [number | null, number | null] {
  */
 export interface ToolPose { u: number; h: number; beta: number; crouch: number; lean: number; oneHand?: boolean; load?: number }
 
-export interface HandTarget { u: number; h: number; lat?: number }
+export interface HandTarget { u: number; h: number; lat?: number; /** přímý cíl v lokálních souřadnicích postavy (držení za ruce) */ local?: { x: number; y: number } }
 
 export interface AnimState {
   dir: Direction;
@@ -32,7 +32,7 @@ export interface AnimState {
    * v délkách nohy od kořene (u vpřed, h výška, lat do strany; index 0 = vzdálená ruka, 1 = blízká),
    * null = ruka zůstává v běžné póze. w = váha prolnutí (0..1) – mění se plynule, ruce nepřeskočí.
    */
-  hands?: { t: [HandTarget | null, HandTarget | null]; w: number } | null;
+  hands?: { t: [HandTarget | null, HandTarget | null]; w: number; /** 'hold' = držení za ruce (řídí simulace dvojic) */ src?: 'hold' } | null;
   walkPhase: number;
   walkBlend: number;
   idleTime: number;

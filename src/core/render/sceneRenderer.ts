@@ -13,7 +13,7 @@ import { drawGroundIntegration, drawObjectIntegration, gradedImage, characterLig
 import type { ProjectFile, SceneObject, AssetEntry } from '../model/types';
 import type { Simulation } from '../sim/simulation';
 import type { AgentState, PropState } from '../sim/types';
-import { characterVisual, localToScene } from './characterPose';
+import { characterVisual, localToScene, paintedHeadsOn } from './characterPose';
 import { drawFigure } from '../anim/testFigure';
 import { SHOVEL_SPRITE } from '../anim/skeleton';
 import { cameraFor, toScreen, toWorld, Q, type World } from '../scene/camera';
@@ -26,7 +26,7 @@ import { lidOpenness } from '../sim/simulation';
 import { FOOTPRINT_LIFE, FOOTPRINT_FADE } from '../sim/types';
 import { getCanvasFactory, drawRig, type AccPart } from './rigRenderer';
 import { drawVectorFigure } from '../vector/figure';
-import { drawBladeVec, drawSnowLipVec } from './rigRenderer';
+import { drawBladeVec, drawSnowLipVec, drawRigSlot } from './rigRenderer';
 import { drawHat, drawPompom, drawScarf, drawMitten, hatTop, scarfKnots, stepAccessoryPhysics, TAIL_SEGS } from './accessories';
 import { windFactor } from '../sim/environment';
 import { SIM_DT } from '../sim/types';
@@ -374,7 +374,10 @@ function drawAgentBody(ctx: Ctx, project: ProjectFile, sim: Simulation, a: Agent
       const acc = accessoryDrawer(ctx, project, sim, a, cv);
       const T = ctx.getTransform(), px = Math.hypot(T.a, T.b); // px obrazovky na jednotku postavy (vč. zoomu / exportu)
       if (cv.rig.blades) for (const b of cv.rig.blades) drawBladeVec(ctx, b);
-      drawVectorFigure(ctx, cv.pose, cv.vec.body, cv.vec.outfit, { view: cv.view?.used ?? 'front3q', foot: cv.vec.foot, detail: Math.min(1, Math.max(0, (px * 130 - 60) / 140)), seed: a.id.length, t: sim.state.step * SIM_DT }, acc ? (part) => acc(part) : undefined);
+      // malovaná hlava (obličej z textury): kůže krku a rukou z malby, hlava ve stejné matici jako u malovaných postav
+      const libDir = m.rigLibraryDir ?? '', ph = paintedHeadsOn() ? drawRigSlot(ctx, cv.rig, images, libDir, 'head', false) : undefined;
+      const body = ph ? { ...cv.vec.body, skin: ph } : cv.vec.body;
+      drawVectorFigure(ctx, cv.pose, body, cv.vec.outfit, { view: cv.view?.used ?? 'front3q', foot: cv.vec.foot, detail: Math.min(1, Math.max(0, (px * 130 - 60) / 140)), seed: a.id.length, t: sim.state.step * SIM_DT, paintedHead: paintedHeadsOn() ? () => { drawRigSlot(ctx, cv.rig!, images, libDir, 'head'); } : undefined }, acc ? (part) => acc(part) : undefined);
       if (snowColor && cv.rig.snowLips) for (const l of cv.rig.snowLips) if (l) drawSnowLipVec(ctx, l, snowColor);
       nearCane?.(); heldFn?.();
     } else

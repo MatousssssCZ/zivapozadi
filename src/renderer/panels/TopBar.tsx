@@ -10,12 +10,12 @@ async function guardDirty(): Promise<boolean> {
 }
 
 /** Ukázková scéna podle názvu projektu (galerie aktivit ví, že ji nemusí znovu načítat). */
-export function sceneKeyOf(name: string): string | null { const n = name.toLowerCase(); return n.includes('liberec') ? 'liberec' : n.includes('tramvaj') ? 'tram' : n.includes('kluzi') ? 'pastel' : null; }
+export function sceneKeyOf(name: string): string | null { const n = name.toLowerCase(); return n.includes('liberec') ? 'liberec' : n.includes('tramvaj') ? 'tram' : n.includes('kluzi') ? (/2\b/.test(n) ? 'pastel2' : 'pastel') : null; }
 
-export async function doOpen(kind: 'new' | 'open' | 'demo' | 'demo2' | 'liberec' | 'pastel' | 'tram', dir?: string): Promise<boolean> {
+export async function doOpen(kind: 'new' | 'open' | 'demo' | 'demo2' | 'liberec' | 'pastel' | 'pastel2' | 'tram', dir?: string): Promise<boolean> {
   if (!(await guardDirty())) return false;
   try {
-    const r = kind === 'new' ? await zs().newProject() : kind === 'demo' ? await zs().openDemo() : kind === 'demo2' ? await zs().openDemo('radnice') : kind === 'liberec' ? await zs().openDemo('liberec') : kind === 'pastel' ? await zs().openDemo('pastel') : kind === 'tram' ? await zs().openDemo('tram') : await zs().openProject(dir);
+    const r = kind === 'new' ? await zs().newProject() : kind === 'demo' ? await zs().openDemo() : kind === 'demo2' ? await zs().openDemo('radnice') : kind === 'liberec' ? await zs().openDemo('liberec') : kind === 'pastel' ? await zs().openDemo('pastel') : kind === 'pastel2' ? await zs().openDemo('pastel2') : kind === 'tram' ? await zs().openDemo('tram') : await zs().openProject(dir);
     if (r) { await store.load(r); store.set({ sceneKey: kind === 'new' || kind === 'open' ? sceneKeyOf(r.project.meta.name) : kind }); store.toast('info', `Otevřen projekt „${r.project.meta.name}“.`, 2500); }
     return !!r;
   } catch (e) { store.toast('error', (e as Error).message, 12000); return false; }
@@ -70,6 +70,7 @@ export function TopBar() {
         <button onClick={() => doOpen('demo2')}>Demo: radnice</button>
         <button onClick={() => doOpen('tram')} title="Vánoční tramvajová ulice: tramvaj, cestující, pekař">Demo: tramvaj</button>
         <button onClick={() => doOpen('pastel')} title="Pastelové vánoční kluziště: bruslení, nástup přes lavičku, stánek s nápoji">Demo: kluziště</button>
+        <button onClick={() => doOpen('pastel2')} title="Kluziště 2: vektorová těla a oděvy s malovanými obličeji, plnější postavy, dvojice za ruce">Demo: kluziště 2</button>
         <button disabled={!has} onClick={() => store.save()} title="Ctrl+S">Uložit{dirty ? ' •' : ''}</button>
         <button disabled={!has} onClick={async () => {
           const s = store.state; if (!s.dir || !s.project) return;

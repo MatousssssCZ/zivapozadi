@@ -213,6 +213,11 @@ export interface CharacterInstance {
   /** Strana vedle vůdce: 1 = vpravo, −1 = vlevo (výchozí 1). */
   companionSide?: number;
   /**
+   * Dvojice jde za ruce (u postavy, která následuje vůdce). Povoleno: dvě děti (jakákoli pohlaví), nebo
+   * muž a žena stejné věkové skupiny (rodiče / senioři) – podle malované hlavy; jinak se ignoruje (diagnostika).
+   */
+  holdHands?: boolean;
+  /**
    * Chování: `wander` = volná procházka po trasách (původní), `visitor` = návštěvník: přijde vstupem,
    * scénou buď jen projde, nebo si dojde na kávu, nebo se potká s přítelem a jdou na kávu spolu; pak odejde.
    */
@@ -289,6 +294,8 @@ export interface EnvironmentSettings {
 export interface SceneSettings {
   /** Vektorové postavy a zvířata (tělo, oděv, srst bez rastrů; stejné činnosti a pohyb). */
   vectorFigures?: boolean;
+  /** U vektorových postav malovaná hlava a obličej z textury (ne vektorová hlava). */
+  paintedHeads?: boolean;
   width: number;
   height: number;
   backgroundAssetId: string | null;

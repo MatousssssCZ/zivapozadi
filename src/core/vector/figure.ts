@@ -22,7 +22,7 @@ export interface FigureGeo {
   headC: P; headUp: P; headR: number; neck: P; torsoUp: P; neckW: number;
   hands: ({ E: P; d: P; L: number; W: number } | null)[]; back: boolean; skin: string;
 }
-export interface FigureOpts { view: string; foot: FootGeom; detail: number; seed: number; t: number }
+export interface FigureOpts { view: string; foot: FootGeom; detail: number; seed: number; t: number; /** malovaná hlava (obličej z textury) místo vektorové */ paintedHead?: () => void }
 
 /** Geometrie pro doplňky (čepice, šála) – stejná jako při kreslení, počítá se předem. */
 export function figureGeo(pose: SkeletonPose, body: BodyProfile, view: string): FigureGeo {
@@ -147,7 +147,7 @@ export function drawVectorFigure(ctx: Ctx, pose: SkeletonPose, body: BodyProfile
     ];
     const base = sleeveCol(i), col = far ? FAR(base) : base;
     let sides: [P[], P[]] = [[], []];
-    const path = () => { sides = tubePath(ctx, nodes, false); };
+    const path = () => { sides = tubePath(ctx, nodes, false, true); }; // zaoblené nasazení rukávu (ne useknutá hrana)
     ctx.fillStyle = col; path(); ctx.fill();
     { const m0 = mix2(a.root, a.joint, 0.6), tn = perp(norm(sub(a.end, a.root))), w = body.armW + e; cylShade(ctx, path, add(m0, mul(tn, -w * 0.62)), add(m0, mul(tn, w * 0.62)), col, far ? 1.1 : 0.9); }
     if (det > 0.35) {
@@ -189,8 +189,12 @@ export function drawVectorFigure(ctx: Ctx, pose: SkeletonPose, body: BodyProfile
   // body obrysu (n-souřadnice) v hladinách: kyčel 0, pas 0.42, hrudník 0.72, podpaží 0.8, rameno shLv
   const waistIn = (body.chest - body.waist) * (0.35 + 0.65 * fitted) * 0.6;
   const fwdBulge = sy * (back ? body.chestDepth * 0.7 : body.chestDepth * 1.6) + sideExtra * body.chest * 0.32, seat = sy * body.seatDepth * 1.4 + sideExtra * body.chest * 0.22;
-  const Rx = (lv: number) => lv < 0.42 ? lerp(hipR + ease * 0.6, shR + capR * 0.55 - waistIn, lv / 0.42) : lv < 0.72 ? lerp(shR + capR * 0.55 - waistIn, shR + capR * 0.7 + fwdBulge, (lv - 0.42) / 0.3) : shR + capR * 0.75 + fwdBulge * (1 - (lv - 0.72) / 0.3);
-  const Lx = (lv: number) => lv < 0.42 ? lerp(hipL - ease * 0.6 - seat * 0.5, shL - capR * 0.55 + waistIn * 0.7, lv / 0.42) : shL - capR * 0.75;
+  // bříško: vyklenutí v pase vpřed (v ¾ a z profilu), zepředu jen mírně do šířky
+  const bellyK = (lv: number) => body.belly * Math.exp(-(((lv - 0.3) / 0.2) ** 2));
+  const Rx = (lv: number) => Rx0(lv) + bellyK(lv) * (Math.max(0, sy) + 0.3 * Math.abs(cy));
+  const Lx = (lv: number) => Lx0(lv) - bellyK(lv) * (Math.max(0, -sy) * 0 + 0.3 * Math.abs(cy));
+  const Rx0 = (lv: number) => lv < 0.42 ? lerp(hipR + ease * 0.6, shR + capR * 0.55 - waistIn, lv / 0.42) : lv < 0.72 ? lerp(shR + capR * 0.55 - waistIn, shR + capR * 0.7 + fwdBulge, (lv - 0.42) / 0.3) : shR + capR * 0.75 + fwdBulge * (1 - (lv - 0.72) / 0.3);
+  const Lx0 = (lv: number) => lv < 0.42 ? lerp(hipL - ease * 0.6 - seat * 0.5, shL - capR * 0.55 + waistIn * 0.7, lv / 0.42) : shL - capR * 0.75;
   const hemLv = -(of.top.length * legL) / TL; // pod kyčlí (záporné hladiny)
   const hemY = H.y - u.y * (of.top.length * legL) * -1; void hemY;
   const legsAt = (lv: number) => { const p = F(lv, 0); const xs = [0, 1].map((i) => limbXAtY(pose.legs[i], p.y)).filter((v): v is number => v !== null).map((x) => (x - H.x) * n.x + (p.y - H.y) * n.y); return xs; };
@@ -213,9 +217,11 @@ export function drawVectorFigure(ctx: Ctx, pose: SkeletonPose, body: BodyProfile
     for (const lv of [0.2, 0.42, 0.6, 0.72]) pts.push(F(lv, Rx(lv) + scallop(lv)));
     // ramena: zaoblená kopule nad kloubem, svah k límci (ne vodorovná hrana)
     const sr = F(shLv, shR), sl = F(shLv, shL), nk = offN(Nk), ns = body.neckR + 1.4 + ease * 0.3;
-    pts.push(add(add(sr, mul(n, capR * 0.85)), mul(u, -capR * 0.15)), add(add(sr, mul(n, capR * 0.3)), mul(u, capR * 0.72)), F(lvl(Nk) - 0.06, lerp(shR, nk + ns, 0.55)));
+    // zaoblená ramena: oblouk kolem kloubu (deltový sval pod látkou) a měkký svah ke krku
+    const arc = (c: P, side: number, a0: number, a1: number) => { const out: P[] = []; for (let k = 0; k <= 3; k++) { const a = a0 + (a1 - a0) * (k / 3); out.push(add(c, add(mul(n, side * Math.cos(a) * capR * 0.95), mul(u, Math.sin(a) * capR * 0.95)))); } return out; };
+    pts.push(...arc(sr, 1, -0.35, 1.25), F(lvl(Nk) - 0.05, lerp(shR, nk + ns, 0.62)));
     pts.push(F(lvl(Nk) - 0.005, nk + ns), F(lvl(Nk) + 0.005, nk - ns));
-    pts.push(F(lvl(Nk) - 0.06, lerp(shL, nk - ns, 0.55)), add(add(sl, mul(n, -capR * 0.3)), mul(u, capR * 0.72)), add(add(sl, mul(n, -capR * 0.85)), mul(u, -capR * 0.15)));
+    pts.push(F(lvl(Nk) - 0.05, lerp(shL, nk - ns, 0.62)), ...arc(sl, -1, 1.25, -0.35));
     for (const lv of [0.72, 0.6, 0.42, 0.2]) pts.push(F(lv, Lx(lv) - scallop(lv)));
     pts.push(F(lows[0], (of.top.length > 0.2 ? Lx(0) : skirtSides(hemLv)[0])));
     if (of.top.length <= 0.2) { const [l, r] = skirtSides(hemLv); pts.splice(pts.length, 0, F(hemLv - 0.015, lerp(l, r, 0.5))); void r; }
@@ -512,7 +518,7 @@ export function drawVectorFigure(ctx: Ctx, pose: SkeletonPose, body: BodyProfile
   const hands: FigureGeo['hands'] = [null, null];
   if (!back) drawBackpackBack();
   hands[0] = drawArm(0);
-  drawHairBack();
+  if (!o.paintedHead) drawHairBack();
   drawBackPanel();
   legWithBoot(0); legWithBoot(1);
   drawSeat(); drawSkirt();
@@ -524,7 +530,7 @@ export function drawVectorFigure(ctx: Ctx, pose: SkeletonPose, body: BodyProfile
   accDraw?.('scarf');
   if (!back) drawNeckSkin();
   drawHoodBack();
-  drawHead();
+  if (o.paintedHead) o.paintedHead(); else drawHead();
   accDraw?.('hat');
   hands[1] = drawArm(1);
   return { headC: HP(0, 0), headUp, headR: R, neck: add(Nk, mul(u, 1.2)), torsoUp: u, neckW: (body.neckR + 2.2) * 2 * 1.35, hands, back, skin: skinC };

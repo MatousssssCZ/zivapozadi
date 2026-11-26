@@ -333,3 +333,20 @@ export function drawRig(ctx: CanvasRenderingContext2D, asm: RigAssembly, images:
 /** Pro vektorové postavy: nůž brusle a závěj u boty (stejné jako u malovaných). */
 export const drawBladeVec = (ctx: CanvasRenderingContext2D, b: NonNullable<RigAssembly['blades']>[number]) => drawBlade(ctx, b, false);
 export const drawSnowLipVec = (ctx: CanvasRenderingContext2D, l: SnowLip, color: string) => drawSnowLip(ctx, l, color);
+
+/**
+ * Jeden malovaný díl ze sestavy (vektorové postavy s malovanou hlavou): stejná matice i přebarvení
+ * jako v drawRig. Vrací barvu krku z malby (navázání vektorového krku a rukou).
+ */
+export function drawRigSlot(ctx: CanvasRenderingContext2D, asm: RigAssembly, images: AssetImages, libDir: string, slot: PartSlot, draw = true): string | undefined {
+  const it = asm.items.find((x) => x.part.slot === slot); if (!it) return undefined;
+  const p = it.part, tex = images.get(rigImageKey(libDir, p.texture)); if (!tex) return undefined;
+  const tone = slot === 'head' ? neckTone(rigImageKey(libDir, p.texture), tex, p.trim) : undefined;
+  if (tone && asm.acc) asm.acc.geo.skin = tone;
+  if (!draw) return tone;
+  const mask = p.mask ? images.get(rigImageKey(libDir, p.mask)) : null;
+  const img = tinted(rigImageKey(libDir, p.texture), tex, mask, p.mask ? it.color : undefined, 1);
+  ctx.save(); ctx.transform(it.m[0], it.m[1], it.m[2], it.m[3], it.m[4], it.m[5]);
+  ctx.drawImage(img as CanvasImageSource, p.trim.x, p.trim.y, p.trim.w, p.trim.h); ctx.restore();
+  return tone;
+}

@@ -112,3 +112,27 @@ a tlapek zůstávají.
   v `templateFor`, ale vypnutá.
 - Kapuce je jen shrnutá; nasazená kapuce (skrývá vlasy) zatím chybí.
 - Cval psa a skok kočky na překážku řeší simulace (Z09). Samostatný cval zatím chybí.
+
+## Pastelové kluziště 2
+
+Kluziště 2 je scéna `demo/Pastelove-kluziste-2.zscena`, generuje ji `scripts/generate-pastel-v2.ts`.
+Má vektorová těla a oděvy s malovanou hlavou a obličejem z textury (`scene.paintedHeads`); pohledy
+jsou ¾ jako u malovaných hlav.
+
+Pohlaví a věk stavby se odvozují z hlavy:
+
+| Hlava | Pohlaví / věk |
+|---|---|
+| 01, 02, 05, 06, 09, 10 | muž |
+| 03, 04, 07, 08, 11, 12 | žena |
+| 09–12 | senior |
+| dětská | dítě |
+
+**Plnější postavy** (asi 28 %) mají větší objem v pase, bocích, stehnech a pažích a bříško. Malé děti
+nemají vyklenutou hruď, mají kulaté bříško. Ramena jsou zaoblená kopule a rukáv navazuje zaobleně.
+
+**Za ruce** (`holdHands` u následníka dvojice):
+- smí jen dvě děti (jakákoli pohlaví), nebo muž a žena stejné věkové skupiny (rodiče, senioři);
+  jinak dvojice jde jen vedle sebe a vznikne diagnostika;
+- oba sahají ke společnému bodu ve výšce nižší z rukou;
+- držení se plynule naváže a uvolní, když jeden z dvojice začne něco dělat.

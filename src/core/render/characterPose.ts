@@ -10,7 +10,7 @@ import { resolveView } from '../anim/partLibrary';
 import { skeletonPose, viewForDirection, footGeomOf, type SkeletonPose, type ViewId, type PoseOptions, type Anchor } from '../anim/skeleton';
 import { depthScaleAt } from '../scene/geometry';
 import { assembleRig, scaledTemplate, type RigAssembly } from './rigRenderer';
-import { accessoriesOf } from './accessories';
+import { accessoriesOf, type AccessorySpec } from './accessories';
 
 /** Vektorové doplňky (čepice, šála, palčáky) místo malovaných – výchozí zapnuto. */
 let vectorAccessories = true;
@@ -31,10 +31,29 @@ export const VECTOR_ENV = typeof process !== 'undefined' && !!process.env?.VEKTO
 let vectorFigures = VECTOR_ENV;
 export function setVectorFigures(on: boolean) { vectorFigures = on; }
 export function vectorFiguresOn() { return vectorFigures; }
+/** Vektorová těla s malovanou hlavou a obličejem (nastavení scény `paintedHeads`). */
+let paintedHeads = false;
+export function setPaintedHeads(on: boolean) { paintedHeads = on; }
+export function paintedHeadsOn() { return paintedHeads; }
+
+/**
+ * Pohlaví a věk podle malované hlavy (štítky knihovny): muži 01, 02, 05, 06, 09, 10; ženy 03, 04, 07,
+ * 08, 11, 12; senioři 09–12; dětská hlava = dítě (pohlaví neurčené). Bez hlavy z knihovny → null.
+ */
+export function headIdentity(app: CharacterAppearance | undefined): { sex: 'm' | 'f' | null; age: 'adult' | 'senior' | 'child' } | null {
+  const h = app?.variants?.head; if (!h) return null;
+  if (/child/.test(h)) return { sex: null, age: 'child' };
+  const m = /head_(\d+)/.exec(h); if (!m) return { sex: null, age: 'adult' };
+  const n = Number(m[1]);
+  return { sex: [1, 2, 5, 6, 9, 10].includes(n) ? 'm' : [3, 4, 7, 8, 11, 12].includes(n) ? 'f' : null, age: n >= 9 ? 'senior' : 'adult' };
+}
+
 /** Vektorový plán postavy: tělesný profil, outfit (stabilní ze seedu) a kostra podle profilu. */
 export function vectorPlan(tpl: SkeletonTemplate & { id: string }, app: CharacterAppearance, routine?: string): { body: BodyProfile; outfit: Outfit; tpl: SkeletonTemplate } {
-  const child = /child/.test(tpl.id), age = child ? 'child' : app.seed % 7 === 0 ? 'senior' : 'adult';
-  const body = bodyOf(app.seed, age);
+  const child = /child/.test(tpl.id), hid = headIdentity(app);
+  // s malovanou hlavou: věk a stavba podle hlavy (senior s šedivou hlavou nedostane mladý outfit)
+  const age = child ? 'child' : paintedHeads && hid ? (hid.age === 'senior' ? 'senior' : 'adult') : app.seed % 7 === 0 ? 'senior' : 'adult';
+  const body = bodyOf(app.seed, age, paintedHeads && hid?.sex ? hid.sex : undefined);
   void routine;
   return { body, outfit: outfitFor(app.seed >> 3, age), tpl: templateFor(tpl, body) };
 }
@@ -82,9 +101,10 @@ export function characterVisual(agent: AgentState, m: CharacterManifest, look: C
     const vp = vectorFigures && look.routine !== 'baker' ? vectorPlan(scaledTemplate(tpl, app.proportions) as SkeletonTemplate & { id: string }, app, look.routine) : null;
     const stpl = vp ? vp.tpl : scaledTemplate(tpl, app.proportions);
     const paintedView = rv.use; // malované díly (pomocná sestava: úchopy, kotvy) jen v ¾ pohledech
-    if (vp && vp.tpl.views[req.view]) { rv.use = req.view; rv.substituted = false; } // vektorová postava má všechny pohledy
+    if (vp && !paintedHeads && vp.tpl.views[req.view]) { rv.use = req.view; rv.substituted = false; } // vektorová postava má všechny pohledy
     const pose = skeletonPose(stpl, rv.use, req.mirror, agent.anim, agent.holding !== null && agent.holdingKind !== 'bag' && agent.holdingKind !== 'mitten' && agent.holdingKind !== 'shovel', motionOf(agent, app.motion), hashString(agent.id), { ...groundOptions(agent, x, y, scale, req.mirror, cam), snowSink: (agent.snowDepth ?? 0) > 0 && agent.anim ? (agent.snowDepth ?? 0) / Q : 0 });
-    const rig = assembleRig(lib, tpl, app, pose, paintedView, vectorAccessories && look.routine !== 'baker' ? accessoriesOf(app, /child/.test(tpl.id)) : null);
+    const vSpec = vp ? specOfOutfit(vp.outfit, app.seed) : null;
+    const rig = assembleRig(lib, tpl, app, pose, paintedView, vSpec ?? (vectorAccessories && look.routine !== 'baker' ? accessoriesOf(app, /child/.test(tpl.id)) : null));
     // závěj přes spodek zabořené boty (kreslí se hned po botě; barvu dodá vykreslování z pozadí)
     // brusle: nůž pod podrážkou (pata → přednoží), výška držáku = BLADE_H délky nohy
     if (agent.anim.skate || agent.anim.bladesOn) {
@@ -109,11 +129,10 @@ export function characterVisual(agent: AgentState, m: CharacterManifest, look: C
       // úchop: dlaň blízké ruky (vektorová ruka navazuje na předloktí)
       const a1 = pose.arms[1], d = { x: a1.end.x - a1.joint.x, y: a1.end.y - a1.joint.y }, dl = Math.hypot(d.x, d.y) || 1;
       rig.grip = { x: a1.end.x + (d.x / dl) * vp.body.hand * 0.55, y: a1.end.y + (d.y / dl) * vp.body.hand * 0.55 };
-      // doplňky z outfitu (sladěné barvy), geometrie z vektorové hlavy a krku
-      const of = vp.outfit, c = of.colors;
-      rig.acc = { spec: { hat: of.hat === 'fitted' ? 'beanie' : of.hat, hatColor: of.hat === 'fitted' ? c.support : c.accent, hatColor2: c.support, hatStripes: (app.seed & 3) === 1, slouch: of.hat === 'fitted' ? 0 : ((app.seed >> 4) % 5) * 0.05,
-        scarf: of.scarf, scarfColor: of.scarf === 'tube' ? c.support : c.accent, scarfColor2: c.support, scarfStripes: (app.seed & 4) === 4, tailLen: 0.9 + ((app.seed >> 6) % 4) * 0.1, mittens: false, mittenColor: c.accent, mittenCuff: c.support },
-        geo: figureGeo(pose, vp.body, rv.use), order: rig.acc?.order ?? { hat: 0, scarf: 0, mitten: [0, 0] } };
+      // doplňky z outfitu (sladěné barvy); geometrie: hlava z malby (malované hlavy) nebo z vektorové hlavy,
+      // krk, trup a ruce vždy z vektorového těla
+      const vg = figureGeo(pose, vp.body, rv.use), pg = rig.acc?.geo;
+      rig.acc = { spec: vSpec!, geo: paintedHeads && pg ? { ...pg, neck: vg.neck, torsoUp: vg.torsoUp, neckW: vg.neckW, hands: vg.hands, back: vg.back } : vg, order: rig.acc?.order ?? { hat: 0, scarf: 0, mitten: [0, 0] } };
     }
     return { x, y, scale, mirror: req.mirror, pose, rig, grip: rig.grip, view: { requested: req.view, used: rv.use, substituted: rv.substituted },
       warning: rig.missing.length ? `Chybí díly: ${rig.missing.join(', ')}` : undefined, vec: vp ? { body: vp.body, outfit: vp.outfit, foot: footGeomOf(stpl) } : undefined };
@@ -170,4 +189,11 @@ export function gaitContextFor(m: CharacterManifest, look: CharacterLook): GaitC
 
 export function localToScene(cv: CharacterVisual, p: Vec2): Vec2 {
   return { x: cv.x + (cv.mirror ? -p.x : p.x) * cv.scale, y: cv.y + p.y * cv.scale };
+}
+
+/** Doplňky (čepice, šála) z outfitu vektorové postavy – sladěné barvy, stabilní ze seedu. */
+function specOfOutfit(of: Outfit, seed: number): AccessorySpec {
+  const c = of.colors;
+  return { hat: of.hat === 'fitted' ? 'beanie' : of.hat, hatColor: of.hat === 'fitted' ? c.support : c.accent, hatColor2: c.support, hatStripes: (seed & 3) === 1, slouch: of.hat === 'fitted' ? 0 : ((seed >> 4) % 5) * 0.05,
+    scarf: of.scarf, scarfColor: of.scarf === 'tube' ? c.support : c.accent, scarfColor2: c.support, scarfStripes: (seed & 4) === 4, tailLen: 0.9 + ((seed >> 6) % 4) * 0.1, mittens: false, mittenColor: c.accent, mittenCuff: c.support };
 }
