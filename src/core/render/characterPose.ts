@@ -55,7 +55,9 @@ export function vectorPlan(tpl: SkeletonTemplate & { id: string }, app: Characte
   const age = child ? 'child' : paintedHeads && hid ? (hid.age === 'senior' ? 'senior' : 'adult') : app.seed % 7 === 0 ? 'senior' : 'adult';
   const body = bodyOf(app.seed, age, paintedHeads && hid?.sex ? hid.sex : undefined);
   void routine;
-  return { body, outfit: outfitFor(app.seed >> 3, age), tpl: templateFor(tpl, body) };
+  // oblečení podle pohlaví: z malované hlavy (malované hlavy), jinak ze stavby těla (vektorová hlava)
+  const sex = child ? undefined : paintedHeads && hid?.sex ? hid.sex : body.sex;
+  return { body, outfit: outfitFor(app.seed >> 3, age, sex), tpl: templateFor(tpl, body) };
 }
 
 export interface CharacterVisual {
