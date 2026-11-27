@@ -23,6 +23,7 @@ npx tsx scripts/generate-mountain-demo.ts
 - 6 dětí v nepřetržitém cyklu, rodič u dojezdu se dívá na jezdce.
 - **Tři dráhy** vějířem přes svah (nekříží se, nejmenší rozestup 2,45 m). Děti nejezdí jedno za druhým – může jet víc najednou, každé po své dráze (za 400 s: 29 jízd, dvě děti souběžně 55 s, tři souběžně 6 s).
 - Cyklus: fronta nahoře → položení bobů (předklon) → usednutí → odraz → **jízda podle sklonu** (gravitace, tření μ 0,07, odpor úměrný v², u každého dítěte jiný) → **brzdění nohama** na rovině dojezdu (zpomalení spočítané tak, aby vždy zastavilo před chodníkem, odlétá sníh) → vstání na stranu ke kameře → zvednutí šňůry → návrat pěšky po dojezdu → výstup po schodech → fronta.
+- **Běh:** část dětí (výchozí 40 % návratů) běží – zpátky po dojezdu a první část schodů, pak zvolní do chůze. Poklus je vrstva nad chůzí (`AnimState.run`): švihová noha se zvedá výš, pánev níž s větším pérováním, předklon trupu ~9°, lokty pokrčené ~90° a paže kmitají víc; rychlost 1,85 m/s po rovině, 1,2 m/s do schodů.
 - Jízda trvá 9–11 s. Boby za dítětem jedou po jeho stopě ve vzdálenosti šňůry (jen tah – nikdy nepředjedou dítě do kopce), natáčejí se podle tahu; šňůra má průvěs.
 - **Rezervace po drahách:** dráha je obsazená od cesty ke startu přes jízdu, vstávání a sebrání šňůry, dokud se její jezdec s boby nevzdálí ~3 m od místa zastavení. Výjezdy jsou aspoň 1 s od sebe. Návrat vede pod konci všech drah, takže nekříží jízdy.
 - Na cestě děti dodržují rozestupy (počkají za tím, kdo je před nimi, i za jeho boby); přednost má ten, kdo je na okruhu dál, a kdo čeká přes 3 s, pomalu pokračuje – žádné vzájemné zaseknutí.
@@ -33,6 +34,12 @@ npx tsx scripts/generate-mountain-demo.ts
 - Stylizovaný low-poly 3D model promítaný kamerou scény: zašlá červená kapota, zelenošedé blatníky se sněhem, prosklená kabina s řidičem, výfuk, oranžový maják se zábleskem, šikmá radlice (vzdálený konec vpředu → sníh jde k bližší krajnici) a hrnutý sníh před ní. Kola se točí podle ujeté dráhy, karoserie lehce vibruje.
 - Časy: první průjezd 60–120 s, interval 240–420 s, průjezd 25–40 s; začátek i konec mimo obraz.
 - Za radlicí zůstane tmavší utužený pás s kolejemi a val hrud sněhu na bližší krajnici; při sněžení pás zapadne asi za 5 minut (bez sněžení za 20 minut). Smrk v popředí traktor zakryje.
+
+## Nastavení v editoru
+Bez výběru (vlastnosti scény v pravém panelu) jsou sekce **Bobování** a **Traktor s pluhem**. Změny se projeví hned v běžící simulaci (bez restartu) a jdou vrátit tlačítkem Zpět.
+- Bobování: zapnuto / vypnuto (děti počkají nahoře), max. souběžných jízd (1 – počet drah), podíl běhu (%), rychlost jízdy (0,5–1,6×; brzdění vždy zastaví před chodníkem), první jízda po startu, tlačítko **Další jízda hned**, živý přehled (kolik dětí právě jede).
+- Traktor: zapnuto / vypnuto, první průjezd od–do, interval od–do, délka průjezdu od–do (určuje rychlost), šířka radlice, odpočet do dalšího průjezdu, tlačítko **Projet teď**.
+- Dráhy, výstup a fronta se zatím upravují v generátoru scény (`MOUNTAIN` / `p.hill` v `scripts/generate-mountain-demo.ts`).
 
 ## Další život
 - Běžkaři (epizody A01): tam po horní namalované stopě, obrat na konci, zpět; zastaví se na chvíli ve stopě.

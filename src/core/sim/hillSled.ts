@@ -28,6 +28,9 @@ export interface HillConfig {
   kids: string[]; watchers?: string[]; watchSpots?: Vec2[];
   /** nejvíc souběžných jízd (výchozí = počet drah) */ maxRiding?: number;
   colors?: string[]; firstDelay?: number;
+  /** podíl návratů, kdy dítě běží (0–1; výchozí 0,4) */ runShare?: number;
+  /** násobek rychlosti jízdy (odpor vzduchu a sněhu; výchozí 1) */ rideSpeed?: number;
+  /** vypnuto (děti stojí ve frontě) */ paused?: boolean;
 }
 
 export type P3 = { X: number; Z: number; H: number };
@@ -42,11 +45,12 @@ export interface HillKid {
   /** stopa dítěte (za ní jedou boby na šňůře) */ trail: P3[];
   /** stání při vstávání / sedání: odkud kam (obraz) */ from?: Vec2; to?: Vec2;
   brake?: number; acc?: number; color: string;
+  /** toto kolo běží (zpátky po dojezdu a kus do kopce) */ runs?: boolean;
   /** jak dlouho čeká za někým (s) – pojistka proti vzájemnému zablokování */ blk?: number;
 }
 export interface HillState { kids: HillKid[]; lastLaunch: number; qn: number; rides: number; watchT: number }
 
-export const HILL = { rope: 1.1, sledL: 1.12, walk: 0.95, climb: 0.62, mu: 0.07, g: 9.81 } as const;
+export const HILL = { rope: 1.1, sledL: 1.12, walk: 0.95, climb: 0.62, run: 1.85, runClimb: 1.2, mu: 0.07, g: 9.81 } as const;
 const D_TOW = HILL.rope * 0.92 + HILL.sledL / 2;
 
 /** obrazová výška nad úpatím → px „země“ (hloubka) navíc */
@@ -188,15 +192,21 @@ export function stepHill(h: HillHost, st: HillState): void {
         k.blk = blocked ? (k.blk ?? 0) + dt : 0;
         const forced = (k.blk ?? 0) > 3;
         const steep = Math.max(0, cur.T.H) / Math.max(0.2, Math.hypot(cur.T.X, cur.T.Z));
-        const vT = blocked && !forced ? 0 : (forced ? 0.45 : 1) * (steep > 0.15 ? HILL.climb + (HILL.walk - HILL.climb) * Math.max(0, 1 - (steep - 0.15) * 2) : HILL.walk) * (0.92 + 0.16 * hashNoise(seed, 8810, kids.indexOf(k)));
-        k.v += Math.sign(vT - k.v) * Math.min(Math.abs(vT - k.v), dt * 1.6);
+        // běh: zpátky po dojezdu a první část schodů (pak dítě zvolní do chůze); do kopce pomaleji
+        const S0 = pathOf(cam, cfg, k.path!);
+        const running = !!k.runs && (k.next === 'asc' || (k.path!.k === 'asc' && k.s < S0.len * 0.55));
+        const vWalk = steep > 0.15 ? HILL.climb + (HILL.walk - HILL.climb) * Math.max(0, 1 - (steep - 0.15) * 2) : HILL.walk;
+        const vRun = steep > 0.15 ? HILL.runClimb + (HILL.run - HILL.runClimb) * Math.max(0, 1 - (steep - 0.15) * 2) : HILL.run;
+        const vT = blocked && !forced ? 0 : (forced ? 0.45 : 1) * (running ? vRun : vWalk) * (0.92 + 0.16 * hashNoise(seed, 8810, kids.indexOf(k)));
+        a.anim.run = Math.max(0, Math.min(1, (a.anim.run ?? 0) + (running && k.v > 1.1 ? dt / 0.5 : -dt / 0.6)));
+        k.v += Math.sign(vT - k.v) * Math.min(Math.abs(vT - k.v), dt * (running ? 2.2 : 1.6));
         k.s = Math.min(S.len, k.s + k.v * dt);
         const nx = at(S, k.s), p0 = scr3(cam, cur.P), p1 = scr3(cam, nx.P);
         const moving = Math.hypot(p1.x - p0.x, p1.y - p0.y) > 1e-3;
         h.place(a, p1, toScreen(cam, nx.P).y - p1.y, moving ? Math.atan2(p1.y - p0.y, p1.x - p0.x) : a.facing, Math.hypot(p1.x - p0.x, p1.y - p0.y) / dt, moving ? Math.atan2(nx.P.Z - cur.P.Z, nx.P.X - cur.P.X) : null);
         if (d3(nx.P, k.trail[k.trail.length - 1]) > 0.05) k.trail.push(nx.P);
         towSled(k);
-        a.status = k.path!.k === 'asc' ? 'Táhne boby do kopce' : k.path!.k === 'ret' ? 'Vrací se s boby k výstupu' : 'Jde s boby';
+        a.status = running && k.v > 1.1 ? (k.path!.k === 'asc' ? 'Běží s boby do kopce' : 'Běží s boby zpátky k výstupu') : k.path!.k === 'asc' ? 'Táhne boby do kopce' : k.path!.k === 'ret' ? 'Vrací se s boby k výstupu' : 'Jde s boby';
         if (k.s >= S.len - 1e-3) {
           k.v = 0;
           if (k.next === 'asc' && k.path!.k === 'line') { k.path = { k: 'ret', i: k.lane }; k.s = 0; }
@@ -216,7 +226,7 @@ export function stepHill(h: HillHost, st: HillState): void {
         // pohled dolů na svah (na jezdce)
         const r0 = riding[0] ? h.agent(riding[0].id) : null;
         if (r0 && Math.floor(t * 0.5) !== Math.floor((t - dt) * 0.5)) a.facing = Math.atan2(r0.pos.y - a.pos.y, r0.pos.x - a.pos.x);
-        if (rank !== 0 || el < k.wait || t < (cfg.firstDelay ?? 0)) break;
+        if (rank !== 0 || el < k.wait || t < (cfg.firstDelay ?? 0) || cfg.paused) break;
         // každé dítě má vlastní dráhu: dráha je obsazená od cesty ke startu přes jízdu, vstávání a sebrání
         // šňůry, dokud se dítě s boby nevzdálí ~3 m od místa zastavení. Víc dětí může jet souběžně (každé
         // po své dráze); mezi výjezdy aspoň 1 s, ať se nerozjedou jako na povel.
@@ -264,7 +274,8 @@ export function stepHill(h: HillHost, st: HillState): void {
         const L = pathOf(cam, cfg, { k: 'lane', i: k.lane });
         const cur = at(L, k.s), hz = Math.max(1e-3, Math.hypot(cur.T.X, cur.T.Z));
         const sinT = -cur.T.H, cosT = hz;
-        let acc = HILL.g * sinT - HILL.mu * HILL.g * cosT - k.cd * k.v * k.v;
+        const rs = Math.max(0.5, Math.min(1.6, cfg.rideSpeed ?? 1));
+        let acc = HILL.g * sinT - HILL.mu * HILL.g * cosT - (k.cd / (rs * rs)) * k.v * k.v;
         // dojezd (rovina): brzdění nohama – vždy zastaví před koncem dráhy
         const rem = L.len - k.s, flat = sinT < 0.04 && k.s > L.len * 0.5;
         k.brake = 0;
@@ -310,6 +321,7 @@ export function stepHill(h: HillHost, st: HillState): void {
           const R = cfg.returns[k.lane], P = hill3(cam, cfg, a.pos);
           k.trail = [k.sled.P, P];
           k.ph = 'walk'; k.next = 'asc'; k.path = { k: 'line', a: { ...a.pos }, b: { ...R[0] } }; k.s = 0; k.v = 0;
+          k.runs = hashNoise(seed, 8860, k.n * 13 + kids.indexOf(k)) < (cfg.runShare ?? 0.4);
         }
         break;
       }

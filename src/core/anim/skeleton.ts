@@ -424,6 +424,16 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
   const anchorAt = (i: number): Vec2 => { const o = opts.anchors![i]!; return { x: o.x + anchorPull[i].x, y: o.y + anchorPull[i].y }; };
   const ankleXY = (f: { u: number; h: number }, i: number) => { const o = isAnch(i) ? anchorAt(i) : baseOf(i), g = gOf(i); return { x: o.x + g.x * f.u, y: o.y - f.h + g.y * f.u }; };
   for (let i = 0; i < 2; i++) if (anchored[i] && gaitFeet[i].contact !== 'swing') { const f = footAt(qs[i], S, w, geom, 0); feet[i] = b < 1 ? { ...f, theta: f.theta * b } : f; }
+  // poklus: švihová noha se zvedá výš (koleno vpřed a nahoru, pata k hýždi), pánev níž a víc pérování
+  const run = (a.run ?? 0) * b;
+  if (run > 0) {
+    const ev0 = gaitEvents(w);
+    for (let i = 0; i < 2; i++) if (gaitFeet[i].contact === 'swing') {
+      const sw = clamp((qs[i] - ev0.toeOff) / Math.max(0.05, 1 - ev0.toeOff), 0, 1);
+      feet[i] = { ...feet[i], h: feet[i].h + Math.sin(Math.PI * Math.pow(sw, 0.8)) * 0.24 * L * run };
+    }
+    pelvisH += (-0.045 + 0.035 * Math.cos(4 * Math.PI * q0)) * L * run; gaitH = pelvisH;
+  }
   // Perspektiva hloubky: krok do hloubky posune chodidlo i svisle (výš = dál). Nohy se proto
   // počítají v „plochém“ prostoru (jako z boku) a výsledek se zkosí – noha se zkrátí/prodlouží
   // perspektivou, místo aby se ohnula v koleni jako na schodech.
@@ -582,7 +592,7 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
   // --- trup, krk, hlava: předklon a jeho kmitání z tabulky, hlava stabilizovaná (absolutní pitch)
   const breathe = (0.5 + 0.5 * Math.sin((tIdle / 3.6) * Math.PI * 2)) * I.breathe;
   const fsg = Math.sign(fx || 1);
-  const trunkPitch = (sampleGait('trunkPitchDeg', q0, w) + (motion.lean - 1)) * DEG * b;
+  const trunkPitch = (sampleGait('trunkPitchDeg', q0, w) + (motion.lean - 1) + 9 * (a.run ?? 0)) * DEG * b;
   const torsoAngle = -Math.PI / 2 + trunkPitch * fsg - shiftIdle * 0.004 - (soc ? soc.trunkDeg * DEG : 0) + (crouch * 0.42 + (tool ? tool.lean * 0.38 : 0)) * fsg * Math.max(0.45, Math.abs(fx)); // dřep / práce s nástrojem: trup vpřed (ve 3/4 pohledu se předklon ke kameře zkracuje)
   const neck = { x: hip.x + Math.cos(torsoAngle) * B.torso, y: hip.y + Math.sin(torsoAngle) * B.torso - breathe };
   const headTiltIdle = I.headAmp * (Math.sin(tIdle * 0.71 + motion.phase * 6.2) + 0.5 * Math.sin(tIdle * 1.37 + motion.phase * 3.1));
@@ -609,10 +619,11 @@ export function skeletonPose(tpl: SkeletonTemplate, view: ViewId, mirror: boolea
   const armFK = (i: number): Limb => {
     const root = armRoot(i);
     const q = qs[i] - lag;
-    const scale = motion.armSwing * (i === 0 ? motion.armLR ?? 1 : 2 - (motion.armLR ?? 1));
+    const rk = (a.run ?? 0) * b;
+    const scale = motion.armSwing * (i === 0 ? motion.armLR ?? 1 : 2 - (motion.armLR ?? 1)) * (1 + 1.3 * rk);
     const sh = sampleGait('shoulderFlexDeg', q, w), shMean = -4;
     const shoulderFlex = (-2 + (shMean + (sh - shMean) * scale + 2) * b) * DEG;
-    const elbow = (10 + (sampleGait('elbowFlexDeg', q, w) - 10) * b) * DEG;
+    const elbow = (10 + (sampleGait('elbowFlexDeg', q, w) - 10) * b + 70 * rk) * DEG; // poklus: lokty pokrčené ~90°
     const out = v.shoulderSpread ? sideX(i) * 2.5 : 0;
     const vec = (t: number, len: number) => ({ x: Math.sin(t) * len * fx, y: Math.cos(t) * len + Math.sin(t) * len * fy * 0.4 });
     const ua = trunkPitch * fsg * 0 + shoulderFlex + trunkPitch; // absolutní úhel nadloktí (vpřed kladně)

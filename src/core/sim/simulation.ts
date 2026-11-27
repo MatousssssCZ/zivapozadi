@@ -630,7 +630,7 @@ export class Simulation {
   /** id dítěte, které právě jede (nebo se chystá) */
   hillRider(): string | null { const st = this.state.hill; return st?.kids.find((k) => k.ph === 'ride' || k.ph === 'sit' || k.ph === 'place' || (k.ph === 'walk' && k.next === 'place'))?.id ?? null; }
   /** Traktor s radlicí hned vyjede (kontrola, galerie). */
-  plowNow(): { ok: boolean; msg: string } { if (!this.project.plow) return { ok: false, msg: 'Scéna nemá traktor.' }; const st = (this.state.plow ??= newPlowState(this.project)); if (st.phase === 'run') return { ok: false, msg: 'Traktor už jede.' }; st.until = this.time(); return { ok: true, msg: 'Traktor vyjíždí.' }; }
+  plowNow(): { ok: boolean; msg: string } { if (!this.project.plow) return { ok: false, msg: 'Scéna nemá traktor.' }; const st = (this.state.plow ??= newPlowState(this.project)); if (st.phase === 'run') return { ok: false, msg: 'Traktor už jede.' }; if (this.project.plow.enabled === false) return { ok: false, msg: 'Traktor je vypnutý.' }; st.until = this.time(); return { ok: true, msg: 'Traktor vyjíždí.' }; }
   sledNow(): { ok: boolean; msg: string } { const st = this.state.sled; if (!this.project.sled) return { ok: false, msg: 'Scéna nemá sáňky.' }; if (!st) return { ok: false, msg: 'Sáňky ještě nejsou připravené.' }; if (st.phase !== 'offstage') return { ok: false, msg: 'Sáňky už jedou.' }; st.until = this.time(); return { ok: true, msg: 'Rodič táhne dítě na sáňkách.' }; }
   /** Galerie aktivit: chodci upadne rukavice (A09). */
   mittenNow(): { ok: boolean; msg: string } {
@@ -728,7 +728,7 @@ export class Simulation {
   /** Hustota davu (0–1, podíl chodců a bruslařů ve scéně) – mění se za běhu bez přestavění simulace. */
   setCrowd(c: { walkers?: number; skaters?: number }) { this.patchProject((p) => { p.crowd = { ...(p.crowd ?? {}), ...c }; }); }
   /** Úprava nastavení, které nemění minulý průběh (hustota, zdroje kouře): bez přestavění simulace. */
-  patchProject(fn: (p: ProjectFile) => void) { const env = this.project.scene.environment; if (env) this.project.scene.environment = structuredClone(env); this.project.crowd = this.project.crowd ? { ...this.project.crowd } : undefined; fn(this.project); }
+  patchProject(fn: (p: ProjectFile) => void) { const env = this.project.scene.environment; if (env) this.project.scene.environment = structuredClone(env); this.project.crowd = this.project.crowd ? { ...this.project.crowd } : undefined; if (this.project.hill) this.project.hill = { ...this.project.hill }; if (this.project.plow) this.project.plow = { ...this.project.plow }; fn(this.project); }
   /** smí postava (podle pořadí ve své skupině a hustoty davu) do scény? */
   private crowdAllows(a: AgentState, kind: 'walkers' | 'skaters'): boolean {
     const cr = this.project.crowd, N = kind === 'walkers' ? cr?.walkersN : cr?.skatersN;

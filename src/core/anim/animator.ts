@@ -64,6 +64,8 @@ export interface AnimState {
   skate?: import('./fallPoses').FallKey | null;
   /** Sed na lavičce: odpočinek nebo přezouvání bruslí (čas, délka, váha prolnutí 0–1). */
   sit?: { kind: 'rest' | 'change' | 'kneel' | 'bend' | 'squat' | 'sled' | 'lift' | 'tuck' | 'angel' | 'climb' | 'ski'; r?: number; t: number; dur: number; w: number; from?: { x: number; y: number }; to?: { x: number; y: number } } | null;
+  /** Poklus (0–1): vrstva nad chůzí – vyšší zvedání kolen, pokrčené kmitající paže, předklon, víc pérování. */
+  run?: number;
   /** Na nohou jsou brusle (chůze po sněhu k brance / od ní) – kreslí se nůž. */
   bladesOn?: boolean;
 }

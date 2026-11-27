@@ -140,7 +140,8 @@ class Store {
   editLive(label: string, fn: (p: ProjectFile) => void) {
     const cur = this.state.project; if (!cur) return;
     const next = structuredClone(cur); fn(next);
-    this.undo.push({ project: cur, label }); if (this.undo.length > HISTORY_LIMIT) this.undo.shift();
+    // do historie samostatná kopie: běžící simulace může sdílet objekt `cur` a patchProject ho mění
+    this.undo.push({ project: structuredClone(cur), label }); if (this.undo.length > HISTORY_LIMIT) this.undo.shift();
     this.redo = [];
     this.applyProject(next, false);
     this.sim.sim?.patchProject(fn);

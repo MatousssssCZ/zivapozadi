@@ -14,6 +14,7 @@ export interface PlowConfig {
   /** osa jízdy po silnici (obraz, zleva doprava; první a poslední bod mimo obraz) */ path: Vec2[];
   firstDelay?: [number, number]; interval?: [number, number]; traversal?: [number, number];
   /** šířka radlice (m) */ bandW?: number;
+  /** false = traktor nevyjíždí (výchozí zapnuto) */ enabled?: boolean;
 }
 export interface PlowState {
   phase: 'off' | 'run'; until: number; n: number;
@@ -63,7 +64,7 @@ export function stepPlow(project: ProjectFile, st: PlowState, t: number, log: (m
     for (let i = 0; i < st.cleared.length; i++) { if (st.cleared[i] > 0) st.cleared[i] = Math.max(0, st.cleared[i] - k); if (st.berm[i] > 0) st.berm[i] = Math.max(0, st.berm[i] - k * 0.6); }
   }
   if (st.phase === 'off') {
-    if (t < st.until) return;
+    if (t < st.until || cfg.enabled === false) return;
     const [a, b] = cfg.traversal ?? [25, 40], dur = a + (b - a) * hashNoise(project.seed, 9510, st.n);
     st.phase = 'run'; st.s = 0; st.v = 0; st.vT = ax.len / dur; st.dist = 0;
     log('Traktor s radlicí vyjíždí odhrnovat silnici.');
