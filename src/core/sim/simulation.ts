@@ -36,6 +36,7 @@ import { stepBakery, newBakeryState, bakeryStartNow, TASK_LABEL, type BakeryHost
 import { createSkater, stepSkater, stepRinkEvents, separate, addTrails, skatePose, SKATE_PROFILES, TRAIL_LIFE, FALL_TOTAL, type IceGeo, type RinkState, type RinkCtx , forceRinkEvent, makeIceGeo, RINK_FALL_T0, rinkFallLen, LIFE_LABEL, insideW, clampToIce, type TrickKind } from './rink';
 import { stepFalls, startFall, newFallsState, DEFAULT_FALLS, type FallHost, type FallsState } from './falls';
 import { fallEndShift as fallEndShiftOf, type FallVariant } from '../anim/fallPoses';
+import { stepPlow, newPlowState, plowAxis, axisAt } from './plow';
 import { stepHill, initHill, type HillHost } from './hillSled';
 import { stepSled, sledObstacles, sledPathProblem, type SledHost } from './sled';
 import { forceMitten } from './mitten';
@@ -524,6 +525,16 @@ export class Simulation {
     if (this.project.falls || this.state.falls?.active.length) stepFalls(this.fallHost(), this.fallsState());
     if (this.project.rink) this.stepRink(t);
     if (this.project.hill && this.state.hill) stepHill(this.hillHost(), this.state.hill);
+    if (this.project.plow) {
+      const pl = (this.state.plow ??= newPlowState(this.project));
+      stepPlow(this.project, pl, t, (m) => this.log('info', m));
+      // sníh odletující z bližšího konce radlice k bližší krajnici
+      if (pl.phase === 'run' && pl.v > 0.3 && Math.floor(t / 0.1) !== Math.floor((t - SIM_DT) / 0.1)) {
+        const cam = this.cam(), { P, hd } = axisAt(plowAxis(cam, this.project.plow), pl.s), c = Math.cos(hd), s = Math.sin(hd);
+        const q = toScreen(cam, { X: P.X + 2.25 * c + 1.5 * s, Z: P.Z + 2.25 * s - 1.5 * c }, 0.15), sc = depthScaleAt(this.project.scene.depth, q.y);
+        for (let i = 0; i < 3; i++) emit((this.state.particles ??= []), { kind: 'snowPuff', x: q.x + (i - 1) * 5 * sc, y: q.y, t0: t, life: 0.5 + ((i * 37 + this.state.step) % 30) / 100, w0: 0, sc: sc * 1.4, seed: this.state.step * 7 + i * 13 });
+      }
+    }
     if (this.project.tram) this.stepTramAll(t);
     if (this.project.bakery) this.stepBakeryAll(t);
     if (this.project.pram) this.stepPramAll();
@@ -609,6 +620,8 @@ export class Simulation {
   // ---------------------------------------------------------------- pekař
   private bakeryHost: BakeryHost | null = null;
   /** Galerie aktivit: sáňky (A03) vyjedou hned. */
+  /** Traktor s radlicí hned vyjede (kontrola, galerie). */
+  plowNow(): { ok: boolean; msg: string } { if (!this.project.plow) return { ok: false, msg: 'Scéna nemá traktor.' }; const st = (this.state.plow ??= newPlowState(this.project)); if (st.phase === 'run') return { ok: false, msg: 'Traktor už jede.' }; st.until = this.time(); return { ok: true, msg: 'Traktor vyjíždí.' }; }
   sledNow(): { ok: boolean; msg: string } { const st = this.state.sled; if (!this.project.sled) return { ok: false, msg: 'Scéna nemá sáňky.' }; if (!st) return { ok: false, msg: 'Sáňky ještě nejsou připravené.' }; if (st.phase !== 'offstage') return { ok: false, msg: 'Sáňky už jedou.' }; st.until = this.time(); return { ok: true, msg: 'Rodič táhne dítě na sáňkách.' }; }
   /** Galerie aktivit: chodci upadne rukavice (A09). */
   mittenNow(): { ok: boolean; msg: string } {

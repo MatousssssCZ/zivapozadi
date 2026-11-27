@@ -19,6 +19,8 @@ import { SHOVEL_SPRITE } from '../anim/skeleton';
 import { cameraFor, toScreen, toWorld, Q, type World } from '../scene/camera';
 import { SLED } from '../sim/sled';
 import { towing, hill3, HILL } from '../sim/hillSled';
+import { plowAxis, axisAt, PLOW } from '../sim/plow';
+import { drawTractor, drawPlowedBand } from './tractor3d';
 import { tramGeo, tramMatrix, trackYAt, doorQuad, tramVisible, type TramGeo } from '../sim/tram';
 import { BAKERY_REFILL, GRIT_LIFE } from '../sim/bakery';
 import { drawSnowSurface, snowItems } from './snowRender';
@@ -969,6 +971,15 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
             ctx.beginPath(); ctx.moveTo(hand.x, hand.y); ctx.quadraticCurveTo((hand.x + ringS.x) / 2, Math.max(hand.y, ringS.y) + sag, ringS.x, ringS.y); ctx.stroke(); ctx.restore();
           } });
         }
+      }
+    }
+    // traktor s radlicí: odhrnutý pás (zem, pod vším) a 3D traktor
+    if (sim.state.plow && project.plow) {
+      const pl = sim.state.plow, ax = plowAxis(cam, project.plow), hw = (project.plow.bandW ?? 2.6) / 2;
+      items.push({ key: -1e6, tie: 0, draw: () => drawPlowedBand(ctx, cam, (s) => axisAt(ax, s), PLOW.bin, pl.cleared, pl.berm, hw) });
+      if (pl.phase === 'run') {
+        const { P, hd } = axisAt(ax, pl.s), c = toScreen(cam, P), ppm = depthScaleAt(sc.depth, c.y) / Q;
+        items.push({ key: c.y + 0.6 * ppm, tie: 13000, draw: () => drawTractor(ctx, cam, P, hd, pl.dist, opts.time, ppm) });
       }
     }
     // bobování na svahu: boby (3D model ve výšce terénu, sklon svahu) + šňůra od ruky dítěte při tahání

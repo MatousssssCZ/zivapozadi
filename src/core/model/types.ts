@@ -352,6 +352,8 @@ export interface ProjectFile {
   episodes?: import('../sim/episodes').EpisodeConfig[];
   /** Bobování na svahu (terén svahu, dráhy, návrat, výstup, fronta; děti a rodiče s routine „hill“). */
   hill?: import('../sim/hillSled').HillConfig;
+  /** Traktor s radlicí: občasný průjezd po silnici, odhrnutý pás a val na bližší krajnici. */
+  plow?: import('../sim/plow').PlowConfig;
   sled?: {
     path: Vec2[]; parentId: string; firstDelay?: number;
     /** dítě na saních (postava s routine „rider“) – pak se kreslí vektorové saně a jezdec z kostry; jinak malovaný sprite */

@@ -114,6 +114,8 @@ export async function generateMountain(dir: string): Promise<ProjectFile> {
     queue: V([[185, 322], [150, 309], [118, 298], [90, 290]]),
     kids: kidApps.map((_, i) => `kid_bob${i + 1}`), watchers: ['ch_rodic_svah'], watchSpots: V([[250, 712]]),
   };
+  // traktor s radlicí po silnici (osa podle obou okrajů silnice; začátek i konec mimo obraz)
+  p.plow = { path: V([[-320, 968], [300, 965], [800, 960], [1200, 951], [1600, 936], [1950, 918], [2260, 902]]), firstDelay: [60, 120], interval: [240, 420], traversal: [25, 40], bandW: 2.6 };
   p.crowd = { walkersN: 6, dogs: 2, walkSpeed: 0.95 };
   p.export = { ...p.export, durationSec: 60, chunkSec: 20 };
   await saveProject(dir, p);

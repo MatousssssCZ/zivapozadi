@@ -206,6 +206,7 @@ export interface SimState {
   bakery?: import('./bakery').BakeryState;
   /** Sáňky (B02): stav průchodu. */
   sled?: import('./sled').SledState;
+  /** traktor s radlicí (project.plow) */ plow?: import('./plow').PlowState;
   /** bobování na svahu (project.hill) */ hill?: import('./hillSled').HillState;
   /** Upadlá rukavice (B03): stav jediné události ve scéně. */
   mitten?: import('./mitten').MittenIncident;
