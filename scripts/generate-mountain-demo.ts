@@ -100,16 +100,23 @@ export async function generateMountain(dir: string): Promise<ProjectFile> {
   ];
   // bobování: 5 dětí v cyklu (fronta → jízda → dojezd → návrat → výstup), rodič u dojezdu
   const kidLib = JSON.parse(await fs.readFile('resources/builtin/painted-parts-child/library.json', 'utf8')) as PartLibrary;
-  const kidApps = generateGroup(kidLib, 5, 7314).appearances;
-  const kidNames = ['Vojta', 'Eliška', 'Kuba', 'Natálka', 'Šimon'];
+  const kidApps = generateGroup(kidLib, 6, 7314).appearances;
+  const kidNames = ['Vojta', 'Eliška', 'Kuba', 'Natálka', 'Šimon', 'Bára'];
   kidApps.forEach((app, i) => p.characters.push({ id: `kid_bob${i + 1}`, name: kidNames[i], assetId: 'builtin_postava_dite', startNodeId: 'c0', baseScale: 1, walkSpeed: 50, palette: pal, wander: false, appearance: app, routine: 'hill', activities: {} }));
   const parApp = generateGroup(lib, 1, 7315).appearances[0]; parApp.variants = { ...parApp.variants, head: 'head_06_cg' };
   p.characters.push({ id: 'ch_rodic_svah', name: 'Táta u svahu', assetId: 'builtin_postava_cg', startNodeId: 'c0', baseScale: 1, walkSpeed: 54, palette: pal, wander: false, appearance: parApp, routine: 'hill', activities: {} });
   const V = (pts: [number, number][]) => pts.map(([x, y]) => ({ x, y }));
+  // tři dráhy vějířem přes svah (nekříží se, nejmenší rozestup 2,45 m); návrat pod konci všech drah
+  const lanes: [number, number][][] = [
+    [[215, 345], [385, 418], [560, 535], [715, 640], [805, 700], [855, 728]],
+    [[360, 338], [540, 410], [725, 515], [890, 622], [1000, 692], [1060, 722]],
+    [[515, 334], [700, 400], [885, 495], [1060, 598], [1185, 680], [1260, 714]],
+  ];
+  const bottom: [number, number][] = [[1110, 754], [800, 753], [560, 752], [330, 750], [150, 742]];
   p.hill = {
-    footY: 700, rise: 0.75, blend: 70, conflictX: 640, firstDelay: 2,
-    lanes: [V([[225, 342], [403, 410], [595, 529], [768, 640], [880, 700], [960, 728]]), V([[292, 346], [475, 415], [660, 525], [830, 630], [950, 695], [1040, 722]])],
-    returns: [V([[940, 744], [800, 752], [560, 752], [330, 750], [150, 742]]), V([[1025, 742], [940, 755], [800, 756], [560, 754], [330, 752], [150, 742]])],
+    footY: 700, rise: 0.75, blend: 70, firstDelay: 2, maxRiding: 3,
+    lanes: lanes.map(V),
+    returns: lanes.map((L) => { const e = L[L.length - 1]; return V([[e[0] - 18, e[1] + 24], ...bottom.filter(([x]) => x < e[0] - 60)]); }),
     ascent: V([[150, 742], [120, 690], [100, 620], [85, 540], [78, 460], [80, 390], [95, 335], [130, 312]]),
     queue: V([[185, 322], [150, 309], [118, 298], [90, 290]]),
     kids: kidApps.map((_, i) => `kid_bob${i + 1}`), watchers: ['ch_rodic_svah'], watchSpots: V([[250, 712]]),

@@ -7,8 +7,9 @@
  * Cyklus dítěte: fronta nahoře → položení bobů → usednutí → odraz → jízda po dráze podle sklonu
  * (gravitace, tření, odpor, brzdění nohama na dojezdu) → zastavení před chodníkem → vstání →
  * návrat pěšky po dojezdu s boby na šňůře → výstup po vyšlapané cestě → fronta. Bez teleportů.
- * Rezervace: dojezd je společný – nikdo nevyjede, dokud v konfliktní části dojezdu někdo stojí,
- * vstává nebo se vrací; druhá jízda smí jen hned po první (souběžně v druhé dráze).
+ * Rezervace po drahách: každé dítě jede svou dráhou (dráhy se nekříží, rozestup ≥ 2,4 m), víc dětí
+ * může jet souběžně. Dráha je obsazená, dokud se její jezdec s boby nevzdálí od místa zastavení;
+ * návrat vede pod konci všech drah, takže jízdy nekříží.
  */
 import type { Vec2 } from '../math/vec';
 import type { AgentState } from './types';
@@ -25,7 +26,7 @@ export interface HillConfig {
   /** místa fronty nahoře ([0] nejblíž drahám) */ queue: Vec2[];
   /** děti (routine „hill“), rodiče sledující svah a jejich místa */
   kids: string[]; watchers?: string[]; watchSpots?: Vec2[];
-  /** x, od kterého je dojezd konfliktní (místo zastavení a vstávání) */ conflictX: number;
+  /** nejvíc souběžných jízd (výchozí = počet drah) */ maxRiding?: number;
   colors?: string[]; firstDelay?: number;
 }
 
@@ -41,6 +42,7 @@ export interface HillKid {
   /** stopa dítěte (za ní jedou boby na šňůře) */ trail: P3[];
   /** stání při vstávání / sedání: odkud kam (obraz) */ from?: Vec2; to?: Vec2;
   brake?: number; acc?: number; color: string;
+  /** jak dlouho čeká za někým (s) – pojistka proti vzájemnému zablokování */ blk?: number;
 }
 export interface HillState { kids: HillKid[]; lastLaunch: number; qn: number; rides: number; watchT: number }
 
@@ -110,8 +112,8 @@ export function initHill(h: HillHost): HillState {
   const asc = pathOf(cam, cfg, { k: 'asc' }), ret0 = pathOf(cam, cfg, { k: 'ret', i: 0 });
   cfg.kids.forEach((id, i) => {
     const k: HillKid = { id, ph: 'queue', t0: 0, n: 0, s: 0, lane: i % cfg.lanes.length, v: 0, cd: 0.2, qn: 0, wait: 0, sled: { P: { X: 0, Z: 0, H: 0 }, hd: 0, pitch: 0, dist: 0 }, trail: [], color: colors[i % colors.length] };
-    const slot = i % 5;
-    if (slot === 0 || slot === 1) { k.ph = 'queue'; k.qn = st.qn++; k.wait = 3 + 4 * hashNoise(seed, 8800, i) + slot * 3; }
+    const slot = i % 6;
+    if (slot === 0 || slot === 1 || slot === 5) { k.ph = 'queue'; k.qn = st.qn++; k.wait = 3 + 4 * hashNoise(seed, 8800, i) + slot * 3; }
     else { k.ph = 'walk'; k.path = slot === 3 ? { k: 'ret', i: 0 } : { k: 'asc' }; k.next = slot === 3 ? 'asc' : 'top'; k.lane = 0; k.s = (slot === 2 ? 0.35 : slot === 4 ? 0.75 : 0.55) * (slot === 3 ? ret0.len : asc.len); }
     st.kids.push(k);
   });
@@ -158,9 +160,6 @@ export function stepHill(h: HillHost, st: HillState): void {
   const kids = st.kids;
   const posOf = (k: HillKid): P3 | null => { const a = h.agent(k.id); return a ? hill3(cam, cfg, a.pos) : null; };
   const riding = kids.filter((k) => k.ph === 'ride' || k.ph === 'sit' || k.ph === 'place');
-  // konflikt na dojezdu: zastavené, vstávající, sbírající, nebo vracející se v konfliktní části
-  const conflict = kids.some((k) => k.ph === 'getup' || k.ph === 'pick' || (k.ph === 'ride' && k.s > pathOf(cam, cfg, { k: 'lane', i: k.lane }).len * 0.55) ||
-    (k.ph === 'walk' && k.path?.k === 'ret' && (h.agent(k.id)?.pos.x ?? 0) > cfg.conflictX));
   // fronta: pořadí podle čísla příchodu
   const queued = kids.filter((k) => k.ph === 'queue' || (k.ph === 'walk' && k.next === 'queue')).sort((a, b) => a.qn - b.qn);
 
@@ -173,17 +172,23 @@ export function stepHill(h: HillHost, st: HillState): void {
         const cur = at(S, k.s);
         // rozestupy: někdo (nebo cizí boby) těsně před dítětem ve směru chůze → počká
         const dir = { X: cur.T.X, Z: cur.T.Z };
+        // přednost má ten, kdo je na okruhu dál (návrat doleva → výstup → fronta); kdo je za ním, počká.
+        // Pojistka: kdo čeká přes 3 s, pomalu pokračuje (žádné věčné zaseknutí).
         let blocked = false;
+        const me = progressOf(cam, cfg, k, a.pos);
         for (const o of kids) {
           if (o === k) continue;
+          if (o.ph === 'walk' && (o.blk ?? 0) > 0 && progressOf(cam, cfg, o, h.agent(o.id)?.pos ?? a.pos) < me) continue; // stojí za mnou
           const op = posOf(o); if (!op) continue;
           for (const [Q, r] of [[op, 1.0], [o.sled.P, 0.75]] as const) {
             const dx = Q.X - cur.P.X, dz = Q.Z - cur.P.Z, dd = Math.hypot(dx, dz, Q.H - cur.P.H);
             if (dd < r && dx * dir.X + dz * dir.Z > 0.25 * dd) blocked = true;
           }
         }
+        k.blk = blocked ? (k.blk ?? 0) + dt : 0;
+        const forced = (k.blk ?? 0) > 3;
         const steep = Math.max(0, cur.T.H) / Math.max(0.2, Math.hypot(cur.T.X, cur.T.Z));
-        const vT = blocked ? 0 : (steep > 0.15 ? HILL.climb + (HILL.walk - HILL.climb) * Math.max(0, 1 - (steep - 0.15) * 2) : HILL.walk) * (0.92 + 0.16 * hashNoise(seed, 8810, kids.indexOf(k)));
+        const vT = blocked && !forced ? 0 : (forced ? 0.45 : 1) * (steep > 0.15 ? HILL.climb + (HILL.walk - HILL.climb) * Math.max(0, 1 - (steep - 0.15) * 2) : HILL.walk) * (0.92 + 0.16 * hashNoise(seed, 8810, kids.indexOf(k)));
         k.v += Math.sign(vT - k.v) * Math.min(Math.abs(vT - k.v), dt * 1.6);
         k.s = Math.min(S.len, k.s + k.v * dt);
         const nx = at(S, k.s), p0 = scr3(cam, cur.P), p1 = scr3(cam, nx.P);
@@ -212,13 +217,16 @@ export function stepHill(h: HillHost, st: HillState): void {
         const r0 = riding[0] ? h.agent(riding[0].id) : null;
         if (r0 && Math.floor(t * 0.5) !== Math.floor((t - dt) * 0.5)) a.facing = Math.atan2(r0.pos.y - a.pos.y, r0.pos.x - a.pos.x);
         if (rank !== 0 || el < k.wait || t < (cfg.firstDelay ?? 0)) break;
-        // výběr dráhy: volná (nikdo na ní) a bez konfliktu na dojezdu; druhá souběžně jen hned po první
-        const free = cfg.lanes.map((_, i) => !kids.some((o) => o !== k && o.lane === i && (o.ph === 'ride' || o.ph === 'sit' || o.ph === 'place' || (o.ph === 'walk' && o.next === 'place'))));
-        const nRide = riding.length + kids.filter((o) => o.ph === 'walk' && o.next === 'place').length;
-        const pairOk = nRide === 1 && t - st.lastLaunch < 2.5 && !kids.some((o) => o.ph === 'getup' || o.ph === 'pick');
-        if (!(nRide === 0 && !conflict) && !pairOk) break;
-        const li = free.findIndex((f, i) => f && (i === (st.rides % cfg.lanes.length) || !free[st.rides % cfg.lanes.length]));
-        if (li < 0) break;
+        // každé dítě má vlastní dráhu: dráha je obsazená od cesty ke startu přes jízdu, vstávání a sebrání
+        // šňůry, dokud se dítě s boby nevzdálí ~3 m od místa zastavení. Víc dětí může jet souběžně (každé
+        // po své dráze); mezi výjezdy aspoň 1 s, ať se nerozjedou jako na povel.
+        const laneBusy = (i: number) => kids.some((o) => o !== k && o.lane === i && (o.ph === 'place' || o.ph === 'sit' || o.ph === 'ride' || o.ph === 'getup' || o.ph === 'pick' ||
+          (o.ph === 'walk' && (o.next === 'place' || (o.next === 'asc' && (o.path?.k === 'line' || (o.path?.k === 'ret' && o.s < 3)))))));
+        const nRide = kids.filter((o) => o.ph === 'ride' || o.ph === 'sit' || o.ph === 'place' || (o.ph === 'walk' && o.next === 'place')).length;
+        if (nRide >= (cfg.maxRiding ?? cfg.lanes.length) || t - st.lastLaunch < 1) break;
+        const freeL = cfg.lanes.map((_, i) => i).filter((i) => !laneBusy(i));
+        if (!freeL.length) break;
+        const li = freeL[Math.floor(hashNoise(seed, 8850, st.rides) * freeL.length) % freeL.length];
         k.lane = li; st.lastLaunch = t; st.rides++;
         const L = pathOf(cam, cfg, { k: 'lane', i: li }), s0 = at(L, 0.0), hd = Math.atan2(s0.T.Z, s0.T.X);
         const stand = sideSpot(s0.P, hd, 0.45);
@@ -315,6 +323,15 @@ export function stepHill(h: HillHost, st: HillState): void {
     for (const id of cfg.watchers) { const w = h.agent(id); if (w && ra) w.facing = Math.atan2(ra.pos.y - w.pos.y, ra.pos.x - w.pos.x); }
   }
   for (const id of cfg.watchers ?? []) { const w = h.agent(id); if (w) { h.place(w, w.pos, liftPx(cfg, w.pos.y), w.facing, 0, null); w.status = 'Dívá se na děti na svahu'; } }
+}
+
+/** jak daleko je dítě na okruhu (větší = dál): návrat (doleva) < výstup < fronta / cesta ke startu */
+function progressOf(cam: Camera, cfg: HillConfig, k: HillKid, p: Vec2): number {
+  void cam; void cfg;
+  if (k.ph !== 'walk') return 1e5;
+  if (k.next === 'asc') return 2000 - p.x;        // z dojezdu k výstupu: čím víc vlevo, tím dál
+  if (k.next === 'top') return 4000 - p.y;        // po schodech nahoru
+  return 8000 + p.x;                              // fronta / cesta ke startu dráhy
 }
 
 /** místo sedu na bobech (obraz) a lift (px) – sedák kousek za středem */

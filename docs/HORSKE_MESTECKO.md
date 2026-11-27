@@ -20,11 +20,13 @@ npx tsx scripts/generate-mountain-demo.ts
 - **Svah** (`src/core/sim/hillSled.ts`): nad úpatím (`footY` = 700 px) se obrazová výška rozdělí na hloubku (25 %) a skutečnou výšku nad zemí (75 %), s plynulým přechodem 70 px. Postavy na svahu mají měřítko podle hloubky terénu (`AgentState.lift`), ne podle obrazového y – děti nahoře nejsou maličké. Boby se kreslí jako 3D model ve výšce terénu a se sklonem svahu.
 
 ## Bobování (A02)
-- 5 dětí v nepřetržitém cyklu, rodič u dojezdu se dívá na jezdce.
+- 6 dětí v nepřetržitém cyklu, rodič u dojezdu se dívá na jezdce.
+- **Tři dráhy** vějířem přes svah (nekříží se, nejmenší rozestup 2,45 m). Děti nejezdí jedno za druhým – může jet víc najednou, každé po své dráze (za 400 s: 29 jízd, dvě děti souběžně 55 s, tři souběžně 6 s).
 - Cyklus: fronta nahoře → položení bobů (předklon) → usednutí → odraz → **jízda podle sklonu** (gravitace, tření μ 0,07, odpor úměrný v², u každého dítěte jiný) → **brzdění nohama** na rovině dojezdu (zpomalení spočítané tak, aby vždy zastavilo před chodníkem, odlétá sníh) → vstání na stranu ke kameře → zvednutí šňůry → návrat pěšky po dojezdu → výstup po schodech → fronta.
 - Jízda trvá 9–11 s. Boby za dítětem jedou po jeho stopě ve vzdálenosti šňůry (jen tah – nikdy nepředjedou dítě do kopce), natáčejí se podle tahu; šňůra má průvěs.
-- **Rezervace dojezdu:** nikdo nevyjede, dokud na dojezdu někdo dojíždí, vstává, bere šňůru nebo se vrací v konfliktní části (x > 640). Druhá dráha smí vyjet souběžně jen hned po první. Děti na cestě dodržují rozestupy (počkají za tím, kdo je před nimi, i za jeho boby).
-- Žádné teleporty: kontrola po 240 s simulace – největší posun za krok 2,3 px.
+- **Rezervace po drahách:** dráha je obsazená od cesty ke startu přes jízdu, vstávání a sebrání šňůry, dokud se její jezdec s boby nevzdálí ~3 m od místa zastavení. Výjezdy jsou aspoň 1 s od sebe. Návrat vede pod konci všech drah, takže nekříží jízdy.
+- Na cestě děti dodržují rozestupy (počkají za tím, kdo je před nimi, i za jeho boby); přednost má ten, kdo je na okruhu dál, a kdo čeká přes 3 s, pomalu pokračuje – žádné vzájemné zaseknutí.
+- Žádné teleporty: kontrola po 400 s simulace – největší posun za krok 2,4 px.
 
 ## Traktor s radlicí (H01)
 - `src/core/sim/plow.ts` (průjezd, odhrnutý pás) a `src/core/render/tractor3d.ts` (model).
