@@ -7,6 +7,7 @@
  */
 import type { Vec2 } from '../math/vec';
 import type { AccessorySpec, AccessoryGeo } from './accessories';
+import { getCanvasFactory } from './rigRenderer';
 
 type V3 = [number, number, number];
 type Ctx = CanvasRenderingContext2D;
@@ -40,6 +41,33 @@ function drawFacets(ctx: Ctx, fs: Facet[], ox: number, oy: number, ang: number, 
 }
 const proj = (p: V3): Vec2 => ({ x: p[0], y: -p[1] });
 
+/**
+ * Plošky čepice / nákrčníku se nemění (tvar závisí jen na doplňku, velikosti hlavy a pohledu) – vykreslí
+ * se jednou do bitmapy v rozlišení ≥ aktuálního (měřítko zaokrouhlené nahoru po čtvrtinách oktávy) a pak
+ * se jen kreslí s natočením. Ušetří stovky plošek na postavu a snímek; kvalita stejná.
+ */
+const facetCache = new Map<string, { img: CanvasImageSource; x0: number; y0: number; w: number; h: number; k: number }>();
+function cachedFacets(ctx: Ctx, key: string, build: () => Facet[], ox: number, oy: number, ang: number, lw: number) {
+  const f = getCanvasFactory(), T = ctx.getTransform(), sc = Math.hypot(T.a, T.b);
+  if (!f || !(sc > 0)) { drawFacets(ctx, build(), ox, oy, ang, lw); return; }
+  const k = Math.pow(2, Math.ceil(Math.log2(sc) * 4) / 4), ck = `${key}|${k.toFixed(4)}`;
+  let e = facetCache.get(ck);
+  if (!e) {
+    const fs = build(); let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const q of fs) for (const p of q.pts) { x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y); x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y); }
+    if (!fs.length) return;
+    const pad = 2 / k + lw; x0 -= pad; y0 -= pad; x1 += pad; y1 += pad;
+    const W = Math.max(1, Math.ceil((x1 - x0) * k)), H = Math.max(1, Math.ceil((y1 - y0) * k));
+    const c = f(W, H), cx = c.getContext('2d') as unknown as Ctx;
+    cx.setTransform(k, 0, 0, k, -x0 * k, -y0 * k);
+    drawFacets(cx, fs, 0, 0, 0, lw);
+    if (facetCache.size > 800) facetCache.clear();
+    e = { img: c as unknown as CanvasImageSource, x0, y0, w: W / k, h: H / k, k };
+    facetCache.set(ck, e);
+  }
+  ctx.save(); ctx.translate(ox, oy); ctx.rotate(ang); ctx.drawImage(e.img, e.x0, e.y0, e.w, e.h); ctx.restore();
+}
+
 // ---------------------------------------------------------------- čepice
 /** okraj čepice (polární úhel od temene): nad čelem výš, v týle níž */
 const rimTheta = (phi: number) => ((85 - 13 * Math.cos(phi)) * Math.PI) / 180;
@@ -53,7 +81,9 @@ function capPoint(s: AccessorySpec, g: AccessoryGeo, th: number, phi: number, rk
 export function drawHat3D(ctx: Ctx, s: AccessorySpec, g: AccessoryGeo, far: number) {
   if (s.hat === 'none') return;
   const ang = Math.atan2(g.headUp.y, g.headUp.x) + Math.PI / 2, NP = 28, NR = 9, cuff = s.hat !== 'earflap';
-  const facets: Facet[] = [], dPhi = (2 * Math.PI) / NP;
+  const dPhi = (2 * Math.PI) / NP;
+  const build = (): Facet[] => {
+  const facets: Facet[] = [];
   const quad = (a: V3, b: V3, c: V3, d: V3, color: string, k: number) => {
     const ctr = mul(add(add(a, b), add(c, d)), 0.25), n = norm(ctr);
     if (n[2] < -0.04) return; // odvrácená ploška (za hlavou)
@@ -86,7 +116,9 @@ export function drawHat3D(ctx: Ctx, s: AccessorySpec, g: AccessoryGeo, far: numb
       }
     }
   }
-  drawFacets(ctx, facets, g.headC.x, g.headC.y, ang, g.headR * 0.03);
+  return facets;
+  };
+  cachedFacets(ctx, `h|${s.hat}|${s.hatColor}|${s.hatColor2}|${s.hatStripes}|${s.slouch.toFixed(3)}|${g.headR.toFixed(2)}|${g.back}|${far.toFixed(3)}`, build, g.headC.x, g.headC.y, ang, g.headR * 0.03);
   if (s.hat === 'earflap') {
     // šňůrky ušanek
     const c = Math.cos(ang), sn = Math.sin(ang);
@@ -124,7 +156,10 @@ export function drawNeck3D(ctx: Ctx, s: AccessorySpec, g: AccessoryGeo, far: num
   const cp = Math.cos(PITCH), sp = Math.sin(PITCH);
   const projP = (p: V3): Vec2 => ({ x: p[0], y: -(p[1] * cp) + p[2] * sp });
   const facing = (n: V3) => n[2] * cp + n[1] * sp;
-  const facets: Facet[] = [], dPhi = (2 * Math.PI) / NP;
+  const top = (phi: number, rk: number) => { const r = radius(1) * rk; return add(mul(U, y1), mul(add(mul(F, Math.cos(phi)), mul(S, Math.sin(phi))), r)); };
+  const dPhi = (2 * Math.PI) / NP;
+  const build = (): Facet[] => {
+  const facets: Facet[] = [];
   for (let j = 0; j < NP; j++) {
     const p0 = j * dPhi, p1 = p0 + dPhi;
     for (let i = 0; i < NR; i++) {
@@ -139,13 +174,14 @@ export function drawNeck3D(ctx: Ctx, s: AccessorySpec, g: AccessoryGeo, far: num
     }
   }
   // horní plocha ohrnutého lemu (vidět shora) – jen přední polovina prstence, zadní zakryje krk a hlava
-  const top = (phi: number, rk: number) => { const r = radius(1) * rk; return add(mul(U, y1), mul(add(mul(F, Math.cos(phi)), mul(S, Math.sin(phi))), r)); };
   for (let j = 0; j < NP; j++) {
     const p0 = j * dPhi, p1 = p0 + dPhi, mid = (p0 + p1) / 2, nz = Math.cos(mid) * F[2] + Math.sin(mid) * S[2];
     const a = top(p0, 1), b = top(p1, 1), c = top(p1, 0.8), d = top(p0, 0.8);
     // celý horní lem (i zadní půlka za krkem je shora vidět jako vnější plocha role)
     facets.push({ pts: [a, b, c, d].map(projP), z: nz < 0 ? -1e3 + nz : 1e3, n: [0, 1, 0.3], color: s.scarfColor, k: (tube ? 1.02 : 0.95) * (nz < 0 ? 0.88 : 1) * far });
   }
+  return facets;
+  };
   void facing;
   // otvor límce: místo vnitřku je vidět krk ve stínu brady (žádná vnitřní stěna)
   const hole = () => { ctx.beginPath(); for (let j = 0; j <= NP; j++) { const q = projP(top(j * dPhi, 0.82)), x = g.neck.x + q.x * Math.cos(ang) - q.y * Math.sin(ang), y = g.neck.y + q.x * Math.sin(ang) + q.y * Math.cos(ang); j ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.closePath(); };
@@ -178,7 +214,7 @@ export function drawNeck3D(ctx: Ctx, s: AccessorySpec, g: AccessoryGeo, far: num
     gr.addColorStop(0, 'rgba(40,22,16,0.15)'); gr.addColorStop(1, `rgba(40,22,16,${g.back ? 0.35 : 0.55})`);
     ctx.fillStyle = gr; ctx.fillRect(g.neck.x - w * 3, g.neck.y - w * 3, w * 6, w * 6); }
   ctx.restore();
-  drawFacets(ctx, facets, g.neck.x, g.neck.y, ang, w * 0.02);
+  cachedFacets(ctx, `n|${s.scarf}|${s.scarfColor}|${s.scarfColor2}|${s.scarfStripes}|${w.toFixed(2)}|${g.back}|${far.toFixed(3)}`, build, g.neck.x, g.neck.y, ang, w * 0.02);
   // horní hrana límce (pletený okraj): tmavší linka po přední polovině
   const c = Math.cos(ang), sn = Math.sin(ang);
   ctx.strokeStyle = 'rgba(0,0,0,0.16)'; ctx.lineWidth = w * 0.03; ctx.beginPath(); let first = true;

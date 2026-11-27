@@ -709,19 +709,26 @@ export class Simulation {
     // majitelé psů se řídí jen počtem psů; „chodci“ = lidé bez psa (vůdce + doprovod)
     if (kind === 'walkers' && this.chars.get(a.id)?.pet && (cr?.dogs !== undefined || N !== undefined)) {
       if (cr?.dogs === undefined) return true;
-      const owners = this.project.characters.filter((c) => c.routine === 'visitor' && !c.skate && !c.companionId && c.pet);
-      const j = owners.findIndex((c) => c.id === a.id); return j < 0 || j < cr.dogs;
+      const j = this.crowdIndex('owners').get(a.id) ?? -1; return j < 0 || j < cr.dogs;
     }
-    const pool = this.project.characters.filter((c) => (kind === 'skaters' ? !!c.skate && !c.skatePair : c.routine === 'visitor' && !c.skate && !c.companionId && (N === undefined || !c.pet)));
-    const i = pool.findIndex((c) => c.id === a.id); if (i < 0) return true;
-    if (N !== undefined) {
-      // počet osob: vůdce + jeho stálý doprovod (partner, děti) – postupně podle pořadí v projektu
-      let used = 0;
-      for (let k = 0; k <= i; k++) used += 1 + this.project.characters.filter((c) => c.companionId === pool[k].id).length;
-      return used <= N;
-    }
+    const idx = this.crowdIndex(kind === 'skaters' ? 'skaters' : N === undefined ? 'walkersAll' : 'walkers'), i = idx.get(a.id) ?? -1, pool = this.crowdPools.get(kind === 'skaters' ? 'skaters' : N === undefined ? 'walkersAll' : 'walkers')!;
+    if (i < 0) return true;
+    // počet osob: vůdce + jeho stálý doprovod (partner, děti) – kumulativně podle pořadí v projektu (předpočítané)
+    if (N !== undefined) return (this.crowdCum.get(`${kind}|${a.id}`) ?? Infinity) <= N;
     const k = cr?.[kind] ?? 1; if (k >= 0.999) return true;
     return i < Math.round(pool.length * k);
+  }
+  /** Předpočítané skupiny pro hustotu davu (postavy projektu se za běhu nemění). */
+  private crowdPools = new Map<string, CharacterInstance[]>();
+  private crowdIdx = new Map<string, Map<string, number>>();
+  private crowdCum = new Map<string, number>();
+  private crowdIndex(kind: 'owners' | 'skaters' | 'walkers' | 'walkersAll'): Map<string, number> {
+    let m = this.crowdIdx.get(kind); if (m) return m;
+    const ch = this.project.characters, vis = (c: CharacterInstance) => c.routine === 'visitor' && !c.skate && !c.companionId;
+    const pool = kind === 'owners' ? ch.filter((c) => vis(c) && c.pet) : kind === 'skaters' ? ch.filter((c) => !!c.skate && !c.skatePair) : kind === 'walkers' ? ch.filter((c) => vis(c) && !c.pet) : ch.filter(vis);
+    m = new Map(pool.map((c, i) => [c.id, i])); this.crowdIdx.set(kind, m); this.crowdPools.set(kind, pool);
+    if (kind === 'walkers' || kind === 'skaters') { let used = 0; for (const c of pool) { used += 1 + ch.filter((x) => x.companionId === c.id).length; this.crowdCum.set(`${kind}|${c.id}`, used); } }
+    return m;
   }
   /** Násobek rychlosti chůze ze scény (chodci; bruslaři a pracovníci mají vlastní tempo). */
   private walkK(a: AgentState): number { const k = this.project.crowd?.walkSpeed; return k && this.chars.get(a.id)?.routine === 'visitor' && !a.anim.skate ? k : 1; }

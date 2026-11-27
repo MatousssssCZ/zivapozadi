@@ -39,18 +39,31 @@ export function EditorCanvas() {
 
   useEffect(() => {
     let raf = 0, last = performance.now();
+    // adaptivní rozlišení náhledu: při přehrávání se plátno zmenší, když snímky nestíhají (~30 fps),
+    // a po zastavení se vrátí na plnou ostrost. Export ani simulace se tím nemění.
+    let q = 1, avg = 16, settleUntil = 0;
+    const LEVELS = [1, 0.8, 0.66, 0.5];
+    const resize = () => {
+      const c = ref.current, w = wrap.current; if (!c || !w) return;
+      const dpr = (window.devicePixelRatio || 1) * q;
+      const W = Math.max(10, Math.floor(w.clientWidth * dpr)), H = Math.max(10, Math.floor(w.clientHeight * dpr));
+      if (c.width !== W || c.height !== H) { c.width = W; c.height = H; }
+    };
     const loop = (now: number) => {
       // skryté okno: prohlížeč smyčku pozastaví; po návratu žádné dohánění (krok nejvýš 0,25 s)
       const dt = Math.min(0.25, (now - last) / 1000); last = now;
-      if (!document.hidden) { store.sim.tick(dt); draw(); }
+      if (!document.hidden) {
+        const t0 = performance.now(); store.sim.tick(dt); draw(); const ms = performance.now() - t0;
+        avg = avg * 0.9 + ms * 0.1;
+        const W = window as unknown as { __perf?: number[][] }; if (W.__perf) { W.__perf.push([ms, q]); if (W.__perf.length > 4000) W.__perf.shift(); } // ladění výkonu
+        const playing = store.sim.clock.playing;
+        const want = !playing ? 0 : avg > 30 ? Math.min(LEVELS.length - 1, LEVELS.indexOf(q) + 1) : avg < 12 ? Math.max(0, LEVELS.indexOf(q) - 1) : LEVELS.indexOf(q);
+        if (LEVELS[want] !== q && now > settleUntil) { q = LEVELS[want]; resize(); settleUntil = now + 600; avg = 16; }
+      }
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
-    const ro = new ResizeObserver(() => {
-      const c = ref.current, w = wrap.current; if (!c || !w) return;
-      const dpr = window.devicePixelRatio || 1;
-      c.width = Math.max(10, Math.floor(w.clientWidth * dpr)); c.height = Math.max(10, Math.floor(w.clientHeight * dpr));
-    });
+    const ro = new ResizeObserver(resize);
     ro.observe(wrap.current!);
     return () => { cancelAnimationFrame(raf); ro.disconnect(); };
   }, []);

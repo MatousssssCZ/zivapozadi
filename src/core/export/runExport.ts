@@ -12,12 +12,18 @@ export interface EncoderHost {
   beginChunk(chunkIndex: number): Promise<void>;
   /** Předá snímek; vrací se, až ho enkodér převezme (omezená fronta ⇒ omezená paměť). */
   writeFrame(rgba: Uint8Array): Promise<void>;
+  /** Volitelně: snímek přímo z plátna (bez vyčítání pixelů – prohlížeč / WebCodecs). */
+  writeCanvasFrame?(canvas: unknown): Promise<void>;
   endChunk(chunkIndex: number): Promise<void>;
   finalize(): Promise<{ outputPath: string }>;
   abort(): Promise<void>;
 }
 
-export interface FrameRenderer { render(sim: Simulation, time: number): Uint8Array | Promise<Uint8Array> }
+export interface FrameRenderer {
+  render(sim: Simulation, time: number): Uint8Array | Promise<Uint8Array>;
+  /** Volitelně: jen vykreslit do plátna (pro `writeCanvasFrame`). */
+  draw?(sim: Simulation, time: number): unknown;
+}
 
 export interface ExportProgress {
   framesDone: number; totalFrames: number; chunk: number; chunks: number;
@@ -58,6 +64,7 @@ export async function runExport(
   }
   const framesBefore = plan.chunks[first].startFrame;
   let done = framesBefore;
+  let pending: Promise<void> | null = null;
   let chunksThisRun = 0;
   try {
     for (let ci = first; ci < plan.chunks.length; ci++) {
@@ -68,8 +75,9 @@ export async function runExport(
         if (opts.signal?.cancelled) throw new ExportCancelled();
         const targetStep = f * plan.stepsPerFrame;
         while (sim.state.step < targetStep) sim.step();
-        const rgba = await renderer.render(sim, f / plan.fps);
-        await host.writeFrame(rgba);
+        // překrytí: kodér zpracovává předchozí snímek, zatímco se kreslí další (nejvýš jeden v letu)
+        if (renderer.draw && host.writeCanvasFrame) { const cv = renderer.draw(sim, f / plan.fps); if (pending) await pending; pending = host.writeCanvasFrame(cv); }
+        else { const rgba = await renderer.render(sim, f / plan.fps); if (pending) await pending; pending = host.writeFrame(rgba); }
         done++;
         const el = now() - t0;
         const rate = (done - framesBefore) / Math.max(1e-6, el);
@@ -82,6 +90,7 @@ export async function runExport(
         while (sim.state.step < nextStep) sim.step();
         await host.saveCheckpoint(ci + 1, sim.snapshot());
       }
+      if (pending) { await pending; pending = null; }
       await host.endChunk(ci);
       chunksThisRun++;
       if (opts.stopAfterChunks !== undefined && chunksThisRun >= opts.stopAfterChunks && ci < plan.chunks.length - 1) {

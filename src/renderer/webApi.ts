@@ -233,6 +233,12 @@ export function createWebApi(): ZsApi {
       s.encoder.encode(frame, { keyFrame: s.n % (s.fps * 10) === 0, ...(s.pick.perFrame ?? {}) } as VideoEncoderEncodeOptions); frame.close(); s.n++;
       while (s.encoder.encodeQueueSize > 6) await new Promise((r) => setTimeout(r, 5));
     },
+    async exportCanvasFrame(cv) {
+      const s = ex!; if (s.err) throw s.err;
+      const frame = new VideoFrame(cv, { timestamp: Math.round((s.n * 1e6) / s.fps), duration: Math.round(1e6 / s.fps) });
+      s.encoder.encode(frame, { keyFrame: s.n % (s.fps * 10) === 0, ...(s.pick.perFrame ?? {}) } as VideoEncoderEncodeOptions); frame.close(); s.n++;
+      while (s.encoder.encodeQueueSize > 6) await new Promise((r) => setTimeout(r, 2));
+    },
     async exportEndChunk() { /* */ },
     async exportFinalize() {
       const s = ex!; await s.encoder.flush(); s.muxer.finalize(); s.encoder.close();

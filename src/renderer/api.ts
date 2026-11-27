@@ -26,6 +26,8 @@ export interface ZsApi {
   exportSaveCheckpoint(i: number, state: SimState): Promise<void>;
   exportBeginChunk(i: number): Promise<void>;
   exportFrame(buf: Uint8Array): Promise<void>;
+  /** Jen prohlížeč: snímek přímo z plátna do kodéru (bez kopie pixelů). */
+  exportCanvasFrame?(canvas: OffscreenCanvas): Promise<void>;
   exportEndChunk(i: number): Promise<void>;
   exportFinalize(): Promise<{ outputPath: string }>;
   exportAbort(): Promise<void>;

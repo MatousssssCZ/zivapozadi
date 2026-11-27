@@ -135,14 +135,15 @@ export function laneKMax(geo: IceGeo, m = 1.8): number { let k = 0.95; for (let 
 export function insideW(p: World, poly: World[]): boolean { let ins = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const a = poly[j], b = poly[i]; if ((b.Z > p.Z) !== (a.Z > p.Z) && p.X < ((a.X - b.X) * (p.Z - b.Z)) / (a.Z - b.Z) + b.X) ins = !ins; } return ins; }
 /** nejbližší bod mantinelu (okraj ledu) a vzdálenost */
 export function railNearest(poly: World[], p: World): { q: World; d: number; n: World } {
-  let best = { q: poly[0], d: Infinity, n: { X: 0, Z: 1 } };
+  // bez alokací ve smyčce (volá se pro každého bruslaře několikrát za krok); výsledek totožný
+  let bd = Infinity, bx = poly[0].X, bz = poly[0].Z, nx = 0, nz = 1;
   for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
     const a = poly[j], b = poly[i], abX = b.X - a.X, abZ = b.Z - a.Z, L2 = abX * abX + abZ * abZ || 1;
-    const t = Math.max(0, Math.min(1, ((p.X - a.X) * abX + (p.Z - a.Z) * abZ) / L2)), q = { X: a.X + abX * t, Z: a.Z + abZ * t };
-    const d = Math.hypot(p.X - q.X, p.Z - q.Z);
-    if (d < best.d) { const l = Math.sqrt(L2); best = { q, d, n: { X: -abZ / l, Z: abX / l } }; }
+    const t = Math.max(0, Math.min(1, ((p.X - a.X) * abX + (p.Z - a.Z) * abZ) / L2)), qx = a.X + abX * t, qz = a.Z + abZ * t;
+    const d = Math.hypot(p.X - qx, p.Z - qz);
+    if (d < bd) { const l = Math.sqrt(L2); bd = d; bx = qx; bz = qz; nx = -abZ / l; nz = abX / l; }
   }
-  return best;
+  return { q: { X: bx, Z: bz }, d: bd, n: { X: nx, Z: nz } };
 }
 
 // ---------------------------------------------------------------- vznik
