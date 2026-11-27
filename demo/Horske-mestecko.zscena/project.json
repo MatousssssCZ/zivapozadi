@@ -3,8 +3,8 @@
   "formatVersion": 1,
   "meta": {
     "name": "Horské městečko – západ slunce",
-    "createdAt": "2026-11-27T21:04:55.379Z",
-    "modifiedAt": "2026-11-27T21:04:55.483Z",
+    "createdAt": "2026-11-27T21:16:12.750Z",
+    "modifiedAt": "2026-11-27T21:16:12.860Z",
     "appVersion": "0.1.0"
   },
   "seed": 7311,
@@ -1833,6 +1833,354 @@
       },
       "routine": "actor",
       "activities": {}
+    },
+    {
+      "id": "kid_bob1",
+      "name": "Vojta",
+      "assetId": "builtin_postava_dite",
+      "startNodeId": "c0",
+      "baseScale": 1,
+      "walkSpeed": 50,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": false,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-dite-v1",
+        "seed": 684146148,
+        "bodyTemplate": "child-cg",
+        "variants": {
+          "jacket": "jacket_coat_child",
+          "hat": "hat_beanie_child",
+          "scarf": "scarf_long_child",
+          "trousers": "trousers_child",
+          "boots": "boots_child",
+          "gloves": "gloves_child",
+          "head": "head_child"
+        },
+        "colors": {
+          "jacket": "vinova",
+          "hat": "tmave-seda",
+          "scarf": "okrova",
+          "gloves": "tmave-seda",
+          "trousers": "tmave-seda",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 1.004,
+          "build": 0.952
+        },
+        "motion": {
+          "strideScale": 1.074,
+          "armSwing": 1.309,
+          "bob": 0.86,
+          "sway": 1.091,
+          "idleTempo": 1.013,
+          "lean": 2.029,
+          "speed": 0.912,
+          "phase": 0.943,
+          "armLag": -0.224,
+          "armLR": 1.126
+        },
+        "locks": []
+      },
+      "routine": "hill",
+      "activities": {}
+    },
+    {
+      "id": "kid_bob2",
+      "name": "Eliška",
+      "assetId": "builtin_postava_dite",
+      "startNodeId": "c0",
+      "baseScale": 1,
+      "walkSpeed": 50,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": false,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-dite-v1",
+        "seed": 386143966,
+        "bodyTemplate": "child-cg",
+        "variants": {
+          "jacket": "jacket_coat_child",
+          "hat": "hat_beanie_child",
+          "scarf": "scarf_long_child",
+          "trousers": "trousers_child",
+          "boots": "boots_child",
+          "gloves": "gloves_child",
+          "head": "head_child"
+        },
+        "colors": {
+          "jacket": "okrova",
+          "hat": "tmave-seda",
+          "scarf": "kremova",
+          "gloves": "kremova",
+          "trousers": "tmave-seda",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 1.036,
+          "build": 1.043
+        },
+        "motion": {
+          "strideScale": 1.025,
+          "armSwing": 0.911,
+          "bob": 1.038,
+          "sway": 0.765,
+          "idleTempo": 1.132,
+          "lean": 0.377,
+          "speed": 0.966,
+          "phase": 0.513,
+          "armLag": -1.9,
+          "armLR": 1.118
+        },
+        "locks": []
+      },
+      "routine": "hill",
+      "activities": {}
+    },
+    {
+      "id": "kid_bob3",
+      "name": "Kuba",
+      "assetId": "builtin_postava_dite",
+      "startNodeId": "c0",
+      "baseScale": 1,
+      "walkSpeed": 50,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": false,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-dite-v1",
+        "seed": 688548733,
+        "bodyTemplate": "child-cg",
+        "variants": {
+          "jacket": "jacket_coat_child",
+          "hat": "hat_beanie_child",
+          "scarf": "scarf_long_child",
+          "trousers": "trousers_child",
+          "boots": "boots_child",
+          "gloves": "gloves_child",
+          "head": "head_child"
+        },
+        "colors": {
+          "jacket": "vinova",
+          "hat": "okrova",
+          "scarf": "tmave-seda",
+          "gloves": "okrova",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 1.005,
+          "build": 0.961
+        },
+        "motion": {
+          "strideScale": 1.046,
+          "armSwing": 1.196,
+          "bob": 1.086,
+          "sway": 0.902,
+          "idleTempo": 0.99,
+          "lean": 2.685,
+          "speed": 1.201,
+          "phase": 0.187,
+          "armLag": 3.061,
+          "armLR": 1.122
+        },
+        "locks": []
+      },
+      "routine": "hill",
+      "activities": {}
+    },
+    {
+      "id": "kid_bob4",
+      "name": "Natálka",
+      "assetId": "builtin_postava_dite",
+      "startNodeId": "c0",
+      "baseScale": 1,
+      "walkSpeed": 50,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": false,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-dite-v1",
+        "seed": 867835738,
+        "bodyTemplate": "child-cg",
+        "variants": {
+          "jacket": "jacket_coat_child",
+          "hat": "hat_beanie_child",
+          "scarf": "scarf_long_child",
+          "trousers": "trousers_child",
+          "boots": "boots_child",
+          "gloves": "gloves_child",
+          "head": "head_child"
+        },
+        "colors": {
+          "jacket": "tmave-seda",
+          "hat": "kremova",
+          "scarf": "vinova",
+          "gloves": "kremova",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 1.006,
+          "build": 1.003
+        },
+        "motion": {
+          "strideScale": 1.041,
+          "armSwing": 0.671,
+          "bob": 1.191,
+          "sway": 1.185,
+          "idleTempo": 1.119,
+          "lean": 0.824,
+          "speed": 1.018,
+          "phase": 0.54,
+          "armLag": -1.882,
+          "armLR": 0.914
+        },
+        "locks": []
+      },
+      "routine": "hill",
+      "activities": {}
+    },
+    {
+      "id": "kid_bob5",
+      "name": "Šimon",
+      "assetId": "builtin_postava_dite",
+      "startNodeId": "c0",
+      "baseScale": 1,
+      "walkSpeed": 50,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": false,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-dite-v1",
+        "seed": 1727912663,
+        "bodyTemplate": "child-cg",
+        "variants": {
+          "jacket": "jacket_coat_child",
+          "hat": "hat_beanie_child",
+          "scarf": "scarf_long_child",
+          "trousers": "trousers_child",
+          "boots": "boots_child",
+          "gloves": "gloves_child",
+          "head": "head_child"
+        },
+        "colors": {
+          "jacket": "petrolejova",
+          "hat": "vinova",
+          "scarf": "olivova",
+          "gloves": "olivova",
+          "trousers": "tmave-seda",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 0.953,
+          "build": 0.966
+        },
+        "motion": {
+          "strideScale": 0.934,
+          "armSwing": 1.191,
+          "bob": 0.899,
+          "sway": 1.237,
+          "idleTempo": 1.024,
+          "lean": 1.232,
+          "speed": 1.218,
+          "phase": 0.997,
+          "armLag": 0.17,
+          "armLR": 0.857
+        },
+        "locks": []
+      },
+      "routine": "hill",
+      "activities": {}
+    },
+    {
+      "id": "ch_rodic_svah",
+      "name": "Táta u svahu",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "c0",
+      "baseScale": 1,
+      "walkSpeed": 54,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": false,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 514165933,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_puffer_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_neckwarmer_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_hiking_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_06_cg"
+        },
+        "colors": {
+          "jacket": "hneda",
+          "hat": "kremova",
+          "scarf": "vinova",
+          "gloves": "kremova",
+          "trousers": "olivova",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 1.02,
+          "build": 1.034
+        },
+        "motion": {
+          "strideScale": 0.992,
+          "armSwing": 0.812,
+          "bob": 1.041,
+          "sway": 1.151,
+          "idleTempo": 1.023,
+          "lean": 1.47,
+          "speed": 1.179,
+          "phase": 0.927,
+          "armLag": -0.986,
+          "armLR": 0.885
+        },
+        "locks": []
+      },
+      "routine": "hill",
+      "activities": {}
     }
   ],
   "schedule": [],
@@ -1997,6 +2345,185 @@
       }
     }
   ],
+  "hill": {
+    "footY": 700,
+    "rise": 0.75,
+    "blend": 70,
+    "conflictX": 640,
+    "firstDelay": 2,
+    "lanes": [
+      [
+        {
+          "x": 225,
+          "y": 342
+        },
+        {
+          "x": 403,
+          "y": 410
+        },
+        {
+          "x": 595,
+          "y": 529
+        },
+        {
+          "x": 768,
+          "y": 640
+        },
+        {
+          "x": 880,
+          "y": 700
+        },
+        {
+          "x": 960,
+          "y": 728
+        }
+      ],
+      [
+        {
+          "x": 292,
+          "y": 346
+        },
+        {
+          "x": 475,
+          "y": 415
+        },
+        {
+          "x": 660,
+          "y": 525
+        },
+        {
+          "x": 830,
+          "y": 630
+        },
+        {
+          "x": 950,
+          "y": 695
+        },
+        {
+          "x": 1040,
+          "y": 722
+        }
+      ]
+    ],
+    "returns": [
+      [
+        {
+          "x": 940,
+          "y": 744
+        },
+        {
+          "x": 800,
+          "y": 752
+        },
+        {
+          "x": 560,
+          "y": 752
+        },
+        {
+          "x": 330,
+          "y": 750
+        },
+        {
+          "x": 150,
+          "y": 742
+        }
+      ],
+      [
+        {
+          "x": 1025,
+          "y": 742
+        },
+        {
+          "x": 940,
+          "y": 755
+        },
+        {
+          "x": 800,
+          "y": 756
+        },
+        {
+          "x": 560,
+          "y": 754
+        },
+        {
+          "x": 330,
+          "y": 752
+        },
+        {
+          "x": 150,
+          "y": 742
+        }
+      ]
+    ],
+    "ascent": [
+      {
+        "x": 150,
+        "y": 742
+      },
+      {
+        "x": 120,
+        "y": 690
+      },
+      {
+        "x": 100,
+        "y": 620
+      },
+      {
+        "x": 85,
+        "y": 540
+      },
+      {
+        "x": 78,
+        "y": 460
+      },
+      {
+        "x": 80,
+        "y": 390
+      },
+      {
+        "x": 95,
+        "y": 335
+      },
+      {
+        "x": 130,
+        "y": 312
+      }
+    ],
+    "queue": [
+      {
+        "x": 185,
+        "y": 322
+      },
+      {
+        "x": 150,
+        "y": 309
+      },
+      {
+        "x": 118,
+        "y": 298
+      },
+      {
+        "x": 90,
+        "y": 290
+      }
+    ],
+    "kids": [
+      "kid_bob1",
+      "kid_bob2",
+      "kid_bob3",
+      "kid_bob4",
+      "kid_bob5"
+    ],
+    "watchers": [
+      "ch_rodic_svah"
+    ],
+    "watchSpots": [
+      {
+        "x": 250,
+        "y": 712
+      }
+    ]
+  },
   "crowd": {
     "walkersN": 6,
     "dogs": 2,

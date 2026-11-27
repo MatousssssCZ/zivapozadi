@@ -20,8 +20,8 @@ function projector(cam: Camera, S: World, hd: number, lift: number, pitch: numbe
   return (x: number, z: number, h: number): Vec2 => toScreen(cam, { X: S.X + x * c - z * s, Z: S.Z + x * s + z * c }, h + lift + x * pitch);
 }
 /** oko provazu na přídi (obraz) */
-export function sledRingScreen(cam: Camera, S: World, hd: number, kind: SledKind): Vec2 {
-  return projector(cam, S, hd, 0, 0)(L / 2 - (kind === 'boby' ? 0.0 : 0.04), 0, kind === 'boby' ? 0.2 : 0.2);
+export function sledRingScreen(cam: Camera, S: World, hd: number, kind: SledKind, H0 = 0, pitch0 = 0): Vec2 {
+  return projector(cam, S, hd, H0, pitch0)(L / 2 - (kind === 'boby' ? 0.0 : 0.04), 0, kind === 'boby' ? 0.2 : 0.2);
 }
 /** výška sedáku (m) – kde sedí jezdec */
 export const SEAT_H = { sane: 0.18, boby: 0.06 } as const;
@@ -39,11 +39,11 @@ function hull(pts: Vec2[]): Vec2[] {
  * Nakreslí saně. `dist` = ujetá dráha (m) – poskakování na nerovnostech, `ppm` px na metr v místě saní
  * (tloušťky čar), `color` barva bobů / laku sáněk.
  */
-export function drawVectorSled(ctx: Ctx, cam: Camera, S: World, hd: number, kind: SledKind, dist: number, ppm: number, color = '#b8322f') {
-  const bump = 0.006 * Math.sin(dist * 7.3) + 0.004 * Math.sin(dist * 13.1 + 1.3), pitch = 0.012 * Math.cos(dist * 7.3);
-  const P = projector(cam, S, hd, Math.max(0, bump), pitch);
+export function drawVectorSled(ctx: Ctx, cam: Camera, S: World, hd: number, kind: SledKind, dist: number, ppm: number, color = '#b8322f', H0 = 0, pitch0 = 0) {
+  const bump = 0.006 * Math.sin(dist * 7.3) + 0.004 * Math.sin(dist * 13.1 + 1.3), pitch = 0.012 * Math.cos(dist * 7.3) + pitch0;
+  const P = projector(cam, S, hd, H0 + Math.max(0, bump), pitch);
   // stín na sněhu (měkký, pod celými saněmi)
-  const g0 = projector(cam, S, hd, 0, 0), sh = [g0(-L / 2, -Wd / 2, 0), g0(L / 2, -Wd / 2, 0), g0(L / 2, Wd / 2, 0), g0(-L / 2, Wd / 2, 0)];
+  const g0 = projector(cam, S, hd, H0, pitch0), sh = [g0(-L / 2, -Wd / 2, 0), g0(L / 2, -Wd / 2, 0), g0(L / 2, Wd / 2, 0), g0(-L / 2, Wd / 2, 0)];
   ctx.save(); ctx.fillStyle = 'rgba(70,80,110,0.22)'; ctx.filter = `blur(${Math.max(0.5, 0.03 * ppm).toFixed(1)}px)`; poly(ctx, sh); ctx.fill(); ctx.restore();
   // strana blíž ke kameře = větší Z ve světě? (kamera hledí do +Z: blíž je menší Z)
   const zSide = (z: number) => S.Z + Math.sin(hd) * 0 + Math.cos(hd) * z;

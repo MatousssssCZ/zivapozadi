@@ -18,6 +18,7 @@ import { drawFigure } from '../anim/testFigure';
 import { SHOVEL_SPRITE } from '../anim/skeleton';
 import { cameraFor, toScreen, toWorld, Q, type World } from '../scene/camera';
 import { SLED } from '../sim/sled';
+import { towing, hill3, HILL } from '../sim/hillSled';
 import { tramGeo, tramMatrix, trackYAt, doorQuad, tramVisible, type TramGeo } from '../sim/tram';
 import { BAKERY_REFILL, GRIT_LIFE } from '../sim/bakery';
 import { drawSnowSurface, snowItems } from './snowRender';
@@ -967,6 +968,20 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
             ctx.save(); ctx.strokeStyle = 'rgba(205,185,150,0.95)'; ctx.lineWidth = Math.max(1, 0.014 * ppm);
             ctx.beginPath(); ctx.moveTo(hand.x, hand.y); ctx.quadraticCurveTo((hand.x + ringS.x) / 2, Math.max(hand.y, ringS.y) + sag, ringS.x, ringS.y); ctx.stroke(); ctx.restore();
           } });
+        }
+      }
+    }
+    // bobování na svahu: boby (3D model ve výšce terénu, sklon svahu) + šňůra od ruky dítěte při tahání
+    if (sim.state.hill && project.hill) for (const k of sim.state.hill.kids) {
+      const S = { X: k.sled.P.X, Z: k.sled.P.Z }, H0 = k.sled.P.H, c = toScreen(cam, S, H0), gy = toScreen(cam, S).y, ppm = depthScaleAt(sc.depth, gy) / Q;
+      items.push({ key: c.y, tie: 12500, draw: () => drawVectorSled(ctx, cam, S, k.sled.hd, 'boby', k.sled.dist, ppm, k.color, H0, k.sled.pitch) });
+      const kid = sim.state.agents.find((x) => x.id === k.id);
+      if (kid && towing(k)) {
+        const oc = sim.characterOf(kid.id), om = oc ? sim.manifests[oc.assetId] : undefined;
+        if (oc && om) {
+          const cv = characterVisual(kid, om, oc, sc), hand = localToScene(cv, cv.grip), ring = sledRingScreen(cam, S, k.sled.hd, 'boby', H0, k.sled.pitch);
+          const kh = hill3(cam, project.hill, kid.pos), dd = Math.hypot(kh.X - k.sled.P.X, kh.Z - k.sled.P.Z, kh.H - k.sled.P.H);
+          items.push({ key: Math.max(kid.pos.y, c.y) + 0.1, tie: 12501, draw: () => drawRope(ctx, hand, ring, Math.max(0.8, Math.min(1, (dd - HILL.sledL / 2) / HILL.rope)), ppm) });
         }
       }
     }

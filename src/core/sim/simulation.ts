@@ -36,6 +36,7 @@ import { stepBakery, newBakeryState, bakeryStartNow, TASK_LABEL, type BakeryHost
 import { createSkater, stepSkater, stepRinkEvents, separate, addTrails, skatePose, SKATE_PROFILES, TRAIL_LIFE, FALL_TOTAL, type IceGeo, type RinkState, type RinkCtx , forceRinkEvent, makeIceGeo, RINK_FALL_T0, rinkFallLen, LIFE_LABEL, insideW, clampToIce, type TrickKind } from './rink';
 import { stepFalls, startFall, newFallsState, DEFAULT_FALLS, type FallHost, type FallsState } from './falls';
 import { fallEndShift as fallEndShiftOf, type FallVariant } from '../anim/fallPoses';
+import { stepHill, initHill, type HillHost } from './hillSled';
 import { stepSled, sledObstacles, sledPathProblem, type SledHost } from './sled';
 import { forceMitten } from './mitten';
 import { stepEpisode, newEpisodeState, episodeStartNow, type ActorHost } from './episodes';
@@ -155,6 +156,7 @@ export class Simulation {
     for (const c of sim.project.characters) sim.spawnAgent(c);
     sim.linkPairs();
     sim.initVisitors();
+    if (sim.project.hill) sim.state.hill = initHill(sim.hillHost());
     return sim;
   }
 
@@ -246,6 +248,7 @@ export class Simulation {
       wander: { waitUntil: 0, prevNode: null, atStop: false }, cooldowns: {}, status: 'Stojí',
     };
     a.pace = randRange(a.rng, 0.9, 1.1);
+    if (c.routine === 'hill') a.onHill = true; // bobování: řídí hillSled.ts
     if (c.routine === 'sled' || c.routine === 'shovel' || c.routine === 'rider' || c.routine === 'pram' || c.routine === 'actor') a.hidden = true; // přijdou později zpoza okraje (nikdy nestojí u vstupu v prvním snímku)
     if (c.gaitProfile) { a.anim.elder = elderState(c.gaitProfile, c.caneSide ?? 'R', hashString(c.id)); a.pace = 1; }
     a.lane = (rand(a.rng) < 0.5 ? -1 : 1) * randRange(a.rng, 3, 7);
@@ -520,6 +523,7 @@ export class Simulation {
     if (this.state.mitten || this.state.agents.some((a) => a.holdingKind === 'mitten') || this.state.step % 60 === 0) stepMitten(this.mittenHost());
     if (this.project.falls || this.state.falls?.active.length) stepFalls(this.fallHost(), this.fallsState());
     if (this.project.rink) this.stepRink(t);
+    if (this.project.hill && this.state.hill) stepHill(this.hillHost(), this.state.hill);
     if (this.project.tram) this.stepTramAll(t);
     if (this.project.bakery) this.stepBakeryAll(t);
     if (this.project.pram) this.stepPramAll();
@@ -917,7 +921,7 @@ export class Simulation {
     const st = this.state.rink, L = st?.life?.[a.id], en = this.project.rink?.entry;
     if (!st || !L || !en || L.ph === 'ice') return false;
     const seatPt = () => (L.seat ? this.pointsOf(en.benchId).find((p) => p.key === L.seat) : undefined);
-    const atSeat = () => { const p = seatPt(); return !!p && Math.hypot(a.pos.x - p.pos.x, a.pos.y - p.pos.y) < 112 * depthScaleAt(this.project.scene.depth, a.pos.y); };
+    const atSeat = () => { const p = seatPt(); return !!p && Math.hypot(a.pos.x - p.pos.x, a.pos.y - p.pos.y) < 112 * depthScaleAt(this.project.scene.depth, a.pos.y + (a.lift ?? 0)); };
     const mateId = c.skatePair ?? this.project.characters.find((x) => x.skatePair === a.id)?.id, isKid = !c.skatePair && !!mateId;
     switch (L.ph) {
       case 'toBench': case 'arrive': {
@@ -1078,6 +1082,21 @@ export class Simulation {
     });
   }
 
+  private hillCache: HillHost | null = null;
+  hillHost(): HillHost {
+    const self = this;
+    return (this.hillCache ??= {
+      project: this.project, time: () => self.time(),
+      agent: (id) => self.state.agents.find((x) => x.id === id),
+      place: (a, p, lift, facing, speedPx, gh) => {
+        a.pos = { x: p.x, y: p.y }; a.lift = lift; a.facing = facing; a.speed = speedPx; a.off = undefined; a.hidden = false;
+        if (gh !== null) a.groundHeading = gh;
+        a.vel = { X: 0, Z: 0 };
+      },
+      puff: (x, y, n, seed) => { const t0 = self.time(), sc = depthScaleAt(self.project.scene.depth, y); for (let i = 0; i < n; i++) emit((self.state.particles ??= []), { kind: 'snowPuff', x: x + (i - n / 2) * 4 * sc, y, t0, life: 0.35 + ((i * 37) % 30) / 100, w0: 0, sc, seed: seed + i * 13 }); },
+      log: (m, id) => self.log('info', m, id),
+    });
+  }
   private sledBlocked = false;
   private sledCache: SledHost | null = null;
   private sledHost(): SledHost {
@@ -1293,7 +1312,7 @@ export class Simulation {
     const c = this.chars.get(a.id), m = c ? this.manifests[c.assetId] : undefined;
     if (!c || !m) return;
     const cv = characterVisual(a, m, c, this.project.scene), mouth = localToScene(cv, { x: cv.pose.head.x + 4.5, y: cv.pose.head.y + 3 });
-    const sc = depthScaleAt(this.project.scene.depth, a.pos.y);
+    const sc = depthScaleAt(this.project.scene.depth, a.pos.y + (a.lift ?? 0));
     emit((this.state.particles ??= []), { kind: 'breath', x: mouth.x, y: mouth.y, t0: t, life: laughing ? 0.9 : 1.3, w0: windIntegral(this.project.seed, t, !!this.project.scene.environment?.gusts), sc, seed: Math.floor(t * 997) % 100000, vx: cv.mirror ? -1 : 1 });
   }
 
@@ -1334,7 +1353,7 @@ export class Simulation {
 
   private vmaxOwn(a: AgentState): number {
     const c = this.chars.get(a.id)!;
-    return this.walkSpeedOf(a) * a.pace * (a.speedFactor ?? 1) * depthScaleAt(this.project.scene.depth, a.pos.y) * c.baseScale * this.walkK(a);
+    return this.walkSpeedOf(a) * a.pace * (a.speedFactor ?? 1) * depthScaleAt(this.project.scene.depth, a.pos.y + (a.lift ?? 0)) * c.baseScale * this.walkK(a);
   }
 
   /** Základní rychlost chůze (j/s). Senior: z profilu (krok × kadence) převedená stejně jako v animátoru,
@@ -1347,7 +1366,7 @@ export class Simulation {
   }
 
   private scaleOf(a: AgentState): number {
-    return this.chars.get(a.id)!.baseScale * depthScaleAt(this.project.scene.depth, a.pos.y);
+    return this.chars.get(a.id)!.baseScale * depthScaleAt(this.project.scene.depth, a.pos.y + (a.lift ?? 0));
   }
 
   private motion = new Map<string, { arrived: boolean; waitingNarrow: boolean }>();
@@ -1396,7 +1415,7 @@ export class Simulation {
     for (const a of this.state.agents) {
       const mv = { arrived: false, waitingNarrow: false };
       this.motion.set(a.id, mv);
-      if (a.onIce) continue; // bruslaře řídí rink.ts
+      if (a.onIce || a.onHill) continue; // bruslaře řídí rink.ts, svah hillSled.ts
       a.off = undefined; a.speedCap = null;
       if (a.follow) {
         const leader = this.state.agents.find((x) => x.id === a.follow!.leaderId);
@@ -1652,7 +1671,7 @@ export class Simulation {
     }
     // 2) přehrávání animací (události z animace řídí navazující logiku)
     // chůze řízená drahou a kontakty (délka nohy a bota postavy; měřítko scény = hloubka × základní měřítko)
-    const scale = c.baseScale * depthScaleAt(this.project.scene.depth, a.pos.y);
+    const scale = c.baseScale * depthScaleAt(this.project.scene.depth, a.pos.y + (a.lift ?? 0));
     // rozejití z (dokračujícího) klidu: kotvy převezmou místa, kde boty právě stojí (žádný skok)
     let heelsNow: (Vec2 | null)[] | null = null;
     if (a.anim.settle && visSpeed > 0.5 && m.backend === 'skeleton') {
@@ -1662,6 +1681,7 @@ export class Simulation {
     // pád: animátor stojí (základní póza zůstane zmrazená – pád se z ní plynule prolne; žádné dokročení)
     const events = a.anim.fall ? [] : stepAnimator(a.anim, m, SIM_DT, visSpeed, (this.vmaxMps(a) / Q) * scale, scale, gaitContextFor(m, c));
     this.latchFootAnchors(a, c, m, heelsNow);
+    if (a.onHill) return; // svah: poloha, sed a stav z hillSled.ts
     if (mv.waitingNarrow) a.status = 'Čeká před úzkým průchodem';
     // 3) rozhodování + účast v činnosti
     if (a.follow) { const l = this.state.agents.find((x) => x.id === a.follow!.leaderId); a.status = l ? (a.hidden ? 'Mimo scénu' : `Jde s postavou ${l.name}`) : 'Stojí'; return; }
@@ -1676,7 +1696,7 @@ export class Simulation {
     if (a.pendingActivity && !a.route) { this.tryStartPending(a); if (a.activity) return; }
     // k lavičce: poslední kus (soused na lavičce, opěradlo) se dosedne plynule – žádné uvíznutí těsně u místa
     if (a.route?.purpose === 'k lavičce') {
-      const w = a.route.wps[a.route.wps.length - 1], d = Math.hypot(a.pos.x - w.x, a.pos.y - w.y), k = depthScaleAt(this.project.scene.depth, a.pos.y);
+      const w = a.route.wps[a.route.wps.length - 1], d = Math.hypot(a.pos.x - w.x, a.pos.y - w.y), k = depthScaleAt(this.project.scene.depth, a.pos.y + (a.lift ?? 0));
       a.benchStall = a.speed < 4 * k && d < 110 * k ? (a.benchStall ?? 0) + SIM_DT : 0;
       if ((a.route.idx >= a.route.wps.length - 1 && d < 36 * k) || (a.benchStall ?? 0) > 1.2) { a.route = null; a.arrived = true; a.benchStall = 0; }
     }
@@ -1966,7 +1986,7 @@ export class Simulation {
         if (!seat) { this.leaveScene(a, t); return; }
         if (!a.anim.sit) {
           if (v.until > 0) { this.res.release(seat.key, a.id); v.seat = null; this.standAway(a, seat.key); v.mode = 'choose'; v.until = t + 0.1; v.leaveNext = true; return; } // vstal
-          if (Math.hypot(a.pos.x - seat.pos.x, a.pos.y - seat.pos.y) > 112 * depthScaleAt(this.project.scene.depth, a.pos.y)) { this.sessionHost().walkPath(a, [seat.pos], 'k lavičce'); a.speedFactor = 0.8; return; }
+          if (Math.hypot(a.pos.x - seat.pos.x, a.pos.y - seat.pos.y) > 112 * depthScaleAt(this.project.scene.depth, a.pos.y + (a.lift ?? 0))) { this.sessionHost().walkPath(a, [seat.pos], 'k lavičce'); a.speedFactor = 0.8; return; }
           this.sitDown(a, 'rest', randRange(a.rng, 15, 45)); v.until = t; a.status = 'Odpočívá na lavičce'; return;
         }
         this.stepSit(a); a.status = 'Odpočívá na lavičce';

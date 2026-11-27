@@ -221,7 +221,7 @@ export interface CharacterInstance {
    * Chování: `wander` = volná procházka po trasách (původní), `visitor` = návštěvník: přijde vstupem,
    * scénou buď jen projde, nebo si dojde na kávu, nebo se potká s přítelem a jdou na kávu spolu; pak odejde.
    */
-  routine?: 'wander' | 'visitor' | 'sled' | 'shovel' | 'baker' | 'rider' | 'pram' | 'actor';
+  routine?: 'wander' | 'visitor' | 'sled' | 'shovel' | 'baker' | 'rider' | 'pram' | 'actor' | 'hill';
   /** Postava venčí psa (Z01). */
   pet?: 'dog';
   /** Rasa psa (díly `animal_<rasa>_*`, např. `dog_collie`); chybí = původní pes. */
@@ -350,6 +350,8 @@ export interface ProjectFile {
   pram?: import('../sim/pram').PramConfig;
   /** Scénické epizody s herci (A13 stromky, A11 zdobení, A12 světýlka, A08 pevnost, A01 běžky). */
   episodes?: import('../sim/episodes').EpisodeConfig[];
+  /** Bobování na svahu (terén svahu, dráhy, návrat, výstup, fronta; děti a rodiče s routine „hill“). */
+  hill?: import('../sim/hillSled').HillConfig;
   sled?: {
     path: Vec2[]; parentId: string; firstDelay?: number;
     /** dítě na saních (postava s routine „rider“) – pak se kreslí vektorové saně a jezdec z kostry; jinak malovaný sprite */

@@ -91,7 +91,7 @@ export function characterVisual(agent: AgentState, m: CharacterManifest, look: C
   // kamera scény (při samotném nastavení hloubky: šířka 1920 px, zorný úhel 50°)
   const scene: SceneSettings = 'depth' in sceneOrDepth ? sceneOrDepth : { width: 1920, height: 1080, depth: sceneOrDepth } as SceneSettings;
   const depth = scene.depth, cam = cameraFor(scene);
-  const scale = look.baseScale * depthScaleAt(depth, agent.pos.y);
+  const scale = look.baseScale * depthScaleAt(depth, agent.pos.y + (agent.lift ?? 0)); // svah: měřítko z hloubky terénu
   // vizuální kořen = poloha na trase + posun z rozestupů (simulace ho mění jen spolu s kroky)
   const x = agent.pos.x + (agent.off?.x ?? 0);
   const y = agent.pos.y + (agent.off?.y ?? 0);
@@ -166,7 +166,7 @@ function groundOptions(agent: AgentState, x: number, y: number, scale: number, m
   const sx = mirror ? -1 : 1;
   // anděl: směr těla ke kameře (dolů po obrazovce), ať leží podél hloubky scény
   const gh = agent.anim.sit?.kind === 'angel' ? worldAngleOfScreen(cam, agent.pos, Math.PI / 2) : agent.groundHeading ?? worldAngleOfScreen(cam, agent.pos, agent.facing); // světový směr chůze
-  const g0 = groundVec(cam, { x, y }, gh, sx);
+  const g0 = groundVec(cam, { x, y: y + (agent.lift ?? 0) }, gh, sx);
   // anděl: hloubka ležícího těla zesílená (čitelně leží, nohy k divákovi), ne jen reálné zkrácení
   const ground = g0;
   const an = agent.anim.anchors, xy = agent.anim.anchorsXY;

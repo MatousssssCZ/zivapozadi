@@ -98,6 +98,22 @@ export async function generateMountain(dir: string): Promise<ProjectFile> {
     { id: 'ep_bezky1', type: 'ski', actors: ['ch_bezkar1'], interval: [70, 140], firstAt: 12, pts: {}, paths: { track: MOUNTAIN.ski.map(([x, y]) => ({ x, y })) } },
     { id: 'ep_bezky2', type: 'ski', actors: ['ch_bezkar2'], interval: [90, 170], firstAt: 55, pts: {}, paths: { track: MOUNTAIN.ski.map(([x, y]) => ({ x, y })) } },
   ];
+  // bobování: 5 dětí v cyklu (fronta → jízda → dojezd → návrat → výstup), rodič u dojezdu
+  const kidLib = JSON.parse(await fs.readFile('resources/builtin/painted-parts-child/library.json', 'utf8')) as PartLibrary;
+  const kidApps = generateGroup(kidLib, 5, 7314).appearances;
+  const kidNames = ['Vojta', 'Eliška', 'Kuba', 'Natálka', 'Šimon'];
+  kidApps.forEach((app, i) => p.characters.push({ id: `kid_bob${i + 1}`, name: kidNames[i], assetId: 'builtin_postava_dite', startNodeId: 'c0', baseScale: 1, walkSpeed: 50, palette: pal, wander: false, appearance: app, routine: 'hill', activities: {} }));
+  const parApp = generateGroup(lib, 1, 7315).appearances[0]; parApp.variants = { ...parApp.variants, head: 'head_06_cg' };
+  p.characters.push({ id: 'ch_rodic_svah', name: 'Táta u svahu', assetId: 'builtin_postava_cg', startNodeId: 'c0', baseScale: 1, walkSpeed: 54, palette: pal, wander: false, appearance: parApp, routine: 'hill', activities: {} });
+  const V = (pts: [number, number][]) => pts.map(([x, y]) => ({ x, y }));
+  p.hill = {
+    footY: 700, rise: 0.75, blend: 70, conflictX: 640, firstDelay: 2,
+    lanes: [V([[225, 342], [403, 410], [595, 529], [768, 640], [880, 700], [960, 728]]), V([[292, 346], [475, 415], [660, 525], [830, 630], [950, 695], [1040, 722]])],
+    returns: [V([[940, 744], [800, 752], [560, 752], [330, 750], [150, 742]]), V([[1025, 742], [940, 755], [800, 756], [560, 754], [330, 752], [150, 742]])],
+    ascent: V([[150, 742], [120, 690], [100, 620], [85, 540], [78, 460], [80, 390], [95, 335], [130, 312]]),
+    queue: V([[185, 322], [150, 309], [118, 298], [90, 290]]),
+    kids: kidApps.map((_, i) => `kid_bob${i + 1}`), watchers: ['ch_rodic_svah'], watchSpots: V([[250, 712]]),
+  };
   p.crowd = { walkersN: 6, dogs: 2, walkSpeed: 0.95 };
   p.export = { ...p.export, durationSec: 60, chunkSec: 20 };
   await saveProject(dir, p);
