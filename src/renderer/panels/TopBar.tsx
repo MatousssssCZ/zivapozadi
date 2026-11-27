@@ -132,22 +132,25 @@ function Density() {
   const crowd = p?.crowd;
   const [w, setW] = useState<number | null>(null);
   if (!p) return null;
-  const chars = p.characters, comp = (id: string) => chars.filter((c) => c.companionId === id).length;
+  // kolik postav každého druhu už má (rozšířená) simulace – navýšení nad to ji přestaví (doplní nové postavy)
+  const sp0 = store.sim.sim?.project ?? p, chars = sp0.characters, comp = (id: string) => chars.filter((c) => c.companionId === id).length;
   const walkPool = chars.filter((c) => c.routine === 'visitor' && !c.skate && !c.companionId);
-  const maxWalk = walkPool.reduce((a, c) => a + 1 + comp(c.id), 0), maxSkate = chars.filter((c) => !!c.skate && !c.skatePair).length;
-  const maxDogs = walkPool.filter((c) => c.pet).length, maxCats = p.cats?.length ?? 0;
-  const cur = { walkersN: crowd?.walkersN ?? Math.round(maxWalk * (crowd?.walkers ?? 1)), skatersN: crowd?.skatersN ?? Math.round(maxSkate * (crowd?.skaters ?? 1)), dogs: crowd?.dogs ?? maxDogs, cats: crowd?.cats ?? maxCats };
-  const setN = (key: 'walkersN' | 'skatersN' | 'dogs' | 'cats', v: number, max: number) => { const n = Math.max(0, Math.min(max, Math.round(v))); store.editLive('Hustota davu', (q) => { q.crowd = { ...(q.crowd ?? {}), [key]: n }; }); };
+  const have = { walkersN: walkPool.filter((c) => !c.pet).reduce((a, c) => a + 1 + comp(c.id), 0), skatersN: chars.filter((c) => !!c.skate && !c.skatePair).length, dogs: walkPool.filter((c) => c.pet).length, cats: sp0.cats?.length ?? 0 };
+  const cur = { walkersN: crowd?.walkersN ?? Math.round(have.walkersN * (crowd?.walkers ?? 1)), skatersN: crowd?.skatersN ?? Math.round(have.skatersN * (crowd?.skaters ?? 1)), dogs: crowd?.dogs ?? have.dogs, cats: crowd?.cats ?? have.cats };
+  const setN = (key: keyof typeof have, v: number) => {
+    const n = Math.max(0, Math.round(v || 0)), fn = (q: NonNullable<typeof p>) => { q.crowd = { ...(q.crowd ?? {}), [key]: n }; };
+    if (n > have[key]) store.edit('Hustota davu', fn); else store.editLive('Hustota davu', fn);
+  };
   const sp = w ?? Math.round((crowd?.walkSpeed ?? 1) * 100);
-  const num = (label: string, key: 'walkersN' | 'skatersN' | 'dogs' | 'cats', max: number, title: string) => max > 0 && (
-    <label className="dens-n" title={title}>{label}<input type="number" min={0} max={max} value={cur[key]} onChange={(e) => setN(key, Number(e.target.value), max)} /><span className="muted">/{max}</span></label>
+  const num = (label: string, key: keyof typeof have, title: string) => (
+    <label className="dens-n" title={title}>{label}<input type="number" min={0} value={cur[key]} onChange={(e) => setN(key, Number(e.target.value))} /></label>
   );
   return (
     <div className="group density">
-      {num('Chodci', 'walkersN', maxWalk, 'Kolik lidí (chodců) smí být ve scéně – doprovod a děti se počítají k nim. Navíc přidaní dokončí, co dělají, a odejdou.')}
-      {p.rink && num('Bruslaři', 'skatersN', maxSkate, 'Kolik bruslařů smí být na ledě')}
-      {num('Psi', 'dogs', maxDogs, 'Kolik majitelů se psem chodí scénou')}
-      {num('Kočky', 'cats', maxCats, 'Kolik koček se ve scéně objevuje')}
+      {num('Chodci', 'walkersN', 'Kolik lidí bez psa smí být ve scéně (doprovod a děti se počítají). Bez horní hranice – chybějící postavy se doplní. Navíc přidaní dokončí, co dělají, a odejdou.')}
+      {p.rink && num('Bruslaři', 'skatersN', 'Kolik bruslařů smí být na ledě (bez horní hranice)')}
+      {num('Psi', 'dogs', 'Kolik lidí se psem chodí scénou (bez horní hranice)')}
+      {num('Kočky', 'cats', 'Kolik koček se ve scéně objevuje (bez horní hranice; potřebují místa pro kočky ve scéně)')}
       <span title="Rychlost chůze chodců (násobek; bruslaři a pracovníci mají vlastní tempo)">Rychlost chůze</span>
       <input type="range" min={50} max={160} step={5} value={sp} onChange={(e) => setW(Number(e.target.value))} onPointerUp={() => { store.editLive('Rychlost chodců', (q) => { q.crowd = { ...(q.crowd ?? {}), walkSpeed: sp / 100 }; }); setW(null); }} onKeyUp={() => { store.editLive('Rychlost chodců', (q) => { q.crowd = { ...(q.crowd ?? {}), walkSpeed: sp / 100 }; }); setW(null); }} />
       <span className="muted">{(sp / 100).toFixed(2)}×</span>

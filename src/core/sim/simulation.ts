@@ -1,4 +1,5 @@
 import type { HandTarget } from '../anim/animator';
+import { expandCrowd } from './crowdExpand';
 import type { ProjectFile, SceneObject, ActivityZone, CharacterInstance } from '../model/types';
 import { buildNavGraph, findPath, nearestAccessibleNode, type NavGraph } from '../nav/navGraph';
 import { interactionPointWorld } from '../scene/geometry';
@@ -149,9 +150,9 @@ export class Simulation {
       version: SIM_STATE_VERSION, step: 0, rng: seedRng(project.seed, 'world'), agents: [], props: [], nextPropId: 1,
       reservations: {}, queues: {}, schedule: {}, removedObjects: [], binCounts: {}, log: [], stats: { cupsServed: 0, cupsDisposed: 0, sips: 0 },
     };
-    const sim = new Simulation(project, manifests, st);
-    for (const ev of project.schedule) st.schedule[ev.id] = { status: 'pending' };
-    for (const c of project.characters) sim.spawnAgent(c);
+    const sim = new Simulation(expandCrowd(project), manifests, st);
+    for (const ev of sim.project.schedule) st.schedule[ev.id] = { status: 'pending' };
+    for (const c of sim.project.characters) sim.spawnAgent(c);
     sim.linkPairs();
     sim.initVisitors();
     return sim;
@@ -160,7 +161,7 @@ export class Simulation {
   /** Obnoví simulaci z checkpointu (stav musí odpovídat stejnému projektu). */
   static restore(project: ProjectFile, manifests: Record<string, CharacterManifest>, snapshot: SimState): Simulation {
     if (snapshot.version !== SIM_STATE_VERSION) throw new Error(`Checkpoint má nepodporovanou verzi stavu ${snapshot.version}.`);
-    const sim = new Simulation(project, manifests, structuredClone(snapshot));
+    const sim = new Simulation(expandCrowd(project), manifests, structuredClone(snapshot));
     for (const id of sim.state.removedObjects) sim.objects.delete(id);
     return sim;
   }
@@ -705,11 +706,14 @@ export class Simulation {
   /** smí postava (podle pořadí ve své skupině a hustoty davu) do scény? */
   private crowdAllows(a: AgentState, kind: 'walkers' | 'skaters'): boolean {
     const cr = this.project.crowd, N = kind === 'walkers' ? cr?.walkersN : cr?.skatersN;
-    const pool = this.project.characters.filter((c) => (kind === 'skaters' ? !!c.skate && !c.skatePair : c.routine === 'visitor' && !c.skate && !c.companionId));
-    const i = pool.findIndex((c) => c.id === a.id); if (i < 0) return true;
-    if (kind === 'walkers' && cr?.dogs !== undefined && this.chars.get(a.id)?.pet) {
-      const owners = pool.filter((c) => c.pet); if (owners.findIndex((c) => c.id === a.id) >= cr.dogs) return false;
+    // majitelé psů se řídí jen počtem psů; „chodci“ = lidé bez psa (vůdce + doprovod)
+    if (kind === 'walkers' && this.chars.get(a.id)?.pet && (cr?.dogs !== undefined || N !== undefined)) {
+      if (cr?.dogs === undefined) return true;
+      const owners = this.project.characters.filter((c) => c.routine === 'visitor' && !c.skate && !c.companionId && c.pet);
+      const j = owners.findIndex((c) => c.id === a.id); return j < 0 || j < cr.dogs;
     }
+    const pool = this.project.characters.filter((c) => (kind === 'skaters' ? !!c.skate && !c.skatePair : c.routine === 'visitor' && !c.skate && !c.companionId && (N === undefined || !c.pet)));
+    const i = pool.findIndex((c) => c.id === a.id); if (i < 0) return true;
     if (N !== undefined) {
       // počet osob: vůdce + jeho stálý doprovod (partner, děti) – postupně podle pořadí v projektu
       let used = 0;

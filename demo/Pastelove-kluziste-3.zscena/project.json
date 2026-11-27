@@ -9417,10 +9417,31 @@
       ]
     }
   ],
+  "cats": [
+    {
+      "firstDelay": 15,
+      "breed": "cat_british"
+    }
+  ],
+  "catSpots": [
+    {
+      "x": 470,
+      "y": 748
+    },
+    {
+      "x": 1255,
+      "y": 750
+    },
+    {
+      "x": 760,
+      "y": 1062
+    }
+  ],
   "crowd": {
     "walkersN": 30,
     "skatersN": 18,
     "dogs": 3,
+    "cats": 1,
     "walkSpeed": 1
   }
 }

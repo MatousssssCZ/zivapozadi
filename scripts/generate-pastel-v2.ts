@@ -85,7 +85,10 @@ const wHeads = ['head_05_cg', 'head_02_cg', 'head_10_cg', 'head_07_cg', 'head_06
 p.characters.push(...wHeads.map((h, i) => clone(worker, `ch_lopata${i + 2}`, wNames[i], h, 980011 + i * 101)));
 
 // hustota (počty) a tempo chodců – lze měnit v horní liště
-p.crowd = { walkersN: 30, skatersN: 18, dogs: 3, walkSpeed: 1 };
+// kočka: prochází po chodníku před domy, sedává u lampy a u lavičky
+p.cats = [{ firstDelay: 15, breed: 'cat_british' }];
+p.catSpots = [{ x: 470, y: 748 }, { x: 1255, y: 750 }, { x: 760, y: 1062 }];
+p.crowd = { walkersN: 30, skatersN: 18, dogs: 3, cats: 1, walkSpeed: 1 };
 }
 await fs.writeFile(pf, JSON.stringify(p, null, 2) + '\n');
 console.log('Scéna vytvořena:', dst, `(${p.characters.length} postav, ${pairs.length / 2} dvojice za ruce, ${(p.clearings?.length ?? 0) + 1} úseky odklízení)`);
