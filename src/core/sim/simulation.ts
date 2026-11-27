@@ -620,6 +620,15 @@ export class Simulation {
   // ---------------------------------------------------------------- pekař
   private bakeryHost: BakeryHost | null = null;
   /** Galerie aktivit: sáňky (A03) vyjedou hned. */
+  /** Bobování: první dítě ve frontě vyjede, jakmile to rezervace dojezdu dovolí. */
+  hillNow(): { ok: boolean; msg: string } {
+    const st = this.state.hill; if (!st) return { ok: false, msg: 'Scéna nemá svah.' };
+    const q = st.kids.filter((k) => k.ph === 'queue'); if (!q.length) return { ok: false, msg: 'Nikdo nečeká nahoře.' };
+    for (const k of q) k.wait = 0;
+    return { ok: true, msg: 'Dítě nahoře vyjede, jakmile je dojezd volný.' };
+  }
+  /** id dítěte, které právě jede (nebo se chystá) */
+  hillRider(): string | null { const st = this.state.hill; return st?.kids.find((k) => k.ph === 'ride' || k.ph === 'sit' || k.ph === 'place' || (k.ph === 'walk' && k.next === 'place'))?.id ?? null; }
   /** Traktor s radlicí hned vyjede (kontrola, galerie). */
   plowNow(): { ok: boolean; msg: string } { if (!this.project.plow) return { ok: false, msg: 'Scéna nemá traktor.' }; const st = (this.state.plow ??= newPlowState(this.project)); if (st.phase === 'run') return { ok: false, msg: 'Traktor už jede.' }; st.until = this.time(); return { ok: true, msg: 'Traktor vyjíždí.' }; }
   sledNow(): { ok: boolean; msg: string } { const st = this.state.sled; if (!this.project.sled) return { ok: false, msg: 'Scéna nemá sáňky.' }; if (!st) return { ok: false, msg: 'Sáňky ještě nejsou připravené.' }; if (st.phase !== 'offstage') return { ok: false, msg: 'Sáňky už jedou.' }; st.until = this.time(); return { ok: true, msg: 'Rodič táhne dítě na sáňkách.' }; }

@@ -7,7 +7,7 @@ import type { Simulation } from '../core/sim/simulation';
 import type { TrickKind } from '../core/sim/rink';
 import type { FallVariant } from '../core/anim/fallPoses';
 
-export type SceneKey = 'liberec' | 'tram' | 'pastel';
+export type SceneKey = 'liberec' | 'tram' | 'pastel' | 'hory';
 export type Status = 'done' | 'partial' | 'blocked' | 'todo';
 export interface R { ok: boolean; msg: string }
 export interface FollowUp { label: string; run: (sim: Simulation) => R | string; hint?: string }
@@ -61,7 +61,8 @@ export const CATALOG: CatalogEntry[] = [
   { id: 'rink', name: 'Bruslení: prvky a pády', group: 'Kluziště', scene: 'pastel', status: 'done', desc: 'Bruslaři na ledě; vyberte prvek – skok s otočkou, holubičku, piruetu, jízdu vzad, skluz na jedné noze nebo pád.', start: (s) => s.triggerRinkEvent('trick', null, 'jump'), maxWait: 90, follow: (s) => s.state.rink?.event?.id, actions: rinkActions },
   // ------------------------------------------------------------ zatím chybějící / blokované
   { id: 'A01', code: 'A01', name: 'Běžkování', group: 'Saně a lyže', scene: 'tram', status: 'done', desc: 'Klasický střídavý běh po rovné stopě: rychlost přibývá jen při odrazu (zatížená lyže + opřená hůl), jinak skluz s třením. Fáze kroku podle ujeté dráhy, paže a nohy křížově, pata zadní nohy se zvedá, zapíchnutý hrot hole drží místo. Pauza o hole, rozjezd krátkými kroky. Střídá se jistý běžkař a začátečník. Za ním zůstane stopa.', start: (s) => s.episodeNow('ep_bezky'), follow: () => 'ch_bezkar', actions: [{ label: 'Další běžkař (střídá jistý / začátečník)', run: (s) => s.episodeNow('ep_bezky') }] },
-  { id: 'A02', code: 'A02', name: 'Bobování a sáňkování ze svahu', group: 'Saně a lyže', scene: null, status: 'blocked', desc: '', missing: 'Žádná scéna nemá kopec – zadání zakazuje sjezd po vizuálně rovné ploše. Potřebné pozadí: mírný svah 5–12° s dojezdem a bočním návratem.' },
+  { id: 'A02', code: 'A02', name: 'Bobování ze svahu', group: 'Saně a lyže', scene: 'hory', status: 'done', desc: 'Celý cyklus: fronta nahoře → položení bobů → usednutí → odraz → jízda podle sklonu (gravitace, tření, odpor) → brzdění nohama na dojezdu → vstání → návrat pěšky s boby na šňůře → výstup po schodech. Dojezd je rezervovaný – nikdo nevyjede, dokud tam někdo stojí nebo se vrací.', start: (s) => s.hillNow(), maxWait: 90, follow: (s) => s.hillRider(), actions: [{ label: 'Další jízda', run: (s) => s.hillNow() }] },
+  { id: 'H01', code: 'H01', name: 'Traktor odhrnuje silnici', group: 'Saně a lyže', scene: 'hory', status: 'done', desc: 'Stylizovaný 3D traktor s radlicí projede silnicí zleva doprava; kola se točí podle ujeté dráhy, bliká maják. Za ním zůstane odhrnutý pás a val sněhu na bližší krajnici, který při sněžení pomalu zapadá.', start: (s) => s.plowNow(), maxWait: 10, focus: { x: 0, y: 760, w: 1920, h: 320 }, actions: [{ label: 'Další průjezd', run: (s) => s.plowNow() }] },
   { id: 'A04', code: 'A04', name: 'První lyžování dítěte', group: 'Saně a lyže', scene: null, status: 'blocked', desc: '', missing: 'Potřeba svahu 3–7° s dojezdem.' },
   { id: 'A05', code: 'A05', name: 'Rodič a dítě společně na saních', group: 'Saně a lyže', scene: null, status: 'blocked', desc: '', missing: 'Potřeba svahu.' },
   { id: 'A06', code: 'A06', name: 'Vyšlapávání hlubokým sněhem', group: 'Sníh', scene: 'liberec', status: 'partial', desc: 'Boty se boří podle hloubky sněhu, chůze se zpomalí, stopy vznikají pod zatíženou botou a přetrvají. Chybí vysoké zvedání kolen a dítě ve stopách dospělého.' },
@@ -73,4 +74,4 @@ export const CATALOG: CatalogEntry[] = [
 ];
 
 export const STATUS_LABEL: Record<Status, string> = { done: 'hotovo', partial: 'částečně', blocked: 'chybí podklad', todo: 'zatím chybí' };
-export const SCENE_LABEL: Record<SceneKey, string> = { liberec: 'Liberec – živý trh', tram: 'Vánoční tramvajová ulice', pastel: 'Pastelové kluziště' };
+export const SCENE_LABEL: Record<SceneKey, string> = { liberec: 'Liberec – živý trh', tram: 'Vánoční tramvajová ulice', pastel: 'Pastelové kluziště', hory: 'Horské městečko' };
