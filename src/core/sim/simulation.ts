@@ -157,7 +157,12 @@ export class Simulation {
     for (const c of sim.project.characters) sim.spawnAgent(c);
     sim.linkPairs();
     sim.initVisitors();
-    if (sim.project.hill) sim.state.hill = initHill(sim.hillHost());
+    if (sim.project.hill) {
+      sim.state.hill = initHill(sim.hillHost());
+      // děti ze svahu, které se při menším počtu (hill.kidsN) nepoužijí, nejsou vidět
+      const used = new Set([...sim.project.hill.kids, ...(sim.project.hill.watchers ?? [])]);
+      for (const a of sim.state.agents) if (a.onHill && !used.has(a.id)) { a.hidden = true; a.onHill = false; a.status = 'Mimo scénu'; }
+    }
     return sim;
   }
 

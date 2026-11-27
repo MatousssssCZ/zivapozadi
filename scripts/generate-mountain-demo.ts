@@ -114,8 +114,9 @@ export async function generateMountain(dir: string): Promise<ProjectFile> {
   ];
   const bottom: [number, number][] = [[1110, 754], [800, 753], [560, 752], [330, 750], [150, 742]];
   p.hill = {
-    footY: 700, rise: 0.75, blend: 70, firstDelay: 2, maxRiding: 3, runShare: 0.4, rideSpeed: 1, paused: false,
+    footY: 700, rise: 0.75, blend: 70, firstDelay: 2, laneCount: 5, kidsN: 10, runShare: 0.4, rideSpeed: 1, paused: false,
     lanes: lanes.map(V),
+    returnLine: V(bottom),
     returns: lanes.map((L) => { const e = L[L.length - 1]; return V([[e[0] - 18, e[1] + 24], ...bottom.filter(([x]) => x < e[0] - 60)]); }),
     ascent: V([[150, 742], [120, 690], [100, 620], [85, 540], [78, 460], [80, 390], [95, 335], [130, 312]]),
     queue: V([[185, 322], [150, 309], [118, 298], [90, 290]]),

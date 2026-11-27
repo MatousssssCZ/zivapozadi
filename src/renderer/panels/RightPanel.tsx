@@ -309,22 +309,29 @@ function HillProps({ p }: { p: ProjectFile }) {
   useSimTick();
   const st = store.sim.sim?.state.hill;
   const riding = st ? st.kids.filter((k) => k.ph === 'ride').length : 0;
+  const nLanes = Math.max(1, Math.round(h.laneCount ?? h.lanes.length));
   return (
     <Section title="Bobování">
       <Check label="Děti bobují (vypnuto = čekají nahoře)" value={!h.paused} onChange={(v) => live('Bobování zapnuto', (d) => { d.hill!.paused = !v; })} />
-      <Row label="Souběžných jízd (max.)" hint={`Každé dítě jede po své dráze; drah je ${h.lanes.length}.`}>
-        <NumField value={h.maxRiding ?? h.lanes.length} min={1} max={h.lanes.length} step={1} onCommit={(v) => live('Souběžné jízdy', (d) => { d.hill!.maxRiding = Math.max(1, Math.min(d.hill!.lanes.length, Math.round(v))); })} />
+      <Row label="Počet dětí" hint="Bez omezení – další děti se doplní (jiný vzhled), méně = část dětí odejde ze scény.">
+        <NumField value={h.kidsN ?? h.kids.length} min={0} step={1} onCommit={(v) => upd('Počet dětí na svahu', (d) => { d.hill!.kidsN = Math.max(0, Math.round(v)); })} />
+      </Row>
+      <Row label="Počet drah" hint="Bez omezení – každé dítě jede po své dráze; dráhy se rozloží vějířem přes svah (víc drah = užší rozestupy).">
+        <NumField value={nLanes} min={1} step={1} onCommit={(v) => upd('Počet drah', (d) => { d.hill!.laneCount = Math.max(1, Math.round(v)); })} />
+      </Row>
+      <Row label="Souběžných jízd (0 = bez omezení)" hint="0 = bez omezení (jede tolik dětí, kolik je volných drah). Víc než drah → drah se přidá.">
+        <NumField value={h.maxRiding ?? 0} min={0} step={1} onCommit={(v) => { const n = Math.max(0, Math.round(v)); if (n > nLanes) upd('Souběžné jízdy', (d) => { d.hill!.maxRiding = n; d.hill!.laneCount = n; }); else live('Souběžné jízdy', (d) => { d.hill!.maxRiding = n || undefined; }); }} />
       </Row>
       <Row label="Běh zpátky a do kopce (%)" hint="Kolik návratů děti poběží; na schodech pak zvolní do chůze.">
         <NumField value={Math.round((h.runShare ?? 0.4) * 100)} min={0} max={100} step={10} onCommit={(v) => live('Podíl běhu', (d) => { d.hill!.runShare = Math.max(0, Math.min(100, v)) / 100; })} />
       </Row>
-      <Row label="Rychlost jízdy (×)" hint="Méně = měkký sníh, víc = ujetá dráha (0,5–1,6). Brzdění vždy zastaví před chodníkem.">
-        <NumField value={h.rideSpeed ?? 1} min={0.5} max={1.6} step={0.1} onCommit={(v) => live('Rychlost jízdy', (d) => { d.hill!.rideSpeed = Math.max(0.5, Math.min(1.6, v)); })} />
+      <Row label="Rychlost jízdy (×)" hint="Méně = měkký sníh, víc = ujetá dráha. Brzdění vždy zastaví před chodníkem.">
+        <NumField value={h.rideSpeed ?? 1} min={0.2} step={0.1} onCommit={(v) => live('Rychlost jízdy', (d) => { d.hill!.rideSpeed = Math.max(0.2, v); })} />
       </Row>
       <Row label="První jízda po startu (s)" hint="Za kolik sekund po startu scény vyjede první dítě.">
-        <NumField value={h.firstDelay ?? 0} min={0} max={120} step={1} onCommit={(v) => upd('První jízda', (d) => { d.hill!.firstDelay = Math.max(0, v); })} />
+        <NumField value={h.firstDelay ?? 0} min={0} step={1} onCommit={(v) => upd('První jízda', (d) => { d.hill!.firstDelay = Math.max(0, v); })} />
       </Row>
-      <div className="muted small">Dětí {h.kids.length}, rodičů {h.watchers?.length ?? 0}; právě jede {riding}. Dráhy, výstup a fronta se upravují v generátoru scény.</div>
+      <div className="muted small">Dětí {h.kidsN ?? h.kids.length}, drah {nLanes}, rodičů {h.watchers?.length ?? 0}; právě jede {riding}. Dráhy, výstup a fronta se upravují v generátoru scény.</div>
       <div className="actions"><button onClick={() => simAct((s) => s.hillNow())}>Další jízda hned</button></div>
     </Section>
   );
@@ -335,22 +342,22 @@ function PlowProps({ p }: { p: ProjectFile }) {
   const c = p.plow!;
   useSimTick();
   const st = store.sim.sim?.state.plow, t = store.sim.sim?.time() ?? 0;
-  const pair = (label: string, hint: string, key: 'firstDelay' | 'interval' | 'traversal', def: [number, number], min: number, max: number) => {
+  const pair = (label: string, hint: string, key: 'firstDelay' | 'interval' | 'traversal', def: [number, number], min: number) => {
     const v = c[key] ?? def;
     return (
       <Row label={label} hint={hint}>
-        <NumField value={v[0]} min={min} max={max} step={5} onCommit={(x) => live(`Traktor: ${label}`, (d) => { const o = d.plow![key] ?? def; d.plow![key] = [Math.min(x, o[1]), o[1]]; })} />
-        <NumField value={v[1]} min={min} max={max} step={5} onCommit={(x) => live(`Traktor: ${label}`, (d) => { const o = d.plow![key] ?? def; d.plow![key] = [o[0], Math.max(x, o[0])]; })} />
+        <NumField value={v[0]} min={min} step={5} onCommit={(x) => live(`Traktor: ${label}`, (d) => { const o = d.plow![key] ?? def; d.plow![key] = [Math.min(x, o[1]), o[1]]; })} />
+        <NumField value={v[1]} min={min} step={5} onCommit={(x) => live(`Traktor: ${label}`, (d) => { const o = d.plow![key] ?? def; d.plow![key] = [o[0], Math.max(x, o[0])]; })} />
       </Row>
     );
   };
   return (
     <Section title="Traktor s pluhem">
       <Check label="Traktor jezdí" value={c.enabled !== false} onChange={(v) => live('Traktor zapnut', (d) => { d.plow!.enabled = v; })} />
-      {pair('První průjezd od–do (s)', 'Po startu scény', 'firstDelay', [60, 120], 0, 600)}
-      {pair('Interval od–do (s)', 'Pauza mezi průjezdy', 'interval', [240, 420], 20, 1800)}
-      {pair('Průjezd od–do (s)', 'Jak dlouho jede přes celý záběr (určuje rychlost)', 'traversal', [25, 40], 10, 120)}
-      <Row label="Šířka radlice (m)" hint="Šířka odhrnutého pásu na silnici"><NumField value={c.bandW ?? 2.6} min={1.5} max={3.5} step={0.1} onCommit={(v) => live('Šířka radlice', (d) => { d.plow!.bandW = Math.max(1.5, Math.min(3.5, v)); })} /></Row>
+      {pair('První průjezd od–do (s)', 'Po startu scény', 'firstDelay', [60, 120], 0)}
+      {pair('Interval od–do (s)', 'Pauza mezi průjezdy', 'interval', [240, 420], 0)}
+      {pair('Průjezd od–do (s)', 'Jak dlouho jede přes celý záběr (určuje rychlost)', 'traversal', [25, 40], 1)}
+      <Row label="Šířka radlice (m)" hint="Šířka odhrnutého pásu na silnici"><NumField value={c.bandW ?? 2.6} min={0.5} step={0.1} onCommit={(v) => live('Šířka radlice', (d) => { d.plow!.bandW = Math.max(0.5, v); })} /></Row>
       <div className="muted small">{!st ? 'Čeká na start simulace.' : st.phase === 'run' ? 'Traktor právě jede.' : c.enabled === false ? 'Vypnuto.' : `Další průjezd za ${Math.max(0, Math.round(st.until - t))} s.`} Odhrnutý pás při sněžení zapadne asi za 5 min.</div>
       <div className="actions"><button onClick={() => simAct((s) => s.plowNow())}>Projet teď</button></div>
     </Section>

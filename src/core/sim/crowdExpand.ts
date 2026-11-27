@@ -24,7 +24,23 @@ function cloneOf(p: ProjectFile, base: CharacterInstance, donor: CharacterInstan
   return c;
 }
 
-export function expandCrowd(p: ProjectFile): ProjectFile {
+/** Bobování: víc dětí, než má projekt (hill.kidsN) – klony dětí ze svahu; méně = jen prvních kidsN. */
+function expandHill(p: ProjectFile): ProjectFile {
+  const h = p.hill; if (!h || h.kidsN === undefined) return p;
+  const want = Math.max(0, Math.round(h.kidsN));
+  if (want <= h.kids.length) return want === h.kids.length ? p : { ...p, hill: { ...h, kids: h.kids.slice(0, want) } };
+  const pool = h.kids.map((id) => p.characters.find((c) => c.id === id)).filter((c): c is CharacterInstance => !!c);
+  if (!pool.length) return p;
+  const q: ProjectFile = { ...p, characters: [...p.characters], hill: { ...h, kids: [...h.kids] } };
+  for (let n = 0; n < want - h.kids.length; n++) {
+    const c = cloneOf(p, pool[n % pool.length], pool[(n * 3 + 1) % pool.length], `gen_h_${n + 1}`, n + 200);
+    q.characters.push(c); q.hill!.kids.push(c.id);
+  }
+  return q;
+}
+
+export function expandCrowd(p0: ProjectFile): ProjectFile {
+  const p = expandHill(p0);
   const cr = p.crowd; if (!cr) return p;
   const walkPool = p.characters.filter((c) => c.routine === 'visitor' && !c.skate && !c.companionId && !c.pet);
   const ownerPool = p.characters.filter((c) => c.routine === 'visitor' && !c.skate && !c.companionId && c.pet);

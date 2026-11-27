@@ -26,7 +26,11 @@ export interface HillConfig {
   /** místa fronty nahoře ([0] nejblíž drahám) */ queue: Vec2[];
   /** děti (routine „hill“), rodiče sledující svah a jejich místa */
   kids: string[]; watchers?: string[]; watchSpots?: Vec2[];
-  /** nejvíc souběžných jízd (výchozí = počet drah) */ maxRiding?: number;
+  /** nejvíc souběžných jízd (bez horní meze; výchozí = bez omezení, tj. kolik je drah) */ maxRiding?: number;
+  /** počet drah (libovolný): vějíř mezi zadanými drahami `lanes` (výchozí = jejich počet) */ laneCount?: number;
+  /** počet dětí (libovolný; víc než `kids` → doplní se klony, méně → jen prvních N) */ kidsN?: number;
+  /** počet řad na výstupu (výchozí podle počtu dětí: 1 řada na každých 7 dětí) */ ascentCols?: number;
+  /** společná zpáteční cesta pod konci drah (zprava doleva k výstupu) – návraty vygenerovaných drah */ returnLine?: Vec2[];
   colors?: string[]; firstDelay?: number;
   /** podíl návratů, kdy dítě běží (0–1; výchozí 0,4) */ runShare?: number;
   /** násobek rychlosti jízdy (odpor vzduchu a sněhu; výchozí 1) */ rideSpeed?: number;
@@ -38,13 +42,15 @@ type PathRef = { k: 'lane' | 'ret' | 'asc' | 'line'; i?: number; a?: Vec2; b?: V
 export type HillPhase = 'walk' | 'queue' | 'place' | 'sit' | 'ride' | 'getup' | 'pick';
 export interface HillKid {
   id: string; ph: HillPhase; t0: number; n: number;
-  path?: PathRef; s: number; next?: 'queue' | 'place' | 'asc' | 'top';
+  path?: PathRef; s: number; next?: 'queue' | 'place' | 'asc' | 'ascGo' | 'top';
+  /** řada na schodech (víc dětí jde nahoru vedle sebe) */ col?: number;
   lane: number; v: number; cd: number; qn: number; wait: number;
   /** boby: střed (svět + výška), směr (rad, svět), sklon (dH/dx), ujetá dráha */
   sled: { P: P3; hd: number; pitch: number; dist: number };
   /** stopa dítěte (za ní jedou boby na šňůře) */ trail: P3[];
   /** stání při vstávání / sedání: odkud kam (obraz) */ from?: Vec2; to?: Vec2;
   brake?: number; acc?: number; color: string;
+  /** kdy se zařadilo do fronty (posun ve frontě už nečeká celou prodlevu) */ qT?: number;
   /** toto kolo běží (zpátky po dojezdu a kus do kopce) */ runs?: boolean;
   /** jak dlouho čeká za někým (s) – pojistka proti vzájemnému zablokování */ blk?: number;
 }
@@ -67,6 +73,33 @@ export function hill3(cam: Camera, cfg: HillConfig, p: Vec2): P3 {
 }
 export const scr3 = (cam: Camera, P: P3): Vec2 => toScreen(cam, P, P.H);
 
+/**
+ * Dráhy pro libovolný počet: vějíř mezi zadanými drahami (po částech lineárně, bod po bodu); při počtu
+ * rovném zadaným drahám jsou to přesně ony. Návrat každé dráhy: kousek dolů od místa zastavení a pak
+ * po společné zpáteční cestě. Fronta: zadaná místa nahoře, další děti čekají na schodech (viz queueSpot).
+ */
+export interface HillGeo { lanes: Vec2[][]; returns: Vec2[][]; /** řady výstupu (posunuté do strany o 26 px) */ ascents: Vec2[][] }
+const geoCache = new WeakMap<HillConfig, HillGeo>();
+export function hillGeo(cfg: HillConfig): HillGeo {
+  let g = geoCache.get(cfg); if (g) return g;
+  const M = cfg.lanes.length, N = Math.max(1, Math.round(cfg.laneCount ?? M));
+  let lanes: Vec2[][], returns: Vec2[][];
+  if (N === M) { lanes = cfg.lanes; returns = cfg.returns; }
+  else {
+    lanes = Array.from({ length: N }, (_, j) => {
+      const u = N === 1 ? (M - 1) / 2 : (j / (N - 1)) * (M - 1), i0 = Math.min(M - 1, Math.floor(u)), i1 = Math.min(M - 1, i0 + 1), f = u - i0;
+      const A = cfg.lanes[i0], B = cfg.lanes[i1];
+      return A.length === B.length ? A.map((p, k) => ({ x: p.x + (B[k].x - p.x) * f, y: p.y + (B[k].y - p.y) * f })) : (f < 0.5 ? A : B);
+    });
+    const line = cfg.returnLine ?? cfg.returns[0].slice(1);
+    returns = lanes.map((L) => { const e = L[L.length - 1]; return [{ x: e.x - 18, y: e.y + 24 }, ...line.filter((q) => q.x < e.x - 60)]; });
+  }
+  const C = Math.max(1, Math.round(cfg.ascentCols ?? Math.ceil(cfg.kids.length / 7)));
+  const ascents = Array.from({ length: C }, (_, c) => { const dx = (c - (C - 1) / 2) * 26; return cfg.ascent.map((q) => ({ x: q.x + dx, y: q.y })); });
+  g = { lanes, returns, ascents }; geoCache.set(cfg, g);
+  return g;
+}
+
 interface Sampled { pts: P3[]; cum: number[]; len: number }
 const cache = new WeakMap<HillConfig, Map<string, Sampled>>();
 function sample(cam: Camera, cfg: HillConfig, poly: Vec2[]): Sampled {
@@ -84,7 +117,7 @@ function pathOf(cam: Camera, cfg: HillConfig, r: PathRef): Sampled {
   if (r.k === 'line') return sample(cam, cfg, [r.a!, r.b!]);
   let m = cache.get(cfg); if (!m) cache.set(cfg, (m = new Map()));
   const key = `${r.k}${r.i ?? 0}`; let s = m.get(key);
-  if (!s) { s = sample(cam, cfg, r.k === 'lane' ? cfg.lanes[r.i!] : r.k === 'ret' ? cfg.returns[r.i!] : cfg.ascent); m.set(key, s); }
+  if (!s) { const G = hillGeo(cfg); s = sample(cam, cfg, r.k === 'lane' ? G.lanes[r.i!] : r.k === 'ret' ? G.returns[r.i!] : G.ascents[r.i ?? 0] ?? cfg.ascent); m.set(key, s); }
   return s;
 }
 function at(S: Sampled, s: number): { P: P3; T: P3 } {
@@ -113,18 +146,20 @@ export function initHill(h: HillHost): HillState {
   const cfg = h.project.hill!, cam = cameraFor(h.project.scene), seed = h.project.seed;
   const st: HillState = { kids: [], lastLaunch: -99, qn: 0, rides: 0, watchT: 0 };
   const colors = cfg.colors ?? ['#d23a32', '#2f6fb6', '#e8a317', '#3f9a5a', '#8a4fb0', '#e0663a'];
-  const asc = pathOf(cam, cfg, { k: 'asc' }), ret0 = pathOf(cam, cfg, { k: 'ret', i: 0 });
+  const C = hillGeo(cfg).ascents.length, asc = pathOf(cam, cfg, { k: 'asc' }), ret0 = pathOf(cam, cfg, { k: 'ret', i: 0 });
   cfg.kids.forEach((id, i) => {
-    const k: HillKid = { id, ph: 'queue', t0: 0, n: 0, s: 0, lane: i % cfg.lanes.length, v: 0, cd: 0.2, qn: 0, wait: 0, sled: { P: { X: 0, Z: 0, H: 0 }, hd: 0, pitch: 0, dist: 0 }, trail: [], color: colors[i % colors.length] };
-    const slot = i % 6;
-    if (slot === 0 || slot === 1 || slot === 5) { k.ph = 'queue'; k.qn = st.qn++; k.wait = 3 + 4 * hashNoise(seed, 8800, i) + slot * 3; }
-    else { k.ph = 'walk'; k.path = slot === 3 ? { k: 'ret', i: 0 } : { k: 'asc' }; k.next = slot === 3 ? 'asc' : 'top'; k.lane = 0; k.s = (slot === 2 ? 0.35 : slot === 4 ? 0.75 : 0.55) * (slot === 3 ? ret0.len : asc.len); }
+    const k: HillKid = { id, ph: 'queue', t0: 0, n: 0, s: 0, lane: i % hillGeo(cfg).lanes.length, v: 0, cd: 0.2, qn: 0, wait: 0, sled: { P: { X: 0, Z: 0, H: 0 }, hd: 0, pitch: 0, dist: 0 }, trail: [], color: colors[i % colors.length] };
+    // víc dětí: další „vlna“ rozmístění kus vedle (žádné dvě na stejném místě); přebytek čeká ve frontě
+    const slot = i % 6, wave = Math.floor(i / 6);
+    const frac = (slot === 2 ? 0.35 : slot === 4 ? 0.75 : 0.55) - 0.11 * wave;
+    if (slot === 0 || slot === 1 || slot === 5 || frac < 0.08) { k.ph = 'queue'; k.qn = st.qn++; k.wait = 3 + 4 * hashNoise(seed, 8800, i) + slot * 3; }
+    else { k.col = wave % C; k.ph = 'walk'; k.path = slot === 3 ? { k: 'ret', i: 0 } : { k: 'asc', i: k.col }; k.next = slot === 3 ? 'asc' : 'top'; k.lane = 0; k.s = frac * (slot === 3 ? ret0.len : asc.len); }
     st.kids.push(k);
   });
   // polohy: fronta / dráha; boby za dítětem po jeho dráze (stopa)
   for (const k of st.kids) {
     let P: P3, back: P3;
-    if (k.ph === 'queue') { const q = cfg.queue[Math.min(k.qn, cfg.queue.length - 1)]; P = hill3(cam, cfg, q); back = hill3(cam, cfg, { x: q.x - 28, y: q.y + 14 }); }
+    if (k.ph === 'queue') { const Q = cfg.queue.length; if (k.qn >= Q) k.col = (k.qn - Q) % C; const q = queueSpot(cam, cfg, k.qn, k.col ?? 0, Math.floor((k.qn - Q) / C)); P = hill3(cam, cfg, q); back = hill3(cam, cfg, { x: q.x - 28, y: q.y + 14 }); }
     else { const S = pathOf(cam, cfg, k.path!); P = at(S, k.s).P; back = at(S, k.s - D_TOW).P; }
     k.trail = [back, P];
     k.sled = { P: back, hd: Math.atan2(P.Z - back.Z, P.X - back.X), pitch: 0, dist: 0 };
@@ -133,6 +168,15 @@ export function initHill(h: HillHost): HillState {
   }
   (cfg.watchers ?? []).forEach((id, i) => { const a = h.agent(id), q = cfg.watchSpots?.[i]; if (a && q) h.place(a, q, liftPx(cfg, q.y), -Math.PI / 2 - 0.3, 0, null); });
   return st;
+}
+
+/** rozestup fronty na schodech (dítě + boby za ním na šňůře) */
+const QGAP = 2.6;
+/** místo ve frontě: zadaná místa nahoře, další po 2,6 m dolů po schodech (výstupu) */
+export function queueSpot(cam: Camera, cfg: HillConfig, rank: number, col = 0, depth = rank - cfg.queue.length): Vec2 {
+  if (rank < cfg.queue.length) return cfg.queue[Math.max(0, rank)];
+  const A = pathOf(cam, cfg, { k: 'asc', i: col });
+  return scr3(cam, at(A, Math.max(0, A.len - QGAP * (depth + 1))).P);
 }
 
 /** boby za dítětem: střed na stopě ve vzdálenosti šňůry (jen tah – když dítě stojí, boby stojí) */
@@ -178,29 +222,43 @@ export function stepHill(h: HillHost, st: HillState): void {
         const dir = { X: cur.T.X, Z: cur.T.Z };
         // přednost má ten, kdo je na okruhu dál (návrat doleva → výstup → fronta); kdo je za ním, počká.
         // Pojistka: kdo čeká přes 3 s, pomalu pokračuje (žádné věčné zaseknutí).
-        let blocked = false;
+        let blocked = false, byStanding = false;
         const me = progressOf(cam, cfg, k, a.pos);
         for (const o of kids) {
           if (o === k) continue;
+          // plošina nahoře (posun ve frontě, cesta ke startu dráhy): děti se obcházejí – čeká se jen na toho,
+          // kdo na startu pokládá boby nebo si sedá; ostatní na přecházející nahoře nečekají
+          const top = (x: HillKid) => x.ph === 'walk' && x.path?.k === 'line' && (x.next === 'queue' || x.next === 'place');
+          const inQ = (x: HillKid) => x.ph === 'queue' || top(x);
+          if (top(k) && o.ph !== 'place' && o.ph !== 'sit') continue;
+          if (top(o)) continue;
+          if (k.next === 'queue' && inQ(o) && k.path?.k === 'line') continue;
           if (o.ph === 'walk' && (o.blk ?? 0) > 0 && progressOf(cam, cfg, o, h.agent(o.id)?.pos ?? a.pos) < me) continue; // stojí za mnou
           const op = posOf(o); if (!op) continue;
           for (const [Q, r] of [[op, 1.0], [o.sled.P, 0.75]] as const) {
             const dx = Q.X - cur.P.X, dz = Q.Z - cur.P.Z, dd = Math.hypot(dx, dz, Q.H - cur.P.H);
-            if (dd < r && dx * dir.X + dz * dir.Z > 0.25 * dd) blocked = true;
+            if (dd < r && dx * dir.X + dz * dir.Z > 0.25 * dd) { blocked = true; if (o.ph === 'queue' || (o.ph === 'walk' && o.next === 'queue')) byStanding = true; }
           }
         }
         k.blk = blocked ? (k.blk ?? 0) + dt : 0;
-        const forced = (k.blk ?? 0) > 3;
+        const forced = (k.blk ?? 0) > 3 && !byStanding; // do stojící fronty se nikdo neprotlačí
         const steep = Math.max(0, cur.T.H) / Math.max(0.2, Math.hypot(cur.T.X, cur.T.Z));
         // běh: zpátky po dojezdu a první část schodů (pak dítě zvolní do chůze); do kopce pomaleji
         const S0 = pathOf(cam, cfg, k.path!);
-        const running = !!k.runs && (k.next === 'asc' || (k.path!.k === 'asc' && k.s < S0.len * 0.55));
+        const running = !!k.runs && (k.next === 'asc' || k.next === 'ascGo' || (k.path!.k === 'asc' && k.s < S0.len * 0.55));
         const vWalk = steep > 0.15 ? HILL.climb + (HILL.walk - HILL.climb) * Math.max(0, 1 - (steep - 0.15) * 2) : HILL.walk;
         const vRun = steep > 0.15 ? HILL.runClimb + (HILL.run - HILL.runClimb) * Math.max(0, 1 - (steep - 0.15) * 2) : HILL.run;
         const vT = blocked && !forced ? 0 : (forced ? 0.45 : 1) * (running ? vRun : vWalk) * (0.92 + 0.16 * hashNoise(seed, 8810, kids.indexOf(k)));
         a.anim.run = Math.max(0, Math.min(1, (a.anim.run ?? 0) + (running && k.v > 1.1 ? dt / 0.5 : -dt / 0.6)));
         k.v += Math.sign(vT - k.v) * Math.min(Math.abs(vT - k.v), dt * (running ? 2.2 : 1.6));
+        const sPrev = k.s;
         k.s = Math.min(S.len, k.s + k.v * dt);
+        // plná fronta nahoře: dítě se zařadí na schodech (konec fronty)
+        if (k.path!.k === 'asc' && queued.length >= cfg.queue.length) {
+          const inCol = queued.slice(cfg.queue.length).filter((o) => (o.col ?? 0) === (k.col ?? 0)).length;
+          const sTail = S.len - QGAP * (inCol + 1);
+          if (k.s >= sTail) { k.s = Math.max(sPrev, Math.min(k.s, sTail)); k.v = 0; k.qn = st.qn++; k.ph = 'queue'; k.t0 = t; k.wait = 2 + 4 * hashNoise(seed, 8820, k.n * 7 + kids.indexOf(k)); queued.push(k); }
+        }
         const nx = at(S, k.s), p0 = scr3(cam, cur.P), p1 = scr3(cam, nx.P);
         const moving = Math.hypot(p1.x - p0.x, p1.y - p0.y) > 1e-3;
         h.place(a, p1, toScreen(cam, nx.P).y - p1.y, moving ? Math.atan2(p1.y - p0.y, p1.x - p0.x) : a.facing, Math.hypot(p1.x - p0.x, p1.y - p0.y) / dt, moving ? Math.atan2(nx.P.Z - cur.P.Z, nx.P.X - cur.P.X) : null);
@@ -210,34 +268,44 @@ export function stepHill(h: HillHost, st: HillState): void {
         if (k.s >= S.len - 1e-3) {
           k.v = 0;
           if (k.next === 'asc' && k.path!.k === 'line') { k.path = { k: 'ret', i: k.lane }; k.s = 0; }
-          else if (k.next === 'asc') { k.path = { k: 'asc' }; k.s = 0; k.next = 'top'; }
-          else if (k.next === 'top') { k.qn = st.qn++; k.next = 'queue'; const q = cfg.queue[Math.min(queued.length, cfg.queue.length - 1)]; k.path = { k: 'line', a: { ...a.pos }, b: { ...q } }; k.s = 0; }
-          else if (k.next === 'queue') { k.ph = 'queue'; k.t0 = t; k.wait = 2 + 4 * hashNoise(seed, 8820, k.n * 7 + kids.indexOf(k)); }
+          else if (k.next === 'asc') {
+            // řada výstupu s nejmenším počtem dětí (na schodech i ve frontě v té řadě); přechod do ní bez skoku
+            const G = hillGeo(cfg), cnt = G.ascents.map((_, c) => kids.filter((o) => o !== k && (o.col ?? 0) === c && ((o.ph === 'walk' && (o.path?.k === 'asc' || o.next === 'ascGo')) || (o.ph === 'queue' && queued.indexOf(o) >= cfg.queue.length))).length);
+            k.col = cnt.indexOf(Math.min(...cnt));
+            const st0 = G.ascents[k.col][0];
+            if (Math.hypot(st0.x - a.pos.x, st0.y - a.pos.y) > 3) { k.path = { k: 'line', a: { ...a.pos }, b: { ...st0 } }; k.next = 'ascGo'; }
+            else { k.path = { k: 'asc', i: k.col }; k.next = 'top'; }
+            k.s = 0;
+          }
+          else if (k.next === 'ascGo') { k.path = { k: 'asc', i: k.col ?? 0 }; k.s = 0; k.next = 'top'; }
+          else if (k.next === 'top') { k.qn = st.qn++; k.next = 'queue'; const q = queueSpot(cam, cfg, queued.length); k.path = { k: 'line', a: { ...a.pos }, b: { ...q } }; k.s = 0; }
+          else if (k.next === 'queue') { const shift = k.ph === 'walk' && k.path!.k === 'line' && (k.qT ?? -1) >= 0; k.ph = 'queue'; k.t0 = t; k.wait = shift ? 0.4 : 2 + 4 * hashNoise(seed, 8820, k.n * 7 + kids.indexOf(k)); k.qT = t; }
           else if (k.next === 'place') { k.ph = 'place'; k.t0 = t; k.from = undefined; }
         }
         break;
       }
       case 'queue': {
-        const rank = queued.indexOf(k), spot = cfg.queue[Math.min(rank, cfg.queue.length - 1)];
-        a.status = rank === 0 ? 'Čeká na volnou dráhu' : 'Čeká ve frontě na svah';
+        const rank = queued.indexOf(k), Qn = cfg.queue.length, spot = queueSpot(cam, cfg, rank, k.col ?? 0, rank >= Qn ? queued.slice(Qn, rank).filter((o) => (o.col ?? 0) === (k.col ?? 0)).length : 0);
+        a.status = rank < cfg.queue.length ? 'Čeká na volnou dráhu' : 'Čeká ve frontě na schodech';
         h.place(a, a.pos, liftPx(cfg, a.pos.y) , a.facing, 0, null);
         // posun ve frontě
-        if (Math.hypot(spot.x - a.pos.x, spot.y - a.pos.y) > 6 && rank >= 0) { k.ph = 'walk'; k.next = 'queue'; k.path = { k: 'line', a: { ...a.pos }, b: { ...spot } }; k.s = 0; break; }
+        if (Math.hypot(spot.x - a.pos.x, spot.y - a.pos.y) > 6 && rank >= 0) { k.qT = k.qT ?? t; k.ph = 'walk'; k.next = 'queue'; k.path = { k: 'line', a: { ...a.pos }, b: { ...spot } }; k.s = 0; break; }
         // pohled dolů na svah (na jezdce)
         const r0 = riding[0] ? h.agent(riding[0].id) : null;
         if (r0 && Math.floor(t * 0.5) !== Math.floor((t - dt) * 0.5)) a.facing = Math.atan2(r0.pos.y - a.pos.y, r0.pos.x - a.pos.x);
-        if (rank !== 0 || el < k.wait || t < (cfg.firstDelay ?? 0) || cfg.paused) break;
+        // vyjet smí kdokoli, kdo stojí nahoře na plošině (ne na schodech – nešel by přes svah), je-li volná dráha
+        if (rank < 0 || rank >= cfg.queue.length || el < k.wait || t < (cfg.firstDelay ?? 0) || cfg.paused) break;
         // každé dítě má vlastní dráhu: dráha je obsazená od cesty ke startu přes jízdu, vstávání a sebrání
         // šňůry, dokud se dítě s boby nevzdálí ~3 m od místa zastavení. Víc dětí může jet souběžně (každé
         // po své dráze); mezi výjezdy aspoň 1 s, ať se nerozjedou jako na povel.
         const laneBusy = (i: number) => kids.some((o) => o !== k && o.lane === i && (o.ph === 'place' || o.ph === 'sit' || o.ph === 'ride' || o.ph === 'getup' || o.ph === 'pick' ||
           (o.ph === 'walk' && (o.next === 'place' || (o.next === 'asc' && (o.path?.k === 'line' || (o.path?.k === 'ret' && o.s < 3)))))));
         const nRide = kids.filter((o) => o.ph === 'ride' || o.ph === 'sit' || o.ph === 'place' || (o.ph === 'walk' && o.next === 'place')).length;
-        if (nRide >= (cfg.maxRiding ?? cfg.lanes.length) || t - st.lastLaunch < 1) break;
-        const freeL = cfg.lanes.map((_, i) => i).filter((i) => !laneBusy(i));
+        if ((cfg.maxRiding && nRide >= cfg.maxRiding) || t - st.lastLaunch < 1) break;
+        const freeL = hillGeo(cfg).lanes.map((_, i) => i).filter((i) => !laneBusy(i));
         if (!freeL.length) break;
         const li = freeL[Math.floor(hashNoise(seed, 8850, st.rides) * freeL.length) % freeL.length];
-        k.lane = li; st.lastLaunch = t; st.rides++;
+        k.lane = li; st.lastLaunch = t; st.rides++; k.qT = undefined;
         const L = pathOf(cam, cfg, { k: 'lane', i: li }), s0 = at(L, 0.0), hd = Math.atan2(s0.T.Z, s0.T.X);
         const stand = sideSpot(s0.P, hd, 0.45);
         k.ph = 'walk'; k.next = 'place'; k.path = { k: 'line', a: { ...a.pos }, b: scr3(cam, stand) }; k.s = 0;
@@ -274,7 +342,7 @@ export function stepHill(h: HillHost, st: HillState): void {
         const L = pathOf(cam, cfg, { k: 'lane', i: k.lane });
         const cur = at(L, k.s), hz = Math.max(1e-3, Math.hypot(cur.T.X, cur.T.Z));
         const sinT = -cur.T.H, cosT = hz;
-        const rs = Math.max(0.5, Math.min(1.6, cfg.rideSpeed ?? 1));
+        const rs = Math.max(0.2, cfg.rideSpeed ?? 1);
         let acc = HILL.g * sinT - HILL.mu * HILL.g * cosT - (k.cd / (rs * rs)) * k.v * k.v;
         // dojezd (rovina): brzdění nohama – vždy zastaví před koncem dráhy
         const rem = L.len - k.s, flat = sinT < 0.04 && k.s > L.len * 0.5;
@@ -318,7 +386,7 @@ export function stepHill(h: HillHost, st: HillState): void {
         a.status = 'Bere šňůru od bobů';
         if (el >= 0.8) {
           a.anim.sit = null;
-          const R = cfg.returns[k.lane], P = hill3(cam, cfg, a.pos);
+          const R = hillGeo(cfg).returns[k.lane], P = hill3(cam, cfg, a.pos);
           k.trail = [k.sled.P, P];
           k.ph = 'walk'; k.next = 'asc'; k.path = { k: 'line', a: { ...a.pos }, b: { ...R[0] } }; k.s = 0; k.v = 0;
           k.runs = hashNoise(seed, 8860, k.n * 13 + kids.indexOf(k)) < (cfg.runShare ?? 0.4);
@@ -341,7 +409,8 @@ export function stepHill(h: HillHost, st: HillState): void {
 function progressOf(cam: Camera, cfg: HillConfig, k: HillKid, p: Vec2): number {
   void cam; void cfg;
   if (k.ph !== 'walk') return 1e5;
-  if (k.next === 'asc') return 2000 - p.x;        // z dojezdu k výstupu: čím víc vlevo, tím dál
+  if (k.next === 'asc') return 2000 - p.x;
+  if (k.next === 'ascGo') return 2500;        // z dojezdu k výstupu: čím víc vlevo, tím dál
   if (k.next === 'top') return 4000 - p.y;        // po schodech nahoru
   return 8000 + p.x;                              // fronta / cesta ke startu dráhy
 }

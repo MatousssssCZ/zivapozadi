@@ -3,8 +3,8 @@
   "formatVersion": 1,
   "meta": {
     "name": "Horské městečko – západ slunce",
-    "createdAt": "2026-11-27T21:50:43.581Z",
-    "modifiedAt": "2026-11-27T21:50:44.106Z",
+    "createdAt": "2026-11-27T22:04:08.540Z",
+    "modifiedAt": "2026-11-27T22:04:08.639Z",
     "appVersion": "0.1.0"
   },
   "seed": 7311,
@@ -2408,7 +2408,8 @@
     "rise": 0.75,
     "blend": 70,
     "firstDelay": 2,
-    "maxRiding": 3,
+    "laneCount": 5,
+    "kidsN": 10,
     "runShare": 0.4,
     "rideSpeed": 1,
     "paused": false,
@@ -2491,6 +2492,28 @@
           "y": 714
         }
       ]
+    ],
+    "returnLine": [
+      {
+        "x": 1110,
+        "y": 754
+      },
+      {
+        "x": 800,
+        "y": 753
+      },
+      {
+        "x": 560,
+        "y": 752
+      },
+      {
+        "x": 330,
+        "y": 750
+      },
+      {
+        "x": 150,
+        "y": 742
+      }
     ],
     "returns": [
       [

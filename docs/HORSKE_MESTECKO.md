@@ -20,8 +20,9 @@ npx tsx scripts/generate-mountain-demo.ts
 - **Svah** (`src/core/sim/hillSled.ts`): nad úpatím (`footY` = 700 px) se obrazová výška rozdělí na hloubku (25 %) a skutečnou výšku nad zemí (75 %), s plynulým přechodem 70 px. Postavy na svahu mají měřítko podle hloubky terénu (`AgentState.lift`), ne podle obrazového y – děti nahoře nejsou maličké. Boby se kreslí jako 3D model ve výšce terénu a se sklonem svahu.
 
 ## Bobování (A02)
-- 6 dětí v nepřetržitém cyklu, rodič u dojezdu se dívá na jezdce.
-- **Tři dráhy** vějířem přes svah (nekříží se, nejmenší rozestup 2,45 m). Děti nejezdí jedno za druhým – může jet víc najednou, každé po své dráze (za 400 s: 29 jízd, dvě děti souběžně 55 s, tři souběžně 6 s).
+- 10 dětí v nepřetržitém cyklu (výchozí), rodič u dojezdu se dívá na jezdce.
+- **Bez horních limitů:** počet dětí (`hill.kidsN`), počet drah (`hill.laneCount`) i souběžných jízd (`hill.maxRiding`, 0 = bez omezení) jsou libovolné. Dráhy se vygenerují vějířem mezi třemi zadanými drahami (výchozích 5 drah, rozestup ≥ 1,2 m; víc drah = užší rozestupy), další děti se doplní klony s jiným vzhledem. Každé dítě jede po své dráze.
+- Při víc dětech jdou nahoru ve více řadách vedle sebe (1 řada na 7 dětí, `hill.ascentCols`); nahoře vyjíždí kdokoli z plošiny, je-li volná dráha; plná fronta se protáhne na schody (v řadách, rozestup 2,6 m – dítě + boby). Ověřeno: 10 dětí / 5 drah → až 4 jízdy najednou; 30 dětí / 10 drah → až 6 najednou, 95 jízd za 300 s, žádné zaseknutí ani skok polohy.
 - Cyklus: fronta nahoře → položení bobů (předklon) → usednutí → odraz → **jízda podle sklonu** (gravitace, tření μ 0,07, odpor úměrný v², u každého dítěte jiný) → **brzdění nohama** na rovině dojezdu (zpomalení spočítané tak, aby vždy zastavilo před chodníkem, odlétá sníh) → vstání na stranu ke kameře → zvednutí šňůry → návrat pěšky po dojezdu → výstup po schodech → fronta.
 - **Běh:** část dětí (výchozí 40 % návratů) běží – zpátky po dojezdu a první část schodů, pak zvolní do chůze. Poklus je vrstva nad chůzí (`AnimState.run`): švihová noha se zvedá výš, pánev níž s větším pérováním, předklon trupu ~9°, lokty pokrčené ~90° a paže kmitají víc; rychlost 1,85 m/s po rovině, 1,2 m/s do schodů.
 - Jízda trvá 9–11 s. Boby za dítětem jedou po jeho stopě ve vzdálenosti šňůry (jen tah – nikdy nepředjedou dítě do kopce), natáčejí se podle tahu; šňůra má průvěs.
@@ -37,8 +38,8 @@ npx tsx scripts/generate-mountain-demo.ts
 
 ## Nastavení v editoru
 Bez výběru (vlastnosti scény v pravém panelu) jsou sekce **Bobování** a **Traktor s pluhem**. Změny se projeví hned v běžící simulaci (bez restartu) a jdou vrátit tlačítkem Zpět.
-- Bobování: zapnuto / vypnuto (děti počkají nahoře), max. souběžných jízd (1 – počet drah), podíl běhu (%), rychlost jízdy (0,5–1,6×; brzdění vždy zastaví před chodníkem), první jízda po startu, tlačítko **Další jízda hned**, živý přehled (kolik dětí právě jede).
-- Traktor: zapnuto / vypnuto, první průjezd od–do, interval od–do, délka průjezdu od–do (určuje rychlost), šířka radlice, odpočet do dalšího průjezdu, tlačítko **Projet teď**.
+- Bobování: zapnuto / vypnuto (děti počkají nahoře), **počet dětí** a **počet drah** (bez omezení), max. souběžných jízd (0 = bez omezení; víc než drah → dráhy se přidají), podíl běhu (%), rychlost jízdy (bez horní meze; brzdění vždy zastaví před chodníkem), první jízda po startu, tlačítko **Další jízda hned**, živý přehled (kolik dětí právě jede).
+- Traktor: zapnuto / vypnuto, první průjezd od–do, interval od–do, délka průjezdu od–do (určuje rychlost), šířka radlice (všechno bez horních mezí), odpočet do dalšího průjezdu, tlačítko **Projet teď**.
 - Dráhy, výstup a fronta se zatím upravují v generátoru scény (`MOUNTAIN` / `p.hill` v `scripts/generate-mountain-demo.ts`).
 
 ## Další život
