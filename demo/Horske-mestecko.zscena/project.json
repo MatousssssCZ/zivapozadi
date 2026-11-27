@@ -1,0 +1,2005 @@
+{
+  "format": "zimni-scena-projekt",
+  "formatVersion": 1,
+  "meta": {
+    "name": "Horské městečko – západ slunce",
+    "createdAt": "2026-11-27T21:04:55.379Z",
+    "modifiedAt": "2026-11-27T21:04:55.483Z",
+    "appVersion": "0.1.0"
+  },
+  "seed": 7311,
+  "scene": {
+    "width": 1920,
+    "height": 1080,
+    "backgroundAssetId": "asset_image_pozadi_b394353d",
+    "backgroundColor": "#dfe8f2",
+    "depth": {
+      "enabled": true,
+      "yFar": 425,
+      "scaleFar": 0.27,
+      "yNear": 1080,
+      "scaleNear": 0.773
+    },
+    "snowfall": {
+      "enabled": true,
+      "density": 0.22,
+      "wind": 0.05
+    },
+    "environment": {
+      "variableSnow": true,
+      "gusts": false,
+      "cupSteam": false,
+      "stallSteam": false,
+      "sources": []
+    },
+    "vectorFigures": true,
+    "paintedHeads": true
+  },
+  "assets": [
+    {
+      "id": "asset_image_pozadi_b394353d",
+      "kind": "image",
+      "name": "Pozadí – horské městečko",
+      "file": "assets/images/pozadi-b394353d.png",
+      "width": 1672,
+      "height": 941,
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "pixelScale": 1.1483253588516746
+    },
+    {
+      "id": "asset_image_lampa-scena_f63b92e3",
+      "kind": "image",
+      "name": "Vánoční lampa",
+      "file": "assets/images/lampa-scena-f63b92e3.png",
+      "width": 76,
+      "height": 420,
+      "anchor": {
+        "x": 0.4984,
+        "y": 0.9977
+      },
+      "pixelScale": 1,
+      "shape": {
+        "bodyU0": 0.42,
+        "bodyU1": 0.58,
+        "depthM": 0.3,
+        "lights": [
+          {
+            "u": 0.5,
+            "v": 0.17,
+            "color": "#FFD6A0",
+            "heightM": 3.4,
+            "radiusM": 2.4,
+            "groundGain": 0.05,
+            "haloOpacity": 0.05,
+            "haloSigmaPx": 3.5,
+            "characterGain": 0.1,
+            "flicker": 0.01
+          }
+        ]
+      }
+    },
+    {
+      "id": "asset_image_smrk-scena_f4462223",
+      "kind": "image",
+      "name": "Smrk (popředí)",
+      "file": "assets/images/smrk-scena-f4462223.png",
+      "width": 695,
+      "height": 1100,
+      "anchor": {
+        "x": 0.4978,
+        "y": 1
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "asset_image_neviditelny_ff9f5906",
+      "kind": "image",
+      "name": "Místo pro pozorování",
+      "file": "assets/images/neviditelny-ff9f5906.png",
+      "width": 4,
+      "height": 4,
+      "anchor": {
+        "x": 0.5,
+        "y": 1
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "builtin_postava_cg",
+      "kind": "character",
+      "name": "Malovaná postava – díly z ChatGPT",
+      "file": "assets/characters/malovana-postava-cg.json",
+      "includeDir": "painted-parts-cg"
+    },
+    {
+      "id": "builtin_postava_dite",
+      "kind": "character",
+      "name": "Malované dítě – díly z ChatGPT",
+      "file": "assets/characters/malovana-postava-dite.json",
+      "includeDir": "painted-parts-child"
+    },
+    {
+      "id": "animal_dog_collie_fl_a",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_fl_a",
+      "file": "assets/images/dog-collie-fl-a-5435b082.png",
+      "width": 100,
+      "height": 193,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_fl_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_fl_a_back",
+      "file": "assets/images/dog-collie-fl-a-back-75234da3.png",
+      "width": 102,
+      "height": 194,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_fl_b",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_fl_b",
+      "file": "assets/images/dog-collie-fl-b-d37dd7eb.png",
+      "width": 107,
+      "height": 187,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_fl_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_fl_b_back",
+      "file": "assets/images/dog-collie-fl-b-back-61d142ee.png",
+      "width": 104,
+      "height": 188,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_fu_a",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_fu_a",
+      "file": "assets/images/dog-collie-fu-a-5f64d955.png",
+      "width": 120,
+      "height": 222,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_fu_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_fu_a_back",
+      "file": "assets/images/dog-collie-fu-a-back-6c245298.png",
+      "width": 122,
+      "height": 222,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_fu_b",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_fu_b",
+      "file": "assets/images/dog-collie-fu-b-24dc9ee3.png",
+      "width": 109,
+      "height": 221,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_fu_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_fu_b_back",
+      "file": "assets/images/dog-collie-fu-b-back-13e30766.png",
+      "width": 111,
+      "height": 221,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_head",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_head",
+      "file": "assets/images/dog-collie-head-9e2570dd.png",
+      "width": 221,
+      "height": 317,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_head_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_head_back",
+      "file": "assets/images/dog-collie-head-back-79a4e62f.png",
+      "width": 222,
+      "height": 316,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_hl_a",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_hl_a",
+      "file": "assets/images/dog-collie-hl-a-fc9eac34.png",
+      "width": 95,
+      "height": 197,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_hl_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_hl_a_back",
+      "file": "assets/images/dog-collie-hl-a-back-21207ab7.png",
+      "width": 105,
+      "height": 199,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_hl_b",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_hl_b",
+      "file": "assets/images/dog-collie-hl-b-023758f4.png",
+      "width": 102,
+      "height": 199,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_hl_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_hl_b_back",
+      "file": "assets/images/dog-collie-hl-b-back-2d68bb8d.png",
+      "width": 103,
+      "height": 198,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_hu_a",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_hu_a",
+      "file": "assets/images/dog-collie-hu-a-a57a1471.png",
+      "width": 159,
+      "height": 266,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_hu_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_hu_a_back",
+      "file": "assets/images/dog-collie-hu-a-back-970ec9f9.png",
+      "width": 158,
+      "height": 267,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_hu_b",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_hu_b",
+      "file": "assets/images/dog-collie-hu-b-ab276e0d.png",
+      "width": 161,
+      "height": 268,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_hu_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_hu_b_back",
+      "file": "assets/images/dog-collie-hu-b-back-ad148634.png",
+      "width": 164,
+      "height": 267,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_tail",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_tail",
+      "file": "assets/images/dog-collie-tail-790d7ecb.png",
+      "width": 213,
+      "height": 260,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_tail_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_tail_back",
+      "file": "assets/images/dog-collie-tail-back-4fbd598b.png",
+      "width": 216,
+      "height": 254,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_torso",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_torso",
+      "file": "assets/images/dog-collie-torso-4042fc85.png",
+      "width": 378,
+      "height": 248,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_collie_torso_back",
+      "kind": "image",
+      "name": "Zvíře – dog_collie_torso_back",
+      "file": "assets/images/dog-collie-torso-back-43e09c53.png",
+      "width": 382,
+      "height": 246,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dachshund_fl_a",
+      "kind": "image",
+      "name": "Zvíře – dog_dachshund_fl_a",
+      "file": "assets/images/dog-dachshund-fl-a-6ff7e1ff.png",
+      "width": 86,
+      "height": 125,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dachshund_fl_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_dachshund_fl_a_back",
+      "file": "assets/images/dog-dachshund-fl-a-back-26fd4335.png",
+      "width": 83,
+      "height": 122,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dachshund_fl_b",
+      "kind": "image",
+      "name": "Zvíře – dog_dachshund_fl_b",
+      "file": "assets/images/dog-dachshund-fl-b-bdff90cb.png",
+      "width": 93,
+      "height": 117,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dachshund_fl_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_dachshund_fl_b_back",
+      "file": "assets/images/dog-dachshund-fl-b-back-8fb4b0aa.png",
+      "width": 89,
+      "height": 117,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dachshund_fu_a",
+      "kind": "image",
+      "name": "Zvíře – dog_dachshund_fu_a",
+      "file": "assets/images/dog-dachshund-fu-a-b713368a.png",
+      "width": 124,
+      "height": 175,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dachshund_fu_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_dachshund_fu_a_back",
+      "file": "assets/images/dog-dachshund-fu-a-back-791d7e93.png",
+      "width": 125,
+      "height": 172,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dachshund_fu_b",
+      "kind": "image",
+      "name": "Zvíře – dog_dachshund_fu_b",
+      "file": "assets/images/dog-dachshund-fu-b-d64f495e.png",
+      "width": 127,
+      "height": 175,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dachshund_fu_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_dachshund_fu_b_back",
+      "file": "assets/images/dog-dachshund-fu-b-back-bca7d58c.png",
+      "width": 130,
+      "height": 175,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dachshund_head",
+      "kind": "image",
+      "name": "Zvíře – dog_dachshund_head",
+      "file": "assets/images/dog-dachshund-head-5f00dc39.png",
+      "width": 279,
+      "height": 301,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dachshund_head_back",
+      "kind": "image",
+      "name": "Zvíře – dog_dachshund_head_back",
+      "file": "assets/images/dog-dachshund-head-back-63f556f7.png",
+      "width": 262,
+      "height": 297,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dachshund_hl_a",
+      "kind": "image",
+      "name": "Zvíře – dog_dachshund_hl_a",
+      "file": "assets/images/dog-dachshund-hl-a-7a7c34d2.png",
+      "width": 90,
+      "height": 129,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dachshund_hl_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_dachshund_hl_a_back",
+      "file": "assets/images/dog-dachshund-hl-a-back-1a244b02.png",
+      "width": 91,
+      "height": 125,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dachshund_hl_b",
+      "kind": "image",
+      "name": "Zvíře – dog_dachshund_hl_b",
+      "file": "assets/images/dog-dachshund-hl-b-6f5c9219.png",
+      "width": 94,
+      "height": 126,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dachshund_hl_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_dachshund_hl_b_back",
+      "file": "assets/images/dog-dachshund-hl-b-back-e2caee99.png",
+      "width": 92,
+      "height": 125,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dachshund_hu_a",
+      "kind": "image",
+      "name": "Zvíře – dog_dachshund_hu_a",
+      "file": "assets/images/dog-dachshund-hu-a-ed2ab6e5.png",
+      "width": 153,
+      "height": 189,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dachshund_hu_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_dachshund_hu_a_back",
+      "file": "assets/images/dog-dachshund-hu-a-back-a70e165e.png",
+      "width": 157,
+      "height": 190,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dachshund_hu_b",
+      "kind": "image",
+      "name": "Zvíře – dog_dachshund_hu_b",
+      "file": "assets/images/dog-dachshund-hu-b-e687582e.png",
+      "width": 155,
+      "height": 186,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dachshund_hu_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_dachshund_hu_b_back",
+      "file": "assets/images/dog-dachshund-hu-b-back-6ce4d3cf.png",
+      "width": 157,
+      "height": 189,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dachshund_tail",
+      "kind": "image",
+      "name": "Zvíře – dog_dachshund_tail",
+      "file": "assets/images/dog-dachshund-tail-2203a7e2.png",
+      "width": 175,
+      "height": 125,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dachshund_tail_back",
+      "kind": "image",
+      "name": "Zvíře – dog_dachshund_tail_back",
+      "file": "assets/images/dog-dachshund-tail-back-8c8c6297.png",
+      "width": 173,
+      "height": 124,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dachshund_torso",
+      "kind": "image",
+      "name": "Zvíře – dog_dachshund_torso",
+      "file": "assets/images/dog-dachshund-torso-669f4dac.png",
+      "width": 410,
+      "height": 192,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dachshund_torso_back",
+      "kind": "image",
+      "name": "Zvíře – dog_dachshund_torso_back",
+      "file": "assets/images/dog-dachshund-torso-back-073e3d9b.png",
+      "width": 425,
+      "height": 192,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    }
+  ],
+  "objects": [
+    {
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "id": "obj_lampa1",
+      "name": "Lampa 1",
+      "assetId": "asset_image_lampa-scena_f63b92e3",
+      "x": 461,
+      "y": 872,
+      "scale": 0.48857142857142855,
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": false,
+          "saturation": 0.88,
+          "contrast": 0.95,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": true,
+          "gain": 0.8
+        }
+      },
+      "footprint": [
+        {
+          "x": -29,
+          "y": -10
+        },
+        {
+          "x": 29,
+          "y": -10
+        },
+        {
+          "x": 29,
+          "y": 10
+        },
+        {
+          "x": -29,
+          "y": 10
+        }
+      ]
+    },
+    {
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "id": "obj_lampa2",
+      "name": "Lampa 2",
+      "assetId": "asset_image_lampa-scena_f63b92e3",
+      "x": 1536,
+      "y": 848,
+      "scale": 0.4242857142857143,
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": false,
+          "saturation": 0.88,
+          "contrast": 0.95,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": true,
+          "gain": 0.8
+        }
+      },
+      "footprint": [
+        {
+          "x": -33,
+          "y": -12
+        },
+        {
+          "x": 33,
+          "y": -12
+        },
+        {
+          "x": 33,
+          "y": 12
+        },
+        {
+          "x": -33,
+          "y": 12
+        }
+      ]
+    },
+    {
+      "layer": "foreground",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "id": "obj_smrk",
+      "name": "Smrk v popředí",
+      "assetId": "asset_image_smrk-scena_f4462223",
+      "x": 1882,
+      "y": 1069,
+      "scale": 0.4909090909090909
+    },
+    {
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "id": "obj_vyhled",
+      "name": "Pohled na svah",
+      "assetId": "asset_image_neviditelny_ff9f5906",
+      "x": 700,
+      "y": 836,
+      "scale": 1,
+      "interaction": {
+        "kind": "viewpoint",
+        "points": [
+          {
+            "id": "watch1",
+            "kind": "view",
+            "offset": {
+              "x": -354,
+              "y": 0
+            },
+            "facing": -1.9707963267948965,
+            "label": "Dívá se na děti 1"
+          },
+          {
+            "id": "watch2",
+            "kind": "view",
+            "offset": {
+              "x": 375,
+              "y": -4
+            },
+            "facing": -1.9707963267948965,
+            "label": "Dívá se na děti 2"
+          }
+        ]
+      }
+    }
+  ],
+  "nav": {
+    "nodes": [
+      {
+        "id": "c0",
+        "x": -70,
+        "y": 842,
+        "name": "Chodník 0",
+        "portal": true
+      },
+      {
+        "id": "c1",
+        "x": 180,
+        "y": 842,
+        "name": "Chodník 1"
+      },
+      {
+        "id": "c2",
+        "x": 420,
+        "y": 840,
+        "name": "Chodník 2"
+      },
+      {
+        "id": "c3",
+        "x": 700,
+        "y": 839,
+        "name": "Chodník 3"
+      },
+      {
+        "id": "c4",
+        "x": 960,
+        "y": 837,
+        "name": "Chodník 4"
+      },
+      {
+        "id": "c5",
+        "x": 1200,
+        "y": 831,
+        "name": "Chodník 5"
+      },
+      {
+        "id": "c6",
+        "x": 1440,
+        "y": 820,
+        "name": "Chodník 6"
+      },
+      {
+        "id": "c7",
+        "x": 1680,
+        "y": 808,
+        "name": "Chodník 7"
+      },
+      {
+        "id": "c8",
+        "x": 1990,
+        "y": 792,
+        "name": "Chodník 8",
+        "portal": true
+      },
+      {
+        "id": "d0",
+        "x": 1990,
+        "y": 432,
+        "name": "U domů 0",
+        "portal": true
+      },
+      {
+        "id": "d1",
+        "x": 1820,
+        "y": 430,
+        "name": "U domů 1"
+      },
+      {
+        "id": "d2",
+        "x": 1620,
+        "y": 432,
+        "name": "U domů 2"
+      },
+      {
+        "id": "d3",
+        "x": 1420,
+        "y": 434,
+        "name": "U domů 3"
+      },
+      {
+        "id": "d4",
+        "x": 1220,
+        "y": 432,
+        "name": "U domů 4"
+      },
+      {
+        "id": "d5",
+        "x": 1060,
+        "y": 430,
+        "name": "U domů 5"
+      }
+    ],
+    "edges": [
+      {
+        "id": "e_c1",
+        "a": "c0",
+        "b": "c1",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_c2",
+        "a": "c1",
+        "b": "c2",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_c3",
+        "a": "c2",
+        "b": "c3",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_c4",
+        "a": "c3",
+        "b": "c4",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_c5",
+        "a": "c4",
+        "b": "c5",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_c6",
+        "a": "c5",
+        "b": "c6",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_c7",
+        "a": "c6",
+        "b": "c7",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_c8",
+        "a": "c7",
+        "b": "c8",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_d1",
+        "a": "d0",
+        "b": "d1",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_d2",
+        "a": "d1",
+        "b": "d2",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_d3",
+        "a": "d2",
+        "b": "d3",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_d4",
+        "a": "d3",
+        "b": "d4",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_d5",
+        "a": "d4",
+        "b": "d5",
+        "oneWay": false,
+        "narrow": false
+      }
+    ]
+  },
+  "areas": [
+    {
+      "id": "area_snih",
+      "name": "Sníh",
+      "kind": "snow",
+      "polygon": [
+        {
+          "x": 0,
+          "y": 250
+        },
+        {
+          "x": 1920,
+          "y": 250
+        },
+        {
+          "x": 1920,
+          "y": 1080
+        },
+        {
+          "x": 0,
+          "y": 1080
+        }
+      ]
+    }
+  ],
+  "zones": [
+    {
+      "id": "zone_svah",
+      "name": "Pozorování dětí na svahu",
+      "activityType": "viewing",
+      "activityVersion": 1,
+      "enabled": true,
+      "bounds": [
+        {
+          "x": 0,
+          "y": 790
+        },
+        {
+          "x": 1920,
+          "y": 790
+        },
+        {
+          "x": 1920,
+          "y": 880
+        },
+        {
+          "x": 0,
+          "y": 880
+        }
+      ],
+      "objectRoles": {
+        "view": [
+          "obj_vyhled"
+        ]
+      },
+      "params": {
+        "lookMin": 8,
+        "lookMax": 25
+      }
+    }
+  ],
+  "characters": [
+    {
+      "id": "ch_1",
+      "name": "Tereza",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "c0",
+      "baseScale": 1,
+      "walkSpeed": 64.1,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 676742150,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_neckwarmer_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_01_cg"
+        },
+        "colors": {
+          "jacket": "kremova",
+          "hat": "petrolejova",
+          "scarf": "okrova",
+          "gloves": "petrolejova",
+          "trousers": "tmave-seda",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 0.984,
+          "build": 1.025
+        },
+        "motion": {
+          "strideScale": 1.094,
+          "armSwing": 1.333,
+          "bob": 1.02,
+          "sway": 1,
+          "idleTempo": 1.096,
+          "lean": 1.815,
+          "speed": 1.144,
+          "phase": 0.551,
+          "armLag": -0.322,
+          "armLR": 1.091
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {}
+    },
+    {
+      "id": "ch_2",
+      "name": "Lukáš",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "c8",
+      "baseScale": 1,
+      "walkSpeed": 68.3,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 309179054,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_puffer_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_neckwarmer_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_03_cg"
+        },
+        "colors": {
+          "jacket": "petrolejova",
+          "hat": "vinova",
+          "scarf": "hneda",
+          "gloves": "hneda",
+          "trousers": "tmave-seda",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 0.952,
+          "build": 0.958
+        },
+        "motion": {
+          "strideScale": 1.018,
+          "armSwing": 0.983,
+          "bob": 0.802,
+          "sway": 1.162,
+          "idleTempo": 1.037,
+          "lean": 1.922,
+          "speed": 1.22,
+          "phase": 0.374,
+          "armLag": 3.706,
+          "armLR": 0.879
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {},
+      "pet": "dog",
+      "petBreed": "dog_collie"
+    },
+    {
+      "id": "ch_3",
+      "name": "Monika",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "d0",
+      "baseScale": 1,
+      "walkSpeed": 47.9,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1620682440,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_neckwarmer_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_hiking_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_05_cg"
+        },
+        "colors": {
+          "jacket": "kremova",
+          "hat": "olivova",
+          "scarf": "petrolejova",
+          "gloves": "petrolejova",
+          "trousers": "tmave-seda",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 1.022,
+          "build": 1.042
+        },
+        "motion": {
+          "strideScale": 1.029,
+          "armSwing": 1.117,
+          "bob": 1.142,
+          "sway": 0.93,
+          "idleTempo": 1.142,
+          "lean": 1.33,
+          "speed": 0.855,
+          "phase": 0.139,
+          "armLag": 0.881,
+          "armLR": 0.982
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {}
+    },
+    {
+      "id": "ch_4",
+      "name": "Filip",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "c0",
+      "baseScale": 1,
+      "walkSpeed": 51.1,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1911480883,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_neckwarmer_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_07_cg"
+        },
+        "colors": {
+          "jacket": "vinova",
+          "hat": "hneda",
+          "scarf": "okrova",
+          "gloves": "okrova",
+          "trousers": "tmave-seda",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 0.951,
+          "build": 0.989
+        },
+        "motion": {
+          "strideScale": 0.987,
+          "armSwing": 0.981,
+          "bob": 1.026,
+          "sway": 0.89,
+          "idleTempo": 1.125,
+          "lean": 1.576,
+          "speed": 0.913,
+          "phase": 0.011,
+          "armLag": 2.785,
+          "armLR": 0.872
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {},
+      "companionId": "ch_3",
+      "companionSide": -1
+    },
+    {
+      "id": "ch_5",
+      "name": "Hedvika",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "c8",
+      "baseScale": 1,
+      "walkSpeed": 61.9,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 652439717,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_02_cg"
+        },
+        "colors": {
+          "jacket": "olivova",
+          "hat": "hneda",
+          "scarf": "okrova",
+          "gloves": "hneda",
+          "trousers": "tmave-seda",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 1.01,
+          "build": 0.986
+        },
+        "motion": {
+          "strideScale": 0.931,
+          "armSwing": 1.273,
+          "bob": 1.075,
+          "sway": 0.783,
+          "idleTempo": 1.026,
+          "lean": 2.697,
+          "speed": 1.106,
+          "phase": 0.438,
+          "armLag": -1.722,
+          "armLR": 0.872
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {}
+    },
+    {
+      "id": "ch_6",
+      "name": "Ondřej",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "d0",
+      "baseScale": 1,
+      "walkSpeed": 57.6,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 943289745,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_puffer_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_neckwarmer_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_08_cg"
+        },
+        "colors": {
+          "jacket": "vinova",
+          "hat": "tmave-seda",
+          "scarf": "okrova",
+          "gloves": "tmave-seda",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 0.967,
+          "build": 0.954
+        },
+        "motion": {
+          "strideScale": 1.019,
+          "armSwing": 1.077,
+          "bob": 0.902,
+          "sway": 0.981,
+          "idleTempo": 0.982,
+          "lean": 2.499,
+          "speed": 1.029,
+          "phase": 0.17,
+          "armLag": 3.47,
+          "armLR": 1.031
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {}
+    },
+    {
+      "id": "ch_7",
+      "name": "Kristýna",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "c0",
+      "baseScale": 1,
+      "walkSpeed": 66.8,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1619451908,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_hiking_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_06_cg"
+        },
+        "colors": {
+          "jacket": "petrolejova",
+          "hat": "vinova",
+          "scarf": "tmave-seda",
+          "gloves": "vinova",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 0.964,
+          "build": 1.025
+        },
+        "motion": {
+          "strideScale": 1.058,
+          "armSwing": 0.852,
+          "bob": 0.946,
+          "sway": 1.214,
+          "idleTempo": 1.061,
+          "lean": 2.122,
+          "speed": 1.192,
+          "phase": 0.18,
+          "armLag": 2.775,
+          "armLR": 0.957
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {},
+      "pet": "dog",
+      "petBreed": "dog_dachshund"
+    },
+    {
+      "id": "ch_8",
+      "name": "Radim",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "c8",
+      "baseScale": 1,
+      "walkSpeed": 62.4,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 282924476,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_puffer_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_neckwarmer_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_04_cg"
+        },
+        "colors": {
+          "jacket": "hneda",
+          "hat": "okrova",
+          "scarf": "petrolejova",
+          "gloves": "okrova",
+          "trousers": "olivova",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 1.021,
+          "build": 0.978
+        },
+        "motion": {
+          "strideScale": 1.015,
+          "armSwing": 0.687,
+          "bob": 1.048,
+          "sway": 1.11,
+          "idleTempo": 0.869,
+          "lean": 2.774,
+          "speed": 1.115,
+          "phase": 0.188,
+          "armLag": 2.089,
+          "armLR": 0.887
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {}
+    },
+    {
+      "id": "ch_9",
+      "name": "Pan Josef",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "d0",
+      "baseScale": 1,
+      "walkSpeed": 54.9,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 591516273,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_puffer_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_neckwarmer_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_hiking_cg",
+          "gloves": "gloves_cg",
+          "head": "head_10_cg"
+        },
+        "colors": {
+          "jacket": "petrolejova",
+          "hat": "hneda",
+          "scarf": "kremova",
+          "gloves": "kremova",
+          "trousers": "olivova",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 0.959,
+          "build": 0.981
+        },
+        "motion": {
+          "strideScale": 1.057,
+          "armSwing": 1.192,
+          "bob": 1.105,
+          "sway": 0.97,
+          "idleTempo": 0.894,
+          "lean": 1.713,
+          "speed": 0.98,
+          "phase": 0.938,
+          "armLag": 0.809,
+          "armLR": 0.972
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {},
+      "gaitProfile": "elderA"
+    },
+    {
+      "id": "ch_10",
+      "name": "Paní Alena",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "c0",
+      "baseScale": 1,
+      "walkSpeed": 66.5,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 877143421,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_neckwarmer_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_11_cg"
+        },
+        "colors": {
+          "jacket": "tmave-seda",
+          "hat": "olivova",
+          "scarf": "vinova",
+          "gloves": "olivova",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 0.976,
+          "build": 0.954
+        },
+        "motion": {
+          "strideScale": 0.974,
+          "armSwing": 0.737,
+          "bob": 1.032,
+          "sway": 0.816,
+          "idleTempo": 1.05,
+          "lean": 0.107,
+          "speed": 1.188,
+          "phase": 0.006,
+          "armLag": 0.314,
+          "armLR": 0.958
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {},
+      "gaitProfile": "elderA",
+      "companionId": "ch_9",
+      "companionSide": 1,
+      "holdHands": true
+    },
+    {
+      "id": "ch_bezkar1",
+      "name": "Běžkař Vítek",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "c8",
+      "baseScale": 1,
+      "walkSpeed": 55,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": false,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 216251751,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_neckwarmer_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_02_cg"
+        },
+        "colors": {
+          "jacket": "okrova",
+          "hat": "vinova",
+          "scarf": "petrolejova",
+          "gloves": "petrolejova",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 1.003,
+          "build": 0.995
+        },
+        "motion": {
+          "strideScale": 0.924,
+          "armSwing": 1.131,
+          "bob": 0.913,
+          "sway": 0.885,
+          "idleTempo": 1.086,
+          "lean": 1.951,
+          "speed": 1.004,
+          "phase": 0.656,
+          "armLag": 3.175,
+          "armLR": 1.102
+        },
+        "locks": []
+      },
+      "routine": "actor",
+      "activities": {}
+    },
+    {
+      "id": "ch_bezkar2",
+      "name": "Běžkařka Jitka",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "c8",
+      "baseScale": 1,
+      "walkSpeed": 55,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": false,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 607653477,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_puffer_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_07_cg"
+        },
+        "colors": {
+          "jacket": "tmave-seda",
+          "hat": "kremova",
+          "scarf": "olivova",
+          "gloves": "kremova",
+          "trousers": "olivova",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 0.98,
+          "build": 1.034
+        },
+        "motion": {
+          "strideScale": 0.971,
+          "armSwing": 1.302,
+          "bob": 0.834,
+          "sway": 0.886,
+          "idleTempo": 0.903,
+          "lean": 0.084,
+          "speed": 0.966,
+          "phase": 0.532,
+          "armLag": 1.187,
+          "armLR": 0.885
+        },
+        "locks": []
+      },
+      "routine": "actor",
+      "activities": {}
+    }
+  ],
+  "schedule": [],
+  "export": {
+    "resolution": "1920x1080",
+    "fps": 30,
+    "durationMode": "manual",
+    "durationSec": 60,
+    "audioAssetId": null,
+    "audioWhenShorter": "silence",
+    "crf": 20,
+    "preset": "medium",
+    "chunkSec": 20,
+    "outputPath": null,
+    "diagnosticPngSequence": false
+  },
+  "episodes": [
+    {
+      "id": "ep_bezky1",
+      "type": "ski",
+      "actors": [
+        "ch_bezkar1"
+      ],
+      "interval": [
+        70,
+        140
+      ],
+      "firstAt": 12,
+      "pts": {},
+      "paths": {
+        "track": [
+          {
+            "x": 1990,
+            "y": 410
+          },
+          {
+            "x": 1842,
+            "y": 414
+          },
+          {
+            "x": 1814,
+            "y": 421
+          },
+          {
+            "x": 1709,
+            "y": 452
+          },
+          {
+            "x": 1536,
+            "y": 495
+          },
+          {
+            "x": 1402,
+            "y": 543
+          },
+          {
+            "x": 1334,
+            "y": 586
+          },
+          {
+            "x": 1318,
+            "y": 606
+          },
+          {
+            "x": 1340,
+            "y": 612
+          },
+          {
+            "x": 1414,
+            "y": 566
+          },
+          {
+            "x": 1548,
+            "y": 515
+          },
+          {
+            "x": 1720,
+            "y": 470
+          },
+          {
+            "x": 1828,
+            "y": 436
+          },
+          {
+            "x": 1990,
+            "y": 428
+          }
+        ]
+      }
+    },
+    {
+      "id": "ep_bezky2",
+      "type": "ski",
+      "actors": [
+        "ch_bezkar2"
+      ],
+      "interval": [
+        90,
+        170
+      ],
+      "firstAt": 55,
+      "pts": {},
+      "paths": {
+        "track": [
+          {
+            "x": 1990,
+            "y": 410
+          },
+          {
+            "x": 1842,
+            "y": 414
+          },
+          {
+            "x": 1814,
+            "y": 421
+          },
+          {
+            "x": 1709,
+            "y": 452
+          },
+          {
+            "x": 1536,
+            "y": 495
+          },
+          {
+            "x": 1402,
+            "y": 543
+          },
+          {
+            "x": 1334,
+            "y": 586
+          },
+          {
+            "x": 1318,
+            "y": 606
+          },
+          {
+            "x": 1340,
+            "y": 612
+          },
+          {
+            "x": 1414,
+            "y": 566
+          },
+          {
+            "x": 1548,
+            "y": 515
+          },
+          {
+            "x": 1720,
+            "y": 470
+          },
+          {
+            "x": 1828,
+            "y": 436
+          },
+          {
+            "x": 1990,
+            "y": 428
+          }
+        ]
+      }
+    }
+  ],
+  "crowd": {
+    "walkersN": 6,
+    "dogs": 2,
+    "walkSpeed": 0.95
+  }
+}

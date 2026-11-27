@@ -1,0 +1,354 @@
+{
+  "sceneId": "horske_mestecko_zapad_slunce_v1",
+  "status": "layout_draft_requires_visual_calibration",
+  "coordinateSystem": {
+    "origin": "top_left",
+    "units": "normalized_image_uv",
+    "sourceWidth": 1672,
+    "sourceHeight": 941,
+    "preserveAspectRatio": true,
+    "pointMeaning": "ground_contact",
+    "note": "UV routes are visual guides, not calibrated 3D world coordinates; hill elevation and world depth must be separate."
+  },
+  "assets": {
+    "background": "assets/pozadi.png",
+    "spruce": "assets/smrk.png",
+    "lamp": "assets/lampa.png"
+  },
+  "props": [
+    {
+      "id": "spruce_foreground_right",
+      "asset": "spruce",
+      "position": [
+        0.98,
+        0.99
+      ],
+      "sourceAnchor": [
+        0.5,
+        0.972
+      ],
+      "imageHeightFraction": 0.5,
+      "occlusion": "fixed_foreground_no_walkable_area_in_front"
+    },
+    {
+      "id": "lamp_left",
+      "asset": "lamp",
+      "position": [
+        0.24,
+        0.81
+      ],
+      "sourceAnchor": [
+        0.5,
+        0.987
+      ],
+      "imageHeightFraction": 0.19,
+      "occlusion": "ground_depth_sorted",
+      "collision": "base_only"
+    },
+    {
+      "id": "lamp_right",
+      "asset": "lamp",
+      "position": [
+        0.8,
+        0.755
+      ],
+      "sourceAnchor": [
+        0.5,
+        0.987
+      ],
+      "imageHeightFraction": 0.16,
+      "occlusion": "ground_depth_sorted",
+      "collision": "base_only"
+    }
+  ],
+  "paths": [
+    {
+      "id": "sled_down_a",
+      "surface": "hill_to_runout",
+      "points": [
+        [
+          0.115,
+          0.315
+        ],
+        [
+          0.21,
+          0.38
+        ],
+        [
+          0.31,
+          0.49
+        ],
+        [
+          0.4,
+          0.6
+        ],
+        [
+          0.48,
+          0.67
+        ]
+      ],
+      "direction": "forward",
+      "reservationGroup": "sled_runout"
+    },
+    {
+      "id": "sled_down_b",
+      "surface": "hill_to_runout",
+      "points": [
+        [
+          0.15,
+          0.32
+        ],
+        [
+          0.25,
+          0.39
+        ],
+        [
+          0.35,
+          0.49
+        ],
+        [
+          0.45,
+          0.59
+        ],
+        [
+          0.54,
+          0.66
+        ]
+      ],
+      "direction": "forward",
+      "reservationGroup": "sled_runout"
+    },
+    {
+      "id": "sled_return_to_ascent",
+      "surface": "runout",
+      "points": [
+        [
+          0.48,
+          0.67
+        ],
+        [
+          0.37,
+          0.69
+        ],
+        [
+          0.22,
+          0.69
+        ],
+        [
+          0.07,
+          0.68
+        ]
+      ],
+      "direction": "forward",
+      "reservationGroup": "sled_runout"
+    },
+    {
+      "id": "sled_ascent",
+      "surface": "hill_footpath",
+      "points": [
+        [
+          0.07,
+          0.68
+        ],
+        [
+          0.045,
+          0.57
+        ],
+        [
+          0.035,
+          0.45
+        ],
+        [
+          0.04,
+          0.36
+        ],
+        [
+          0.055,
+          0.29
+        ],
+        [
+          0.115,
+          0.315
+        ]
+      ],
+      "direction": "forward"
+    },
+    {
+      "id": "ski_reference_centerline",
+      "surface": "ski_meadow",
+      "points": [
+        [
+          0.69,
+          0.55
+        ],
+        [
+          0.73,
+          0.505
+        ],
+        [
+          0.8,
+          0.46
+        ],
+        [
+          0.89,
+          0.42
+        ],
+        [
+          0.945,
+          0.39
+        ],
+        [
+          0.94,
+          0.375
+        ]
+      ],
+      "direction": "controlled",
+      "note": "Follow the two painted grooves; connect offscreen path only after visual calibration."
+    },
+    {
+      "id": "walking_promenade",
+      "surface": "sidewalk",
+      "points": [
+        [
+          -0.05,
+          0.79
+        ],
+        [
+          0.15,
+          0.8
+        ],
+        [
+          0.38,
+          0.8
+        ],
+        [
+          0.6,
+          0.775
+        ],
+        [
+          0.8,
+          0.735
+        ],
+        [
+          1.05,
+          0.695
+        ]
+      ],
+      "direction": "both"
+    },
+    {
+      "id": "tractor_road",
+      "surface": "road",
+      "points": [
+        [
+          -0.08,
+          0.87
+        ],
+        [
+          0.14,
+          0.9
+        ],
+        [
+          0.35,
+          0.9
+        ],
+        [
+          0.54,
+          0.885
+        ],
+        [
+          0.76,
+          0.84
+        ],
+        [
+          1.08,
+          0.775
+        ]
+      ],
+      "direction": "forward"
+    }
+  ],
+  "poi": [
+    {
+      "id": "watch_sledding_left",
+      "position": [
+        0.18,
+        0.785
+      ],
+      "purpose": "pause_and_watch",
+      "maxOccupants": 2
+    },
+    {
+      "id": "watch_sledding_middle",
+      "position": [
+        0.56,
+        0.775
+      ],
+      "purpose": "pause_and_watch",
+      "maxOccupants": 2
+    },
+    {
+      "id": "dog_sniff_left",
+      "position": [
+        0.13,
+        0.79
+      ],
+      "purpose": "dog_pause_with_owner",
+      "maxOccupants": 1
+    }
+  ],
+  "timing": {
+    "firstTractorDelaySeconds": [
+      60,
+      120
+    ],
+    "tractorIntervalSeconds": [
+      240,
+      420
+    ],
+    "tractorTraversalSeconds": [
+      25,
+      40
+    ],
+    "sledDescentSeconds": [
+      7,
+      12
+    ],
+    "walkerPauseSeconds": [
+      8,
+      25
+    ]
+  },
+  "population": {
+    "childrenTotal": [
+      4,
+      6
+    ],
+    "sleddersDescendingMax": 2,
+    "parents": [
+      1,
+      2
+    ],
+    "skiers": [
+      1,
+      3
+    ],
+    "walkers": [
+      4,
+      7
+    ],
+    "dogOwnerPairs": [
+      1,
+      2
+    ],
+    "note": "Dog owners and watching adults should be included in total pedestrian budget, not added without limit."
+  },
+  "constraints": [
+    "No walking or dog routes through sled downhill lanes",
+    "Reserve runout for both descent and crossing back to ascent",
+    "Tractor stays on road and plows toward foreground verge",
+    "All routes must be visually calibrated before release",
+    "Painted distant trees are static",
+    "No global screen-y sorting across elevated terrain"
+  ]
+}
