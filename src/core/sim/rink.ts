@@ -51,7 +51,8 @@ export interface RinkConfig {
   entry?: { benchId: string; gate: Vec2; inIce: Vec2; session?: [number, number]; offIce?: [number, number]; startOnIce?: number; drinkChance?: number };
   /** odrazy postav na ledě (síla 0–1, délka jako podíl výšky postavy) a částice ledu při brzdění */ reflections?: { alpha: number; len: number } | false; particles?: boolean;
   /** pády: první pokus a interval (s), osobní odstup (s); prvky: interval (s), osobní odstup (s), skok */
-  events?: { fallEvery?: [number, number]; fallPersonal?: number; /** podíl zaváhání, která skončí pádem (0,6) */ fallChance?: number; trickEvery?: [number, number]; trickPersonal?: [number, number]; jump?: boolean; tricks?: Partial<Record<TrickKind, number>> };
+  events?: { fallEvery?: [number, number]; fallPersonal?: number; /** podíl zaváhání, která skončí pádem (0,6) */ fallChance?: number; trickEvery?: [number, number]; trickPersonal?: [number, number]; jump?: boolean; tricks?: Partial<Record<TrickKind, number>>;
+    /** násobky četnosti (0 = vypnuto, 1 = výchozí): pády, skoky, holubičky */ fallRate?: number; jumpRate?: number; arabesqueRate?: number };
 }
 /** oneFoot = skluz na jedné noze, backward = jízda vzad, spin = pirueta na místě, jump = skok s otočkou
  *  ve vzduchu (rozmach volnou nohou, odraz, otočka, dopad na jednu nohu), arabesque = holubička, hop = (vypnuto) */
@@ -422,11 +423,27 @@ function stepTrickMotion(s: Skater, c: RinkCtx) {
 }
 
 // ---------------------------------------------------------------- globální události (pády, prvky)
+/** poslední násobky četnosti (mimo stav simulace – checkpoint ani otisk se nemění) */
+const rateKeys = new WeakMap<object, string>();
 export function stepRinkEvents(c: RinkCtx): void {
   const st = c.st, t = c.t, ev = c.cfg.events ?? {};
+  const fr = ev.fallRate ?? 1, jr = ev.jumpRate ?? 1, ar = ev.arabesqueRate ?? 1;
+  // váhy prvků s násobky; četnost prvků roste s jejich součtem (víc skoků = víc prvků celkem)
+  const wOf = (k: TrickKind) => (ev.tricks?.[k] ?? TRICK_WEIGHTS[k]) * (k === 'jump' ? jr : k === 'arabesque' ? ar : 1);
+  const ks0 = availableTricks(c.cfg), base = ks0.reduce((a, k) => a + (ev.tricks?.[k] ?? TRICK_WEIGHTS[k]), 0) || 1, cur = ks0.reduce((a, k) => a + wOf(k), 0);
+  const tk = cur / base; // násobek četnosti prvků
+  // změna nastavení za běhu: přeplánovat nejbližší pád / prvek hned (ne až po starém intervalu)
+  const key = `${fr}|${tk.toFixed(3)}`, prev = rateKeys.get(st);
+  if (prev !== undefined && prev !== key) {
+    if (!st.event) st.nextFall = fr > 0 ? t + randRange(st.rng, 3, 10) / Math.min(1, fr) : t + 1e6;
+    st.nextTrick = tk > 0 ? t + randRange(st.rng, 3, 10) / Math.min(1, tk) : t + 1e6; st.trickWindow = null;
+  }
+  rateKeys.set(st, key);
+  if (fr <= 0) st.nextFall = Math.max(st.nextFall, t + 5);
+  if (tk <= 0) st.nextTrick = Math.max(st.nextTrick, t + 5);
   // pád: jeden pokus za celé kluziště po 100–220 s, nejvýše jeden probíhající, osobně ≥ 180 s
-  if (!st.event && t >= st.nextFall) {
-    st.nextFall = t + randRange(st.rng, ...(ev.fallEvery ?? [100, 220]));
+  if (!st.event && t >= st.nextFall && fr > 0) {
+    st.nextFall = t + randRange(st.rng, ...(ev.fallEvery ?? [100, 220])) / fr;
     const cands = c.all.filter((s) => (s.st === 'SKATE' || s.st === 'MARCH') && !s.holdHand && t - s.lastFall >= (ev.fallPersonal ?? 180) && (s.v > 0.15 || s.prof === 'beginnerKid') && t - st.lastTrickEnd > 20);
     const tot = cands.reduce((q, s) => q + SKATE_PROFILES[s.prof].fallW, 0);
     if (tot > 0) {
@@ -437,7 +454,7 @@ export function stepRinkEvents(c: RinkCtx): void {
     }
   }
   // prvek: globální interval 90–150 s; kandidáti s dovedností, osobní odstup jen při ≥ 2 způsobilých
-  if (t >= st.nextTrick) {
+  if (t >= st.nextTrick && tk > 0) {
     if (st.trickWindow === null) st.trickWindow = t;
     const capable = c.all.filter((s) => { const k = SKATE_PROFILES[s.prof].skills; return k.oneFoot || k.backward || k.spin || k.jump || k.arabesque; });
     const personal = capable.length >= 2 ? randRange(st.rng, ...(ev.trickPersonal ?? [180, 300])) : 0;
@@ -447,13 +464,13 @@ export function stepRinkEvents(c: RinkCtx): void {
     for (const s of ready) {
       const sk = SKATE_PROFILES[s.prof].skills, ks = kinds.filter((k) => (k === 'oneFoot' && sk.oneFoot) || (k === 'backward' && sk.backward) || (k === 'spin' && sk.spin) || (k === 'jump' && sk.jump) || (k === 'arabesque' && sk.arabesque));
       if (!ks.length) continue;
-      const W = ks.map((k) => (ev.tricks?.[k] ?? TRICK_WEIGHTS[k])), tot = W.reduce((a, b) => a + b, 0);
+      const W = ks.map(wOf), tot = W.reduce((a, b) => a + b, 0); if (tot <= 0 && (jr !== 1 || ar !== 1)) continue;
       let r = rand(st.rng) * tot; const kind = ks.find((_, i) => (r -= W[i]) < 0) ?? ks[0];
       const dur = kind === 'oneFoot' ? randRange(st.rng, 3, 5) : kind === 'spin' ? randRange(st.rng, 2.2, 2.8) : kind === 'jump' ? JUMP_AIR : kind === 'arabesque' ? randRange(st.rng, 3, 4.5) : randRange(st.rng, 3, 6);
       if (!spaceFree(s, c, dur + 2)) continue; // nájezd, provedení a výjezd volné
       s.st = 'TRICK_PREPARE'; s.tSt = 0; s.trick = { kind, t: 0, dur, phase: 'prep' }; st.event = { kind: 'trick', id: s.id, t0: t };
       st.stats.tricks++; st.stats.tricksByKind[kind] = (st.stats.tricksByKind[kind] ?? 0) + 1; st.lastTrickKind = kind;
-      st.nextTrick = t + randRange(st.rng, ...(ev.trickEvery ?? [90, 150])) + dur + 2; st.trickWindow = null; started = true;
+      st.nextTrick = t + randRange(st.rng, ...(ev.trickEvery ?? [90, 150])) / tk + dur + 2; st.trickWindow = null; started = true;
       break;
     }
     // bez prostoru 20–30 s: odložit o 30–60 s (žádná fronta zmeškaných triků)

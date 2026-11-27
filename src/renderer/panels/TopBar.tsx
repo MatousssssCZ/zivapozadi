@@ -127,6 +127,19 @@ export function TopBar() {
  * Hustota davu počty (ne procenty): kolik lidí, bruslařů, psů a koček smí být ve scéně, a tempo chodců.
  * Ukládá se do scény (export je pak stejný). Kdo je navíc, dokončí, co dělá, a odejde.
  */
+/** Kluziště: četnost pádů, skoků a holubiček (násobek; 0 = vypnuto). Mění se živě, uloží se do scény. */
+function RinkRates() {
+  const ev = useEditor((s) => s.project?.rink?.events);
+  const item = (label: string, key: 'fallRate' | 'jumpRate' | 'arabesqueRate', title: string) => (
+    <label className="dens-n" title={title}>{label}
+      <select value={String(ev?.[key] ?? 1)} onChange={(e) => store.editLive(`Kluziště: ${label}`, (q) => { if (q.rink) q.rink.events = { ...(q.rink.events ?? {}), [key]: Number(e.target.value) }; })}>
+        {[0, 0.25, 0.5, 1, 1.5, 2, 3, 4].map((v) => <option key={v} value={v}>{v === 0 ? 'vypnuto' : `${v}×`}</option>)}
+      </select>
+    </label>
+  );
+  return <>{item('Pády', 'fallRate', 'Jak často bruslaři zaváhají a upadnou (násobek výchozí četnosti)')}{item('Skoky', 'jumpRate', 'Četnost skoků s otočkou')}{item('Holubičky', 'arabesqueRate', 'Četnost holubiček')}</>;
+}
+
 function Density() {
   const p = useEditor((s) => s.project);
   const crowd = p?.crowd;
@@ -151,6 +164,7 @@ function Density() {
       {p.rink && num('Bruslaři', 'skatersN', 'Kolik bruslařů smí být na ledě (bez horní hranice)')}
       {num('Psi', 'dogs', 'Kolik lidí se psem chodí scénou (bez horní hranice)')}
       {num('Kočky', 'cats', 'Kolik koček se ve scéně objevuje (bez horní hranice; potřebují místa pro kočky ve scéně)')}
+      {p.rink && <RinkRates />}
       <span title="Rychlost chůze chodců (násobek; bruslaři a pracovníci mají vlastní tempo)">Rychlost chůze</span>
       <input type="range" min={50} max={160} step={5} value={sp} onChange={(e) => setW(Number(e.target.value))} onPointerUp={() => { store.editLive('Rychlost chodců', (q) => { q.crowd = { ...(q.crowd ?? {}), walkSpeed: sp / 100 }; }); setW(null); }} onKeyUp={() => { store.editLive('Rychlost chodců', (q) => { q.crowd = { ...(q.crowd ?? {}), walkSpeed: sp / 100 }; }); setW(null); }} />
       <span className="muted">{(sp / 100).toFixed(2)}×</span>
