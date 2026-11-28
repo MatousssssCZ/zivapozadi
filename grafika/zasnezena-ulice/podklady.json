@@ -1,0 +1,57 @@
+{
+  "lampa": {
+    "w": 282,
+    "h": 1517,
+    "fullH": 1536,
+    "anchor": [
+      0.4894,
+      1.0
+    ],
+    "cropTop": 10,
+    "cropLeft": 371
+  },
+  "lavicka": {
+    "w": 1470,
+    "h": 918,
+    "fullH": 1024,
+    "anchor": [
+      0.4963,
+      1.0
+    ],
+    "cropTop": 57,
+    "cropLeft": 33
+  },
+  "strom": {
+    "w": 1166,
+    "h": 1287,
+    "fullH": 1312,
+    "anchor": [
+      0.458,
+      1.0
+    ],
+    "cropTop": 6,
+    "cropLeft": 16
+  },
+  "plotek": {
+    "w": 1739,
+    "h": 825,
+    "fullH": 887,
+    "anchor": [
+      0.5003,
+      1.0
+    ],
+    "cropTop": 24,
+    "cropLeft": 19
+  },
+  "kos": {
+    "w": 756,
+    "h": 1325,
+    "fullH": 1536,
+    "anchor": [
+      0.4881,
+      1.0
+    ],
+    "cropTop": 101,
+    "cropLeft": 131
+  }
+}

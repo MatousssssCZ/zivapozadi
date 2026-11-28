@@ -1,0 +1,1479 @@
+{
+  "format": "zimni-scena-projekt",
+  "formatVersion": 1,
+  "meta": {
+    "name": "Zasněžená ulice – modrý podvečer",
+    "createdAt": "2026-11-28T14:08:42.444Z",
+    "modifiedAt": "2026-11-28T14:08:44.719Z",
+    "appVersion": "0.1.0"
+  },
+  "seed": 8417,
+  "scene": {
+    "width": 1920,
+    "height": 1080,
+    "backgroundAssetId": "asset_image_pozadi_e5fdd223",
+    "backgroundColor": "#dfe8f2",
+    "depth": {
+      "enabled": true,
+      "yFar": 540,
+      "scaleFar": 0.726,
+      "yNear": 1080,
+      "scaleNear": 1.017
+    },
+    "snowfall": {
+      "enabled": true,
+      "density": 0.3,
+      "wind": 0.04
+    },
+    "environment": {
+      "variableSnow": true,
+      "gusts": false,
+      "cupSteam": false,
+      "stallSteam": false,
+      "sources": []
+    },
+    "vectorFigures": true,
+    "paintedHeads": true
+  },
+  "assets": [
+    {
+      "id": "asset_image_pozadi_e5fdd223",
+      "kind": "image",
+      "name": "Pozadí – zasněžená ulice",
+      "file": "assets/images/pozadi-e5fdd223.png",
+      "width": 1672,
+      "height": 941,
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "pixelScale": 1.1483253588516746
+    },
+    {
+      "id": "asset_image_lampa-scena_2187c677",
+      "kind": "image",
+      "name": "Lampa",
+      "file": "assets/images/lampa-scena-2187c677.png",
+      "width": 282,
+      "height": 1517,
+      "anchor": {
+        "x": 0.4894,
+        "y": 1
+      },
+      "pixelScale": 1,
+      "shape": {
+        "bodyU0": 0.4,
+        "bodyU1": 0.6,
+        "depthM": 0.3,
+        "lights": [
+          {
+            "u": 0.5,
+            "v": 0.08,
+            "color": "#FFD49A",
+            "heightM": 3.6,
+            "radiusM": 2.6,
+            "groundGain": 0.06,
+            "haloOpacity": 0.06,
+            "haloSigmaPx": 4,
+            "characterGain": 0.12,
+            "flicker": 0.01
+          }
+        ]
+      }
+    },
+    {
+      "id": "asset_image_lavicka-scena_30204ed7",
+      "kind": "image",
+      "name": "Lavička",
+      "file": "assets/images/lavicka-scena-30204ed7.png",
+      "width": 1470,
+      "height": 918,
+      "anchor": {
+        "x": 0.4963,
+        "y": 1
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "asset_image_strom-scena_cfe2e790",
+      "kind": "image",
+      "name": "Strom",
+      "file": "assets/images/strom-scena-cfe2e790.png",
+      "width": 1166,
+      "height": 1287,
+      "anchor": {
+        "x": 0.458,
+        "y": 1
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "asset_image_plotek-scena_0ad3206b",
+      "kind": "image",
+      "name": "Plůtek",
+      "file": "assets/images/plotek-scena-0ad3206b.png",
+      "width": 1739,
+      "height": 825,
+      "anchor": {
+        "x": 0.5003,
+        "y": 1
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "asset_image_kos-scena_04f67f9b",
+      "kind": "image",
+      "name": "Koš",
+      "file": "assets/images/kos-scena-04f67f9b.png",
+      "width": 756,
+      "height": 1325,
+      "anchor": {
+        "x": 0.4881,
+        "y": 1
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "builtin_postava_cg",
+      "kind": "character",
+      "name": "Malovaná postava – díly z ChatGPT",
+      "file": "assets/characters/malovana-postava-cg.json",
+      "includeDir": "painted-parts-cg"
+    },
+    {
+      "id": "builtin_postava_dite",
+      "kind": "character",
+      "name": "Malované dítě – díly z ChatGPT",
+      "file": "assets/characters/malovana-postava-dite.json",
+      "includeDir": "painted-parts-child"
+    },
+    {
+      "id": "animal_dog_dalmatian_fl_a",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_fl_a",
+      "file": "assets/images/dog-dalmatian-fl-a-e3f42e6f.png",
+      "width": 103,
+      "height": 218,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_fl_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_fl_a_back",
+      "file": "assets/images/dog-dalmatian-fl-a-back-cbbeaeb9.png",
+      "width": 101,
+      "height": 208,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_fl_b",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_fl_b",
+      "file": "assets/images/dog-dalmatian-fl-b-0ae55c35.png",
+      "width": 94,
+      "height": 212,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_fl_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_fl_b_back",
+      "file": "assets/images/dog-dalmatian-fl-b-back-69df4847.png",
+      "width": 101,
+      "height": 203,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_fu_a",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_fu_a",
+      "file": "assets/images/dog-dalmatian-fu-a-0325ea68.png",
+      "width": 108,
+      "height": 235,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_fu_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_fu_a_back",
+      "file": "assets/images/dog-dalmatian-fu-a-back-07213cd8.png",
+      "width": 114,
+      "height": 240,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_fu_b",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_fu_b",
+      "file": "assets/images/dog-dalmatian-fu-b-efa9fa84.png",
+      "width": 99,
+      "height": 236,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_fu_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_fu_b_back",
+      "file": "assets/images/dog-dalmatian-fu-b-back-fd69c535.png",
+      "width": 106,
+      "height": 239,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_head",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_head",
+      "file": "assets/images/dog-dalmatian-head-8bb623d0.png",
+      "width": 243,
+      "height": 284,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_head_back",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_head_back",
+      "file": "assets/images/dog-dalmatian-head-back-f3904a5d.png",
+      "width": 225,
+      "height": 290,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_hl_a",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_hl_a",
+      "file": "assets/images/dog-dalmatian-hl-a-50bf16cd.png",
+      "width": 101,
+      "height": 224,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_hl_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_hl_a_back",
+      "file": "assets/images/dog-dalmatian-hl-a-back-773a9f83.png",
+      "width": 98,
+      "height": 221,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_hl_b",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_hl_b",
+      "file": "assets/images/dog-dalmatian-hl-b-72429fbd.png",
+      "width": 106,
+      "height": 210,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_hl_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_hl_b_back",
+      "file": "assets/images/dog-dalmatian-hl-b-back-a974ca99.png",
+      "width": 107,
+      "height": 204,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_hu_a",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_hu_a",
+      "file": "assets/images/dog-dalmatian-hu-a-2d9e6776.png",
+      "width": 158,
+      "height": 232,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_hu_a_back",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_hu_a_back",
+      "file": "assets/images/dog-dalmatian-hu-a-back-7f3e249d.png",
+      "width": 137,
+      "height": 229,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_hu_b",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_hu_b",
+      "file": "assets/images/dog-dalmatian-hu-b-744a88ca.png",
+      "width": 126,
+      "height": 232,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_hu_b_back",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_hu_b_back",
+      "file": "assets/images/dog-dalmatian-hu-b-back-1928911d.png",
+      "width": 134,
+      "height": 229,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_tail",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_tail",
+      "file": "assets/images/dog-dalmatian-tail-062763a2.png",
+      "width": 190,
+      "height": 213,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_tail_back",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_tail_back",
+      "file": "assets/images/dog-dalmatian-tail-back-a701ed9e.png",
+      "width": 194,
+      "height": 215,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_torso",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_torso",
+      "file": "assets/images/dog-dalmatian-torso-f4432679.png",
+      "width": 392,
+      "height": 238,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    },
+    {
+      "id": "animal_dog_dalmatian_torso_back",
+      "kind": "image",
+      "name": "Zvíře – dog_dalmatian_torso_back",
+      "file": "assets/images/dog-dalmatian-torso-back-790f4753.png",
+      "width": 387,
+      "height": 233,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "pixelScale": 1
+    }
+  ],
+  "objects": [
+    {
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "id": "obj_lampa_far",
+      "name": "Lampa (vzdálená)",
+      "assetId": "asset_image_lampa-scena_2187c677",
+      "x": 480,
+      "y": 605,
+      "scale": 0.11953125000000002,
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": false,
+          "saturation": 0.88,
+          "contrast": 0.95,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": true,
+          "gain": 0.9
+        }
+      },
+      "footprint": [
+        {
+          "x": -75,
+          "y": -33
+        },
+        {
+          "x": 75,
+          "y": -33
+        },
+        {
+          "x": 75,
+          "y": 33
+        },
+        {
+          "x": -75,
+          "y": 33
+        }
+      ]
+    },
+    {
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "id": "obj_lampa_near",
+      "name": "Lampa (blízká)",
+      "assetId": "asset_image_lampa-scena_2187c677",
+      "x": 1018,
+      "y": 950,
+      "scale": 0.16874999999999998,
+      "integration": {
+        "contact": {
+          "enabled": true,
+          "opacity": 0.22,
+          "sigmaPx": 0.6,
+          "color": "#627196"
+        },
+        "ao": {
+          "enabled": true,
+          "opacity": 0.1,
+          "sigmaPx": 1.5,
+          "expandM": 0.07
+        },
+        "snowLip": {
+          "enabled": true,
+          "heightM": 0.035,
+          "coverage": 0.75
+        },
+        "grade": {
+          "enabled": false,
+          "saturation": 0.88,
+          "contrast": 0.95,
+          "exposureEV": 0,
+          "ambientMix": 0.08,
+          "ambient": "#9aa8d6",
+          "hazeBeta": 0.0015,
+          "hazeColor": "#BBC9E4"
+        },
+        "lights": {
+          "enabled": true,
+          "gain": 0.9
+        }
+      },
+      "footprint": [
+        {
+          "x": -71,
+          "y": -30
+        },
+        {
+          "x": 71,
+          "y": -30
+        },
+        {
+          "x": 71,
+          "y": 30
+        },
+        {
+          "x": -71,
+          "y": 30
+        }
+      ]
+    },
+    {
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "id": "obj_lavicka",
+      "name": "Lavička",
+      "assetId": "asset_image_lavicka-scena_30204ed7",
+      "x": 1171,
+      "y": 983,
+      "scale": 0.08964843750000001,
+      "footprint": [
+        {
+          "x": -692,
+          "y": -112
+        },
+        {
+          "x": 692,
+          "y": -112
+        },
+        {
+          "x": 692,
+          "y": 112
+        },
+        {
+          "x": -692,
+          "y": 112
+        }
+      ]
+    },
+    {
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "id": "obj_kos",
+      "name": "Koš",
+      "assetId": "asset_image_kos-scena_04f67f9b",
+      "x": 1046,
+      "y": 983,
+      "scale": 0.045703125000000004,
+      "footprint": [
+        {
+          "x": -394,
+          "y": -175
+        },
+        {
+          "x": 394,
+          "y": -175
+        },
+        {
+          "x": 394,
+          "y": 175
+        },
+        {
+          "x": -394,
+          "y": 175
+        }
+      ]
+    },
+    {
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "id": "obj_plotek1",
+      "name": "Plůtek 1",
+      "assetId": "asset_image_plotek-scena_0ad3206b",
+      "x": 1382,
+      "y": 929,
+      "scale": 0.066967305524239,
+      "footprint": [
+        {
+          "x": -866,
+          "y": -45
+        },
+        {
+          "x": 866,
+          "y": -45
+        },
+        {
+          "x": 866,
+          "y": 45
+        },
+        {
+          "x": -866,
+          "y": 45
+        }
+      ]
+    },
+    {
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "id": "obj_plotek2",
+      "name": "Plůtek 2",
+      "assetId": "asset_image_plotek-scena_0ad3206b",
+      "x": 1670,
+      "y": 929,
+      "scale": 0.066967305524239,
+      "footprint": [
+        {
+          "x": -866,
+          "y": -45
+        },
+        {
+          "x": 866,
+          "y": -45
+        },
+        {
+          "x": 866,
+          "y": 45
+        },
+        {
+          "x": -866,
+          "y": 45
+        }
+      ]
+    },
+    {
+      "layer": "world",
+      "zBias": 0,
+      "flipX": false,
+      "visible": true,
+      "locked": false,
+      "id": "obj_strom",
+      "name": "Strom",
+      "assetId": "asset_image_strom-scena_cfe2e790",
+      "x": 1891,
+      "y": 1064,
+      "scale": 0.32926829268292684,
+      "footprint": [
+        {
+          "x": -43,
+          "y": -18
+        },
+        {
+          "x": 43,
+          "y": -18
+        },
+        {
+          "x": 43,
+          "y": 18
+        },
+        {
+          "x": -43,
+          "y": 18
+        }
+      ]
+    }
+  ],
+  "nav": {
+    "nodes": [
+      {
+        "id": "f0",
+        "x": -70,
+        "y": 586,
+        "name": "Vzdálený chodník 0",
+        "portal": true
+      },
+      {
+        "id": "f1",
+        "x": 300,
+        "y": 586,
+        "name": "Vzdálený chodník 1"
+      },
+      {
+        "id": "f2",
+        "x": 700,
+        "y": 585,
+        "name": "Vzdálený chodník 2"
+      },
+      {
+        "id": "f3",
+        "x": 1100,
+        "y": 585,
+        "name": "Vzdálený chodník 3"
+      },
+      {
+        "id": "f4",
+        "x": 1500,
+        "y": 586,
+        "name": "Vzdálený chodník 4"
+      },
+      {
+        "id": "f5",
+        "x": 1700,
+        "y": 590,
+        "name": "Vzdálený chodník 5"
+      },
+      {
+        "id": "f6",
+        "x": 1990,
+        "y": 594,
+        "name": "Vzdálený chodník 6",
+        "portal": true
+      },
+      {
+        "id": "n0",
+        "x": -70,
+        "y": 903,
+        "name": "Přední chodník 0",
+        "portal": true
+      },
+      {
+        "id": "n1",
+        "x": 300,
+        "y": 903,
+        "name": "Přední chodník 1"
+      },
+      {
+        "id": "n2",
+        "x": 650,
+        "y": 903,
+        "name": "Přední chodník 2"
+      },
+      {
+        "id": "n3",
+        "x": 920,
+        "y": 900,
+        "name": "Přední chodník 3"
+      },
+      {
+        "id": "n4",
+        "x": 1000,
+        "y": 878,
+        "name": "Přední chodník 4"
+      },
+      {
+        "id": "n5",
+        "x": 1100,
+        "y": 848,
+        "name": "Přední chodník 5"
+      },
+      {
+        "id": "n6",
+        "x": 1400,
+        "y": 843,
+        "name": "Přední chodník 6"
+      },
+      {
+        "id": "n7",
+        "x": 1700,
+        "y": 842,
+        "name": "Přední chodník 7"
+      },
+      {
+        "id": "n8",
+        "x": 1990,
+        "y": 842,
+        "name": "Přední chodník 8",
+        "portal": true
+      }
+    ],
+    "edges": [
+      {
+        "id": "e_f1",
+        "a": "f0",
+        "b": "f1",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_f2",
+        "a": "f1",
+        "b": "f2",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_f3",
+        "a": "f2",
+        "b": "f3",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_f4",
+        "a": "f3",
+        "b": "f4",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_f5",
+        "a": "f4",
+        "b": "f5",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_f6",
+        "a": "f5",
+        "b": "f6",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_n1",
+        "a": "n0",
+        "b": "n1",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_n2",
+        "a": "n1",
+        "b": "n2",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_n3",
+        "a": "n2",
+        "b": "n3",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_n4",
+        "a": "n3",
+        "b": "n4",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_n5",
+        "a": "n4",
+        "b": "n5",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_n6",
+        "a": "n5",
+        "b": "n6",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_n7",
+        "a": "n6",
+        "b": "n7",
+        "oneWay": false,
+        "narrow": false
+      },
+      {
+        "id": "e_n8",
+        "a": "n7",
+        "b": "n8",
+        "oneWay": false,
+        "narrow": false
+      }
+    ]
+  },
+  "areas": [
+    {
+      "id": "area_snih",
+      "name": "Sníh (dětská plocha a okraje)",
+      "kind": "snow",
+      "polygon": [
+        {
+          "x": 600,
+          "y": 935
+        },
+        {
+          "x": 1000,
+          "y": 905
+        },
+        {
+          "x": 1100,
+          "y": 888
+        },
+        {
+          "x": 1920,
+          "y": 885
+        },
+        {
+          "x": 1920,
+          "y": 1080
+        },
+        {
+          "x": 600,
+          "y": 1080
+        }
+      ]
+    },
+    {
+      "id": "area_kere",
+      "name": "Keře vlevo dole (neprůchozí)",
+      "kind": "obstacle",
+      "polygon": [
+        {
+          "x": 0,
+          "y": 930
+        },
+        {
+          "x": 240,
+          "y": 935
+        },
+        {
+          "x": 610,
+          "y": 990
+        },
+        {
+          "x": 610,
+          "y": 1080
+        },
+        {
+          "x": 0,
+          "y": 1080
+        }
+      ]
+    }
+  ],
+  "zones": [],
+  "characters": [
+    {
+      "id": "ch_1",
+      "name": "Jakub",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "f0",
+      "baseScale": 1,
+      "walkSpeed": 53.3,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1445358366,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_02_cg"
+        },
+        "colors": {
+          "jacket": "kremova",
+          "hat": "okrova",
+          "scarf": "tmave-seda",
+          "gloves": "okrova",
+          "trousers": "tmave-seda",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 1.02,
+          "build": 1
+        },
+        "motion": {
+          "strideScale": 0.973,
+          "armSwing": 0.956,
+          "bob": 1.112,
+          "sway": 0.861,
+          "idleTempo": 0.895,
+          "lean": 2.676,
+          "speed": 0.952,
+          "phase": 0.329,
+          "armLag": -0.144,
+          "armLR": 1.096
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {}
+    },
+    {
+      "id": "ch_2",
+      "name": "Lucie",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n0",
+      "baseScale": 1,
+      "walkSpeed": 51.2,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 432498940,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_neckwarmer_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_04_cg"
+        },
+        "colors": {
+          "jacket": "olivova",
+          "hat": "petrolejova",
+          "scarf": "hneda",
+          "gloves": "hneda",
+          "trousers": "tmave-seda",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 1.022,
+          "build": 0.99
+        },
+        "motion": {
+          "strideScale": 0.991,
+          "armSwing": 1.335,
+          "bob": 1.133,
+          "sway": 0.797,
+          "idleTempo": 1.138,
+          "lean": 2.981,
+          "speed": 0.915,
+          "phase": 0.177,
+          "armLag": -0.473,
+          "armLR": 1.04
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {}
+    },
+    {
+      "id": "ch_3",
+      "name": "Martin",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "f6",
+      "baseScale": 1,
+      "walkSpeed": 53.2,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1305324368,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_puffer_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_hiking_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_06_cg"
+        },
+        "colors": {
+          "jacket": "tmave-seda",
+          "hat": "petrolejova",
+          "scarf": "vinova",
+          "gloves": "vinova",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 1.037,
+          "build": 0.969
+        },
+        "motion": {
+          "strideScale": 1.073,
+          "armSwing": 1.248,
+          "bob": 0.899,
+          "sway": 0.768,
+          "idleTempo": 1.032,
+          "lean": 0.749,
+          "speed": 0.95,
+          "phase": 0.292,
+          "armLag": 1.406,
+          "armLR": 1.043
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {},
+      "pet": "dog",
+      "petBreed": "dog_dalmatian"
+    },
+    {
+      "id": "ch_4",
+      "name": "Veronika",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n8",
+      "baseScale": 1,
+      "walkSpeed": 48.4,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1140027,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_puffer_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_neckwarmer_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_08_cg"
+        },
+        "colors": {
+          "jacket": "petrolejova",
+          "hat": "vinova",
+          "scarf": "kremova",
+          "gloves": "vinova",
+          "trousers": "olivova",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 1.025,
+          "build": 0.984
+        },
+        "motion": {
+          "strideScale": 0.922,
+          "armSwing": 0.974,
+          "bob": 1.089,
+          "sway": 1.136,
+          "idleTempo": 1.075,
+          "lean": 2.506,
+          "speed": 0.865,
+          "phase": 0.183,
+          "armLag": 0.001,
+          "armLR": 0.979
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {}
+    },
+    {
+      "id": "ch_5",
+      "name": "Pavel",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "f0",
+      "baseScale": 1,
+      "walkSpeed": 54.6,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1368199150,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_hiking_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_01_cg"
+        },
+        "colors": {
+          "jacket": "tmave-seda",
+          "hat": "vinova",
+          "scarf": "olivova",
+          "gloves": "olivova",
+          "trousers": "olivova",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 1.045,
+          "build": 1.015
+        },
+        "motion": {
+          "strideScale": 0.958,
+          "armSwing": 0.836,
+          "bob": 1.103,
+          "sway": 0.987,
+          "idleTempo": 0.999,
+          "lean": 0.713,
+          "speed": 0.975,
+          "phase": 0.204,
+          "armLag": -1.883,
+          "armLR": 0.866
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {}
+    },
+    {
+      "id": "ch_6",
+      "name": "Hana",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n0",
+      "baseScale": 1,
+      "walkSpeed": 63.9,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 947363864,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_puffer_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_neckwarmer_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_hiking_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_03_cg"
+        },
+        "colors": {
+          "jacket": "hneda",
+          "hat": "okrova",
+          "scarf": "kremova",
+          "gloves": "okrova",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 0.976,
+          "build": 0.967
+        },
+        "motion": {
+          "strideScale": 0.955,
+          "armSwing": 0.878,
+          "bob": 1.108,
+          "sway": 0.913,
+          "idleTempo": 0.956,
+          "lean": 0.838,
+          "speed": 1.141,
+          "phase": 0.671,
+          "armLag": -1.547,
+          "armLR": 1.051
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {}
+    },
+    {
+      "id": "ch_7",
+      "name": "Pan Karel",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "f6",
+      "baseScale": 1,
+      "walkSpeed": 65.6,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 166939340,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_puffer_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_neckwarmer_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_09_cg"
+        },
+        "colors": {
+          "jacket": "tmave-seda",
+          "hat": "olivova",
+          "scarf": "vinova",
+          "gloves": "vinova",
+          "trousers": "tmave-seda",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 0.978,
+          "build": 1.008
+        },
+        "motion": {
+          "strideScale": 0.998,
+          "armSwing": 0.746,
+          "bob": 0.809,
+          "sway": 1.165,
+          "idleTempo": 1.123,
+          "lean": 0.193,
+          "speed": 1.171,
+          "phase": 0.355,
+          "armLag": 2.1,
+          "armLR": 0.933
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {},
+      "gaitProfile": "elderA"
+    },
+    {
+      "id": "ch_8",
+      "name": "Paní Marie",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "n8",
+      "baseScale": 1,
+      "walkSpeed": 55.2,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": true,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 473354838,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_rib_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_12_cg"
+        },
+        "colors": {
+          "jacket": "okrova",
+          "hat": "hneda",
+          "scarf": "olivova",
+          "gloves": "hneda",
+          "trousers": "olivova",
+          "boots": "hneda"
+        },
+        "proportions": {
+          "height": 1.033,
+          "build": 0.996
+        },
+        "motion": {
+          "strideScale": 1.063,
+          "armSwing": 0.892,
+          "bob": 1.2,
+          "sway": 0.88,
+          "idleTempo": 1.066,
+          "lean": 0.438,
+          "speed": 0.986,
+          "phase": 0.354,
+          "armLag": 2.559,
+          "armLR": 0.939
+        },
+        "locks": []
+      },
+      "routine": "visitor",
+      "activities": {},
+      "gaitProfile": "elderA",
+      "companionId": "ch_7",
+      "companionSide": 1,
+      "holdHands": true
+    }
+  ],
+  "schedule": [],
+  "export": {
+    "resolution": "1920x1080",
+    "fps": 30,
+    "durationMode": "manual",
+    "durationSec": 60,
+    "audioAssetId": null,
+    "audioWhenShorter": "silence",
+    "crf": 20,
+    "preset": "medium",
+    "chunkSec": 20,
+    "outputPath": null,
+    "diagnosticPngSequence": false
+  },
+  "crowd": {
+    "walkersN": 7,
+    "dogs": 1,
+    "walkSpeed": 0.95
+  }
+}

@@ -1,0 +1,133 @@
+{
+  "format": "zimni-scena-postava",
+  "formatVersion": 1,
+  "id": "painted-cg",
+  "name": "Malovaná postava (ChatGPT díly)",
+  "provisional": false,
+  "backend": "skeleton",
+  "height": 130,
+  "anchor": {
+    "x": 0.5,
+    "y": 1
+  },
+  "directions": [
+    "SE",
+    "NE"
+  ],
+  "directionFallbacks": {
+    "E": {
+      "use": "SE",
+      "mirror": false
+    },
+    "S": {
+      "use": "SE",
+      "mirror": false
+    },
+    "N": {
+      "use": "NE",
+      "mirror": false
+    },
+    "W": {
+      "use": "SE",
+      "mirror": true
+    },
+    "SW": {
+      "use": "SE",
+      "mirror": true
+    },
+    "NW": {
+      "use": "NE",
+      "mirror": true
+    }
+  },
+  "clips": {
+    "idle": {
+      "duration": 3.2,
+      "loop": "loop"
+    },
+    "walk": {
+      "duration": 1,
+      "loop": "loop",
+      "strideLength": 100
+    },
+    "talk": {
+      "duration": 1.4,
+      "loop": "loop"
+    },
+    "receive": {
+      "duration": 1.1,
+      "loop": "once",
+      "events": [
+        {
+          "time": 0.6,
+          "name": "take"
+        }
+      ]
+    },
+    "drink": {
+      "duration": 2.6,
+      "loop": "once",
+      "events": [
+        {
+          "time": 1.1,
+          "name": "sip"
+        }
+      ]
+    },
+    "drop": {
+      "duration": 1,
+      "loop": "once",
+      "events": [
+        {
+          "time": 0.55,
+          "name": "release"
+        }
+      ]
+    },
+    "lidDrop": {
+      "duration": 3,
+      "loop": "once",
+      "events": [
+        {
+          "time": 0.95,
+          "name": "lidOpen"
+        },
+        {
+          "time": 1.75,
+          "name": "release"
+        },
+        {
+          "time": 2.25,
+          "name": "lidClose"
+        }
+      ]
+    },
+    "look": {
+      "duration": 2,
+      "loop": "once"
+    }
+  },
+  "clipFallbacks": {
+    "look": "idle"
+  },
+  "attachPoints": {},
+  "capabilities": [
+    "walk",
+    "look",
+    "hold-cup",
+    "drink",
+    "talk"
+  ],
+  "supportedActivities": [
+    "coffee",
+    "shop",
+    "viewing",
+    "snowman",
+    "snowballFight",
+    "snowAngel"
+  ],
+  "rig": {
+    "library": "painted-parts-cg/library.json",
+    "bodyTemplate": "adult-cg"
+  }
+}

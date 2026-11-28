@@ -13,7 +13,8 @@ import { zs } from './api';
 import type { Tool } from './store';
 
 /** Úvodní menu: Scény (ukázkové i vlastní – otevřít a upravit, nová) a Sandbox (galerie aktivit). */
-const SCENES: { key: 'liberec' | 'tram' | 'pastel' | 'pastel2' | 'pastel3' | 'hory' | 'demo2' | 'demo'; dir: string; name: string; desc: string }[] = [
+const SCENES: { key: 'liberec' | 'tram' | 'pastel' | 'pastel2' | 'pastel3' | 'hory' | 'ulice' | 'demo2' | 'demo'; dir: string; name: string; desc: string }[] = [
+  { key: 'ulice', dir: 'Zasnezena-ulice', name: 'Zasněžená ulice', desc: 'Doprava, parkování a ometání aut, shrnovák s posypem, vyproštění traktorem, sněhulák' },
   { key: 'hory', dir: 'Horske-mestecko', name: 'Horské městečko', desc: 'Bobování na svahu, běžkaři, procházky se psy, pluh na silnici' },
   { key: 'tram', dir: 'Tramvajova-ulice', name: 'Vánoční tramvajová ulice', desc: 'Tramvaj, pekař, květinářka, kočárek, stromky, běžkař, pevnost' },
   { key: 'liberec', dir: 'Liberec-zivy-trh', name: 'Liberec – živý trh', desc: 'Stánky, rodiny, sněhulák, koulovačka, sáňky, psi a kočky' },

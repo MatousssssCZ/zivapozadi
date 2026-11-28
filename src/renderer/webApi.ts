@@ -37,7 +37,7 @@ async function pickWebEncoder(w: number, h: number, fps: number, crf: number, pr
   return cands[3];
 }
 
-const DEMOS: Record<string, string> = { namesti: 'Vanocni-namesti', radnice: 'Namesti-radnice', liberec: 'Liberec-zivy-trh', pastel: 'Pastelove-kluziste', pastel2: 'Pastelove-kluziste-2', pastel3: 'Pastelove-kluziste-3', hory: 'Horske-mestecko', tram: 'Tramvajova-ulice' };
+const DEMOS: Record<string, string> = { namesti: 'Vanocni-namesti', radnice: 'Namesti-radnice', liberec: 'Liberec-zivy-trh', pastel: 'Pastelove-kluziste', pastel2: 'Pastelove-kluziste-2', pastel3: 'Pastelove-kluziste-3', hory: 'Horske-mestecko', ulice: 'Zasnezena-ulice', tram: 'Tramvajova-ulice' };
 const DEFAULT_DEMO = 'Liberec-zivy-trh';
 
 // ------------------------------------------------------------------ IndexedDB (klíč → hodnota)
