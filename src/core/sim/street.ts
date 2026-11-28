@@ -130,7 +130,7 @@ export function stepStreet(project: ProjectFile, st: StreetState, t: number, log
     if (c.mode === 'pullOut' && c.sX === undefined) {
       // výjezd z parkování: blinkr, čekat na mezeru v pruhu (nic blízko za ani těsně před)
       const ln = cfg.lanes[c.lane], dir = ln.dir;
-      const clear = !st.cars.some((o) => o !== c && o.lane === c.lane && (o.mode === 'drive' || o.mode === 'parkIn') && ((c.X - o.X) * dir > -9 && (c.X - o.X) * dir < 38));
+      const clear = !st.cars.some((o) => o !== c && o.lane === c.lane && (o.mode === 'drive' || o.mode === 'parkIn' || (o.mode === 'pullOut' && o.sX !== undefined)) && ((c.X - o.X) * dir > -14 && (c.X - o.X) * dir < 38));
       c.blink = 1; c.brake = true; c.v = 0;
       if (clear && t - (c.since ?? t) > 1.2) { c.sX = c.X; c.tX = c.X + dir * 8.5; c.brake = false; log('Auto vyjíždí z parkování.'); }
       continue;
@@ -173,7 +173,7 @@ export function stepStreet(project: ProjectFile, st: StreetState, t: number, log
       c.hd = Math.atan2((Zp - Zl) * dsm * 1, dir) ;
       // dojezd na místo: zbytek rychlosti se dobrzdí měkce (≤ 2,5 m/s²), auto zůstane stát přesně na místě
       if ((c.tX! - c.X) * dir <= 0.05) { c.X = c.tX!; c.v = Math.max(0, c.v - 2.2 * dt); c.brake = true; }
-      if (((c.tX! - c.X) * dir <= 0.05 && c.v <= 0) || (f > 0.98 && c.v < 0.02)) { c.X = c.tX!; c.Z = Zp; c.hd = dir > 0 ? 0 : Math.PI; c.v = 0; c.mode = 'parked'; c.blink = 0; c.brake = false; c.since = t; c.justParked = true; log(`Auto zaparkovalo (${c.body}).`); }
+      if (((c.tX! - c.X) * dir <= 0.05 && c.v <= 0) || (f > 0.98 && c.v < 0.02)) { c.X = c.tX!; c.Z = Zp; c.hd = dir > 0 ? 0 : Math.PI; c.v = 0; c.mode = 'parked'; c.blink = 0; c.brake = false; c.since = t; c.justParked = true; c.sX = c.tX = undefined; log(`Auto zaparkovalo (${c.body}).`); }
     } else { c.Z = Zl; c.hd = dir > 0 ? 0 : Math.PI; }
   }
   // za okrajem scény auto zmizí (mimo záběr)

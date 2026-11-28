@@ -660,7 +660,8 @@ export class Simulation {
     const blocks: LaneBlock[] = [];
     for (const j of st.jobs) {
       const c = st.cars.find((x) => x.id === j.car); if (!c || c.mode !== 'parked') continue;
-      const roadSide = (c.door ?? 0) > 0.02 || ['toDoor', 'stow', 'doorOpen', 'enter', 'doorClose', 'exitCar', 'leave'].includes(j.ph) || ((j.ph === 'brush' || j.ph === 'toStop') && j.stops[j.si] !== undefined && [3, 4].includes(j.stops[j.si]));
+      const onRoad = !!(j as OwnerJob & { onRoad?: boolean }).onRoad;
+      const roadSide = (c.door ?? 0) > 0.02 || (onRoad && ['toStop', 'brush', 'toDoor', 'stow', 'doorOpen', 'enter', 'doorClose'].includes(j.ph)) || (j.ph === 'leave' && t - j.t0 < 2.6);
       if (roadSide) blocks.push({ lane: c.lane, X: c.X });
     }
     stepStreet(this.project, st, t, (m) => this.log('info', m), blocks);

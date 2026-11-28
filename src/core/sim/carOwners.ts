@@ -55,6 +55,11 @@ export function carLocal(cam: Camera, c: Car, k: number, x: number, z: number, h
   const cs = Math.cos(c.hd), sn = Math.sin(c.hd), X = c.X + (x * cs - z * sn) * k, Z = c.Z + (x * sn + z * cs) * k;
   return { X, Z, H: h * k, s: toScreen(cam, { X, Z }, h * k), g: toScreen(cam, { X, Z }) };
 }
+/** pruh u auta je volný: žádné jedoucí auto se neblíží (do 32 m proti směru jízdy, 6 m za autem) */
+function laneFree(p: ProjectFile, st: StreetState, c: Car): boolean {
+  const dir = p.street!.lanes[c.lane].dir;
+  return !st.cars.some((o) => o !== c && o.lane === c.lane && o.mode !== 'parked' && !(o.mode === 'pullOut' && o.sX === undefined) && o.v > 0.3 && (c.X - o.X) * dir > -6 && (c.X - o.X) * dir < 32);
+}
 /** strana silnice v lokálních z: řidič vlevo (z > 0) = strana do pruhu */
 const ROAD = 1, KERB = -1;
 
@@ -84,7 +89,21 @@ export function stepOwners(h: StreetHost, st: StreetState, jobs: OwnerJob[], t: 
         }
         break;
       }
-      case 'toStop': { a.status = 'Obchází auto se smetákem'; if (!h.moving(a)) go('brush'); break; }
+      case 'toStop': {
+        a.status = 'Obchází auto se smetákem';
+        // na stranu silnice jen do mezery v provozu: na rohu auta počká, až blížící se auto projede
+        const road = STOPS[j.stops[j.si]].z === ROAD;
+        if (road && !laneFree(p, st, c) && h.moving(a) && !(j as OwnerJob & { onRoad?: boolean }).onRoad) {
+          const ag = toWorld(cam, a.pos), cl = (ag.Z - c.Z) * Math.cos(c.hd) - (ag.X - c.X) * Math.sin(c.hd);
+          if (cl * ROAD < (W + 0.2) * k) { a.route = null; a.speed = 0; (j as OwnerJob & { wait?: boolean }).wait = true; a.status = 'Čeká, až projede auto'; break; }
+        }
+        if ((j as OwnerJob & { wait?: boolean }).wait) {
+          if (!laneFree(p, st, c)) { a.status = 'Čeká, až projede auto'; face(at(L, ROAD * 2)); break; }
+          (j as OwnerJob & { wait?: boolean }).wait = false; (j as OwnerJob & { onRoad?: boolean }).onRoad = true; h.walk(a, roundPath(cam, c, k, a, stopPt(j.stops[j.si]), L, W), 1.05); break;
+        }
+        if (!h.moving(a)) { (j as OwnerJob & { onRoad?: boolean }).onRoad = road; go('brush'); }
+        break;
+      }
       case 'brush': {
         const S = STOPS[j.stops[j.si]];
         // nejzasněženější dosažitelná buňka; kartáč v tazích (vpřed s kontaktem, zpět nad povrchem)
@@ -125,7 +144,16 @@ export function stepOwners(h: StreetHost, st: StreetState, jobs: OwnerJob[], t: 
         }
         break;
       }
-      case 'toDoor': { a.status = 'Jde ke dveřím'; if (!h.moving(a)) go('stow'); break; }
+      case 'toDoor': {
+        a.status = 'Jde ke dveřím';
+        if (!(j as OwnerJob & { onRoad?: boolean }).onRoad && !laneFree(p, st, c)) {
+          const ag = toWorld(cam, a.pos), cl = (ag.Z - c.Z) * Math.cos(c.hd) - (ag.X - c.X) * Math.sin(c.hd);
+          if (cl * ROAD < (W + 0.2) * k) { if (h.moving(a)) { a.route = null; a.speed = 0; } a.status = 'Čeká, až projede auto'; (j as OwnerJob & { waitD?: boolean }).waitD = true; break; }
+        }
+        if ((j as OwnerJob & { waitD?: boolean }).waitD) { (j as OwnerJob & { waitD?: boolean }).waitD = false; (j as OwnerJob & { onRoad?: boolean }).onRoad = true; h.walk(a, roundPath(cam, c, k, a, doorPt, L, W), 0.9); break; }
+        if (!h.moving(a)) go('stow');
+        break;
+      }
       case 'stow': { a.status = 'Ukládá smeták do auta'; face(at(g.wsBase[0] - 0.4, 0)); if (el > 0.9) { h.equip(a, null); go('doorOpen'); } break; }
       case 'doorOpen': { c.door = Math.min(1, el / 0.8); a.status = 'Otevírá dveře'; if (el > 0.8) { go('enter'); } break; }
       case 'enter': {
@@ -142,7 +170,7 @@ export function stepOwners(h: StreetHost, st: StreetState, jobs: OwnerJob[], t: 
       case 'doorClose': { c.door = Math.max(0, 1 - el / 0.7); placeDriver(cam, c, k, a, t); if (el > 0.7) go('look'); break; }
       case 'look': {
         placeDriver(cam, c, k, a, t); a.status = 'Rozhlíží se před výjezdem';
-        if (el > 1.8) { c.mode = 'pullOut'; c.blink = 1; c.since = t; go('drive'); }
+        if (el > 1.8) { c.mode = 'pullOut'; c.blink = 1; c.since = t; c.sX = c.tX = undefined; go('drive'); }
         break;
       }
       case 'drive': {
@@ -152,6 +180,7 @@ export function stepOwners(h: StreetHost, st: StreetState, jobs: OwnerJob[], t: 
       }
       // ---- příjezd: vystoupení a odchod
       case 'exitCar': {
+        if ((c.door ?? 0) < 0.01 && !laneFree(p, st, c)) { j.t0 = t; placeDriver(cam, c, k, a, t); a.status = 'Čeká s otevřením dveří, až projede auto'; break; }
         if (el < 0.8) { c.door = el / 0.8; placeDriver(cam, c, k, a, t); a.status = 'Otevírá dveře'; break; }
         const f = Math.min(1, (el - 0.8) / 1.2), e = f * f * (3 - 2 * f), seat = carLocal(cam, c, k, g.wsBase[0] - 0.75, 0.32, 0.45);
         a.vehicle = false; c.driver = undefined;
