@@ -3,8 +3,8 @@
   "formatVersion": 1,
   "meta": {
     "name": "Zasněžená ulice – modrý podvečer",
-    "createdAt": "2026-11-28T14:08:42.444Z",
-    "modifiedAt": "2026-11-28T14:08:44.719Z",
+    "createdAt": "2026-11-28T14:19:00.659Z",
+    "modifiedAt": "2026-11-28T14:19:00.750Z",
     "appVersion": "0.1.0"
   },
   "seed": 8417,
@@ -25,6 +25,7 @@
       "density": 0.3,
       "wind": 0.04
     },
+    "fovDeg": 23,
     "environment": {
       "variableSnow": true,
       "gusts": false,
@@ -1470,6 +1471,42 @@
     "chunkSec": 20,
     "outputPath": null,
     "diagnosticPngSequence": false
+  },
+  "street": {
+    "lanes": [
+      {
+        "y": 760,
+        "dir": 1
+      },
+      {
+        "y": 690,
+        "dir": -1
+      }
+    ],
+    "parks": [
+      {
+        "y": 838,
+        "x0": 20,
+        "x1": 930,
+        "lane": 0
+      },
+      {
+        "y": 633,
+        "x0": 40,
+        "x1": 1640,
+        "lane": 1
+      }
+    ],
+    "gap": [
+      6,
+      24
+    ],
+    "speed": 7.5,
+    "parkShare": 0.3,
+    "parkedInit": [
+      2,
+      2
+    ]
   },
   "crowd": {
     "walkersN": 7,

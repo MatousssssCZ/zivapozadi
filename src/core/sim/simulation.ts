@@ -36,6 +36,7 @@ import { stepBakery, newBakeryState, bakeryStartNow, TASK_LABEL, type BakeryHost
 import { createSkater, stepSkater, stepRinkEvents, separate, addTrails, skatePose, SKATE_PROFILES, TRAIL_LIFE, FALL_TOTAL, type IceGeo, type RinkState, type RinkCtx , forceRinkEvent, makeIceGeo, RINK_FALL_T0, rinkFallLen, LIFE_LABEL, insideW, clampToIce, type TrickKind } from './rink';
 import { stepFalls, startFall, newFallsState, DEFAULT_FALLS, type FallHost, type FallsState } from './falls';
 import { fallEndShift as fallEndShiftOf, type FallVariant } from '../anim/fallPoses';
+import { stepStreet, initStreet } from './street';
 import { stepPlow, newPlowState, plowAxis, axisAt, bladeAhead, bandHalf } from './plow';
 import { tractorScale, DRIVER_SEAT } from '../render/tractor3d';
 import { stepHill, initHill, type HillHost } from './hillSled';
@@ -158,6 +159,7 @@ export class Simulation {
     for (const c of sim.project.characters) sim.spawnAgent(c);
     sim.linkPairs();
     sim.initVisitors();
+    if (sim.project.street) sim.state.street = initStreet(sim.project);
     if (sim.project.hill) {
       sim.state.hill = initHill(sim.hillHost());
       // děti ze svahu, které se při menším počtu (hill.kidsN) nepoužijí, nejsou vidět
@@ -532,6 +534,7 @@ export class Simulation {
     if (this.project.falls || this.state.falls?.active.length) stepFalls(this.fallHost(), this.fallsState());
     if (this.project.rink) this.stepRink(t);
     if (this.project.hill && this.state.hill) stepHill(this.hillHost(), this.state.hill);
+    if (this.project.street) stepStreet(this.project, (this.state.street ??= initStreet(this.project)), t, (m) => this.log('info', m));
     if (this.project.plow) {
       const pl = (this.state.plow ??= newPlowState(this.project));
       stepPlow(this.project, pl, t, (m) => this.log('info', m));

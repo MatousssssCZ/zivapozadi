@@ -48,6 +48,7 @@ export async function generateStreet(dir: string): Promise<ProjectFile> {
   const meta = JSON.parse(await fs.readFile(path.join(G, 'podklady.json'), 'utf8')) as Record<string, { w: number; h: number; fullH: number; anchor: [number, number] }>;
   const p = createEmptyProject('Zasněžená ulice – modrý podvečer', 8417);
   p.scene.depth = { enabled: true, ...STREET.depth };
+  p.scene.fovDeg = 23; // užší zorný úhel: hloubka silnice odpovídá malbě (2 pruhy ≈ 6,9 m) – auta se vejdou do pruhu
   p.scene.snowfall = { enabled: true, density: 0.3, wind: 0.04 };
   p.scene.environment = { variableSnow: true, gusts: false, cupSteam: false, stallSteam: false, sources: [] };
   p.scene.vectorFigures = true; p.scene.paintedHeads = true;
@@ -105,6 +106,13 @@ export async function generateStreet(dir: string): Promise<ProjectFile> {
   });
   Object.assign(p.characters[7], { companionId: 'ch_7', companionSide: 1, holdHands: true }); // senioři za ruce
   Object.assign(p.characters[2], { pet: 'dog', petBreed: 'dog_dalmatian' });
+  // doprava: pravostranná, bližší pruh doprava, vzdálený doleva; parkování podél obou chodníků
+  const RD = STREET.road;
+  p.street = {
+    lanes: [{ y: RD.nearLaneY, dir: 1 }, { y: RD.farLaneY, dir: -1 }],
+    parks: [{ y: RD.nearParkY, x0: 20, x1: RD.nearParkX1, lane: 0 }, { y: RD.farParkY, x0: 40, x1: 1640, lane: 1 }],
+    gap: [6, 24], speed: 7.5, parkShare: 0.3, parkedInit: [2, 2],
+  };
   p.crowd = { walkersN: 7, dogs: 1, walkSpeed: 0.95 };
   p.export = { ...p.export, durationSec: 60, chunkSec: 20 };
   await saveProject(dir, p);

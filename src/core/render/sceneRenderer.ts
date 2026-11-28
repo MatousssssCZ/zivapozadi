@@ -21,6 +21,8 @@ import { SLED } from '../sim/sled';
 import { towing, hill3, HILL } from '../sim/hillSled';
 import { plowAxis, axisAt, PLOW, bladeAhead, bandHalf } from '../sim/plow';
 import { drawTractor, drawPlowedBand } from './tractor3d';
+import { drawCar, carGeo } from './car3d';
+import { carScale } from '../sim/street';
 import { tramGeo, tramMatrix, trackYAt, doorQuad, tramVisible, type TramGeo } from '../sim/tram';
 import { BAKERY_REFILL, GRIT_LIFE } from '../sim/bakery';
 import { drawSnowSurface, snowItems } from './snowRender';
@@ -972,6 +974,12 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
           } });
         }
       }
+    }
+    // auta v ulici (3D model, měřítko postav); řazení podle bližší strany karoserie
+    if (sim.state.street && project.street) for (const c of sim.state.street.cars) {
+      const k = carScale(cam, project, c.X, c.Z), g = carGeo(c.body), near = toScreen(cam, { X: c.X, Z: c.Z - g.zB * k }), ppm = depthScaleAt(sc.depth, near.y) / Q;
+      if (near.x < -400 || near.x > project.scene.width + 400) continue;
+      items.push({ key: near.y, tie: 12800 + (c.id % 100), draw: () => drawCar(ctx, cam, { X: c.X, Z: c.Z }, c.hd, k, ppm, { body: c.body, color: c.color }, { dist: c.dist, t: opts.time, snow: c.snow, blink: c.blink, brake: c.brake, lights: c.mode !== 'parked', door: c.door }) });
     }
     // traktor s radlicí: odhrnutý pás (zem, pod vším) a 3D traktor
     if (sim.state.plow && project.plow) {
