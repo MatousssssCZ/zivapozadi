@@ -36,7 +36,7 @@ import { stepBakery, newBakeryState, bakeryStartNow, TASK_LABEL, type BakeryHost
 import { createSkater, stepSkater, stepRinkEvents, separate, addTrails, skatePose, SKATE_PROFILES, TRAIL_LIFE, FALL_TOTAL, type IceGeo, type RinkState, type RinkCtx , forceRinkEvent, makeIceGeo, RINK_FALL_T0, rinkFallLen, LIFE_LABEL, insideW, clampToIce, type TrickKind } from './rink';
 import { stepFalls, startFall, newFallsState, DEFAULT_FALLS, type FallHost, type FallsState } from './falls';
 import { fallEndShift as fallEndShiftOf, type FallVariant } from '../anim/fallPoses';
-import { stepStreet, initStreet, type LaneBlock } from './street';
+import { stepStreet, initStreet, truckNow, type LaneBlock } from './street';
 import { stepOwners, carLocal, type StreetHost, type OwnerJob } from './carOwners';
 import { carGeo } from '../render/car3d';
 import { carScale } from './street';
@@ -664,7 +664,8 @@ export class Simulation {
       const roadSide = (c.door ?? 0) > 0.02 || (onRoad && ['toStop', 'brush', 'toDoor', 'stow', 'doorOpen', 'enter', 'doorClose'].includes(j.ph)) || (j.ph === 'leave' && t - j.t0 < 2.6);
       if (roadSide) blocks.push({ lane: c.lane, X: c.X });
     }
-    stepStreet(this.project, st, t, (m) => this.log('info', m), blocks);
+    const busyCars = new Set(st.jobs.filter((j) => j.ph !== 'come').map((j) => j.car));
+    stepStreet(this.project, st, t, (m) => this.log('info', m), blocks, { busyCars, puff: (x, y, n, seed, low) => { const t0 = this.time(), sc = depthScaleAt(this.project.scene.depth, y); for (let i = 0; i < n; i++) emit((this.state.particles ??= []), { kind: 'snowPuff', x: x + (i - n / 2) * 6 * sc, y, t0, life: (low ? 0.3 : 0.45) + ((i * 37) % 30) / 100, w0: 0, sc: sc * (low ? 1.3 : 1), seed: seed + i * 13 }); } });
   }
   private freeOwner(): AgentState | null {
     const ids = this.project.street?.owners ?? [], busy = new Set((this.state.street?.jobs ?? []).map((j) => j.owner));
@@ -684,6 +685,8 @@ export class Simulation {
     this.log('info', `${own.name} jde k autu.`, own.id);
     return `${own.name} jde ometat auto a odjet.`;
   }
+  /** Ladicí spuštění: shrnovák s posypem hned vyjede. */
+  streetPlowNow(): { ok: boolean; msg: string } { const st = this.state.street; if (!st || !this.project.street?.plowTruck) return { ok: false, msg: 'Scéna nemá shrnovák.' }; if (st.cars.some((c) => c.body === 'truck')) return { ok: false, msg: 'Shrnovák už jede.' }; truckNow(st, this.time()); return { ok: true, msg: 'Shrnovák s posypem vyjíždí.' }; }
   /** Ladicí spuštění: majitel hned jde k (nejzasněženějšímu) zaparkovanému autu. */
   departNow(): { ok: boolean; msg: string } {
     const st = this.state.street; if (!st) return { ok: false, msg: 'Scéna nemá ulici.' };

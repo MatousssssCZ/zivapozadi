@@ -13,6 +13,8 @@ import { hashNoise } from '../math/rng';
 import { SIM_DT } from './types';
 import { carGeo, newCarSnow, CAR_COLORS, type CarBody, type CarSnow } from '../render/car3d';
 import { tractorScale } from '../render/tractor3d';
+import { initRoadSnow, stepRoadSnow, tyreTrack, plowLane, gritLane, coverAt, type RoadSnowState } from './roadSnow';
+import { TRUCK } from '../render/municipal3d';
 
 export interface StreetConfig {
   /** pruhy (y obrazu středu pruhu, směr jízdy +1 = doprava) */ lanes: { y: number; dir: 1 | -1 }[];
@@ -22,6 +24,8 @@ export interface StreetConfig {
   /** počáteční zaparkovaná auta (počet v každém pásu) */ parkedInit?: number[];
   /** násobek sněžení na autech (přibývání) */ snowRate?: number;
   /** postavy majitelů (routine „driver“) a interval odjezdů (s) */ owners?: string[]; departEvery?: [number, number];
+  /** počáteční pokrytí vozovky sněhem (0–1) */ roadSnow?: number;
+  /** shrnovák s posypem: interval (s), první průjezd, rychlost (m/s); polovina šířky pruhu (m) */ plowTruck?: { every?: [number, number]; first?: number; speed?: number }; laneHalf?: number;
 }
 export type CarMode = 'drive' | 'parkIn' | 'parked' | 'pullOut';
 export interface Car {
@@ -34,7 +38,7 @@ export interface Car {
   /** řidič sedí uvnitř (id postavy) */ driver?: string;
   /** právě zaparkovalo – řidič vystoupí */ justParked?: boolean;
 }
-export interface StreetState { cars: Car[]; nextId: number; spawnT: number[]; n: number; /** majitelé u aut (odjezd / příjezd) */ jobs?: import('./carOwners').OwnerJob[]; departT?: number; departN?: number }
+export interface StreetState { cars: Car[]; nextId: number; spawnT: number[]; n: number; road?: import('./roadSnow').RoadSnowState; truckT?: number; truckN?: number; /** majitelé u aut (odjezd / příjezd) */ jobs?: import('./carOwners').OwnerJob[]; departT?: number; departN?: number }
 
 const G = (c: Car) => carGeo(c.body);
 /** měřítko modelu (shodné s postavami) v hloubce Z */
@@ -79,10 +83,15 @@ function freeSpot(cam: Camera, project: ProjectFile, st: StreetState, pi: number
   return dir > 0 ? Math.min(g[1] - L / 2 - 1.0, g[0] + L / 2 + 2.6) : Math.max(g[0] + L / 2 + 1.0, g[1] - L / 2 - 2.6);
 }
 
+/** vedlejší efekty dopravy (částice) */
+export interface StreetFx { puff(x: number, y: number, n: number, seed: number, low?: boolean): void; busyCars: Set<number> }
 /** překážka v pruhu (člověk u auta na straně silnice, otevřené dveře): auta před ní zastaví */
 export interface LaneBlock { lane: number; X: number }
-export function stepStreet(project: ProjectFile, st: StreetState, t: number, log: (m: string) => void, blocks: LaneBlock[] = []): void {
+export function stepStreet(project: ProjectFile, st: StreetState, t: number, log: (m: string) => void, blocks: LaneBlock[] = [], fx?: StreetFx): void {
   const cfg = project.street!, cam = cameraFor(project.scene), seed = project.seed, dt = SIM_DT;
+  const road = (st.road ??= initRoadSnow(project));
+  stepRoadSnow(project, road, t);
+  stepTruckSpawn(project, st, t, log);
   const v0 = cfg.speed ?? 7.5;
   const W = project.scene.width;
   // sněžení: na stojících autech pomalu přibývá sníh (jen při aktivním sněžení)
@@ -137,6 +146,15 @@ export function stepStreet(project: ProjectFile, st: StreetState, t: number, log
     }
     const ln = cfg.lanes[c.lane], dir = ln.dir, Zl = laneZ(cam, ln.y);
     let vDes = v0 * (0.92 + 0.16 * hashNoise(seed, 9630, c.id));
+    const truck = c.body === 'truck';
+    // shrnovák: pomalu; u auta, kde stojí člověk, ještě zpomalí a nestříká
+    let gentle = false;
+    if (truck) {
+      vDes = cfg.plowTruck?.speed ?? 4.2;
+      const pi = cfg.parks.findIndex((p) => p.lane === c.lane);
+      gentle = pi >= 0 && st.cars.some((o) => o.mode === 'parked' && o.park === pi && fx?.busyCars.has(o.id) && (o.X - c.X) * dir > -6 && (o.X - c.X) * dir < 16);
+      if (gentle) vDes = 1.8;
+    }
     // parkování: zpomalit k místu, blikat
     if (c.mode === 'pullOut') vDes = Math.min(vDes, 2.5 + 2.5 * Math.max(0, (c.X - c.sX!) * dir) / 8.5); // rozjezd z místa
     if (c.mode === 'parkIn') {
@@ -158,7 +176,9 @@ export function stepStreet(project: ProjectFile, st: StreetState, t: number, log
     const vPrev = c.v;
     c.v = Math.max(0, c.v + acc * dt);
     c.brake = c.v < vPrev - 0.4 * dt || (c.mode === 'parkIn' && (c.tX! - c.X) * dir < 8);
+    const Xprev = c.X;
     c.X += dir * c.v * dt; c.dist += c.v * dt;
+    if (c.mode === 'drive' || c.mode === 'pullOut') roadEffects(project, st, road, c, Xprev, truck, gentle, t, fx);
     if (c.mode === 'pullOut') {
       // výjezd: plynulý přejezd od obrubníku do pruhu po S-křivce, pak běžná jízda
       const Zp = laneZ(cam, cfg.parks[c.park!].y), f = Math.max(0, Math.min(1, ((c.X - c.sX!) * dir) / Math.max(1, (c.tX! - c.sX!) * dir)));
@@ -179,4 +199,61 @@ export function stepStreet(project: ProjectFile, st: StreetState, t: number, log
   // za okrajem scény auto zmizí (mimo záběr)
   st.cars = st.cars.filter((c) => { if (c.mode !== 'drive') return true; const x = toScreen(cam, { X: c.X, Z: c.Z }).x; return dirOk(c, x); });
   function dirOk(c: Car, x: number) { const d = cfg.lanes[c.lane].dir; return d > 0 ? x < W + 420 : x > -420; }
+}
+
+/** shrnovák s posypem: občasný průjezd (střídavě v obou pruzích), mimo záběr se rozjede */
+function stepTruckSpawn(project: ProjectFile, st: StreetState, t: number, log: (m: string) => void) {
+  const cfg = project.street!, pt = cfg.plowTruck; if (!pt) return;
+  if (st.truckT === undefined) st.truckT = pt.first ?? 120;
+  if (t < st.truckT || st.cars.some((c) => c.body === 'truck')) return;
+  st.truckN = (st.truckN ?? 0) + 1;
+  const [a, b] = pt.every ?? [240, 420];
+  st.truckT = t + a + (b - a) * hashNoise(project.seed, 9800, st.truckN);
+  const li = st.truckN % cfg.lanes.length, ln = cfg.lanes[li], cam = cameraFor(project.scene), W = project.scene.width;
+  const X = toWorld(cam, { x: ln.dir > 0 ? -1300 : W + 1300, y: ln.y }).X;
+  if (st.cars.some((c) => c.lane === li && c.mode !== 'parked' && Math.abs(c.X - X) < 16)) { st.truckT = t + 5; return; }
+  st.cars.push({ id: st.nextId++, body: 'truck', color: '#d9772a', X, Z: toWorld(cam, { x: 960, y: ln.y }).Z, hd: ln.dir > 0 ? 0 : Math.PI, v: pt.speed ?? 4.2, lane: li, mode: 'drive', dist: 0, snow: { roof: [], hood: [], trunk: [], ws: [], rw: [], winL: [], winR: [], lowL: [], lowR: [] }, blink: 0, brake: false });
+  log('Shrnovák s posypem vyjíždí.');
+}
+/** Ladicí spuštění shrnováku. */
+export function truckNow(st: StreetState, t: number) { st.truckT = t; }
+
+/**
+ * Účinky jízdy na sníh: koleje od kol; shrnovák odhrne pruh v šířce radlice, za ním posyp a nízká
+ * sprška ke krajnici – část dopadne na spodní boky zaparkovaných aut (zůstane vidět). Běžná auta
+ * při rychlosti a hodně břečce drobně odstříknou na sousední zaparkovaná auta.
+ */
+function roadEffects(project: ProjectFile, st: StreetState, road: RoadSnowState, c: Car, Xprev: number, truck: boolean, gentle: boolean, t: number, fx?: StreetFx) {
+  const cfg = project.street!, L = road.lanes[c.lane], dir = cfg.lanes[c.lane].dir, cam = cameraFor(project.scene), dt = SIM_DT;
+  if (!L) return;
+  const k = carScale(cam, project, c.X, c.Z);
+  if (!truck) { tyreTrack(L, c.X, carGeo(c.body).L * k, c.v); }
+  const pi = cfg.parks.findIndex((p) => p.lane === c.lane);
+  if (truck) {
+    const bl = (TRUCK.blade + 0.2) * k;
+    const removed = plowLane(L, Xprev + dir * bl, c.X + dir * bl);
+    gritLane(L, c.X - dir * (TRUCK.L / 2 + 0.6) * k, 1.0);
+    // sprška od pravého konce radlice ke krajnici (nízko); u lidí omezená
+    if (!gentle && removed > 0 && fx && Math.floor(t / 0.09) !== Math.floor((t - dt) / 0.09)) {
+      const Zk = c.Z - (dir > 0 ? 1 : -1) * 1.7 * k, q = toScreen(cam, { X: c.X + dir * (bl - 0.3), Z: Zk }, 0.25);
+      fx.puff(q.x, q.y, 3, Math.floor(t * 50) + c.id, true);
+    }
+    if (pi >= 0) for (const o of st.cars) {
+      if (o.mode !== 'parked' || o.park !== pi) continue;
+      const ko = carScale(cam, project, o.X, o.Z), Lo = carGeo(o.body).L * ko, bx = c.X + dir * bl;
+      if (Math.abs(bx - o.X) > Lo / 2) continue;
+      const busy = fx?.busyCars.has(o.id), amt = (gentle || busy ? 0.15 : 1) * Math.min(1, removed * 3 + 0.2) * 0.9 * dt * c.v;
+      // bok k silnici = strana řidiče (lowL); buňka podle místa radlice podél auta
+      const arr = o.snow.lowL, f = ((bx - o.X) * Math.cos(o.hd) / Lo) + 0.5, i = Math.max(0, Math.min(arr.length - 1, Math.floor(f * arr.length)));
+      arr[i] = Math.min(1, arr[i] + amt * 1.4); if (i > 0) arr[i - 1] = Math.min(1, arr[i - 1] + amt * 0.5); if (i < arr.length - 1) arr[i + 1] = Math.min(1, arr[i + 1] + amt * 0.5);
+    }
+  } else if (pi >= 0 && c.v > 5 && coverAt(L, c.X) > 0.45) {
+    for (const o of st.cars) {
+      if (o.mode !== 'parked' || o.park !== pi) continue;
+      const ko = carScale(cam, project, o.X, o.Z), Lo = carGeo(o.body).L * ko;
+      if (Math.abs(c.X - o.X) > Lo / 2) continue;
+      const arr = o.snow.lowL, f = ((c.X - o.X) * Math.cos(o.hd) / Lo) + 0.5, i = Math.max(0, Math.min(arr.length - 1, Math.floor(f * arr.length)));
+      arr[i] = Math.min(0.5, arr[i] + 0.05 * dt * (coverAt(L, c.X) - 0.4));
+    }
+  }
 }

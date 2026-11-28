@@ -3,8 +3,8 @@
   "formatVersion": 1,
   "meta": {
     "name": "Zasněžená ulice – modrý podvečer",
-    "createdAt": "2026-11-28T14:34:44.400Z",
-    "modifiedAt": "2026-11-28T14:34:44.517Z",
+    "createdAt": "2026-11-28T14:40:01.110Z",
+    "modifiedAt": "2026-11-28T14:40:01.212Z",
     "appVersion": "0.1.0"
   },
   "seed": 8417,
@@ -1739,6 +1739,16 @@
       2,
       2
     ],
+    "roadSnow": 0.7,
+    "laneHalf": 1.3,
+    "plowTruck": {
+      "every": [
+        240,
+        420
+      ],
+      "first": 150,
+      "speed": 4.2
+    },
     "owners": [
       "ch_ridic1",
       "ch_ridic2",

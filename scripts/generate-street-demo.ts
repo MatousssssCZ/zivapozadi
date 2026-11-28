@@ -112,6 +112,7 @@ export async function generateStreet(dir: string): Promise<ProjectFile> {
     lanes: [{ y: RD.nearLaneY, dir: 1 }, { y: RD.farLaneY, dir: -1 }],
     parks: [{ y: RD.nearParkY, x0: 20, x1: RD.nearParkX1, lane: 0 }, { y: RD.farParkY, x0: 40, x1: 1640, lane: 1 }],
     gap: [6, 24], speed: 7.5, parkShare: 0.3, parkedInit: [2, 2],
+    roadSnow: 0.7, laneHalf: 1.3, plowTruck: { every: [240, 420], first: 150, speed: 4.2 },
   };
   // majitelé aut (přijdou ometat a odjet; vystoupí po zaparkování) – zásoba postav, mimo scénu, dokud nejsou potřeba
   const ownApps = generateGroup(lib, 4, 8419).appearances, ownHeads = ['head_05_cg', 'head_07_cg', 'head_01_cg', 'head_11_cg'], ownNames = ['Tomáš (řidič)', 'Jana (řidička)', 'Petr (řidič)', 'Alena (řidička)'];

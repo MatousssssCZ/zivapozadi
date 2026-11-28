@@ -10,7 +10,7 @@ import type { Vec2 } from '../math/vec';
 import { place, wheel, drawFaces, type Face, type V3 } from './lowpoly3d';
 
 type Ctx = CanvasRenderingContext2D;
-export type CarBody = 'sedan' | 'hatch' | 'wagon';
+export type CarBody = 'sedan' | 'hatch' | 'wagon' | 'truck';
 export interface CarLook { body: CarBody; color: string }
 /** sníh po buňkách (0 = čisto, 1 = plná vrstva) */
 export interface CarSnow { roof: number[]; hood: number[]; trunk: number[]; ws: number[]; rw: number[]; winL: number[]; winR: number[]; lowL: number[]; lowR: number[] }
@@ -21,6 +21,7 @@ type P2 = [number, number];
 /** profil (x, h): nos, přední hrana kapoty, pata čelního skla, vršek skla, konec střechy, pata zadního skla, konec kufru, záď */
 export interface CarGeo { L: number; nose: P2; hoodF: P2; wsBase: P2; wsTop: P2; roofBack: P2; rwBase: P2; trunkEnd: P2; tail: P2; xf: number; xr: number; r: number; zB: number; zG: number; doors: 2 | 4 }
 export function carGeo(body: CarBody): CarGeo {
+  if (body === 'truck') return { L: 8.3, nose: [4.15, 0.62], hoodF: [3.4, 1.0], wsBase: [3.3, 1.85], wsTop: [3.05, 2.75], roofBack: [1.7, 2.8], rwBase: [1.6, 2.2], trunkEnd: [-3.6, 2.2], tail: [-4.1, 0.62], xf: 2.4, xr: -2.1, r: 0.52, zB: 1.25, zG: 1.2, doors: 2 };
   if (body === 'hatch') return { L: 3.8, nose: [1.9, 0.62], hoodF: [1.78, 0.78], wsBase: [0.75, 0.88], wsTop: [0.15, 1.42], roofBack: [-1.55, 1.4], rwBase: [-1.84, 0.95], trunkEnd: [-1.88, 0.92], tail: [-1.9, 0.62], xf: 1.15, xr: -1.15, r: 0.3, zB: 0.84, zG: 0.7, doors: 2 };
   if (body === 'wagon') return { L: 4.6, nose: [2.3, 0.62], hoodF: [2.18, 0.78], wsBase: [0.95, 0.86], wsTop: [0.35, 1.4], roofBack: [-2.05, 1.4], rwBase: [-2.25, 0.95], trunkEnd: [-2.28, 0.92], tail: [-2.3, 0.62], xf: 1.5, xr: -1.5, r: 0.31, zB: 0.87, zG: 0.72, doors: 4 };
   return { L: 4.3, nose: [2.15, 0.62], hoodF: [2.02, 0.78], wsBase: [0.85, 0.86], wsTop: [0.25, 1.4], roofBack: [-0.9, 1.42], rwBase: [-1.45, 0.9], trunkEnd: [-2.08, 0.86], tail: [-2.15, 0.62], xf: 1.38, xr: -1.38, r: 0.31, zB: 0.86, zG: 0.71, doors: 4 };

@@ -22,6 +22,8 @@ import { towing, hill3, HILL } from '../sim/hillSled';
 import { plowAxis, axisAt, PLOW, bladeAhead, bandHalf } from '../sim/plow';
 import { drawTractor, drawPlowedBand } from './tractor3d';
 import { drawCar, carGeo } from './car3d';
+import { drawTruck } from './municipal3d';
+import { drawRoadSnow } from './roadSnowRender';
 import { carScale } from '../sim/street';
 import { tramGeo, tramMatrix, trackYAt, doorQuad, tramVisible, type TramGeo } from '../sim/tram';
 import { BAKERY_REFILL, GRIT_LIFE } from '../sim/bakery';
@@ -983,11 +985,14 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
         }
       }
     }
+    // sníh na vozovce (maskovaná vrstva nad pruhy – malba zůstává podkladem)
+    if (sim.state.street?.road && project.street) { const rs = sim.state.street.road; items.push({ key: -1e6 + 1, tie: 0, draw: () => drawRoadSnow(ctx, cam, project, rs) }); }
     // auta v ulici (3D model, měřítko postav); řazení podle bližší strany karoserie
     if (sim.state.street && project.street) for (const c of sim.state.street.cars) {
       const k = carScale(cam, project, c.X, c.Z), g = carGeo(c.body), near = toScreen(cam, { X: c.X, Z: c.Z - g.zB * k }), ppm = depthScaleAt(sc.depth, near.y) / Q;
       if (near.x < -400 || near.x > project.scene.width + 400) continue;
       const drv = c.driver ? sim.state.agents.find((x) => x.id === c.driver && !x.hidden && x.vehicle) : undefined, brd = sim.state.agents.find((x) => x.boarding === c.id && !x.hidden);
+      if (c.body === 'truck') { items.push({ key: near.y, tie: 12800 + (c.id % 100), draw: () => drawTruck(ctx, cam, { X: c.X, Z: c.Z }, c.hd, k, ppm, { dist: c.dist, t: opts.time, spreading: true, plowing: true, lights: true }) }); continue; }
       items.push({ key: near.y, tie: 12800 + (c.id % 100), draw: () => drawCar(ctx, cam, { X: c.X, Z: c.Z }, c.hd, k, ppm, { body: c.body, color: c.color }, { dist: c.dist, t: opts.time, snow: c.snow, blink: c.blink, brake: c.brake, lights: c.mode !== 'parked' || !!drv, door: c.door, pile: c.pile, inside: drv ? () => drawAgent(ctx, project, sim, drv, 1, images) : undefined, after: brd ? () => drawAgent(ctx, project, sim, brd, 1, images) : undefined }) });
     }
     // traktor s radlicí: odhrnutý pás (zem, pod vším) a 3D traktor
