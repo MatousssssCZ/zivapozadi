@@ -113,6 +113,10 @@ export async function generateStreet(dir: string): Promise<ProjectFile> {
     parks: [{ y: RD.nearParkY, x0: 20, x1: RD.nearParkX1, lane: 0 }, { y: RD.farParkY, x0: 40, x1: 1640, lane: 1 }],
     gap: [6, 24], speed: 7.5, parkShare: 0.3, parkedInit: [2, 2],
   };
+  // majitelé aut (přijdou ometat a odjet; vystoupí po zaparkování) – zásoba postav, mimo scénu, dokud nejsou potřeba
+  const ownApps = generateGroup(lib, 4, 8419).appearances, ownHeads = ['head_05_cg', 'head_07_cg', 'head_01_cg', 'head_11_cg'], ownNames = ['Tomáš (řidič)', 'Jana (řidička)', 'Petr (řidič)', 'Alena (řidička)'];
+  ownApps.forEach((app, i) => { app.variants = { ...app.variants, head: ownHeads[i] }; p.characters.push({ id: `ch_ridic${i + 1}`, name: ownNames[i], assetId: 'builtin_postava_cg', startNodeId: 'f0', baseScale: 1, walkSpeed: 55, palette: pal, wander: false, appearance: app, routine: 'driver', activities: {} }); });
+  p.street!.owners = ownApps.map((_, i) => `ch_ridic${i + 1}`); p.street!.departEvery = [70, 150];
   p.crowd = { walkersN: 7, dogs: 1, walkSpeed: 0.95 };
   p.export = { ...p.export, durationSec: 60, chunkSec: 20 };
   await saveProject(dir, p);

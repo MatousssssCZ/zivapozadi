@@ -21,6 +21,7 @@ export interface StreetConfig {
   /** mezery mezi auty v pruhu (s), rychlost (m/s), podíl aut, která zaparkují */ gap?: [number, number]; speed?: number; parkShare?: number;
   /** počáteční zaparkovaná auta (počet v každém pásu) */ parkedInit?: number[];
   /** násobek sněžení na autech (přibývání) */ snowRate?: number;
+  /** postavy majitelů (routine „driver“) a interval odjezdů (s) */ owners?: string[]; departEvery?: [number, number];
 }
 export type CarMode = 'drive' | 'parkIn' | 'parked' | 'pullOut';
 export interface Car {
@@ -29,8 +30,11 @@ export interface Car {
   lane: number; mode: CarMode; dist: number; snow: CarSnow;
   /** parkování: pás, cílové X, začátek manévru (X), čas zastavení */ park?: number; tX?: number; sX?: number; since?: number;
   blink: number; brake: boolean; door?: number;
+  /** hromádka smetaného sníh vedle auta (0–1) u chodníku / u silnice */ pile?: { kerb: number; road: number };
+  /** řidič sedí uvnitř (id postavy) */ driver?: string;
+  /** právě zaparkovalo – řidič vystoupí */ justParked?: boolean;
 }
-export interface StreetState { cars: Car[]; nextId: number; spawnT: number[]; n: number }
+export interface StreetState { cars: Car[]; nextId: number; spawnT: number[]; n: number; /** majitelé u aut (odjezd / příjezd) */ jobs?: import('./carOwners').OwnerJob[]; departT?: number; departN?: number }
 
 const G = (c: Car) => carGeo(c.body);
 /** měřítko modelu (shodné s postavami) v hloubce Z */
@@ -75,7 +79,9 @@ function freeSpot(cam: Camera, project: ProjectFile, st: StreetState, pi: number
   return dir > 0 ? Math.min(g[1] - L / 2 - 1.0, g[0] + L / 2 + 2.6) : Math.max(g[0] + L / 2 + 1.0, g[1] - L / 2 - 2.6);
 }
 
-export function stepStreet(project: ProjectFile, st: StreetState, t: number, log: (m: string) => void): void {
+/** překážka v pruhu (člověk u auta na straně silnice, otevřené dveře): auta před ní zastaví */
+export interface LaneBlock { lane: number; X: number }
+export function stepStreet(project: ProjectFile, st: StreetState, t: number, log: (m: string) => void, blocks: LaneBlock[] = []): void {
   const cfg = project.street!, cam = cameraFor(project.scene), seed = project.seed, dt = SIM_DT;
   const v0 = cfg.speed ?? 7.5;
   const W = project.scene.width;
@@ -108,19 +114,31 @@ export function stepStreet(project: ProjectFile, st: StreetState, t: number, log
     const dir = cfg.lanes[c.lane].dir, kc = carScale(cam, project, c.X, c.Z), Lc = G(c).L * kc;
     for (const o of st.cars) {
       if (o === c || o.mode === 'parked' || o.lane !== c.lane) continue;
+      // auto čekající u obrubníku na výjezd pruh neblokuje (vyjede až do mezery)
+      if (o.mode === 'pullOut' && o.sX === undefined) continue;
       // auto, které už zajelo k obrubníku (víc než z půlky), pruh neblokuje
       if (o.mode === 'parkIn' && Math.abs(o.Z - laneZ(cam, cfg.lanes[o.lane].y)) > 0.6 * Math.abs(laneZ(cam, cfg.parks[o.park!].y) - laneZ(cam, cfg.lanes[o.lane].y))) continue;
       const d = (o.X - c.X) * dir; if (d <= 0) continue;
       const ko = carScale(cam, project, o.X, o.Z), g = d - (Lc + G(o).L * ko) / 2;
       if (g < best.gap) best = { gap: g, v: o.v };
     }
+    for (const b of blocks) { if (b.lane !== c.lane) continue; const d = (b.X - c.X) * dir - Lc / 2 - 1.2; if (d > -Lc && d < best.gap) best = { gap: Math.max(0.1, d), v: 0 }; }
     return best;
   };
   for (const c of st.cars) {
     if (c.mode === 'parked') { c.v = 0; c.brake = false; continue; }
+    if (c.mode === 'pullOut' && c.sX === undefined) {
+      // výjezd z parkování: blinkr, čekat na mezeru v pruhu (nic blízko za ani těsně před)
+      const ln = cfg.lanes[c.lane], dir = ln.dir;
+      const clear = !st.cars.some((o) => o !== c && o.lane === c.lane && (o.mode === 'drive' || o.mode === 'parkIn') && ((c.X - o.X) * dir > -9 && (c.X - o.X) * dir < 38));
+      c.blink = 1; c.brake = true; c.v = 0;
+      if (clear && t - (c.since ?? t) > 1.2) { c.sX = c.X; c.tX = c.X + dir * 8.5; c.brake = false; log('Auto vyjíždí z parkování.'); }
+      continue;
+    }
     const ln = cfg.lanes[c.lane], dir = ln.dir, Zl = laneZ(cam, ln.y);
     let vDes = v0 * (0.92 + 0.16 * hashNoise(seed, 9630, c.id));
     // parkování: zpomalit k místu, blikat
+    if (c.mode === 'pullOut') vDes = Math.min(vDes, 2.5 + 2.5 * Math.max(0, (c.X - c.sX!) * dir) / 8.5); // rozjezd z místa
     if (c.mode === 'parkIn') {
       const toS = (c.sX! - c.X) * dir, toT = (c.tX! - c.X) * dir;
       if (toS < 30) c.blink = dir > 0 ? -1 : -1; // blinkr ke krajnici (vpravo)
@@ -141,7 +159,13 @@ export function stepStreet(project: ProjectFile, st: StreetState, t: number, log
     c.v = Math.max(0, c.v + acc * dt);
     c.brake = c.v < vPrev - 0.4 * dt || (c.mode === 'parkIn' && (c.tX! - c.X) * dir < 8);
     c.X += dir * c.v * dt; c.dist += c.v * dt;
-    if (c.mode === 'parkIn') {
+    if (c.mode === 'pullOut') {
+      // výjezd: plynulý přejezd od obrubníku do pruhu po S-křivce, pak běžná jízda
+      const Zp = laneZ(cam, cfg.parks[c.park!].y), f = Math.max(0, Math.min(1, ((c.X - c.sX!) * dir) / Math.max(1, (c.tX! - c.sX!) * dir)));
+      const sm = f * f * (3 - 2 * f), dsm = 6 * f * (1 - f) / Math.max(1, Math.abs(c.tX! - c.sX!));
+      c.Z = Zp + (Zl - Zp) * sm; c.hd = Math.atan2((Zl - Zp) * dsm, dir);
+      if (f >= 1) { c.mode = 'drive'; c.park = undefined; c.blink = 0; c.Z = Zl; c.hd = dir > 0 ? 0 : Math.PI; c.sX = c.tX = undefined; }
+    } else if (c.mode === 'parkIn') {
       // plynulý přejezd k obrubníku po S-křivce mezi sX a tX (směr auta sleduje tečnu)
       const Zp = laneZ(cam, cfg.parks[c.park!].y), f = Math.max(0, Math.min(1, ((c.X - c.sX!) * dir) / Math.max(1, (c.tX! - c.sX!) * dir)));
       const sm = f * f * (3 - 2 * f), dsm = 6 * f * (1 - f) / Math.max(1, Math.abs(c.tX! - c.sX!));
@@ -149,7 +173,7 @@ export function stepStreet(project: ProjectFile, st: StreetState, t: number, log
       c.hd = Math.atan2((Zp - Zl) * dsm * 1, dir) ;
       // dojezd na místo: zbytek rychlosti se dobrzdí měkce (≤ 2,5 m/s²), auto zůstane stát přesně na místě
       if ((c.tX! - c.X) * dir <= 0.05) { c.X = c.tX!; c.v = Math.max(0, c.v - 2.2 * dt); c.brake = true; }
-      if (((c.tX! - c.X) * dir <= 0.05 && c.v <= 0) || (f > 0.98 && c.v < 0.02)) { c.X = c.tX!; c.Z = Zp; c.hd = dir > 0 ? 0 : Math.PI; c.v = 0; c.mode = 'parked'; c.blink = 0; c.brake = false; c.since = t; log(`Auto zaparkovalo (${c.body}).`); }
+      if (((c.tX! - c.X) * dir <= 0.05 && c.v <= 0) || (f > 0.98 && c.v < 0.02)) { c.X = c.tX!; c.Z = Zp; c.hd = dir > 0 ? 0 : Math.PI; c.v = 0; c.mode = 'parked'; c.blink = 0; c.brake = false; c.since = t; c.justParked = true; log(`Auto zaparkovalo (${c.body}).`); }
     } else { c.Z = Zl; c.hd = dir > 0 ? 0 : Math.PI; }
   }
   // za okrajem scény auto zmizí (mimo záběr)

@@ -66,6 +66,9 @@ export interface AgentState {
   /** sedí ve vozidle (řidič traktoru): polohu řídí vozidlo, kreslí se uvnitř kabiny */ vehicle?: boolean;
   /** ořez postavy (px scény): průchod dveřmi tramvaje / pekárny – postava zmizí za rámem */
   clip?: { x: number; y: number }[] | null;
+  /** ořez více obrysy (sudo-lichý): nastupování do auta – karoserie zakryje tělo, vidět otvorem dveří */
+  clipRings?: { x: number; y: number }[][] | null;
+  /** nastupuje / vystupuje z auta (id auta): kreslí se po karoserii s ořezem */ boarding?: number | null;
   /** tramvaj: role cestujícího (čeká, vystupuje, nastupuje) a čekací místo */
   tram?: { role: 'wait' | 'alight' | 'board'; spot?: number; step?: number; since: number } | null;
   id: string;

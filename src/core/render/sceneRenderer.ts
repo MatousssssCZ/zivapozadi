@@ -336,6 +336,14 @@ function backgroundColorAt(project: ProjectFile, images: AssetImages, x: number,
 }
 
 function drawAgent(ctx: Ctx, project: ProjectFile, sim: Simulation, a: AgentState, cupScaleFallback: number, images: AssetImages) {
+  if (a.clipRings?.length) {
+    // nastupování / vystupování: vidět jen mimo bok auta a v otvoru dveří (sudo-lichý ořez)
+    const rings = a.clipRings; ctx.save(); ctx.beginPath();
+    for (const r of rings) { r.forEach((q, i) => (i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y))); ctx.closePath(); }
+    ctx.clip('evenodd');
+    a.clipRings = null; try { drawAgent(ctx, project, sim, a, cupScaleFallback, images); } finally { a.clipRings = rings; ctx.restore(); }
+    return;
+  }
   if (a.clip?.length) {
     // průchod dveřmi: postava je vidět jen v otvoru (zmizí za rámem a karoserií)
     const clip = a.clip; ctx.save(); ctx.beginPath(); clip.forEach((q, i) => (i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y))); ctx.closePath(); ctx.clip();
@@ -859,7 +867,7 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
       const ty = trackYAt(trG, a.pos.x); if (ty === null) return a.pos.y;
       return a.pos.y < ty ? a.pos.y - 5000 : Math.max(a.pos.y, K_TRAM + 1);
     };
-    for (const a of sim.state.agents) if (!a.hidden && !a.vehicle) items.push({ key: keyOf(a), tie: 10000 + sim.state.agents.indexOf(a), draw: () => drawAgent(ctx, project, sim, a, 1, images) });
+    for (const a of sim.state.agents) if (!a.hidden && !a.vehicle && a.boarding == null) items.push({ key: keyOf(a), tie: 10000 + sim.state.agents.indexOf(a), draw: () => drawAgent(ctx, project, sim, a, 1, images) });
     if (tr && trG) items.push({ key: K_TRAM, tie: 9500, draw: () => drawTram(ctx, project, sim, trG, images) });
     if (project.episodes?.length) items.push(...episodeItems(ctx, project, sim, cameraFor(sc)));
     const pst = sim.state.pram;
@@ -979,7 +987,8 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
     if (sim.state.street && project.street) for (const c of sim.state.street.cars) {
       const k = carScale(cam, project, c.X, c.Z), g = carGeo(c.body), near = toScreen(cam, { X: c.X, Z: c.Z - g.zB * k }), ppm = depthScaleAt(sc.depth, near.y) / Q;
       if (near.x < -400 || near.x > project.scene.width + 400) continue;
-      items.push({ key: near.y, tie: 12800 + (c.id % 100), draw: () => drawCar(ctx, cam, { X: c.X, Z: c.Z }, c.hd, k, ppm, { body: c.body, color: c.color }, { dist: c.dist, t: opts.time, snow: c.snow, blink: c.blink, brake: c.brake, lights: c.mode !== 'parked', door: c.door }) });
+      const drv = c.driver ? sim.state.agents.find((x) => x.id === c.driver && !x.hidden && x.vehicle) : undefined, brd = sim.state.agents.find((x) => x.boarding === c.id && !x.hidden);
+      items.push({ key: near.y, tie: 12800 + (c.id % 100), draw: () => drawCar(ctx, cam, { X: c.X, Z: c.Z }, c.hd, k, ppm, { body: c.body, color: c.color }, { dist: c.dist, t: opts.time, snow: c.snow, blink: c.blink, brake: c.brake, lights: c.mode !== 'parked' || !!drv, door: c.door, pile: c.pile, inside: drv ? () => drawAgent(ctx, project, sim, drv, 1, images) : undefined, after: brd ? () => drawAgent(ctx, project, sim, brd, 1, images) : undefined }) });
     }
     // traktor s radlicí: odhrnutý pás (zem, pod vším) a 3D traktor
     if (sim.state.plow && project.plow) {

@@ -36,7 +36,10 @@ import { stepBakery, newBakeryState, bakeryStartNow, TASK_LABEL, type BakeryHost
 import { createSkater, stepSkater, stepRinkEvents, separate, addTrails, skatePose, SKATE_PROFILES, TRAIL_LIFE, FALL_TOTAL, type IceGeo, type RinkState, type RinkCtx , forceRinkEvent, makeIceGeo, RINK_FALL_T0, rinkFallLen, LIFE_LABEL, insideW, clampToIce, type TrickKind } from './rink';
 import { stepFalls, startFall, newFallsState, DEFAULT_FALLS, type FallHost, type FallsState } from './falls';
 import { fallEndShift as fallEndShiftOf, type FallVariant } from '../anim/fallPoses';
-import { stepStreet, initStreet } from './street';
+import { stepStreet, initStreet, type LaneBlock } from './street';
+import { stepOwners, carLocal, type StreetHost, type OwnerJob } from './carOwners';
+import { carGeo } from '../render/car3d';
+import { carScale } from './street';
 import { stepPlow, newPlowState, plowAxis, axisAt, bladeAhead, bandHalf } from './plow';
 import { tractorScale, DRIVER_SEAT } from '../render/tractor3d';
 import { stepHill, initHill, type HillHost } from './hillSled';
@@ -259,6 +262,7 @@ export class Simulation {
     a.pace = randRange(a.rng, 0.9, 1.1);
     if (c.routine === 'hill') a.onHill = true; // bobování: řídí hillSled.ts
     if (c.routine === 'plow') { a.vehicle = true; a.hidden = true; a.status = 'Čeká v garáži'; } // řidič traktoru
+    if (c.routine === 'driver') { a.hidden = true; a.status = 'Doma (přijde k autu)'; } // majitel auta
     if (c.routine === 'sled' || c.routine === 'shovel' || c.routine === 'rider' || c.routine === 'pram' || c.routine === 'actor') a.hidden = true; // přijdou později zpoza okraje (nikdy nestojí u vstupu v prvním snímku)
     if (c.gaitProfile) { a.anim.elder = elderState(c.gaitProfile, c.caneSide ?? 'R', hashString(c.id)); a.pace = 1; }
     a.lane = (rand(a.rng) < 0.5 ? -1 : 1) * randRange(a.rng, 3, 7);
@@ -534,7 +538,7 @@ export class Simulation {
     if (this.project.falls || this.state.falls?.active.length) stepFalls(this.fallHost(), this.fallsState());
     if (this.project.rink) this.stepRink(t);
     if (this.project.hill && this.state.hill) stepHill(this.hillHost(), this.state.hill);
-    if (this.project.street) stepStreet(this.project, (this.state.street ??= initStreet(this.project)), t, (m) => this.log('info', m));
+    if (this.project.street) this.stepStreetAll(t);
     if (this.project.plow) {
       const pl = (this.state.plow ??= newPlowState(this.project));
       stepPlow(this.project, pl, t, (m) => this.log('info', m));
@@ -632,6 +636,83 @@ export class Simulation {
   // ---------------------------------------------------------------- pekař
   private bakeryHost: BakeryHost | null = null;
   /** Galerie aktivit: sáňky (A03) vyjedou hned. */
+  /** Doprava v ulici + majitelé aut (odjezdy s ometáním, příjezdy s vystoupením). */
+  private stepStreetAll(t: number) {
+    const st = (this.state.street ??= initStreet(this.project)), cfg = this.project.street!, cam = this.cam(), h = this.streetHost();
+    st.jobs ??= [];
+    // příjezd: kdo právě zaparkoval, vystoupí (volný majitel ze zásoby)
+    for (const c of st.cars) if (c.justParked) {
+      c.justParked = false;
+      const own = this.freeOwner(); if (!own) continue;
+      const g = carGeo(c.body), k = carScale(cam, this.project, c.X, c.Z), seat = carLocal(cam, c, k, g.wsBase[0] - 0.75, 0.32, 0.45);
+      h.show(own, seat.s); own.vehicle = true; c.driver = own.id;
+      st.jobs.push({ car: c.id, owner: own.id, kind: 'arrive', ph: 'exitCar', t0: t, stops: [], si: 0 });
+    }
+    // odjezd: občas přijde majitel zaparkovaného auta (nejdéle stojícího, bez jiného úkolu)
+    if (t >= (st.departT ?? 45)) {
+      st.departN = (st.departN ?? 0) + 1;
+      const [a0, a1] = cfg.departEvery ?? [70, 150];
+      st.departT = t + a0 + (a1 - a0) * hashNoise(this.project.seed, 9710, st.departN);
+      this.startDeparture(st, t);
+    }
+    st.jobs = stepOwners(h, st, st.jobs, t);
+    // překážky v pruhu: člověk na straně silnice nebo otevřené dveře
+    const blocks: LaneBlock[] = [];
+    for (const j of st.jobs) {
+      const c = st.cars.find((x) => x.id === j.car); if (!c || c.mode !== 'parked') continue;
+      const roadSide = (c.door ?? 0) > 0.02 || ['toDoor', 'stow', 'doorOpen', 'enter', 'doorClose', 'exitCar', 'leave'].includes(j.ph) || ((j.ph === 'brush' || j.ph === 'toStop') && j.stops[j.si] !== undefined && [3, 4].includes(j.stops[j.si]));
+      if (roadSide) blocks.push({ lane: c.lane, X: c.X });
+    }
+    stepStreet(this.project, st, t, (m) => this.log('info', m), blocks);
+  }
+  private freeOwner(): AgentState | null {
+    const ids = this.project.street?.owners ?? [], busy = new Set((this.state.street?.jobs ?? []).map((j) => j.owner));
+    for (const id of ids) { const a = this.state.agents.find((x) => x.id === id); if (a && a.hidden && !busy.has(id)) return a; }
+    return null;
+  }
+  private startDeparture(st: import('./street').StreetState, t: number, carId?: number): string {
+    const busyCars = new Set((st.jobs ?? []).map((j) => j.car));
+    const cands = st.cars.filter((c) => c.mode === 'parked' && !busyCars.has(c.id) && (carId === undefined || c.id === carId) && (c.since ?? 0) < t - (carId !== undefined ? 0 : 30));
+    if (!cands.length) return 'Žádné volné zaparkované auto.';
+    const own = this.freeOwner(); if (!own) return 'Žádný volný majitel.';
+    const c = cands.sort((a, b) => (a.since ?? 0) - (b.since ?? 0))[0], cam = this.cam(), g = carGeo(c.body), k = carScale(cam, this.project, c.X, c.Z);
+    const sw = this.project.street!.lanes[c.lane].dir < 0 ? 586 : 903, near = carLocal(cam, c, k, 0, -(g.zB + 0.55)).g;
+    const fromLeft = near.x > this.project.scene.width / 2 ? false : true, start = { x: fromLeft ? -90 : this.project.scene.width + 90, y: sw };
+    const h = this.streetHost(); h.show(own, start); h.walk(own, [{ x: near.x, y: sw }, near], 1);
+    (st.jobs ??= []).push({ car: c.id, owner: own.id, kind: 'depart', ph: 'come', t0: t, stops: [], si: 0 });
+    this.log('info', `${own.name} jde k autu.`, own.id);
+    return `${own.name} jde ometat auto a odjet.`;
+  }
+  /** Ladicí spuštění: majitel hned jde k (nejzasněženějšímu) zaparkovanému autu. */
+  departNow(): { ok: boolean; msg: string } {
+    const st = this.state.street; if (!st) return { ok: false, msg: 'Scéna nemá ulici.' };
+    const snowy = st.cars.filter((c) => c.mode === 'parked' && !(st.jobs ?? []).some((j) => j.car === c.id)).sort((a, b) => b.snow.roof.reduce((x, y) => x + y, 0) - a.snow.roof.reduce((x, y) => x + y, 0))[0];
+    if (!snowy) return { ok: false, msg: 'Žádné volné zaparkované auto.' };
+    const m = this.startDeparture(st, this.time(), snowy.id); return { ok: !/Žádn/.test(m), msg: m };
+  }
+  private streetCache: StreetHost | null = null;
+  private streetHost(): StreetHost {
+    const self = this;
+    return (this.streetCache ??= {
+      project: this.project, time: () => self.time(),
+      agent: (id) => self.state.agents.find((x) => x.id === id),
+      walk: (a, pts, sp) => { self.sessionHost().walkPath(a, pts, 'k autu', true); a.speedFactor = sp; },
+      moving: (a) => a.route !== null,
+      equip: (x, item) => self.equipAgent(x, item),
+      show: (x, p) => { x.pos = { ...p }; x.hidden = false; x.visPrev = undefined; x.off = { x: 0, y: 0 }; x.look = null; x.anim.walkBlend = 0; x.anim.settle = null; x.anim.anchors = undefined; x.anim.anchorsXY = undefined; x.anim.sit = null; x.lift = 0; },
+      hide: (x) => { x.hidden = true; x.route = null; x.speed = 0; x.vel = { X: 0, Z: 0 }; x.vehicle = false; x.clipRings = null; x.anim.sit = null; x.lift = 0; self.equipAgent(x, null); },
+      puff: (x, y, n, seed) => { const t0 = self.time(), sc = depthScaleAt(self.project.scene.depth, y); for (let i = 0; i < n; i++) emit((self.state.particles ??= []), { kind: 'snowPuff', x: x + (i - n / 2) * 4 * sc, y, t0, life: 0.45 + ((i * 37) % 30) / 100, w0: 0, sc, seed: seed + i * 13 }); },
+      log: (m, id) => self.log('info', m, id),
+    });
+  }
+  /** náčiní v rukou (koště jako nástroj) – sdílí pekař i majitel auta */
+  private equipAgent(x: AgentState, item: 'broom' | null) {
+    if (x.holding) { const hid = x.holding; this.state.props = this.state.props.filter((p) => p.id !== hid); x.holding = null; x.holdingKind = null; x.anim.tool = null; }
+    if (!item) return;
+    const p: PropState = { id: `prop${this.state.nextPropId++}`, kind: 'shovel', variant: 'broom', place: { kind: 'held', agentId: x.id }, appearedAt: this.time(), sips: 0 };
+    this.state.props.push(p); x.holding = p.id; x.holdingKind = 'shovel';
+    x.anim.tool = { u: 0.35, h: 0.55, beta: 1.25, crouch: 0, lean: 0 };
+  }
   /** Řidič traktoru: sedí v kabině (poloha sedadla podle modelu a měřítka postav), jinak není vidět. */
   private placePlowDriver(pl: import('./plow').PlowState, t: number) {
     const id = this.project.plow?.driverId; if (!id) return;
@@ -1751,6 +1832,7 @@ export class Simulation {
     }
     if (a.route) { if (!mv.waitingNarrow) a.status = a.pendingActivity ? 'Jde k činnosti' : this.routeStatus(a); return; }
     if (c.routine === 'shovel') { if (a.hidden) a.status = 'Mimo scénu'; return; } // řídí stepClearing
+    if (c.routine === 'driver') return; // řídí carOwners.ts
     if (c.routine === 'baker') return; // řídí stepBakeryAll
     if (c.routine === 'actor') { if (a.hidden) a.status = 'Mimo scénu'; return; } // řídí režisér epizod
     if (c.routine === 'pram') { if (a.hidden) a.status = 'Mimo scénu'; else if (!a.status) a.status = 'Tlačí kočárek'; return; } // řídí stepPram

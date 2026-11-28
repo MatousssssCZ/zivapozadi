@@ -3,8 +3,8 @@
   "formatVersion": 1,
   "meta": {
     "name": "Zasněžená ulice – modrý podvečer",
-    "createdAt": "2026-11-28T14:19:00.659Z",
-    "modifiedAt": "2026-11-28T14:19:00.750Z",
+    "createdAt": "2026-11-28T14:29:23.741Z",
+    "modifiedAt": "2026-11-28T14:29:23.833Z",
     "appVersion": "0.1.0"
   },
   "seed": 8417,
@@ -1456,6 +1456,238 @@
       "companionId": "ch_7",
       "companionSide": 1,
       "holdHands": true
+    },
+    {
+      "id": "ch_ridic1",
+      "name": "Tomáš (řidič)",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "f0",
+      "baseScale": 1,
+      "walkSpeed": 55,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": false,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1005656319,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_puffer_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_neckwarmer_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_cg",
+          "gloves": "gloves_cg",
+          "head": "head_05_cg"
+        },
+        "colors": {
+          "jacket": "petrolejova",
+          "hat": "hneda",
+          "scarf": "olivova",
+          "gloves": "olivova",
+          "trousers": "olivova",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 0.997,
+          "build": 0.953
+        },
+        "motion": {
+          "strideScale": 1.065,
+          "armSwing": 0.69,
+          "bob": 0.935,
+          "sway": 0.913,
+          "idleTempo": 0.931,
+          "lean": 2.524,
+          "speed": 0.906,
+          "phase": 0.99,
+          "armLag": 3.276,
+          "armLR": 1.086
+        },
+        "locks": []
+      },
+      "routine": "driver",
+      "activities": {}
+    },
+    {
+      "id": "ch_ridic2",
+      "name": "Jana (řidička)",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "f0",
+      "baseScale": 1,
+      "walkSpeed": 55,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": false,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 579178285,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_coat_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_hiking_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_07_cg"
+        },
+        "colors": {
+          "jacket": "vinova",
+          "hat": "olivova",
+          "scarf": "kremova",
+          "gloves": "olivova",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 0.967,
+          "build": 0.958
+        },
+        "motion": {
+          "strideScale": 0.975,
+          "armSwing": 0.924,
+          "bob": 1.016,
+          "sway": 0.899,
+          "idleTempo": 1.064,
+          "lean": 1.781,
+          "speed": 0.883,
+          "phase": 0.041,
+          "armLag": 0.288,
+          "armLR": 1.067
+        },
+        "locks": []
+      },
+      "routine": "driver",
+      "activities": {}
+    },
+    {
+      "id": "ch_ridic3",
+      "name": "Petr (řidič)",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "f0",
+      "baseScale": 1,
+      "walkSpeed": 55,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": false,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1831817622,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_puffer_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_neckwarmer_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_hiking_cg",
+          "gloves": "gloves_cg",
+          "head": "head_01_cg"
+        },
+        "colors": {
+          "jacket": "tmave-seda",
+          "hat": "kremova",
+          "scarf": "hneda",
+          "gloves": "kremova",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 1.038,
+          "build": 1.028
+        },
+        "motion": {
+          "strideScale": 0.903,
+          "armSwing": 0.724,
+          "bob": 1.165,
+          "sway": 1.196,
+          "idleTempo": 0.994,
+          "lean": 0.999,
+          "speed": 0.997,
+          "phase": 0.979,
+          "armLag": 2.851,
+          "armLR": 1.107
+        },
+        "locks": []
+      },
+      "routine": "driver",
+      "activities": {}
+    },
+    {
+      "id": "ch_ridic4",
+      "name": "Alena (řidička)",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "f0",
+      "baseScale": 1,
+      "walkSpeed": 55,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": false,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1525402124,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_puffer_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_neckwarmer_cg",
+          "trousers": "trousers_slim_cg",
+          "boots": "boots_hiking_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_11_cg"
+        },
+        "colors": {
+          "jacket": "kremova",
+          "hat": "hneda",
+          "scarf": "petrolejova",
+          "gloves": "hneda",
+          "trousers": "hneda",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 1.041,
+          "build": 0.976
+        },
+        "motion": {
+          "strideScale": 1.058,
+          "armSwing": 0.704,
+          "bob": 1.093,
+          "sway": 0.86,
+          "idleTempo": 1.049,
+          "lean": 2.23,
+          "speed": 1.134,
+          "phase": 0.673,
+          "armLag": 1.646,
+          "armLR": 0.891
+        },
+        "locks": []
+      },
+      "routine": "driver",
+      "activities": {}
     }
   ],
   "schedule": [],
@@ -1506,6 +1738,16 @@
     "parkedInit": [
       2,
       2
+    ],
+    "owners": [
+      "ch_ridic1",
+      "ch_ridic2",
+      "ch_ridic3",
+      "ch_ridic4"
+    ],
+    "departEvery": [
+      70,
+      150
     ]
   },
   "crowd": {

@@ -30,6 +30,8 @@ export interface CarDraw {
   dist: number; t: number; snow?: CarSnow;
   /** otevření dveří řidiče (0–1; řidič vlevo = z > 0) */ door?: number;
   /** blinkr: −1 vpravo, 1 vlevo, 0 vypnuto */ blink?: number; brake?: boolean; lights?: boolean;
+  /** hromádky smetaného sněhu vedle auta */ pile?: { kerb: number; road: number };
+  /** po karoserii (nastupující postava s ořezem) */ after?: () => void;
   /** kreslení postavy uvnitř (mezi vzdálenými a bližšími plochami) */ inside?: () => void;
 }
 const SNOW = '#f1ecf2', GLASS = '#41506a', DARKG = '#1c1c22', CHROME = '#b9bcc4', TIRE = '#202024';
@@ -58,7 +60,7 @@ export function carFaces(g: CarGeo, look: CarLook, d: CarDraw): Face[] {
   for (const s of [1, -1]) {
     F.push({ pts: side(s), color: col, o, post: (P) => doorLines(P, g, s, d) });
     // prosklená kabina (užší) se sloupky
-    F.push({ pts: [[g.wsBase[0], s * zG, g.wsBase[1]], [g.wsTop[0], s * zG, g.wsTop[1]], [g.roofBack[0], s * zG, g.roofBack[1]], [g.rwBase[0], s * zG, g.rwBase[1]]], color: GLASS, o, post: (P) => windowFrame(P, g, s, col) });
+    F.push({ pts: [[g.wsBase[0], s * zG, g.wsBase[1]], [g.wsTop[0], s * zG, g.wsTop[1]], [g.roofBack[0], s * zG, g.roofBack[1]], [g.rwBase[0], s * zG, g.rwBase[1]]], color: GLASS, alpha: d.inside ? 0.62 : undefined, o, post: (P) => windowFrame(P, g, s, col) });
     // rameno mezi bokem a kabinou (podél linie oken)
     F.push({ pts: [[g.rwBase[0], s * zB, g.rwBase[1]], [g.wsBase[0], s * zB, g.wsBase[1]], [g.wsBase[0], s * zG, g.wsBase[1] + 0.02], [g.rwBase[0], s * zG, g.rwBase[1] + 0.02]], color: col, o, stroke: false });
   }
@@ -76,6 +78,7 @@ export function carFaces(g: CarGeo, look: CarLook, d: CarDraw): Face[] {
   // nárazníky (chromované lišty)
   F.push({ pts: [[g.nose[0] + 0.04, -zB, 0.3], [g.nose[0] + 0.04, zB, 0.3], [g.nose[0] + 0.04, zB, 0.4], [g.nose[0] + 0.04, -zB, 0.4]], color: CHROME, o });
   F.push({ pts: [[g.tail[0] - 0.04, -zB, 0.3], [g.tail[0] - 0.04, -zB, 0.4], [g.tail[0] - 0.04, zB, 0.4], [g.tail[0] - 0.04, zB, 0.3]], color: CHROME, o });
+  if (d.door && d.door > 0.01) F.push(...doorFaces(g, col, d.door));
   if (d.snow) F.push(...snowFaces(g, d.snow));
   if (d.inside) F.push({ pts: [[(g.wsBase[0] + g.roofBack[0]) / 2, 0.25, 0.9], [(g.wsBase[0] + g.roofBack[0]) / 2, 0.25, 0.9], [(g.wsBase[0] + g.roofBack[0]) / 2, 0.25, 0.9]], color: DARKG, noCull: true, post: () => d.inside!() });
   return F;
@@ -123,6 +126,24 @@ function blinkers(P: (v: V3) => Vec2, g: CarGeo, d: CarDraw, x: number, end: num
   lamp(P, [x, d.blink * (g.zB - 0.06), end > 0 ? 0.4 : 0.42], 'rgba(255,165,40,1)', 0.05, 1);
 }
 
+/** otevřené dveře řidiče (vlevo, z > 0): tmavý otvor v boku a dveřní panel natočený kolem pantu vpředu */
+function doorFaces(g: CarGeo, col: string, open: number): Face[] {
+  const zB = g.zB, xd0 = g.wsBase[0] - 0.05, xd1 = g.doors === 4 ? (g.wsTop[0] + g.roofBack[0]) / 2 + 0.05 : g.roofBack[0] + 0.25;
+  const bt = (x: number) => g.rwBase[1] + ((g.wsBase[1] - g.rwBase[1]) * (x - g.rwBase[0])) / (g.wsBase[0] - g.rwBase[0]);
+  const rt = (x: number) => Math.min(g.roofBack[1] - 0.04, x > g.wsTop[0] ? g.wsTop[1] - ((x - g.wsTop[0]) / (g.wsBase[0] - g.wsTop[0])) * (g.wsTop[1] - g.wsBase[1]) : g.roofBack[1] - 0.04);
+  const th = open * 1.1, rot = (x: number, h: number): V3 => [xd0 - (xd0 - x) * Math.cos(th), zB + (xd0 - x) * Math.sin(th), h];
+  const F: Face[] = [];
+  // otvor (interiér) – na boku i v linii oken
+  F.push({ pts: [[xd0, zB + 0.004, 0.32], [xd1, zB + 0.004, 0.32], [xd1, zB + 0.004, bt(xd1)], [xd0, zB + 0.004, bt(xd0)]], color: '#1b1a22', noCull: true, bias: -0.04, stroke: false });
+  F.push({ pts: [[xd0, g.zG + 0.004, bt(xd0)], [xd1, g.zG + 0.004, bt(xd1)], [xd1, g.zG + 0.004, rt(xd1)], [xd0, g.zG + 0.004, rt(xd0)]], color: '#22212a', noCull: true, bias: -0.04, stroke: false });
+  // sedadlo v otvoru (kus opěradla)
+  F.push({ pts: [[xd0 - 0.5, zB - 0.05, 0.55], [xd1 + 0.05, zB - 0.05, 0.55], [xd1 + 0.05, zB - 0.05, 0.95], [xd0 - 0.5, zB - 0.05, 0.95]], color: '#5a3e34', noCull: true, bias: -0.06, stroke: false });
+  // dveřní panel (plech) a okno v něm, otočené ven
+  F.push({ pts: [rot(xd0, 0.32), rot(xd1, 0.32), rot(xd1, bt(xd1)), rot(xd0, bt(xd0))], color: col, noCull: true, bias: -0.3 });
+  F.push({ pts: [rot(xd0, bt(xd0)), rot(xd1, bt(xd1)), rot(xd1, rt(xd1)), rot(xd0, rt(xd0))], color: GLASS, alpha: 0.7, noCull: true, bias: -0.3 });
+  return F;
+}
+
 /** sníh: desky po buňkách na střeše, kapotě a kufru; námraza na sklech; břečka na spodních bocích */
 function snowFaces(g: CarGeo, sn: CarSnow): Face[] {
   const F: Face[] = [], o: V3 = [0, 0, 0.6];
@@ -168,7 +189,18 @@ export function drawCar(ctx: Ctx, cam: Camera, P: World, hd: number, kS: number,
   const sh = [[-g.L / 2 - 0.1, -g.zB - 0.15], [g.L / 2 + 0.1, -g.zB - 0.15], [g.L / 2 + 0.1, g.zB + 0.1], [-g.L / 2 - 0.1, g.zB + 0.1]].map(([x, z]) => pl.proj([x, z, 0]));
   ctx.save(); ctx.fillStyle = 'rgba(20,25,50,0.35)'; ctx.filter = `blur(${Math.max(1, 0.12 * ppm).toFixed(1)}px)`;
   ctx.beginPath(); sh.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y))); ctx.closePath(); ctx.fill(); ctx.restore();
+  // hromádky smetaného sněhu vedle auta (na zemi u chodníku / u silnice)
+  for (const [side, amt] of [[-1, d.pile?.kerb ?? 0], [1, d.pile?.road ?? 0]] as const) {
+    if (amt < 0.03) continue;
+    for (let i = 0; i < 4; i++) {
+      const x = -g.L * 0.3 + (g.L * 0.6 * i) / 3, r = (0.12 + 0.1 * amt) * (0.8 + 0.25 * Math.sin(i * 2.3)), c0 = pl.proj([x, side * (g.zB + 0.32), 0]), c1 = pl.proj([x + r, side * (g.zB + 0.32), 0]), top = pl.proj([x, side * (g.zB + 0.32), r * 0.8 * amt + 0.04]);
+      const rx = Math.max(1.5, Math.abs(c1.x - c0.x)), ry = Math.max(1, c0.y - top.y);
+      ctx.fillStyle = 'rgba(150,150,190,0.35)'; ctx.beginPath(); ctx.ellipse(c0.x, c0.y - ry * 0.25, rx * 1.1, ry * 0.6, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ece8f0'; ctx.beginPath(); ctx.ellipse(c0.x, c0.y - ry * 0.5, rx, ry * 0.65, 0, 0, Math.PI * 2); ctx.fill();
+    }
+  }
   drawFaces(ctx, cam, pl, carFaces(g, look, d), ppm, { X: 0.2, Z: 0.6, H: 0.9 });
+  if (d.after) d.after();
   // světla rozsvícená za jízdy: kužel na vozovku před autem
   if (d.lights) {
     const a = pl.proj([g.nose[0] + 0.3, 0, 0]), b = pl.proj([g.nose[0] + 4, 0, 0]);
