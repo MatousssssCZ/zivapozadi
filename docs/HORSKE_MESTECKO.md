@@ -30,10 +30,16 @@ npx tsx scripts/generate-mountain-demo.ts
 - Na cestě děti dodržují rozestupy (počkají za tím, kdo je před nimi, i za jeho boby); přednost má ten, kdo je na okruhu dál, a kdo čeká přes 3 s, pomalu pokračuje – žádné vzájemné zaseknutí.
 - Žádné teleporty: kontrola po 400 s simulace – největší posun za krok 2,4 px.
 
+- **Příchody a odchody:** „Počet dětí“ (horní lišta *Děti na svahu* i panel) je průměr; děti občas přijdou zpoza levého okraje s boby a jiné po dojetí odejdou domů (každých 30–75 s, nastavitelné; počet kolísá kolem průměru). Nikdo se neobjeví ani nezmizí v záběru.
+- **Předbíhání:** rychlejší dítě (běžící, nebo s rychlejším krokem) pomalejší nečeká – vybočí stranou (0,85 m), předběhne ho i s jeho boby a vrátí se na osu cesty (vyhlazený směr – v ohybech bez skoku). Do stojící fronty se nikdo neprotlačí.
+
 ## Traktor s radlicí (H01)
 - `src/core/sim/plow.ts` (průjezd, odhrnutý pás) a `src/core/render/tractor3d.ts` (model).
-- Stylizovaný low-poly 3D model promítaný kamerou scény: zašlá červená kapota, zelenošedé blatníky se sněhem, prosklená kabina s řidičem, výfuk, oranžový maják se zábleskem, šikmá radlice (vzdálený konec vpředu → sníh jde k bližší krajnici) a hrnutý sníh před ní. Kola se točí podle ujeté dráhy, karoserie lehce vibruje.
+- **Traktorista** (postava z knihovny, routine `plow`) v pracovním mundúru – oranžová reflexní bunda s pruhy, tmavé montérky s chrániči kolen, čepice – sedí v kabině, ruce na volantu, občas pootočí volantem a podívá se k radlici; kreslí se mezi zadními a předními plochami kabiny (vidět skly, nohy zakryté panely).
+- **Trasa traktoru** se upravuje v editoru: *Traktor s pluhem → Upravit trasu…* (nebo klik na oranžovou čárkovanou trasu) – body táhnout myší, čísla v panelu, vložit / smazat bod, obrátit směr; upozornění, když začátek / konec není mimo záběr.
+- Stylizovaný low-poly 3D model promítaný kamerou scény (zaoblené blatníky s lemem a sněhem, sloupky a prosklení kabiny, střecha s přesahem, kapota zužující se dopředu s mřížkou a světly, zrcátka, volant, výfuk s kouřem, zadní světla, prohnutá radlice s břitem, žebry a tyčemi s odrazkami): zašlá červená kapota, zelenošedé blatníky se sněhem, prosklená kabina s řidičem, výfuk, oranžový maják se zábleskem, šikmá radlice (vzdálený konec vpředu → sníh jde k bližší krajnici) a hrnutý sníh před ní. Kola se točí podle ujeté dráhy, karoserie lehce vibruje.
 - Časy: první průjezd 60–120 s, interval 240–420 s, průjezd 25–40 s; začátek i konec mimo obraz.
+- Plynulé odhrnování: pás končí přesně u čepele (s měkkým přechodem), val hrud za čepelí plynule narůstá, před čepelí se valí hroudy sněhu (rostou od začátku jízdy); šířka pásu = šířka radlice (v měřítku modelu).
 - Za radlicí zůstane tmavší utužený pás s kolejemi a val hrud sněhu na bližší krajnici; při sněžení pás zapadne asi za 5 minut (bez sněžení za 20 minut). Smrk v popředí traktor zakryje.
 
 ## Nastavení v editoru

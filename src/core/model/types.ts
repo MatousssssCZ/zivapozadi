@@ -221,7 +221,7 @@ export interface CharacterInstance {
    * Chování: `wander` = volná procházka po trasách (původní), `visitor` = návštěvník: přijde vstupem,
    * scénou buď jen projde, nebo si dojde na kávu, nebo se potká s přítelem a jdou na kávu spolu; pak odejde.
    */
-  routine?: 'wander' | 'visitor' | 'sled' | 'shovel' | 'baker' | 'rider' | 'pram' | 'actor' | 'hill';
+  routine?: 'wander' | 'visitor' | 'sled' | 'shovel' | 'baker' | 'rider' | 'pram' | 'actor' | 'hill' | 'plow';
   /** Postava venčí psa (Z01). */
   pet?: 'dog';
   /** Rasa psa (díly `animal_<rasa>_*`, např. `dog_collie`); chybí = původní pes. */

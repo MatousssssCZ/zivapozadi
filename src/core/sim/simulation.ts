@@ -36,7 +36,8 @@ import { stepBakery, newBakeryState, bakeryStartNow, TASK_LABEL, type BakeryHost
 import { createSkater, stepSkater, stepRinkEvents, separate, addTrails, skatePose, SKATE_PROFILES, TRAIL_LIFE, FALL_TOTAL, type IceGeo, type RinkState, type RinkCtx , forceRinkEvent, makeIceGeo, RINK_FALL_T0, rinkFallLen, LIFE_LABEL, insideW, clampToIce, type TrickKind } from './rink';
 import { stepFalls, startFall, newFallsState, DEFAULT_FALLS, type FallHost, type FallsState } from './falls';
 import { fallEndShift as fallEndShiftOf, type FallVariant } from '../anim/fallPoses';
-import { stepPlow, newPlowState, plowAxis, axisAt } from './plow';
+import { stepPlow, newPlowState, plowAxis, axisAt, bladeAhead, bandHalf } from './plow';
+import { tractorScale, DRIVER_SEAT } from '../render/tractor3d';
 import { stepHill, initHill, type HillHost } from './hillSled';
 import { stepSled, sledObstacles, sledPathProblem, type SledHost } from './sled';
 import { forceMitten } from './mitten';
@@ -255,6 +256,7 @@ export class Simulation {
     };
     a.pace = randRange(a.rng, 0.9, 1.1);
     if (c.routine === 'hill') a.onHill = true; // bobování: řídí hillSled.ts
+    if (c.routine === 'plow') { a.vehicle = true; a.hidden = true; a.status = 'Čeká v garáži'; } // řidič traktoru
     if (c.routine === 'sled' || c.routine === 'shovel' || c.routine === 'rider' || c.routine === 'pram' || c.routine === 'actor') a.hidden = true; // přijdou později zpoza okraje (nikdy nestojí u vstupu v prvním snímku)
     if (c.gaitProfile) { a.anim.elder = elderState(c.gaitProfile, c.caneSide ?? 'R', hashString(c.id)); a.pace = 1; }
     a.lane = (rand(a.rng) < 0.5 ? -1 : 1) * randRange(a.rng, 3, 7);
@@ -533,10 +535,12 @@ export class Simulation {
     if (this.project.plow) {
       const pl = (this.state.plow ??= newPlowState(this.project));
       stepPlow(this.project, pl, t, (m) => this.log('info', m));
+      this.placePlowDriver(pl, t);
       // sníh odletující z bližšího konce radlice k bližší krajnici
       if (pl.phase === 'run' && pl.v > 0.3 && Math.floor(t / 0.1) !== Math.floor((t - SIM_DT) / 0.1)) {
         const cam = this.cam(), { P, hd } = axisAt(plowAxis(cam, this.project.plow), pl.s), c = Math.cos(hd), s = Math.sin(hd);
-        const q = toScreen(cam, { X: P.X + 2.25 * c + 1.5 * s, Z: P.Z + 2.25 * s - 1.5 * c }, 0.15), sc = depthScaleAt(this.project.scene.depth, q.y);
+        const bl = bladeAhead(this.project, cam, plowAxis(cam, this.project.plow), pl.s), hw = bandHalf(this.project, cam, plowAxis(cam, this.project.plow), pl.s) * 1.08;
+        const q = toScreen(cam, { X: P.X + (bl - 0.2) * c + hw * s, Z: P.Z + (bl - 0.2) * s - hw * c }, 0.15), sc = depthScaleAt(this.project.scene.depth, q.y);
         for (let i = 0; i < 3; i++) emit((this.state.particles ??= []), { kind: 'snowPuff', x: q.x + (i - 1) * 5 * sc, y: q.y, t0: t, life: 0.5 + ((i * 37 + this.state.step) % 30) / 100, w0: 0, sc: sc * 1.4, seed: this.state.step * 7 + i * 13 });
       }
     }
@@ -625,6 +629,21 @@ export class Simulation {
   // ---------------------------------------------------------------- pekař
   private bakeryHost: BakeryHost | null = null;
   /** Galerie aktivit: sáňky (A03) vyjedou hned. */
+  /** Řidič traktoru: sedí v kabině (poloha sedadla podle modelu a měřítka postav), jinak není vidět. */
+  private placePlowDriver(pl: import('./plow').PlowState, t: number) {
+    const id = this.project.plow?.driverId; if (!id) return;
+    const a = this.state.agents.find((x) => x.id === id); if (!a) return;
+    if (pl.phase !== 'run') { if (!a.hidden) { a.hidden = true; a.anim.sit = null; a.status = 'Čeká v garáži'; } return; }
+    const cam = this.cam(), { P, hd } = axisAt(plowAxis(cam, this.project.plow!), pl.s);
+    const ppm = depthScaleAt(this.project.scene.depth, toScreen(cam, P).y) / Q, k = tractorScale(cam, P, ppm);
+    const c = Math.cos(hd) * k, s = Math.sin(hd) * k, [mx, mz, mh] = DRIVER_SEAT;
+    const W = { X: P.X + mx * c - mz * s, Z: P.Z + mx * s + mz * c }, p = toScreen(cam, W, mh * k), g = toScreen(cam, W);
+    const ahead = toScreen(cam, { X: W.X + Math.cos(hd), Z: W.Z + Math.sin(hd) });
+    a.hidden = false; a.pos = p; a.lift = g.y - p.y; a.off = undefined; a.speed = 0; a.vel = { X: 0, Z: 0 };
+    a.facing = Math.atan2(ahead.y - g.y, ahead.x - g.x); a.groundHeading = hd;
+    const s0 = a.anim.sit; a.anim.sit = { kind: 'drive', t: (s0?.kind === 'drive' ? s0.t : 0) + SIM_DT, dur: 1e9, w: 1, r: 0 };
+    a.status = 'Řídí traktor a odhrnuje silnici'; void t;
+  }
   /** Bobování: první dítě ve frontě vyjede, jakmile to rezervace dojezdu dovolí. */
   hillNow(): { ok: boolean; msg: string } {
     const st = this.state.hill; if (!st) return { ok: false, msg: 'Scéna nemá svah.' };
@@ -1065,7 +1084,7 @@ export class Simulation {
   }
   /** volnější podmínka pro ruční spuštění: viditelný dospělý bez činnosti a věcí v rukou */
   private fallLoose(a: AgentState): boolean {
-    return !a.hidden && !a.activity && !a.holding && !a.follow && !a.anim.fall && !this.isChild(a) && !a.anim.elder && this.chars.get(a.id)?.routine !== 'shovel' && this.chars.get(a.id)?.routine !== 'sled' && this.chars.get(a.id)?.routine !== 'rider' && this.chars.get(a.id)?.routine !== 'pram' && this.chars.get(a.id)?.routine !== 'actor' && !(a.anim.gestures ?? []).length;
+    return !a.hidden && !a.vehicle && !a.onHill && !a.activity && !a.holding && !a.follow && !a.anim.fall && !this.isChild(a) && !a.anim.elder && this.chars.get(a.id)?.routine !== 'shovel' && this.chars.get(a.id)?.routine !== 'sled' && this.chars.get(a.id)?.routine !== 'rider' && this.chars.get(a.id)?.routine !== 'pram' && this.chars.get(a.id)?.routine !== 'actor' && !(a.anim.gestures ?? []).length;
   }
   private fallCache: FallHost | null = null;
   private fallHost(): FallHost {
@@ -1442,7 +1461,7 @@ export class Simulation {
     for (const a of this.state.agents) {
       const mv = { arrived: false, waitingNarrow: false };
       this.motion.set(a.id, mv);
-      if (a.onIce || a.onHill) continue; // bruslaře řídí rink.ts, svah hillSled.ts
+      if (a.onIce || a.onHill || a.vehicle) continue; // bruslaře řídí rink.ts, svah hillSled.ts
       a.off = undefined; a.speedCap = null;
       if (a.follow) {
         const leader = this.state.agents.find((x) => x.id === a.follow!.leaderId);
@@ -1708,7 +1727,7 @@ export class Simulation {
     // pád: animátor stojí (základní póza zůstane zmrazená – pád se z ní plynule prolne; žádné dokročení)
     const events = a.anim.fall ? [] : stepAnimator(a.anim, m, SIM_DT, visSpeed, (this.vmaxMps(a) / Q) * scale, scale, gaitContextFor(m, c));
     this.latchFootAnchors(a, c, m, heelsNow);
-    if (a.onHill) return; // svah: poloha, sed a stav z hillSled.ts
+    if (a.onHill || a.vehicle) return; // svah / vozidlo: poloha, sed a stav řídí jejich modul
     if (mv.waitingNarrow) a.status = 'Čeká před úzkým průchodem';
     // 3) rozhodování + účast v činnosti
     if (a.follow) { const l = this.state.agents.find((x) => x.id === a.follow!.leaderId); a.status = l ? (a.hidden ? 'Mimo scénu' : `Jde s postavou ${l.name}`) : 'Stojí'; return; }

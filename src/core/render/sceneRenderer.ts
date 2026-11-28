@@ -19,7 +19,7 @@ import { SHOVEL_SPRITE } from '../anim/skeleton';
 import { cameraFor, toScreen, toWorld, Q, type World } from '../scene/camera';
 import { SLED } from '../sim/sled';
 import { towing, hill3, HILL } from '../sim/hillSled';
-import { plowAxis, axisAt, PLOW } from '../sim/plow';
+import { plowAxis, axisAt, PLOW, bladeAhead, bandHalf } from '../sim/plow';
 import { drawTractor, drawPlowedBand } from './tractor3d';
 import { tramGeo, tramMatrix, trackYAt, doorQuad, tramVisible, type TramGeo } from '../sim/tram';
 import { BAKERY_REFILL, GRIT_LIFE } from '../sim/bakery';
@@ -345,7 +345,7 @@ function drawAgent(ctx: Ctx, project: ProjectFile, sim: Simulation, a: AgentStat
   const m = sim.manifests[c.assetId];
   if (!m) return;
   const cv = characterVisual(a, m, c, project.scene);
-  drawShadow(ctx, cv.x, cv.y, cv.scale);
+  if (!a.vehicle) drawShadow(ctx, cv.x, cv.y, cv.scale);
   // teplé světlo luceren na postavě (jen v její alfě, izolovaná ROI – B.5)
   const lit = litCtx ? characterLightAt(project, litCtx.objects, litCtx.assets, { x: cv.x, y: cv.y }, litCtx.t) : { g: 0, color: '', dx: 0 };
   if (lit.g > 0.006) {
@@ -857,7 +857,7 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
       const ty = trackYAt(trG, a.pos.x); if (ty === null) return a.pos.y;
       return a.pos.y < ty ? a.pos.y - 5000 : Math.max(a.pos.y, K_TRAM + 1);
     };
-    for (const a of sim.state.agents) if (!a.hidden) items.push({ key: keyOf(a), tie: 10000 + sim.state.agents.indexOf(a), draw: () => drawAgent(ctx, project, sim, a, 1, images) });
+    for (const a of sim.state.agents) if (!a.hidden && !a.vehicle) items.push({ key: keyOf(a), tie: 10000 + sim.state.agents.indexOf(a), draw: () => drawAgent(ctx, project, sim, a, 1, images) });
     if (tr && trG) items.push({ key: K_TRAM, tie: 9500, draw: () => drawTram(ctx, project, sim, trG, images) });
     if (project.episodes?.length) items.push(...episodeItems(ctx, project, sim, cameraFor(sc)));
     const pst = sim.state.pram;
@@ -975,15 +975,17 @@ export function drawScene(ctx: Ctx, project: ProjectFile, sim: Simulation | null
     }
     // traktor s radlicí: odhrnutý pás (zem, pod vším) a 3D traktor
     if (sim.state.plow && project.plow) {
-      const pl = sim.state.plow, ax = plowAxis(cam, project.plow), hw = (project.plow.bandW ?? 2.6) / 2;
-      items.push({ key: -1e6, tie: 0, draw: () => drawPlowedBand(ctx, cam, (s) => axisAt(ax, s), PLOW.bin, pl.cleared, pl.berm, hw) });
+      const pl = sim.state.plow, ax = plowAxis(cam, project.plow), hw = bandHalf(project, cam, ax, ax.len * 0.5);
+      items.push({ key: -1e6, tie: 0, draw: () => drawPlowedBand(ctx, cam, (s) => axisAt(ax, s), PLOW.bin, pl.cleared, pl.berm, hw, pl.phase === 'run' ? pl.s + bladeAhead(project, cam, ax, pl.s) : Infinity) });
       if (pl.phase === 'run') {
         const { P, hd } = axisAt(ax, pl.s), c = toScreen(cam, P), ppm = depthScaleAt(sc.depth, c.y) / Q;
-        items.push({ key: c.y + 0.6 * ppm, tie: 13000, draw: () => drawTractor(ctx, cam, P, hd, pl.dist, opts.time, ppm) });
+        const drv = project.plow.driverId ? sim.state.agents.find((x) => x.id === project.plow!.driverId && !x.hidden) : undefined;
+        items.push({ key: c.y + 0.6 * ppm, tie: 13000, draw: () => drawTractor(ctx, cam, P, hd, pl.dist, opts.time, ppm, drv ? () => drawAgent(ctx, project, sim, drv, 1, images) : undefined, project.plow!.bandW ?? 2.6) });
       }
     }
     // bobování na svahu: boby (3D model ve výšce terénu, sklon svahu) + šňůra od ruky dítěte při tahání
     if (sim.state.hill && project.hill) for (const k of sim.state.hill.kids) {
+      if (k.ph === 'off') continue; // dítě je doma (mimo scénu)
       const S = { X: k.sled.P.X, Z: k.sled.P.Z }, H0 = k.sled.P.H, c = toScreen(cam, S, H0), gy = toScreen(cam, S).y, ppm = depthScaleAt(sc.depth, gy) / Q;
       items.push({ key: c.y, tie: 12500, draw: () => drawVectorSled(ctx, cam, S, k.sled.hd, 'boby', k.sled.dist, ppm, k.color, H0, k.sled.pitch) });
       const kid = sim.state.agents.find((x) => x.id === k.id);

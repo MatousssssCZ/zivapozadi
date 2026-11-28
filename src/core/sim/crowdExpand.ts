@@ -5,10 +5,12 @@
  * Projekt se nemění; simulace pracuje s rozšířenou kopií.
  */
 import type { CharacterInstance, ProjectFile } from '../model/types';
+import { visitSpare } from './hillSled';
 
 const ADULT_HEADS = ['head_01_cg', 'head_02_cg', 'head_03_cg', 'head_04_cg', 'head_05_cg', 'head_06_cg', 'head_07_cg', 'head_08_cg', 'head_09_cg', 'head_10_cg', 'head_11_cg', 'head_12_cg'];
 const DOGS = ['dog_collie', 'dog_dalmatian', 'dog_husky', 'dog_bernese', 'dog_dachshund', 'dog_frenchie'];
 const CATS = ['cat_british', 'cat_mainecoon', undefined];
+const KID_NAMES = ['Adam', 'Klárka', 'Matěj', 'Sofie', 'Ondra', 'Terezka', 'Jonáš', 'Viktorka', 'Tobiáš', 'Anežka', 'Štěpán', 'Rozárka', 'Lukášek', 'Emička', 'Kryštof', 'Julinka', 'Dominik', 'Barunka', 'Filípek', 'Adélka'];
 const companions = (p: ProjectFile, id: string) => p.characters.filter((c) => c.companionId === id).length;
 
 function cloneOf(p: ProjectFile, base: CharacterInstance, donor: CharacterInstance, id: string, n: number): CharacterInstance {
@@ -26,14 +28,16 @@ function cloneOf(p: ProjectFile, base: CharacterInstance, donor: CharacterInstan
 
 /** Bobování: víc dětí, než má projekt (hill.kidsN) – klony dětí ze svahu; méně = jen prvních kidsN. */
 function expandHill(p: ProjectFile): ProjectFile {
-  const h = p.hill; if (!h || h.kidsN === undefined) return p;
-  const want = Math.max(0, Math.round(h.kidsN));
-  if (want <= h.kids.length) return want === h.kids.length ? p : { ...p, hill: { ...h, kids: h.kids.slice(0, want) } };
+  const h = p.hill; if (!h) return p;
+  // průměrný počet dětí na svahu (kidsN) + zásoba těch, kdo přicházejí a odcházejí
+  const base = Math.max(0, Math.round(h.kidsN ?? h.kids.length)), want = base + (base > 0 ? visitSpare(h, base) : 0);
+  if (want <= h.kids.length) return { ...p, hill: { ...h, kidsN: base, kids: h.kids.slice(0, want) } };
   const pool = h.kids.map((id) => p.characters.find((c) => c.id === id)).filter((c): c is CharacterInstance => !!c);
   if (!pool.length) return p;
-  const q: ProjectFile = { ...p, characters: [...p.characters], hill: { ...h, kids: [...h.kids] } };
+  const q: ProjectFile = { ...p, characters: [...p.characters], hill: { ...h, kidsN: base, kids: [...h.kids] } };
   for (let n = 0; n < want - h.kids.length; n++) {
     const c = cloneOf(p, pool[n % pool.length], pool[(n * 3 + 1) % pool.length], `gen_h_${n + 1}`, n + 200);
+    const nm = KID_NAMES[n % KID_NAMES.length]; c.name = n < KID_NAMES.length ? nm : `${nm} ${Math.floor(n / KID_NAMES.length) + 1}.`;
     q.characters.push(c); q.hill!.kids.push(c.id);
   }
   return q;

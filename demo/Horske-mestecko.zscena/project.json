@@ -3,8 +3,8 @@
   "formatVersion": 1,
   "meta": {
     "name": "Horské městečko – západ slunce",
-    "createdAt": "2026-11-27T22:04:08.540Z",
-    "modifiedAt": "2026-11-27T22:04:08.639Z",
+    "createdAt": "2026-11-28T07:14:01.126Z",
+    "modifiedAt": "2026-11-28T07:14:01.233Z",
     "appVersion": "0.1.0"
   },
   "seed": 7311,
@@ -2239,6 +2239,64 @@
       },
       "routine": "hill",
       "activities": {}
+    },
+    {
+      "id": "ch_traktorista",
+      "name": "Traktorista Pepa",
+      "assetId": "builtin_postava_cg",
+      "startNodeId": "c0",
+      "baseScale": 1,
+      "walkSpeed": 54,
+      "palette": {
+        "coat": "#c8553d",
+        "hat": "#f2c14e",
+        "scarf": "#f7f3e3",
+        "skin": "#f1c9a5",
+        "trousers": "#3b4a6b"
+      },
+      "wander": false,
+      "appearance": {
+        "generator": "parts",
+        "libraryId": "malovane-cg-v1",
+        "seed": 1674157313,
+        "bodyTemplate": "adult-cg",
+        "variants": {
+          "jacket": "jacket_puffer_cg",
+          "hat": "hat_beanie_cg",
+          "scarf": "scarf_long_cg",
+          "trousers": "trousers_cg",
+          "boots": "boots_hiking_cg",
+          "gloves": "gloves_puffer_cg",
+          "head": "head_05_cg"
+        },
+        "colors": {
+          "jacket": "hneda",
+          "hat": "olivova",
+          "scarf": "okrova",
+          "gloves": "okrova",
+          "trousers": "olivova",
+          "boots": "tmave-seda"
+        },
+        "proportions": {
+          "height": 1,
+          "build": 1.024
+        },
+        "motion": {
+          "strideScale": 1.019,
+          "armSwing": 1.046,
+          "bob": 1.149,
+          "sway": 1.195,
+          "idleTempo": 1.092,
+          "lean": 1.704,
+          "speed": 1.193,
+          "phase": 0.664,
+          "armLag": 0.083,
+          "armLR": 0.918
+        },
+        "locks": []
+      },
+      "routine": "plow",
+      "activities": {}
     }
   ],
   "schedule": [],
@@ -2697,7 +2755,8 @@
       40
     ],
     "bandW": 2.6,
-    "enabled": true
+    "enabled": true,
+    "driverId": "ch_traktorista"
   },
   "crowd": {
     "walkersN": 6,

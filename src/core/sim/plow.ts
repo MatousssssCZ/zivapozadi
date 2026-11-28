@@ -6,7 +6,9 @@
  */
 import type { Vec2 } from '../math/vec';
 import type { ProjectFile } from '../model/types';
-import { cameraFor, toWorld, type Camera, type World } from '../scene/camera';
+import { cameraFor, toWorld, toScreen, Q, type Camera, type World } from '../scene/camera';
+import { depthScaleAt } from '../scene/geometry';
+import { tractorScale } from '../render/tractor3d';
 import { hashNoise } from '../math/rng';
 import { SIM_DT } from './types';
 
@@ -14,6 +16,7 @@ export interface PlowConfig {
   /** osa jízdy po silnici (obraz, zleva doprava; první a poslední bod mimo obraz) */ path: Vec2[];
   firstDelay?: [number, number]; interval?: [number, number]; traversal?: [number, number];
   /** šířka radlice (m) */ bandW?: number;
+  /** postava řidiče (routine „plow“, pracovní mundúr) – sedí v kabině */ driverId?: string;
   /** false = traktor nevyjíždí (výchozí zapnuto) */ enabled?: boolean;
 }
 export interface PlowState {
@@ -24,7 +27,7 @@ export interface PlowState {
 /** úsek pásu (m), délka za středem (m), radlice před středem (m) */
 export const PLOW = { bin: 0.5, length: 2.2, blade: 2.45 } as const;
 
-interface Axis { pts: World[]; cum: number[]; len: number }
+export interface Axis { pts: World[]; cum: number[]; len: number }
 const cache = new WeakMap<PlowConfig, Axis>();
 export function plowAxis(cam: Camera, cfg: PlowConfig): Axis {
   let a = cache.get(cfg);
@@ -48,6 +51,17 @@ export function axisAt(a: Axis, s: number): { P: World; hd: number } {
   while (hi - lo > 1) { const m = (lo + hi) >> 1; if (a.cum[m] <= s) lo = m; else hi = m; }
   const p = a.pts[lo], q = a.pts[hi], L = a.cum[hi] - a.cum[lo] || 1e-9, f = (s - a.cum[lo]) / L;
   return { P: { X: p.X + (q.X - p.X) * f, Z: p.Z + (q.Z - p.Z) * f }, hd: Math.atan2(q.Z - p.Z, q.X - p.X) };
+}
+
+/** vzdálenost čepele před středem traktoru (m) v daném místě – model je v měřítku postav */
+export function bladeAhead(project: ProjectFile, cam: Camera, ax: Axis, s: number): number {
+  const { P } = axisAt(ax, s), ppm = depthScaleAt(project.scene.depth, toScreen(cam, P).y) / Q;
+  return (PLOW.blade + 0.1) * tractorScale(cam, P, ppm);
+}
+/** poloviční šířka odhrnutého pásu (m) v daném místě */
+export function bandHalf(project: ProjectFile, cam: Camera, ax: Axis, s: number): number {
+  const { P } = axisAt(ax, s), ppm = depthScaleAt(project.scene.depth, toScreen(cam, P).y) / Q;
+  return ((project.plow?.bandW ?? 2.6) / 2) * tractorScale(cam, P, ppm);
 }
 
 export function newPlowState(project: ProjectFile): PlowState {
@@ -74,8 +88,9 @@ export function stepPlow(project: ProjectFile, st: PlowState, t: number, log: (m
   const vT = st.vT * (1 + 0.06 * Math.sin(t * 0.37 + st.n) + 0.03 * Math.sin(t * 1.3));
   st.v += Math.sign(vT - st.v) * Math.min(Math.abs(vT - st.v), dt * 0.6);
   const s0 = st.s; st.s += st.v * dt; st.dist += st.v * dt;
-  // radlice (před přední nápravou) odhrne pás mezi minulou a novou polohou
-  const b0 = Math.floor((s0 + PLOW.blade) / PLOW.bin), b1 = Math.floor((st.s + PLOW.blade) / PLOW.bin);
+  // radlice (před přední nápravou; model v měřítku postav) odhrne pás mezi minulou a novou polohou
+  const bl = bladeAhead(project, cam, ax, st.s);
+  const b0 = Math.floor((s0 + bl) / PLOW.bin), b1 = Math.floor((st.s + bl) / PLOW.bin);
   for (let i = Math.max(0, b0); i <= Math.min(st.cleared.length - 1, b1); i++) { st.cleared[i] = 1; st.berm[i] = Math.min(1, st.berm[i] * 0.4 + 0.9); }
   if (st.s - PLOW.length >= ax.len) {
     st.phase = 'off'; st.n++;

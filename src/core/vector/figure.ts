@@ -309,6 +309,12 @@ export function drawVectorFigure(ctx: Ctx, pose: SkeletonPose, body: BodyProfile
     ctx.save(); gPath(); ctx.clip(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     // barevné panely (sportovní): ramenní sedlo v podpůrné barvě
     if (of.top.panels) { ctx.fillStyle = C.support; ctx.beginPath(); smoothThrough(ctx, [F(0.78, shL - capR * 2), F(0.86, offN(Nk)), F(0.78, shR + capR * 2)], true); ctx.lineTo(F(1.3, shR + 10).x, F(1.3, shR + 10).y); ctx.lineTo(F(1.3, shL - 10).x, F(1.3, shL - 10).y); ctx.closePath(); ctx.fill(); ctx.fillStyle = C.accent; ctx.beginPath(); smoothThrough(ctx, [F(0.76, shL - capR * 2), F(0.84, offN(Nk)), F(0.76, shR + capR * 2)], true); smoothThrough(ctx, [F(0.78, shR + capR * 2), F(0.86, offN(Nk)), F(0.78, shL - capR * 2)], false); ctx.closePath(); ctx.fill(); }
+    // reflexní pruhy (pracovní oděv): dva vodorovné pásy přes trup, světlé s jemným leskem
+    if (of.top.hiVis) for (const v of [0.22, 0.42]) {
+      const a0 = F(v, Lx(v) - 6), a1 = F(v, Rx(v) + 6), b1 = F(v + 0.075, Rx(v + 0.075) + 6), b0 = F(v + 0.075, Lx(v + 0.075) - 6);
+      ctx.fillStyle = C.accent; ctx.beginPath(); ctx.moveTo(a0.x, a0.y); ctx.lineTo(a1.x, a1.y); ctx.lineTo(b1.x, b1.y); ctx.lineTo(b0.x, b0.y); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = withA('#9aa0a0', 0.6); ctx.lineWidth = 0.4; ctx.stroke();
+    }
     // prošívání (péřová): komory sledují trup a lem, oblouky dolů (vyboulení)
     if (quilt && det > 0.25) {
       ctx.strokeStyle = shadeOf(col, 0.42); ctx.lineWidth = 0.6;

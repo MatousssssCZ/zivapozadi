@@ -313,9 +313,14 @@ function HillProps({ p }: { p: ProjectFile }) {
   return (
     <Section title="Bobování">
       <Check label="Děti bobují (vypnuto = čekají nahoře)" value={!h.paused} onChange={(v) => live('Bobování zapnuto', (d) => { d.hill!.paused = !v; })} />
-      <Row label="Počet dětí" hint="Bez omezení – další děti se doplní (jiný vzhled), méně = část dětí odejde ze scény.">
+      <Row label="Počet dětí (průměr)" hint="Bez omezení – další děti se doplní (jiný vzhled). Děti občas přijdou a odejdou, počet kolem průměru kolísá.">
         <NumField value={h.kidsN ?? h.kids.length} min={0} step={1} onCommit={(v) => upd('Počet dětí na svahu', (d) => { d.hill!.kidsN = Math.max(0, Math.round(v)); })} />
       </Row>
+      <Check label="Děti přicházejí a odcházejí" value={h.visits?.enabled !== false} onChange={(v) => upd('Příchody a odchody dětí', (d) => { d.hill!.visits = { ...(d.hill!.visits ?? {}), enabled: v }; })} />
+      {h.visits?.enabled !== false && <Row label="Příchod / odchod každých od–do (s)" hint="Jak často někdo přijde nebo odejde (zpoza levého okraje, s boby).">
+        <NumField value={(h.visits?.interval ?? [30, 75])[0]} min={1} step={5} onCommit={(v) => live('Příchody dětí', (d) => { const o = d.hill!.visits?.interval ?? [30, 75]; d.hill!.visits = { ...(d.hill!.visits ?? {}), interval: [Math.max(1, Math.min(v, o[1])), o[1]] }; })} />
+        <NumField value={(h.visits?.interval ?? [30, 75])[1]} min={1} step={5} onCommit={(v) => live('Příchody dětí', (d) => { const o = d.hill!.visits?.interval ?? [30, 75]; d.hill!.visits = { ...(d.hill!.visits ?? {}), interval: [o[0], Math.max(v, o[0])] }; })} />
+      </Row>}
       <Row label="Počet drah" hint="Bez omezení – každé dítě jede po své dráze; dráhy se rozloží vějířem přes svah (víc drah = užší rozestupy).">
         <NumField value={nLanes} min={1} step={1} onCommit={(v) => upd('Počet drah', (d) => { d.hill!.laneCount = Math.max(1, Math.round(v)); })} />
       </Row>
@@ -331,8 +336,32 @@ function HillProps({ p }: { p: ProjectFile }) {
       <Row label="První jízda po startu (s)" hint="Za kolik sekund po startu scény vyjede první dítě.">
         <NumField value={h.firstDelay ?? 0} min={0} step={1} onCommit={(v) => upd('První jízda', (d) => { d.hill!.firstDelay = Math.max(0, v); })} />
       </Row>
-      <div className="muted small">Dětí {h.kidsN ?? h.kids.length}, drah {nLanes}, rodičů {h.watchers?.length ?? 0}; právě jede {riding}. Dráhy, výstup a fronta se upravují v generátoru scény.</div>
+      <div className="muted small">Na svahu teď {st ? st.kids.filter((k) => k.ph !== 'off').length : (h.kidsN ?? h.kids.length)} dětí (průměr {h.kidsN ?? h.kids.length}), drah {nLanes}, rodičů {h.watchers?.length ?? 0}; právě jede {riding}. Dráhy, výstup a fronta se upravují v generátoru scény.</div>
       <div className="actions"><button onClick={() => simAct((s) => s.hillNow())}>Další jízda hned</button></div>
+    </Section>
+  );
+}
+
+/** Trasa traktoru: body osy jízdy (obraz); první a poslední by měly být mimo záběr, aby traktor přijel a odjel. */
+function PlowPathProps({ p }: { p: ProjectFile }) {
+  const pts = p.plow!.path, W = p.scene.width;
+  const offL = pts[0].x < 0, offR = pts[pts.length - 1].x > W;
+  return (
+    <Section title="Trasa traktoru">
+      <div className="muted small">Body táhněte myší na plátně, nebo upravte čísla. Traktor jede od bodu 1 k poslednímu; radlice odhrnuje pás podél trasy.</div>
+      {pts.map((q, i) => (
+        <Row key={i} label={`Bod ${i + 1}`}>
+          <NumField value={q.x} onCommit={(v) => upd('Trasa traktoru', (d) => { d.plow!.path[i] = { ...d.plow!.path[i], x: Math.round(v) }; })} />
+          <NumField value={q.y} onCommit={(v) => upd('Trasa traktoru', (d) => { d.plow!.path[i] = { ...d.plow!.path[i], y: Math.round(v) }; })} />
+          {i < pts.length - 1 && <button className="icon" title="Vložit bod za tento" onClick={() => upd('Přidání bodu trasy traktoru', (d) => { const a = d.plow!.path[i], b = d.plow!.path[i + 1]; d.plow!.path.splice(i + 1, 0, { x: Math.round((a.x + b.x) / 2), y: Math.round((a.y + b.y) / 2) }); })}>＋</button>}
+          {pts.length > 2 && <button className="icon" title="Smazat bod" onClick={() => upd('Smazání bodu trasy traktoru', (d) => { d.plow!.path.splice(i, 1); })}>✕</button>}
+        </Row>
+      ))}
+      {(!offL || !offR) && <div className="muted small" style={{ color: '#e0a040' }}>⚠ {!offL ? 'První bod je v záběru – traktor by se objevil uprostřed obrazu. ' : ''}{!offR ? 'Poslední bod je v záběru – traktor by zmizel v obraze.' : ''}</div>}
+      <div className="actions">
+        <button onClick={() => upd('Obrácení trasy traktoru', (d) => { d.plow!.path.reverse(); })}>Obrátit směr jízdy</button>
+        <button onClick={() => store.set({ selection: null })}>Hotovo</button>
+      </div>
     </Section>
   );
 }
@@ -359,7 +388,7 @@ function PlowProps({ p }: { p: ProjectFile }) {
       {pair('Průjezd od–do (s)', 'Jak dlouho jede přes celý záběr (určuje rychlost)', 'traversal', [25, 40], 1)}
       <Row label="Šířka radlice (m)" hint="Šířka odhrnutého pásu na silnici"><NumField value={c.bandW ?? 2.6} min={0.5} step={0.1} onCommit={(v) => live('Šířka radlice', (d) => { d.plow!.bandW = Math.max(0.5, v); })} /></Row>
       <div className="muted small">{!st ? 'Čeká na start simulace.' : st.phase === 'run' ? 'Traktor právě jede.' : c.enabled === false ? 'Vypnuto.' : `Další průjezd za ${Math.max(0, Math.round(st.until - t))} s.`} Odhrnutý pás při sněžení zapadne asi za 5 min.</div>
-      <div className="actions"><button onClick={() => simAct((s) => s.plowNow())}>Projet teď</button></div>
+      <div className="actions"><button onClick={() => simAct((s) => s.plowNow())}>Projet teď</button><button onClick={() => store.set({ selection: { kind: 'plowPath', id: 'plow' } })}>Upravit trasu…</button></div>
     </Section>
   );
 }
@@ -432,6 +461,7 @@ export function RightPanel() {
     else if (sel.kind === 'zone' && p.zones.some((x) => x.id === sel.id)) body = <ZoneProps id={sel.id} p={p} />;
     else if (sel.kind === 'character' && p.characters.some((x) => x.id === sel.id)) body = <CharacterProps id={sel.id} p={p} />;
     else if (sel.kind === 'event' && p.schedule.some((x) => x.id === sel.id)) body = <EventProps id={sel.id} p={p} />;
+    else if (sel.kind === 'plowPath' && p.plow) body = <PlowPathProps p={p} />;
   }
   return <div className="panel right" data-testid="props-panel"><div className="panel-body">{body}</div></div>;
 }

@@ -216,7 +216,7 @@ export function EditorCanvas() {
         pt.offset = { x: round(pt.offset.x + (o.flipX ? -dx : dx) / o.scale), y: round(pt.offset.y + dy / o.scale) };
       }); break;
       case 'node': store.live((p) => { const n = p.nav.nodes.find((x) => x.id === h.id); if (n) { n.x = Math.round(n.x + dx); n.y = Math.round(n.y + dy); } }); break;
-      case 'vertex': store.live((p) => { const arr = h.owner === 'area' ? p.areas.find((x) => x.id === h.id)?.polygon : p.zones.find((x) => x.id === h.id)?.bounds; if (arr) arr[h.index] = { x: Math.round(m.x), y: Math.round(m.y) }; }); break;
+      case 'vertex': store.live((p) => { const arr = h.owner === 'plow' ? p.plow?.path : h.owner === 'area' ? p.areas.find((x) => x.id === h.id)?.polygon : p.zones.find((x) => x.id === h.id)?.bounds; if (arr) arr[h.index] = { x: Math.round(m.x), y: Math.round(m.y) }; }); break;
       case 'area': store.live((p) => { const a = p.areas.find((x) => x.id === h.id); if (a) a.polygon = a.polygon.map((q) => ({ x: q.x + dx, y: q.y + dy })); }); break;
       case 'zone': store.live((p) => { const z = p.zones.find((x) => x.id === h.id); if (z) z.bounds = z.bounds.map((q) => ({ x: q.x + dx, y: q.y + dy })); }); break;
       case 'character': store.live((p) => {
@@ -232,7 +232,7 @@ export function EditorCanvas() {
     if ((d.hit as { kind: string }).kind === 'smoke') { const i = (d.hit as unknown as { index: number }).index, m = (d as { last?: Vec2 }).last; if (m) store.editLive('Přesun zdroje kouře', (p) => { const q = p.scene.environment!.sources[i]; q.x = Math.round(m.x); q.y = Math.round(m.y); }); return; }
     if (d.hit?.kind === 'zoneRect' && dragRect.current) { addZone(store.state.zoneType, dragRect.current.a, dragRect.current.b); dragRect.current = null; return; }
     if (d.started && d.hit && d.hit.kind !== 'pan') {
-      const labels: Record<string, string> = { smoke: 'Přesun zdroje kouře', object: 'Přesun objektu', scaleHandle: 'Změna měřítka', point: 'Úprava interakčního bodu', node: 'Přesun bodu trasy', vertex: 'Úprava tvaru', area: 'Přesun oblasti', zone: 'Přesun zóny', character: 'Změna počátečního bodu postavy' };
+      const labels: Record<string, string> = { smoke: 'Přesun zdroje kouře', object: 'Přesun objektu', scaleHandle: 'Změna měřítka', point: 'Úprava interakčního bodu', node: 'Přesun bodu trasy', vertex: (d.hit as { owner?: string }).owner === 'plow' ? 'Úprava trasy traktoru' : 'Úprava tvaru', area: 'Přesun oblasti', zone: 'Přesun zóny', character: 'Změna počátečního bodu postavy' };
       store.endGesture(labels[d.hit.kind] ?? 'Úprava');
     }
   };

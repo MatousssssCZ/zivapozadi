@@ -21,7 +21,7 @@ import { ELDER_PROFILES } from '../anim/elderGait';
 import { BLADE_H } from '../sim/rink';
 import type { MotionParams, SkeletonTemplate } from '../anim/skeleton';
 import { bodyOf, templateFor, type BodyProfile } from '../vector/body';
-import { outfitFor, type Outfit } from '../vector/outfit';
+import { outfitById, outfitFor, type Outfit } from '../vector/outfit';
 import { figureGeo } from '../vector/figure';
 import type { FootGeom } from '../anim/gaitKinematics';
 
@@ -54,7 +54,8 @@ export function vectorPlan(tpl: SkeletonTemplate & { id: string }, app: Characte
   // s malovanou hlavou: věk a stavba podle hlavy (senior s šedivou hlavou nedostane mladý outfit)
   const age = child ? 'child' : paintedHeads && hid ? (hid.age === 'senior' ? 'senior' : 'adult') : app.seed % 7 === 0 ? 'senior' : 'adult';
   const body = bodyOf(app.seed, age, paintedHeads && hid?.sex ? hid.sex : undefined);
-  void routine;
+  // pracovní role (traktorista): pracovní mundúr místo náhodného oblečení
+  if (routine === 'plow' && !child) { const w = outfitById('w_workwear'); if (w) return { body, outfit: w, tpl: templateFor(tpl, body) }; }
   // oblečení podle pohlaví: z malované hlavy (malované hlavy), jinak ze stavby těla (vektorová hlava)
   const sex = child ? undefined : paintedHeads && hid?.sex ? hid.sex : body.sex;
   return { body, outfit: outfitFor(app.seed >> 3, age, sex), tpl: templateFor(tpl, body) };

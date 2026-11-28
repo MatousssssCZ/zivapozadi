@@ -113,7 +113,7 @@ export const fallPhaseAt = (v: FallVariant, t: number): FallPhase => sampleFall(
  * `change`: předklon, jedna noha zvednutá, obě ruce u boty (šněrování), v polovině druhá noha.
  * Klíč je vůči bodu na zemi pod pánví (místo k sezení); prolíná se vahou (sednutí / vstávání).
  */
-export function benchPose(kind: 'rest' | 'change' | 'kneel' | 'bend' | 'squat' | 'sled' | 'lift' | 'tuck' | 'angel' | 'climb' | 'ski', t: number, dur: number, r?: number): FallKey {
+export function benchPose(kind: 'rest' | 'change' | 'kneel' | 'bend' | 'squat' | 'sled' | 'lift' | 'tuck' | 'angel' | 'climb' | 'ski' | 'drive', t: number, dur: number, r?: number): FallKey {
   if (kind === 'ski') return skiPose(t, r ?? 0);
   if (kind === 'climb') return climbPose(t, r ?? 0);
   if (kind === 'angel') return sampleKeys(ANGEL_KEYS, t);
@@ -124,6 +124,12 @@ export function benchPose(kind: 'rest' | 'change' | 'kneel' | 'bend' | 'squat' |
   const SEAT = 0.56; // pánev na sedáku (0,45 m + stehna) v délkách nohy
   const base: FallKey = { t: 0, ph: 'pause', hip: W(-0.12, SEAT), pitch: -4, head: 4, feet: [W(0.38, 0, -0.1), W(0.44, 0, 0.1)], hands: [W(0.22, 0.6, -0.15), W(0.26, 0.6, 0.15)], c: ['s', 'f0', 'f1'] };
   if (kind === 'rest') { base.head = 4 + Math.sin(t * 0.4) * 3; return base; }
+  if (kind === 'drive') {
+    // řidič traktoru: sed, nohy vpředu na pedálech, obě ruce na volantu před hrudí; drobné pootáčení
+    // volantem a pohled střídavě vpřed a k radlici (r = natočení volantu −1…1)
+    const st = Math.sin(t * 0.9) * 0.6 + (r ?? 0), lk = Math.sin(t * 0.23) > 0.6 ? -10 : 2;
+    return { t: 0, ph: 'pause', hip: W(-0.12, SEAT), pitch: 6, head: lk + Math.sin(t * 0.5) * 2, roll: st * 0.8, feet: [W(0.52, 0.06, -0.1), W(0.56, 0.06, 0.1)], hands: [W(0.5, 1.02 + st * 0.03, -0.14), W(0.52, 1.02 - st * 0.03, 0.14)], c: ['s'] };
+  }
   const half = dur / 2, i = t < half ? 0 : 1, tt = (t % half) / half, up = Math.sin(Math.PI * Math.min(1, Math.max(0, (tt - 0.05) / 0.9)));
   const side = i === 0 ? -1 : 1, lace = Math.sin(t * 7) * 0.025 * up;
   const feet: [P3, P3] = [W(0.38, 0, -0.1), W(0.44, 0, 0.1)];

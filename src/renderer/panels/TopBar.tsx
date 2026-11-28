@@ -165,6 +165,7 @@ function Density() {
       {p.rink && num('Bruslaři', 'skatersN', 'Kolik bruslařů smí být na ledě (bez horní hranice)')}
       {num('Psi', 'dogs', 'Kolik lidí se psem chodí scénou (bez horní hranice)')}
       {num('Kočky', 'cats', 'Kolik koček se ve scéně objevuje (bez horní hranice; potřebují místa pro kočky ve scéně)')}
+      {p.hill && <label className="dens-n" title="Kolik dětí průměrně bobuje na svahu (bez horní hranice). Děti občas přijdou a odejdou – počet kolem průměru kolísá.">Děti na svahu<input type="number" min={0} value={Math.round(p.hill.kidsN ?? p.hill.kids.length)} onChange={(e) => { const n = Math.max(0, Math.round(Number(e.target.value) || 0)); store.edit('Počet dětí na svahu', (q) => { q.hill!.kidsN = n; }); }} /></label>}
       {p.rink && <RinkRates />}
       <span title="Rychlost chůze chodců (násobek; bruslaři a pracovníci mají vlastní tempo)">Rychlost chůze</span>
       <input type="range" min={50} max={160} step={5} value={sp} onChange={(e) => setW(Number(e.target.value))} onPointerUp={() => { store.editLive('Rychlost chodců', (q) => { q.crowd = { ...(q.crowd ?? {}), walkSpeed: sp / 100 }; }); setW(null); }} onKeyUp={() => { store.editLive('Rychlost chodců', (q) => { q.crowd = { ...(q.crowd ?? {}), walkSpeed: sp / 100 }; }); setW(null); }} />

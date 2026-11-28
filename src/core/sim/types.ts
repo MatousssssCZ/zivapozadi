@@ -63,6 +63,7 @@ export interface AgentState {
   onIce?: boolean;
   /** dítě / rodič na svahu: pohyb řídí hillSled.ts; lift = px hloubky pod obrazovou polohou (měřítko podle terénu) */
   onHill?: boolean; lift?: number;
+  /** sedí ve vozidle (řidič traktoru): polohu řídí vozidlo, kreslí se uvnitř kabiny */ vehicle?: boolean;
   /** ořez postavy (px scény): průchod dveřmi tramvaje / pekárny – postava zmizí za rámem */
   clip?: { x: number; y: number }[] | null;
   /** tramvaj: role cestujícího (čeká, vystupuje, nastupuje) a čekací místo */

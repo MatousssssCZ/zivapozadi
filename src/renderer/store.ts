@@ -8,7 +8,7 @@ import { zs, type OpenResult } from './api';
 
 export type Tool = 'select' | 'action' | 'smoke' | 'route' | 'obstacle' | 'snow' | 'zone' | 'character' | 'pan';
 export type Selection =
-  | { kind: 'object' | 'node' | 'edge' | 'area' | 'zone' | 'character' | 'event'; id: string }
+  | { kind: 'object' | 'node' | 'edge' | 'area' | 'zone' | 'character' | 'event' | 'plowPath'; id: string }
   | { kind: 'point'; id: string; pointId: string }
   | null;
 
@@ -181,7 +181,7 @@ class Store {
     const exists = s.kind === 'object' || s.kind === 'point' ? p.objects.some((o) => o.id === s.id)
       : s.kind === 'node' ? p.nav.nodes.some((n) => n.id === s.id) : s.kind === 'edge' ? p.nav.edges.some((e) => e.id === s.id)
       : s.kind === 'area' ? p.areas.some((a) => a.id === s.id) : s.kind === 'zone' ? p.zones.some((z) => z.id === s.id)
-      : s.kind === 'character' ? p.characters.some((c) => c.id === s.id) : p.schedule.some((e) => e.id === s.id);
+      : s.kind === 'character' ? p.characters.some((c) => c.id === s.id) : s.kind === 'plowPath' ? !!p.plow : p.schedule.some((e) => e.id === s.id);
     if (!exists) this.set({ selection: null });
   }
 

@@ -22,6 +22,7 @@ export const MATERIALS: Record<Material, MaterialProfile> = {
 export type TopKind = 'puffer' | 'parka' | 'coat' | 'sport' | 'kidJacket' | 'snowsuit';
 export interface Top {
   kind: TopKind; material: Material;
+  /** reflexní pruhy přes trup (pracovní oděv) */ hiVis?: boolean;
   /** délka: hladina lemu jako podíl dolní končetiny od kyčle (0 = kyčel, 0.45 = půl stehna, 1 = kotník) */ length: number;
   /** střih trupu: rovný / vypasovaný (pas užší) / áčkový (rozšiřuje se k lemu) */ fit: 'straight' | 'fitted' | 'aline';
   collar: 'lapel' | 'stand' | 'funnel' | 'hood' | 'none';
@@ -44,6 +45,7 @@ export interface Outfit {
   top: Top; bottom: Bottom; boots: Boots; hair: Hair; colors: OutfitColors;
   hat: 'pompom' | 'beanie' | 'earflap' | 'fitted' | 'none'; scarf: 'long' | 'wrap' | 'tube' | 'none';
   hands: 'mittens' | 'gloves' | 'none'; bag?: 'shoulder' | 'backpack' | 'tote' | 'none';
+  /** zvláštní oděv (pracovní) – nepřiděluje se náhodně chodcům */ special?: boolean;
 }
 
 /** Sladěné palety: hlavní, podpůrná, akcent, kalhoty. */
@@ -92,6 +94,8 @@ export const OUTFITS: Outfit[] = [
   { id: 'a_parka_belted', sex: 'f', label: 'Parka stažená v pase', age: 'adult', top: parka(true), bottom: T('slim'), boots: B('tall', BOOTS.brown, '#2b211c'), hair: { style: 'long', color: '#8a6a40' }, colors: PALETTES.mustardNavy, hat: 'none', scarf: 'long', hands: 'gloves', bag: 'shoulder' },
   { id: 'a_sport_grey', label: 'Sportovní bunda s panely', age: 'adult', top: sport(true), bottom: T('slim'), boots: B('ankle', BOOTS.grey, '#e6e2da'), hair: { style: 'short', color: '#1f1b1a' }, colors: PALETTES.greyRed, hat: 'beanie', scarf: 'none', hands: 'gloves', bag: 'backpack' },
   { id: 'a_sport_plain', label: 'Jednobarevná sportovní bunda', age: 'adult', top: sport(false), bottom: T('straight'), boots: B('ankle', BOOTS.black, '#e6e2da'), hair: { style: 'pony', color: '#4a3424' }, colors: PALETTES.kidNavy, hat: 'fitted', scarf: 'tube', hands: 'gloves' },
+  // ---- pracovní oděv (traktorista, údržba): oranžová reflexní bunda s pruhy, tmavé montérky, pracovní boty
+  { id: 'w_workwear', special: true, sex: 'm', label: 'Pracovní mundúr (reflexní)', age: 'adult', top: { ...sport(true), hiVis: true, pockets: 'flap', length: 0.18, sleeveVol: 1.05 }, bottom: T('loose', { kneePads: true }), boots: B('ankle', BOOTS.black, '#2a2622'), hair: { style: 'crop', color: '#3a2c22' }, colors: { main: '#e8772a', support: '#2f3338', accent: '#e6e8e2', bottom: '#2f3640' }, hat: 'beanie', scarf: 'none', hands: 'gloves' },
   // ---- senioři (věk sám neznamená shrbení – držení řídí pohybový profil)
   { id: 's_coat_grey', sex: 'm', label: 'Senior – šedý vlněný kabát', age: 'senior', top: { ...coatLong('straight', 'buttons'), length: 0.7 }, bottom: T('straight'), boots: B('ankle', BOOTS.black, '#1d1d20'), hair: { style: 'short', color: '#cfcac4' }, colors: { main: '#6c6f78', support: '#d8d2c6', accent: '#6d2a2a', bottom: '#3a3532' }, hat: 'fitted', scarf: 'wrap', hands: 'gloves' },
   { id: 's_coat_camel', sex: 'f', label: 'Seniorka – velbloudí kabát', age: 'senior', top: { ...coatLong('fitted', 'buttons'), length: 0.66 }, bottom: SK(0.62, '#4a4044'), boots: B('ankle', BOOTS.brown, '#2b211c'), hair: { style: 'curly', color: '#dcd6d0' }, colors: PALETTES.camelBrown, hat: 'fitted', scarf: 'long', hands: 'gloves', bag: 'shoulder' },
@@ -134,7 +138,7 @@ export function outfitById(id: string): Outfit | undefined { return OUTFITS.find
 export function outfitFor(seed: number, age: Outfit['age'], sex?: 'm' | 'f'): Outfit {
   // jen střihy pro dané pohlaví (nebo unisex) – muž nedostane dámský kabát se sukní, kabelku apod.
   const fits = (o: Outfit) => !sex || !o.sex || o.sex === sex;
-  const pool = OUTFITS.filter((o) => o.age === age && fits(o)), list = pool.length ? pool : OUTFITS.filter((o) => o.age === 'adult' && fits(o));
+  const pool = OUTFITS.filter((o) => !o.special && o.age === age && fits(o)), list = pool.length ? pool : OUTFITS.filter((o) => !o.special && o.age === 'adult' && fits(o));
   const h = (k: number) => { const x = Math.sin((seed + 1) * 12.9898 + k * 78.233) * 43758.5453; return x - Math.floor(x); };
   const base = list[Math.floor(h(1) * list.length) % list.length];
   const male = sex === 'm' || (!sex && base.sex === 'm'), female = sex === 'f' || (!sex && base.sex === 'f');

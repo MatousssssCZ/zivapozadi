@@ -156,6 +156,17 @@ export function drawOverlay(ctx: Ctx, o: OverlayInput) {
     if (a) { ctx.strokeStyle = 'rgba(255,225,77,0.8)'; ctx.setLineDash([6 * px, 6 * px]); ctx.lineWidth = 2 * px; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(o.mouse.x, o.mouse.y); ctx.stroke(); ctx.setLineDash([]); }
   }
 
+  // Trasa traktoru s pluhem (oranžová čárkovaná; body se dají táhnout, když je trasa vybraná)
+  if (p.plow && p.plow.path.length >= 2) {
+    const selPl = sel?.kind === 'plowPath', pts = p.plow.path;
+    ctx.strokeStyle = selPl ? 'rgba(255,150,40,0.95)' : 'rgba(255,150,40,0.55)'; ctx.lineWidth = (selPl ? 3 : 2) * px; ctx.setLineDash([12 * px, 7 * px]);
+    poly(ctx, pts, false); ctx.stroke(); ctx.setLineDash([]);
+    for (let i = 1; i < pts.length; i++) arrow(ctx, pts[i - 1], pts[i], 0.55, 7 * px, 'rgba(220,110,20,1)');
+    const mid = pts[Math.floor(pts.length / 2)];
+    label(ctx, '🚜 Trasa traktoru', mid.x, mid.y - 12 * px, px, '#fff3e0', 'rgba(170,80,10,0.85)');
+    if (selPl) pts.forEach((q, i) => { ctx.fillStyle = i === 0 || i === pts.length - 1 ? '#ffd8a8' : '#ffffff'; ctx.strokeStyle = '#7a3a00'; ctx.lineWidth = px; ctx.beginPath(); ctx.arc(q.x, q.y, 6 * px, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); label(ctx, String(i + 1), q.x, q.y - 10 * px, px); });
+  }
+
   // Vybraný objekt
   if (sel && (sel.kind === 'object' || sel.kind === 'point')) {
     const ob = p.objects.find((x) => x.id === sel.id);
